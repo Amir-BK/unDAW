@@ -1,3 +1,7 @@
+# Community & Support
+
+https://discord.gg/hTKjSfcbEn
+
 More to come, 
 
 # ALPHA WARNING AND VERSIONING
