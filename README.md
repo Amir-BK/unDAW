@@ -1,4 +1,4 @@
-##V0.0.1! First public release! Currently only the Midi Editor Widget is substantially developed, can also use the Decent Sampler importer to quickly make fusion patches. More to come! 
+## V0.0.1! First public release! Currently only the Midi Editor Widget is substantially developed, can also use the Decent Sampler importer to quickly make fusion patches. More to come! 
 
 # Community & Support
 
