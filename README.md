@@ -1,8 +1,9 @@
+##V0.0.1! First public release! Currently only the Midi Editor Widget is substantially developed, can also use the Decent Sampler importer to quickly make fusion patches. More to come! 
+
 # Community & Support
 
 https://discord.gg/hTKjSfcbEn
 
-More to come, 
 
 # ALPHA WARNING AND VERSIONING
 As Unreal 5.4 is not even in early access to use this plugin you must sync to the Epic repo 5.4 branch, it is expected that this plugin will not maintain a stable API until full 5.4 release, expect changes to be breaking.
