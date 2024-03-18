@@ -36,6 +36,12 @@ enum EBKKeyActions : uint8
 	IncreaseNoteDrawDuration,
 	DecreaseNoteDrawDuration,
 	MainViewSwitch,
+	PlayPause,
+	StopPlayback,
+	ToggleFollowCursor,
+	MuteSelectedTrack,
+	SoloSelectedTrack,
+	ToggleClick
 
 };
 
