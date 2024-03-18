@@ -34,7 +34,8 @@ enum EBKKeyActions : uint8
 	IncreaseQuantizationSnap,
 	DecreaseQuantizationSnap,
 	IncreaseNoteDrawDuration,
-	DecreaseNoteDrawDuration
+	DecreaseNoteDrawDuration,
+	MainViewSwitch,
 
 };
 
@@ -45,7 +46,7 @@ class BKMUSICWIDGETS_API UBKEditorUtilsKeyboardMappings : public UDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "BK Music|Interface")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BK Music|Interface")
 	TMap<FKey, TEnumAsByte<EBKKeyActions>> KeyMap;
 
 };

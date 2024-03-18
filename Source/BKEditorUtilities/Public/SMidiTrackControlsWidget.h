@@ -210,20 +210,20 @@ public:
 						SNew(SEditableTextBox)
 							.Text(InArgs._trackName)
 					]
-					+ SVerticalBox::Slot()
-					[
-						SNew(SComboBox<TSharedPtr<FString>>)
-							.OptionsSource(&optionsArray)
-							.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
-							.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
-							.InitiallySelectedItem(CurrentItem)
-							[
+					//+ SVerticalBox::Slot()
+					//[
+					//	SNew(SComboBox<TSharedPtr<FString>>)
+					//		.OptionsSource(&optionsArray)
+					//		.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
+					//		.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
+					//		.InitiallySelectedItem(CurrentItem)
+					//		[
 
-								SNew(STextBlock)
-									.Text(this, &SMIDITrackControls::GetCurrentItemLabel)
+					//			SNew(STextBlock)
+					//				.Text(this, &SMIDITrackControls::GetCurrentItemLabel)
 
-							]
-					]
+					//		]
+					//]
 		/*			+ SVerticalBox::Slot()
 					[
 						SNew(SSingleProperty)

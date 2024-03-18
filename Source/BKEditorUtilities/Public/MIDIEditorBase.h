@@ -113,17 +113,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "BK Music|MIDI|Internal")
 	FOnPanelPopulated donePopulatingDelegate;
 
-	TSharedPtr<SVerticalBox> tracksVerticalBox;
-
-	TSharedPtr<SScrollBox> panelMainScrollArea;
-
-
-
-	TArray<TSharedRef<SPianoRollGraph>> InternalGraphs;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI|Interface")
-	TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
-
 	//event delegates
 
 	UPROPERTY(BlueprintAssignable, Category = "BK Music|MIDI|Interface")
@@ -240,11 +229,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	UPARAM(ref) FTrackDisplayOptions& GetTrackOptionsRef(int TrackID);
 
+	//call to set grid quantization
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantization);
-
-
-	EQuartzCommandQuantization QuantizationStepSize = EQuartzCommandQuantization::Beat;
 
 
 protected:
@@ -263,6 +250,19 @@ protected:
 
 	//the value used to snap and to display the grid, might be seperated to two values 
 	EMusicTimeSpanOffsetUnits GridQuantizationUnit = EMusicTimeSpanOffsetUnits::Ms;
+
+
+	TSharedPtr<SVerticalBox> tracksVerticalBox;
+
+	TSharedPtr<SScrollBox> panelMainScrollArea;
+
+
+	//currently this is only used to host the one pianoroll graph so it's kind of pointless but the idea is to host other panels
+	TArray<TSharedRef<SPianoRollGraph>> InternalGraphs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI|Interface")
+	TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
+
 	
 	
 	
