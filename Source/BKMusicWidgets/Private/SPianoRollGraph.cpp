@@ -120,7 +120,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 }
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
-	//UE_LOG(LogTemp, Log, TEXT("PianoRoll is Ticking %f"), InCurrentTime);
+	//this is the zoom smoothing function, it is not stable.
 	if (horizontalZoom != hZoomTarget)
 	{
 		//here we keep our zoom position close to where the mouse was, I need to also add interpolation towards the center
@@ -137,9 +137,10 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	}
 
+	// here we perform whatever tick logics related to the play head cursor
 	if (WorldContextObject != nullptr)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("We're ticking and have world context"))
+	
 		double AudioTime = UGameplayStatics::GetAudioTimeSeconds(WorldContextObject);
 		switch (TransportPlaystate)
 		{
@@ -149,9 +150,18 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 		case ReadyToPlay:
 			break;
 		case Playing:
-			parentMidiEditor->AddDeltaToTimeLine(InDeltaTime);
-			//CurrentTimelinePosition += InDeltaTime;
-			//UE_LOG(LogTemp, Log, TEXT("is playtime, delta time %f"), AudioTime - LastMeasuredAudioTime)
+		//to track the playhead accurately we want to calculate the delta audio time, but due to some quirks with unreal
+		//we can't rely on the audio time measurement if the user interacts with the GUI, so if we're playing and suddenly the audio delta is 0,
+		//such as what happens when the user pans the graph, then we fall back on the normal delta time.
+
+			if (AudioTime - LastMeasuredAudioTime > 0)
+			{
+				parentMidiEditor->AddDeltaToTimeLine(AudioTime - LastMeasuredAudioTime);
+			}
+			else {
+				parentMidiEditor->AddDeltaToTimeLine(InDeltaTime);
+			}
+
 			break;
 		case Seeking:
 			break;
@@ -161,18 +171,6 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			break;
 		}
 		LastMeasuredAudioTime = AudioTime;
-	}
-
-	if (PerformanceComponent != nullptr && PerformanceComponent->IsValidLowLevel())
-	{
-		if (PerformanceComponent->IsPlaying())
-		{
-			//UE_LOG(LogTemp, Log, TEXT("We're playing"))
-				//positionOffset.X -= InDeltaTime * horizontalZoom * 1000.0f;
-			//UE_LOG(LogTemp, Log, TEXT("Playtime %f"), PerformanceComponent->TimeAudioComponentPlayed)
-		}
-		
-		//UE_LOG(LogTemp, Log, TEXT("Playtime %f"), PerformanceComponent->)
 	}
 
 	
