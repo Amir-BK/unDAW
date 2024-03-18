@@ -86,6 +86,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "BK Music|MIDI")
 	void SetWorldContextObject(UObject* InWorldContextObject);
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW|SceneManager")
+	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI")
 	TArray<FTrackDisplayOptions> tracksDisplayOptions;
 

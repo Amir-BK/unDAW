@@ -84,6 +84,11 @@ void UMIDIEditorBase::SetWorldContextObject(UObject* InWorldContextObject)
 	WorldContextObject = InWorldContextObject;
 }
 
+void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
+{
+
+}
+
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)
 {
 	for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;

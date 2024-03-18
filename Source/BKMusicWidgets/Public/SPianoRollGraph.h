@@ -164,6 +164,8 @@ public:
 	UAudioComponent* PerformanceComponent;
 	UBKEditorUtilsKeyboardMappings* KeyMappings;
 
+	TScriptInterface<IBK_MusicSceneManagerInterface> MonitoredSceneManager;
+
 	FLinearColor gridColor = FLinearColor::White;
 	FLinearColor accidentalGridColor = FLinearColor::Gray;
 	FLinearColor cNoteColor = FLinearColor::Blue;

@@ -37,7 +37,7 @@ void delegateFunc(FName Output, const FMetaSoundOutput& MetaSoundOutput)
 void AMusicScenePlayerActor::InitClock(float inBPM)
 {
     //AudioComponent;
-	GeneratorHandle = UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(AudioComponent);
+	//GeneratorHandle = UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(AudioComponent);
 	//GeneratorHandle->WatchOutput(FName("Midi Stream"), delegateFunc);
     
 }
