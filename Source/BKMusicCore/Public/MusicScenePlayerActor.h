@@ -5,16 +5,20 @@
 #include "CoreMinimal.h"
 #include "MetasoundGeneratorHandle.h"
 #include "GameFramework/Actor.h"
+#include "BK_MusicSceneManagerInterface.h"
 #include "MusicScenePlayerActor.generated.h"
 
 UCLASS()
-class BKMUSICCORE_API AMusicScenePlayerActor : public AActor
+class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();
+
+	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
+	FOnPlaybackStateChanged PlaystateDelegate;
 
 	UPROPERTY(BlueprintReadWrite,VisibleAnywhere, Category = "BK Music")
 	UAudioComponent* AudioComponent;
@@ -36,4 +40,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
+
+
+	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
 };

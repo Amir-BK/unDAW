@@ -21,7 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSeekEvent, float, NewSeek);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTrackSelectedEvent, bool, selected, int, trackID);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGridQuantizationUnitChanged, EMusicTimeSpanOffsetUnits, NewQuantizationUnit);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 
 /**
 * This is the 

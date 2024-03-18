@@ -46,3 +46,8 @@ void AMusicScenePlayerActor::UpdateWatchers()
 {
 	GeneratorHandle->UpdateWatchers();
 }
+
+FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
+{
+	return &PlaystateDelegate;
+}
