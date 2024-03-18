@@ -12,6 +12,7 @@
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "HarmonixMidi/MidiFile.h"
 #include "HarmonixMidi/MusicTimeSpan.h"
+#include "Engine/DataAsset.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);

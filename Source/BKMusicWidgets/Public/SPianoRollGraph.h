@@ -29,6 +29,7 @@
 
 struct FLinkedMidiEvents;
 
+
 struct FPianoRollKeyLines
 {
 public:

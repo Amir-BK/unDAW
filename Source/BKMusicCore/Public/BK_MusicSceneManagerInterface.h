@@ -4,10 +4,53 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "HarmonixMidi/BarMap.h"
+#include "Sound/SoundWave.h"
+#include "Curves/RichCurve.h"
+
+#include "Curves/RealCurve.h"
+#include "Engine/DataAsset.h"
+#include "Curves/CurveFloat.h"
 
 #include "BK_MusicSceneManagerInterface.generated.h"
 
+USTRUCT(BlueprintType)
+struct FTimeStamppedWavContainer {
+	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
+	FMusicTimestamp TimeStamp;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr <USoundWave> SoundWave;
+
+};
+
+USTRUCT(BlueprintType)
+struct FTimeStamppedCurveContainer {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FMusicTimestamp TimeStamp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr <UCurveFloat> Curve;
+
+};
+
+UCLASS(BlueprintType, EditInlineNew)
+class UDAWSequencerData : public UDataAsset
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
+
+};
 
 UENUM(BlueprintType)
 enum EBKTransportCommands : uint8

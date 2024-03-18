@@ -45,6 +45,7 @@ enum EBKKeyActions : uint8
 
 };
 
+//Data asset class used to make key binds customizable for should probably only be invoked by the editor widget...
 UCLASS(BlueprintType)
 class BKMUSICWIDGETS_API UBKEditorUtilsKeyboardMappings : public UDataAsset
 {
@@ -57,6 +58,7 @@ public:
 
 };
 
+//TODO: needs major refactoring 
 UENUM(BlueprintType)
 enum EPianoRollEditorMouseMode
 {
@@ -92,6 +94,7 @@ struct FLinkedMidiEvents
 	FMidiEvent EndEvent;
 };
 
+//An interface allowing content slate widgets to pass info back to the parent widget which may sync multiple widgets
 UINTERFACE(BlueprintType)
 class BKMUSICWIDGETS_API UTimeSyncedPanel : public UInterface
 {

@@ -42,7 +42,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundEngine",
                 "MetasoundGraphCore",
 				"MetasoundFrontend",
-				"AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix",
+				"AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
 				
                 
              
