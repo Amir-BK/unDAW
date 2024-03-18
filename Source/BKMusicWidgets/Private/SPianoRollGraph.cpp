@@ -153,13 +153,14 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 		//to track the playhead accurately we want to calculate the delta audio time, but due to some quirks with unreal
 		//we can't rely on the audio time measurement if the user interacts with the GUI, so if we're playing and suddenly the audio delta is 0,
 		//such as what happens when the user pans the graph, then we fall back on the normal delta time.
-			if (AudioTime - LastMeasuredAudioTime > 0)
-			{
-				parentMidiEditor->AddDeltaToTimeLine(AudioTime - LastMeasuredAudioTime);
-			}
-			else {
-				parentMidiEditor->AddDeltaToTimeLine(InDeltaTime);
-			}
+			//if (AudioTime - LastMeasuredAudioTime > 0)
+			//{
+			//	parentMidiEditor->AddDeltaToTimeLine(AudioTime - LastMeasuredAudioTime);
+			//}
+			//else {
+			//	parentMidiEditor->AddDeltaToTimeLine(InDeltaTime);
+			//}
+			//UE_LOG(LogTemp,Log, TEXT("Audio Time: %f, Previous Measurement: %f, Audio Delta Time: %f"), AudioTime, LastMeasuredAudioTime, AudioTime - LastMeasuredAudioTime)
 			break;
 		case Seeking:
 			break;

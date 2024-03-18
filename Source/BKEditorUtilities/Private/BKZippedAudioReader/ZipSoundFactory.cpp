@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "ZipSoundFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Audio.h"
