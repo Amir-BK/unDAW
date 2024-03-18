@@ -55,6 +55,11 @@
 		{
 			"Name": "MIDIDevice",
 			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
 		}
+
 	]
 }
