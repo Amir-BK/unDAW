@@ -259,7 +259,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
 	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
 	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
-	ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
+	//ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
 
@@ -801,7 +801,7 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(local.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].UpdateNotePitch(static_cast<uint8>(hoveredPitch));
 	UE_LOG(LogTemp, Log, TEXT("Time before we destroy it %f, after %d"), slotMap[selectedNoteMapIndex].time, ValueAtMouseCursorPostSnapping)
-	slotMap[selectedNoteMapIndex].UpdateNoteStartTime(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping));
+	slotMap[selectedNoteMapIndex].UpdateNoteStartTime(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping), ValueAtMouseCursorPostSnapping);
 	
 
 	
@@ -830,16 +830,20 @@ void SPianoRollGraph::StopDraggingNote()
 		//add new events
 		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
 		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->EndEvent);
+		HarmonixMidiFile->GetTrack(trackID)->Sort();
+		//HarmonixMidiFile->GetTrack(trackID)->
+	
 
-
+		//HarmonixMidiFile->
 		//remove existing note using event index
-		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
 		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->EndIndex);
-
+		//HarmonixMidiFile->GetTrack(trackID)->Sort();
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
+		//HarmonixMidiFile->GetTrack(trackID)->Sort();
 	
 		//call all the sorting functions I could find
-		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		//HarmonixMidiFile->SortAllTracks();
+		
+		HarmonixMidiFile->SortAllTracks();
 		HarmonixMidiFile->TracksChanged();
 		HarmonixMidiFile->MarkPackageDirty();
 

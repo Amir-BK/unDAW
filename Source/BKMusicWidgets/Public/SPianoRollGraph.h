@@ -78,9 +78,11 @@ public:
 		MidiNoteData->EndEvent.SetMsg(newEndMessage);
 	}
 
-	void UpdateNoteStartTime(float newTime)
+	void UpdateNoteStartTime(float newTime, int32 newTick)
 	{
 		time = newTime;
+		MidiNoteData->StartEvent = FMidiEvent(newTick, MidiNoteData->StartEvent.GetMsg());
+		MidiNoteData->EndEvent = FMidiEvent(newTick, MidiNoteData->EndEvent.GetMsg());
 	}
 };
 
