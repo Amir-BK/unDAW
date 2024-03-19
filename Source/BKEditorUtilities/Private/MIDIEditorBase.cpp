@@ -314,7 +314,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 				{
 					for (const auto& foundPair : notes)
 					{
-						PianoRollGraph->AddNote(*foundPair, numTracks);
+						PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
 					}
 				}
 				numTracks++;
@@ -341,6 +341,8 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
 
 	donePopulatingDelegate.Broadcast();
+
+	PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
 }
 
 void UMIDIEditorBase::UpdateDataAsset()

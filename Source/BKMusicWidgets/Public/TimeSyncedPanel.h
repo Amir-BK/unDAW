@@ -10,13 +10,14 @@
 #include <BK_MusicSceneManagerInterface.h>
 #include <HarmonixDsp/FusionSampler/FusionPatch.h>
 #include <HarmonixDsp/Public/HarmonixDsp/FusionSampler/FusionPatch.h>
-#include "Sound/QuartzQuantizationUtilities.h"
 #include <TimeSyncedPanel.Generated.h>
 
 // This class does not need to be modified.
 
 //DECLARE_DELEGATE_OneParam(FOnTransportChanged, EBKPlayState, newTransportState);
 //DECLARE_DELEGATE_OneParam(FOnPianoRollSeekChanged, float, newSeekValue)
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNeedReinit);
 
 
 UENUM(BlueprintType)

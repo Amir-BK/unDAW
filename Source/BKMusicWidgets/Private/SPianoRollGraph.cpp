@@ -55,12 +55,12 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 	vertLine.Add(FVector2f(0.0f, 128 * rowHeight));
 
 }
-void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
+void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot, int inInternalMidiTrackID)
 
 {
 	MidiSongMap = HarmonixMidiFile->GetSongMaps();
 	auto newSlot = FZoomablePanelSlotContainer(&inNote, inTrackSlot);
-	//newSlot
+	newSlot.trackindexInHarmonixMidi = inInternalMidiTrackID;
 	newSlot.time = MidiSongMap->TickToMs(inNote.StartEvent.GetTick());
 	newSlot.duration = MidiSongMap->TickToMs(inNote.EndEvent.GetTick()) - newSlot.time ;
 
@@ -74,7 +74,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 
 	FString noteName = UEngravingSubsystem::pitchNumToStringRepresentation(inNote.StartEvent.GetMsg().Data1);
 	TSharedPtr<SMidiNoteContainer> TempButton;
-	FString tooltext = FString::Printf(TEXT("Time in miliseconds %f \n Pitch: %d \n Velocity: %f, Name: %s"), newSlot.time, inNote.StartEvent.GetMsg().Data1, velocity, *noteName);
+	FString tooltext = FString::Printf(TEXT("Time in miliseconds %f \n Pitch: %d \n Velocity: %f, Name: %s \n TrackID: %d"), newSlot.time, inNote.StartEvent.GetMsg().Data1, velocity, *noteName, inInternalMidiTrackID);
 	
 
 	RootConstraintCanvas->AddSlot()
@@ -777,7 +777,7 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	
 
 	
-	//HarmonixMidiFile->SortAllTracks();
+	
 
 	
 }
@@ -785,23 +785,42 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 void SPianoRollGraph::StopDraggingNote()
 {
 
-	if(PerformanceComponent->IsValidLowLevel())	PerformanceComponent->Stop();
-
 	auto& data = slotMap[selectedNoteMapIndex];
+	const int& trackID = slotMap[selectedNoteMapIndex].trackindexInHarmonixMidi;
+
+	//stop and destroy the audio component if it exists and playing
+	if (PerformanceComponent != nullptr && PerformanceComponent->IsValidLowLevel()) {
+		PerformanceComponent->Stop();
+		//destroy it
+		PerformanceComponent->DestroyComponent();
+	}
+
 	
+	if (HarmonixMidiFile->CanModify())
+	{
 
-	//HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetEvent(data.MidiNoteData->StartIndex);
-	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
-	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->EndIndex);
-		//Remove(slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent);
-	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->AddEvent(data.MidiNoteData->StartEvent);
-	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->AddEvent(data.MidiNoteData->EndEvent);
-	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->Sort();
+		//add new events
+		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
+		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->EndEvent);
 
-	HarmonixMidiFile->TracksChanged();
-	//HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->
-	//HarmonixMidiFile->
-	HarmonixMidiFile->MarkPackageDirty();
+
+		//remove existing note using event index
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->EndIndex);
+
+	
+		//call all the sorting functions I could find
+		//HarmonixMidiFile->GetTrack(trackID)->Sort();
+		//HarmonixMidiFile->SortAllTracks();
+		HarmonixMidiFile->TracksChanged();
+		HarmonixMidiFile->MarkPackageDirty();
+
+		NeedsRinitDelegate.Broadcast();
+	}
+	else {
+		UE_LOG(LogTemp,Log, TEXT("can't modify MIDI file"))
+	}
+
 }
 
 

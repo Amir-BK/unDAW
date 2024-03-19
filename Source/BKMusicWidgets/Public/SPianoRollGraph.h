@@ -31,6 +31,7 @@
 struct FLinkedMidiEvents;
 
 
+
 struct FPianoRollKeyLines
 {
 public:
@@ -49,7 +50,7 @@ public:
 	int32 trackID = -1;
 	float drawLength = 0;
 
-	int32 indexInHarmonixMidi = -1;
+	int32 trackindexInHarmonixMidi = -1;
 	
 	int SelectedTrackID = -1;
 
@@ -219,10 +220,12 @@ public:
 	EMusicTimeSpanOffsetUnits QuantizationGridUnit = EMusicTimeSpanOffsetUnits::Beats;
 	EBKPlayState TransportPlaystate;
 
+	FNeedReinit NeedsRinitDelegate;
+
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo GridFont;
 
-	void AddNote(FLinkedMidiEvents& inNote, int inTrackSlot = 0);
+	void AddNote(FLinkedMidiEvents& inNote, int inTrackSlot = 0, int inInternalMidiTrackID = -1);
 	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
