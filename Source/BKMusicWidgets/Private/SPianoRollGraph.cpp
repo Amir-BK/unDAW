@@ -4,7 +4,7 @@
 #include "SPianoRollGraph.h"
 #include "SlateOptMacros.h"
 #include "Logging/StructuredLog.h"
-//#include <SMidiNoteContainer.h>
+#include <SMidiNoteContainer.h>
 //#include <BKMusicWidgets.h>
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -72,7 +72,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 	float velocity = inNote.StartEvent.GetMsg().Data2;
 
 	FString noteName = UEngravingSubsystem::pitchNumToStringRepresentation(inNote.StartEvent.GetMsg().Data1);
-	TSharedPtr<SColorBlock> TempButton;
+	TSharedPtr<SMidiNoteContainer> TempButton;
 	FString tooltext = FString::Printf(TEXT("Time in miliseconds %f \n Pitch: %d \n Velocity: %f, Name: %s"), newSlot.time, inNote.StartEvent.GetMsg().Data1, velocity, *noteName);
 	
 
@@ -92,7 +92,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 		.ZOrder(inTrackSlot)
 		.Expose(newSlot.slotPointer)
 		[
-			SAssignNew(TempButton, SColorBlock)
+			SAssignNew(TempButton, SMidiNoteContainer)
 
 				.ToolTipText(FText::FromString(tooltext))
 				.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&, data = inTrackSlot, data2 = newSlot]() {
@@ -110,11 +110,11 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 					
 					})))
 				.CornerRadius(FVector4(1.0f, 1.0f, 1.0f, 1.0f))
-				//.UIDinParent(totalNotes)
+				.UIDinParent(totalNotes)
 
 		];
 
-	//TempButton.Get()->SetParentSharedPtr(selfSharedPtr);
+	TempButton.Get()->SetParentSharedPtr(selfSharedPtr);
 	slotMap.Add(totalNotes, newSlot);
 
 }

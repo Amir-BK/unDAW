@@ -16,8 +16,8 @@ UENUM(BlueprintType)
 enum ETrackRendererMode : uint8
 {
 	FusionPatch,
-	CustomPatch
-
+	CustomPatch,
+	NoAudio
 };
 
 // struct that describes some crucial settings used to set up a MIDI track in the render metasound built by the Meta Sound Graph Builder

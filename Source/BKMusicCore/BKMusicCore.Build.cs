@@ -11,12 +11,12 @@ public class BKMusicCore : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		
-        PublicIncludePaths.AddRange(
+		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 				//engine_path + "Plugins/Runtime/Metasound/Source/MetasoundEngine/",
-                //engine_path + "Plugins/Runtime/Metasound/Source/MetasoundEngine/Private/",
-            }
+				//engine_path + "Plugins/Runtime/Metasound/Source/MetasoundEngine/Private/",
+			}
 			);
 				
 		
@@ -24,28 +24,28 @@ public class BKMusicCore : ModuleRules
 			new string[] {
 				// ... add other private include paths required here ...
 				
-            }
+			}
 			);
 
-        //PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "../ThirdParty/Sfizz/"));
-        
+		//PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "../ThirdParty/Sfizz/"));
+		
 
 
-        PublicDependencyModuleNames.AddRange(
+		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Core",
 				"Json",
 				"JsonUtilities",
-                "AudioMixer",
-                "AppFramework",
-                "MetasoundEngine",
-                "MetasoundGraphCore",
+				"AudioMixer",
+				"AppFramework",
+				"MetasoundEngine",
+				"MetasoundGraphCore",
 				"MetasoundFrontend",
 				"AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
 				
-                
-             
+				
+			 
 				// ... add other public dependencies that you statically link with here ...
 			}
 
@@ -61,16 +61,16 @@ public class BKMusicCore : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UMG",
-                "Projects",
-                "InputCore",
-                "SignalProcessing"
+				"Projects",
+				"InputCore",
+				"SignalProcessing"
  
-                
+				
 
 
 				// ... add private dependencies that you statically link with here ...	
 			}
-            );
+			);
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(
@@ -78,7 +78,7 @@ public class BKMusicCore : ModuleRules
 			{
 				// ... add any modules that your module loads dynamically here ...
 				
-            }
+			}
 			);
 	}
 }

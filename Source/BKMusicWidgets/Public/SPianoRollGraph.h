@@ -24,6 +24,7 @@
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"
 #include "HarmonixMidi/MusicTimeSpan.h"
+//#include "SMidiNoteContainer.h"
 
 //#define PIANO_ROLL_DEBUG
 

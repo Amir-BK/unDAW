@@ -13,6 +13,7 @@
 
 #include "SMidiTrackControlsWidget.h"
 
+DEFINE_LOG_CATEGORY(BKMidiLogs);
 
 void UMIDIEditorBase::SetCurrentTimelinePosition(float inPosition)
 {
@@ -86,7 +87,7 @@ void UMIDIEditorBase::SetWorldContextObject(UObject* InWorldContextObject)
 
 void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
 {
-
+	SceneManager = InSceneManager;
 }
 
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)
@@ -234,17 +235,19 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 				break;
 			case FMidiMsg::EType::Tempo:
-				UE_LOG(LogTemp,Log, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
+				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
 					//MidiEvent.GetMsg().Data1
+					TempoEvents.Add(MidiEvent);
 				break;
 			case FMidiMsg::EType::TimeSig:
-				UE_LOG(LogTemp, Log, TEXT("We receive a time signature event!"))
+				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a time signature event!"))
+					TimeSignatureEvents.Add(MidiEvent);
 				break;
 			case FMidiMsg::EType::Text:
-				UE_LOG(LogTemp, Log, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
+				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
 				break;
 			case FMidiMsg::EType::Runtime:
-				UE_LOG(LogTemp, Log, TEXT("We receive a runtime event???"))
+				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a runtime event???"))
 				break;
 			}
 
@@ -255,7 +258,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		
 		if(channelsMap.IsEmpty()) continue;
 
-		UE_LOG(LogTemp, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
+		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
 			
 			bool hasCache = IsValid(MidiEditorCache.Get()) && MidiEditorCache->TracksData.Contains(HarmonixMidiFile->GetFName());
 
@@ -463,6 +466,17 @@ TMap<int32, UFusionPatch*> UMIDIEditorBase::GetTracksMap()
 	}
 	
 	return newTrackMap;
+}
+
+void UMIDIEditorBase::InitAudioBlock()
+{
+	if (SceneManager == nullptr)
+	{
+		UE_LOG(BKMidiLogs, Verbose, TEXT("Initializing Audio Block with no Scene Manager, Editor Preview Only"))
+	}
+	else {
+		UE_LOG(BKMidiLogs, Verbose, TEXT("Initializing Audio Block for Scene Manager Actor: %s"), *SceneManager.GetObject()->GetName())
+	}
 }
 
 TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()

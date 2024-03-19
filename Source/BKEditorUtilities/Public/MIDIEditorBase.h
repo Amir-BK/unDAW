@@ -13,6 +13,7 @@
 #include "HarmonixMidi/MidiFile.h"
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Engine/DataAsset.h"
+#include "Interfaces/MetasoundOutputFormatInterfaces.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -161,6 +162,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	TMap<int32, UFusionPatch*> GetTracksMap();
 
+	// Must be called after making any changes that require rebuilding the metasound
+	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
+	void InitAudioBlock();
+
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	UPARAM(ref) TArray<FTrackDisplayOptions>& GetTrackDisplayOptions();
 
@@ -238,6 +243,10 @@ public:
 	void SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantization);
 
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+	EMetaSoundOutputAudioFormat OutputFormat;
+
 protected:
 
 	//~ Begin UWidget Interface
@@ -246,6 +255,13 @@ protected:
 
 
 	//~ End UWidget Interface
+
+	//this is a reference to the actor implementing the music scene manager interface, if this is null we'll be playing in preview only
+	UPROPERTY()
+	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager;
+
+	TArray<FMidiEvent> TempoEvents;
+	TArray<FMidiEvent> TimeSignatureEvents;
 
 	bool bSnapToQuantizationBorder = true;
 
@@ -267,7 +283,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI|Interface")
 	TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
 
-	
 	
 	
 };
