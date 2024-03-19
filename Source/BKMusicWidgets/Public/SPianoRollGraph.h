@@ -51,6 +51,9 @@ public:
 	float drawLength = 0;
 
 	int32 trackindexInHarmonixMidi = -1;
+
+
+
 	
 	int SelectedTrackID = -1;
 
@@ -73,6 +76,11 @@ public:
 		MidiNoteData->StartEvent.SetMsg(newStartMessage);
 		//MidiNoteData->StartEvent
 		MidiNoteData->EndEvent.SetMsg(newEndMessage);
+	}
+
+	void UpdateNoteStartTime(float newTime)
+	{
+		time = newTime;
 	}
 };
 
@@ -201,6 +209,8 @@ public:
 	SPianoRollGraph() = default;
 	FString PluginDir;
 	TCHAR CursorString;
+
+	int32 ValueAtMouseCursorPostSnapping;
 
 	float horizontalZoom = 0.2f;
 	float hZoomTarget = horizontalZoom;

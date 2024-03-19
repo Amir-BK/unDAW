@@ -167,7 +167,7 @@ FReply SMidiNoteContainer::OnMouseMove(const FGeometry& MyGeometry, const FPoint
 	if (parentPianoRollPanel->isNotePressed)
 		{
 		parentPianoRollPanel->DragNote(MouseEvent);
-		return FReply::Handled();
+		return FReply::Unhandled();
 		}
 	return FReply::Unhandled();
 }

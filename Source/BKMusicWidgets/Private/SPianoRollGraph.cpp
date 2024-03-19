@@ -9,6 +9,73 @@
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
+
+// internal function that converts between the enum types
+EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inTimeSpan)
+{
+	switch (inTimeSpan)
+	{
+	case EMusicTimeSpanOffsetUnits::Ms:
+		return EMidiClockSubdivisionQuantization::Beat;
+		break;
+	case EMusicTimeSpanOffsetUnits::Bars:
+		EMidiClockSubdivisionQuantization::Bar;
+		break;
+	case EMusicTimeSpanOffsetUnits::Beats:
+		return EMidiClockSubdivisionQuantization::Beat;
+		break;
+	case EMusicTimeSpanOffsetUnits::ThirtySecondNotes:
+		return	EMidiClockSubdivisionQuantization::ThirtySecondNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::SixteenthNotes:
+		return EMidiClockSubdivisionQuantization::SixteenthNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::EighthNotes:
+		return EMidiClockSubdivisionQuantization::EighthNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::QuarterNotes:
+		return EMidiClockSubdivisionQuantization::QuarterNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::HalfNotes:
+		return EMidiClockSubdivisionQuantization::HalfNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::WholeNotes:
+		return EMidiClockSubdivisionQuantization::WholeNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::DottedSixteenthNotes:
+		return EMidiClockSubdivisionQuantization::DottedSixteenthNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::DottedEighthNotes:
+		return EMidiClockSubdivisionQuantization::DottedEighthNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::DottedQuarterNotes:
+		return EMidiClockSubdivisionQuantization::DottedQuarterNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::DottedHalfNotes:
+		return EMidiClockSubdivisionQuantization::DottedHalfNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::DottedWholeNotes:
+		return EMidiClockSubdivisionQuantization::DottedWholeNote;
+		break;
+	case EMusicTimeSpanOffsetUnits::SixteenthNoteTriplets:
+		return EMidiClockSubdivisionQuantization::SixteenthNoteTriplet;
+		break;
+	case EMusicTimeSpanOffsetUnits::EighthNoteTriplets:
+		return EMidiClockSubdivisionQuantization::EighthNoteTriplet;
+		break;
+	case EMusicTimeSpanOffsetUnits::QuarterNoteTriplets:
+		return EMidiClockSubdivisionQuantization::QuarterNoteTriplet;
+		break;
+	case EMusicTimeSpanOffsetUnits::HalfNoteTriplets:
+		return EMidiClockSubdivisionQuantization::HalfNoteTriplet;
+		break;
+	default:
+		break;
+	}
+
+	return EMidiClockSubdivisionQuantization::Beat;
+}
+
 	
 void SPianoRollGraph::Construct(const FArguments& InArgs)
 {	
@@ -183,6 +250,19 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	positionOffset.X = FMath::Min(positionOffset.X, 0.0f);
 
+
+
+
+	//update cursor and the such 
+	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
+	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
+	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
+	if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+
+
 }
 void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 {
@@ -212,6 +292,8 @@ void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 		CursorTest = FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(0xF00E);
 		break;
 	}
+
+
 }
 void SPianoRollGraph::AddHorizontalX(float inputX)
 {
@@ -260,72 +342,6 @@ void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::C
 {
 		RecalcGrid();
 };
-
-// internal function that converts between the enum types
-EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inTimeSpan)
-{
-	switch (inTimeSpan)
-	{
-	case EMusicTimeSpanOffsetUnits::Ms:
-		return EMidiClockSubdivisionQuantization::Beat;
-		break;
-	case EMusicTimeSpanOffsetUnits::Bars:
-		EMidiClockSubdivisionQuantization::Bar;
-		break;
-	case EMusicTimeSpanOffsetUnits::Beats:
-		return EMidiClockSubdivisionQuantization::Beat;
-		break;
-	case EMusicTimeSpanOffsetUnits::ThirtySecondNotes:
-		return	EMidiClockSubdivisionQuantization::ThirtySecondNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::SixteenthNotes:
-		return EMidiClockSubdivisionQuantization::SixteenthNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::EighthNotes:
-		return EMidiClockSubdivisionQuantization::EighthNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::QuarterNotes:
-		return EMidiClockSubdivisionQuantization::QuarterNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::HalfNotes:
-		return EMidiClockSubdivisionQuantization::HalfNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::WholeNotes:
-		return EMidiClockSubdivisionQuantization::WholeNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::DottedSixteenthNotes:
-		return EMidiClockSubdivisionQuantization::DottedSixteenthNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::DottedEighthNotes:
-		return EMidiClockSubdivisionQuantization::DottedEighthNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::DottedQuarterNotes:
-		return EMidiClockSubdivisionQuantization::DottedQuarterNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::DottedHalfNotes:
-		return EMidiClockSubdivisionQuantization::DottedHalfNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::DottedWholeNotes:
-		return EMidiClockSubdivisionQuantization::DottedWholeNote;
-		break;
-	case EMusicTimeSpanOffsetUnits::SixteenthNoteTriplets:
-		return EMidiClockSubdivisionQuantization::SixteenthNoteTriplet;
-		break;
-	case EMusicTimeSpanOffsetUnits::EighthNoteTriplets:
-		return EMidiClockSubdivisionQuantization::EighthNoteTriplet;
-		break;
-	case EMusicTimeSpanOffsetUnits::QuarterNoteTriplets:
-		return EMidiClockSubdivisionQuantization::QuarterNoteTriplet;
-		break;
-	case EMusicTimeSpanOffsetUnits::HalfNoteTriplets:
-		return EMidiClockSubdivisionQuantization::HalfNoteTriplet;
-		break;
-	default:
-		break;
-	}
-
-	return EMidiClockSubdivisionQuantization::Beat;
-}
 
 void SPianoRollGraph::RecalcGrid()
 {
@@ -658,14 +674,14 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//mouse crosshairs
 	FLinearColor trackColor = selectedTrackIndex >= 0 ? parentMidiEditor->GetTracksDisplayOptions(selectedTrackIndex).trackColor : FLinearColor::White;
 
-	//ugly code, can't be in the paint event, needs to be in the mouse move or tick methods. 
-	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
-	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
-	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
-	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
-	auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
-	if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+	////ugly code, can't be in the paint event, needs to be in the mouse move or tick methods. 
+	//int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+	//int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
+	//int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+	//int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
+	//int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
+	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
 #ifdef PIANO_ROLL_DEBUG
 
@@ -748,7 +764,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//snapped mouse cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,
 		LayerId,
-		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(PrevSubDivTick)* horizontalZoom, 0))),
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping)* horizontalZoom, 0))),
 		vertLine,
 		ESlateDrawEffect::None,
 		FLinearColor(255, 0, 255),
@@ -771,9 +787,21 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 
 	auto abs = MouseEvent.GetScreenSpacePosition();
 	auto local = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
+
+	//update cursor and the such 
+	int tickAtMouse = MidiSongMap->MsToTick(local.X / horizontalZoom);
+	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
+	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
+	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
+	if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+
 	hoveredPitch = 127 - FMath::Floor(local.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(local.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].UpdateNotePitch(static_cast<uint8>(hoveredPitch));
+	UE_LOG(LogTemp, Log, TEXT("Time before we destroy it %f, after %d"), slotMap[selectedNoteMapIndex].time, ValueAtMouseCursorPostSnapping)
+	slotMap[selectedNoteMapIndex].UpdateNoteStartTime(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping));
 	
 
 	
@@ -815,7 +843,7 @@ void SPianoRollGraph::StopDraggingNote()
 		HarmonixMidiFile->TracksChanged();
 		HarmonixMidiFile->MarkPackageDirty();
 
-		NeedsRinitDelegate.Broadcast();
+		//NeedsRinitDelegate.Broadcast();
 	}
 	else {
 		UE_LOG(LogTemp,Log, TEXT("can't modify MIDI file"))
