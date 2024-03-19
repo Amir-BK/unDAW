@@ -60,6 +60,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot)
 {
 	MidiSongMap = HarmonixMidiFile->GetSongMaps();
 	auto newSlot = FZoomablePanelSlotContainer(&inNote, inTrackSlot);
+	//newSlot
 	newSlot.time = MidiSongMap->TickToMs(inNote.StartEvent.GetTick());
 	newSlot.duration = MidiSongMap->TickToMs(inNote.EndEvent.GetTick()) - newSlot.time ;
 
@@ -773,18 +774,34 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	hoveredPitch = 127 - FMath::Floor(local.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(local.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].UpdateNotePitch(static_cast<uint8>(hoveredPitch));
-
-	HarmonixMidiFile->GetTrack(1)->GetRawEvents().Remove(slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent);
-	HarmonixMidiFile->GetTrack(1)->AddEvent(slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent);
-	HarmonixMidiFile->GetTrack(1)->Sort();
 	
-	HarmonixMidiFile->TracksChanged();
-	//HarmonixMidiFile->
-	HarmonixMidiFile->MarkPackageDirty();
+
 	
 	//HarmonixMidiFile->SortAllTracks();
 
 	
+}
+
+void SPianoRollGraph::StopDraggingNote()
+{
+
+	if(PerformanceComponent->IsValidLowLevel())	PerformanceComponent->Stop();
+
+	auto& data = slotMap[selectedNoteMapIndex];
+	
+
+	//HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetEvent(data.MidiNoteData->StartIndex);
+	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
+	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->EndIndex);
+		//Remove(slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent);
+	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->AddEvent(data.MidiNoteData->StartEvent);
+	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->AddEvent(data.MidiNoteData->EndEvent);
+	HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->Sort();
+
+	HarmonixMidiFile->TracksChanged();
+	//HarmonixMidiFile->GetTrack(slotMap[selectedNoteMapIndex].trackID)->
+	//HarmonixMidiFile->
+	HarmonixMidiFile->MarkPackageDirty();
 }
 
 

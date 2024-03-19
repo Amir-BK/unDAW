@@ -81,9 +81,12 @@ enum EPianoRollEditorMouseMode
 //USTRUCT()
 struct FLinkedMidiEvents
 {
-	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent)
+	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 StartIndex, const int32 Endindex)
 		: StartEvent(StartEvent),
-		  EndEvent(EndEvent)
+		  EndEvent(EndEvent),
+		StartIndex(StartIndex),
+		EndIndex(EndIndex)
+		
 	{
 	}
 
@@ -92,6 +95,8 @@ struct FLinkedMidiEvents
 
 	FMidiEvent StartEvent;
 	FMidiEvent EndEvent;
+	int32 StartIndex;
+	int32 EndIndex;
 };
 
 //An interface allowing content slate widgets to pass info back to the parent widget which may sync multiple widgets

@@ -48,6 +48,8 @@ public:
 	SConstraintCanvas::FSlot* slotPointer;
 	int32 trackID = -1;
 	float drawLength = 0;
+
+	int32 indexInHarmonixMidi = -1;
 	
 	int SelectedTrackID = -1;
 
@@ -325,6 +327,7 @@ public:
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
 	void DragNote(const FPointerEvent& MouseEvent);
+	void StopDraggingNote();
 
 	
 	SPianoRollGraph* pointerToSelf;

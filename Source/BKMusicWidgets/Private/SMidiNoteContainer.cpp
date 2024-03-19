@@ -134,6 +134,7 @@ FReply SMidiNoteContainer::OnMouseButtonUp(const FGeometry& MyGeometry, const FP
 	//parentSharedRef->isNotePressed = false;
 	//parentGraph->isNotePressed = false;
 	parentPianoRollPanel->isNotePressed = false;
+	parentPianoRollPanel->StopDraggingNote();
 	//parentGraph->selectedNoteMapIndex = UniqueIDinParent.Get();
 	
 	

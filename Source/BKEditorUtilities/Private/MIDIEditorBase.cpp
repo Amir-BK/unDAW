@@ -15,6 +15,12 @@
 
 DEFINE_LOG_CATEGORY(BKMidiLogs);
 
+struct FEventsWithIndex
+{
+	FMidiEvent event;
+	int32 eventIndex;
+};
+
 void UMIDIEditorBase::SetCurrentTimelinePosition(float inPosition)
 {
 	currentTimelineCursorPosition = inPosition;
@@ -194,29 +200,37 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		
 		TMap<int, TArray<FLinkedMidiEvents*>> channelsMap;
 		
-		TArray<FLinkedMidiEvents*> linkedNotes;
-		TMap<int32, FMidiEvent> unlinkedNotes;
 		
+
+		TArray<FLinkedMidiEvents*> linkedNotes;
+		//TMap<int32, FMidiEvent> unlinkedNotes;
+		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
+		
+		//track.GetEvent(32)
+
 		// sort events, right now only notes 
-		for (const auto& MidiEvent : track.GetEvents())
+		for (int32 index = 0; const auto& MidiEvent : track.GetEvents())
 		{
 			switch(MidiEvent.GetMsg().Type) {
 			case FMidiMsg::EType::Std:
 				if(MidiEvent.GetMsg().IsNoteOn())
 				{
-					unlinkedNotes.Add(MidiEvent.GetMsg().GetStdData1(), MidiEvent);
+					//unlinkedNotes.Add(MidiEvent.GetMsg().GetStdData1(), MidiEvent);
+					unlinkedNotesIndexed.Add(MidiEvent.GetMsg().GetStdData1(), FEventsWithIndex{ MidiEvent, index });
 				};
 
 				if(MidiEvent.GetMsg().IsNoteOff())
 				{
-					if(unlinkedNotes.Contains(MidiEvent.GetMsg().GetStdData1()))
+					if(unlinkedNotesIndexed.Contains(MidiEvent.GetMsg().GetStdData1()))
 					{
 						const int midiChannel = MidiEvent.GetMsg().GetStdChannel();
 						//MidiEvent.GetMsg().
-						if (midiChannel == unlinkedNotes[MidiEvent.GetMsg().GetStdData1()].GetMsg().GetStdChannel())
+						//unlinkedNotesIndexed
+						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
 						{
 							
-							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotes[MidiEvent.GetMsg().GetStdData1()], MidiEvent);
+							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
+								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
 							linkedNotes.Add(foundPair);
 							// sort the tracks into channels
 							if (channelsMap.Contains(midiChannel))
@@ -251,7 +265,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 				break;
 			}
 
-
+			++index;
 		
 		}
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
