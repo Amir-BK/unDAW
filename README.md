@@ -34,6 +34,7 @@ Editor widget for editing midifiles and creating Unreal DAW musical scenes in th
 # Depenencies & third parties
 All third party resources include their original licensing documents in the resources folder for the plugin, these should be included when used as per the specifications of the original licenses 
 - SMUFL Fonts - Bravura
-- SIMPLE UI icons 
+- SIMPLE UI icons
+- https://github.com/steinbergmedia/petaluma
 
 
