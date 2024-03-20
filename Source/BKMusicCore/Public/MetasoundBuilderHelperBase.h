@@ -25,5 +25,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
 	EMetaSoundOutputAudioFormat OutputFormat;
 
+	UPROPERTY(BlueprintReadOnly)
+	UMetaSoundBuilderSubsystem* MSBuilderSystem;
+
 
 };

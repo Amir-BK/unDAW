@@ -6,4 +6,6 @@
 void UMetasoundBuilderHelperBase::InitBuilderHelepr()
 {
 	UE_LOG(LogTemp,Log, TEXT("Test"))
+
+	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 }

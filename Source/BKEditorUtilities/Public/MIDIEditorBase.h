@@ -244,7 +244,7 @@ public:
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "BK Music|MIDI")
 	EMetaSoundOutputAudioFormat OutputFormat;
 
 protected:

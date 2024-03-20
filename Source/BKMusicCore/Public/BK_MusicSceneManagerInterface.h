@@ -14,7 +14,7 @@
 
 #include "BK_MusicSceneManagerInterface.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
 struct FTimeStamppedWavContainer {
 	GENERATED_BODY()
 
@@ -26,33 +26,33 @@ struct FTimeStamppedWavContainer {
 
 };
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
 struct FTimeStamppedCurveContainer {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	FMusicTimestamp TimeStamp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	TObjectPtr <UCurveFloat> Curve;
 
 };
 
-UCLASS(BlueprintType, EditInlineNew)
+UCLASS(BlueprintType, EditInlineNew, Category = "unDAW|Music Scene Manager")
 class UDAWSequencerData : public UDataAsset
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
 };
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
 enum EBKTransportCommands : uint8
 {
 	Init,
@@ -67,7 +67,7 @@ enum EBKTransportCommands : uint8
 
 };
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
 enum EBKPlayState : uint8
 {
 	Preparing,
@@ -82,7 +82,7 @@ enum EBKPlayState : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, Blueprintable, BlueprintType)
+UINTERFACE(MinimalAPI, Blueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
 class UBK_MusicSceneManagerInterface : public UInterface
 {
 	GENERATED_BODY()

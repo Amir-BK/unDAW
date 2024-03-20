@@ -68,7 +68,7 @@ namespace FK_SFZ::Metasounds
         inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
         
     public:
-        FFKSFZAudioParameterInterfaces() : FParameterInterface("FlyKick SFZ", {0, 1})
+        FFKSFZAudioParameterInterfaces() : FParameterInterface("unDAW SFZ", {0, 1})
         {
            Inputs.Append(GeneratedInputs);
           }

@@ -38,7 +38,7 @@ Audio::FParameterInterfacePtr FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces
 
 void FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces::RegisterInterface()
 {
-	UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering Flykick SFZ Parameter Interfaces"));
+	UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
 	Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
 	InterfaceRegistry.RegisterInterface(GetInterface());
 }
