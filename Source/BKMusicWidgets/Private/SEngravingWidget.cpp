@@ -159,14 +159,14 @@ void USEngravingWidget::prepare_glyphs()
 					
 					//(notestruct.X) + (7 * (int)(asPitchedEvent->pitch / 12))- (clefOffset + (7 * clefOffsetOctave));
 				glyph->mainGlyph = EGlyphsTypes::Black_Notehead;
-				glyph->accidentalGlyph = notestruct.Y == 1 ? EGlyphsTypes::accidentalSharp : EGlyphsTypes::none;
+				glyph->accidentalGlyph = notestruct.Y == 1 ? EGlyphsTypes::accidentalSharp : EGlyphsTypes::no_glyph;
 				glyph->drawStem = true;
 				glyph->prepareStringRepresentation();
 			}
 			else {
 				glyph->mainGlyph = EGlyphsTypes::Rest_Quarter;
 				glyph->draw_height = 0;
-				glyph->accidentalGlyph = EGlyphsTypes::none;
+				glyph->accidentalGlyph = EGlyphsTypes::no_glyph;
 			}
 
 			prepared_glyph_objects.Push(glyph);
@@ -274,7 +274,7 @@ void USEngravingWidget::DrawGlyphElement(UPreparedGlyph* const& glyph, FSlateWin
 		ESlateDrawEffect::None,
 		GlyphColor);
 
-	if (glyph->accidentalGlyph != EGlyphsTypes::none) {
+	if (glyph->accidentalGlyph != EGlyphsTypes::no_glyph) {
 		FString accidentalGlyph;
 
 		FSlateDrawElement::MakeText(

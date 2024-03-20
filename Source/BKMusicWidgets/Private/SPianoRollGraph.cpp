@@ -19,7 +19,7 @@ EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inT
 		return EMidiClockSubdivisionQuantization::Beat;
 		break;
 	case EMusicTimeSpanOffsetUnits::Bars:
-		EMidiClockSubdivisionQuantization::Bar;
+		return EMidiClockSubdivisionQuantization::Bar;
 		break;
 	case EMusicTimeSpanOffsetUnits::Beats:
 		return EMidiClockSubdivisionQuantization::Beat;

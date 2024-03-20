@@ -7,6 +7,7 @@
 #include "UObject/Interface.h"
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "Engine/DataAsset.h"
+#include "GenericPlatform/GenericPlatform.h"
 #include <BK_MusicSceneManagerInterface.h>
 #include <HarmonixDsp/FusionSampler/FusionPatch.h>
 #include <HarmonixDsp/Public/HarmonixDsp/FusionSampler/FusionPatch.h>
@@ -26,7 +27,7 @@ UENUM(BlueprintType)
 /// </summary>
 enum EBKKeyActions : uint8
 {
-	None,
+	NoAction,
 	DrawModeSwitch,
 	SeekMode,
 	SelectMode,
@@ -82,11 +83,11 @@ enum EPianoRollEditorMouseMode
 //USTRUCT()
 struct FLinkedMidiEvents
 {
-	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 StartIndex, const int32 Endindex)
+	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
 		: StartEvent(StartEvent),
 		  EndEvent(EndEvent),
-		StartIndex(StartIndex),
-		EndIndex(EndIndex)
+		StartIndex(inStartIndex),
+		EndIndex(inEndindex)
 		
 	{
 	}

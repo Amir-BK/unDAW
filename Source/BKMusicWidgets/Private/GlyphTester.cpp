@@ -109,7 +109,7 @@ int32 UGlyphTester::NativePaint(const FPaintArgs& Args, const FGeometry& Allotte
 		//MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.Width;
 		if (MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.anchors.Contains(FName(TEXT("stemUpSE"))))
 		{
-			MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.Width;
+			//MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.Width;
 			auto point = MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.anchors[FName(TEXT("stemUpSE"))];
 			auto point2 = MusicFontDataAsset->glyphs[FName(SelectedGlyphName)].metadata.anchors[FName(TEXT("stemDownNW"))];
 			offsets += point.operator*(FVector2f(staffSpace, -staffSpace));

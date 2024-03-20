@@ -61,7 +61,7 @@ struct FQuantizedDuration
 UENUM(BlueprintType)
 enum EGlyphsTypes
 {
-	none,
+	no_glyph,
 	Black_Notehead,
 	Half_Notehead,
 	Whole_Notehead,

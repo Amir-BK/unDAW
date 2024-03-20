@@ -80,7 +80,7 @@ public:
 	TEnumAsByte<EGlyphsTypes> mainGlyph = EGlyphsTypes::Black_Notehead;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetAccidentalGlyph, meta = (ExposeOnSpawn = "true"), Category = "BK Music|Engraving|Tests")
-	TEnumAsByte<EGlyphsTypes> accidentalGlyph = EGlyphsTypes::none;
+	TEnumAsByte<EGlyphsTypes> accidentalGlyph = EGlyphsTypes::no_glyph;
 
 	// vertical height to draw the note, in staff spaces ((in half staff spaces?)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), Category = "BK Music|Engraving|Tests")

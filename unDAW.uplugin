@@ -18,29 +18,18 @@
 		{
 			"Name": "BKMusicWidgets",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault",
-			"PlatformAllowList": [
-				"Win64",
-				"Mac"
-			]
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "BKMusicCore",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible",
-			"PlatformAllowList": [
-				"Win64",
-				"Mac"
-			]
+			"LoadingPhase": "EarliestPossible"
 		},
 		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible",
-			"PlatformAllowList": [
-				"Win64",
-				"Mac"
-			]
+			"LoadingPhase": "EarliestPossible"
+
 		},
 		{
 			"Name": "BK_EditorUtilities",

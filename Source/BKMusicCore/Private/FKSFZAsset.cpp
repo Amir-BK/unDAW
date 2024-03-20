@@ -71,7 +71,7 @@ USFZGroupedRegions* UFKSFZAsset::GetRegionGroupForNote(bool& bSuccess, int const
 		return nullptr;
 	}
 
-	*notesToGroupsMap.Find(Note);
+	//*notesToGroupsMap.Find(Note);
 	bSuccess = true;
 	
 	return *notesToGroupsMap.Find(Note);
@@ -189,7 +189,7 @@ void USFZRegion::InitializeParams()
 		}else
 		{
 			//assume 48k
-			SFZNormalizedTimedParamsArray.Add(key, static_cast<float>(value/ 48,000));
+			SFZNormalizedTimedParamsArray.Add(key, static_cast<float>(value/ 48000));
 		}
 	
 	}
