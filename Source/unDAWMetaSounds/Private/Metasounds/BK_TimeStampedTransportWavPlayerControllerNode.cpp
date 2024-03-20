@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Amir BK, based on original Engine  Epic Games, Inc. All Rights Reserved.
 
 #include "MetasoundExecutableOperator.h"
 #include "MetasoundFacade.h"
@@ -187,6 +187,7 @@ namespace unDAWMetasound
 				timeStampBlockFrameIndex = -1;
 
 			}
+
 			TickSpans.Empty(8);
 
 			//UE_LOG(LogTemp, Log, TEXT("trigger tick %d"), TriggerTick)
@@ -220,6 +221,8 @@ namespace unDAWMetasound
 					return EMusicPlayerTransportState::Playing;
 
 				case EMusicPlayerTransportState::Seeking:
+
+
 					if (ReceivedSeekWhileStopped())
 					{
 						// Assumes the MidiClock is stopped for the remainder of the block.
@@ -230,16 +233,21 @@ namespace unDAWMetasound
 					{
 						StopOutPin->TriggerFrame(StartFrameIndex);
 						int32 PlayFrameIndex = FMath::Min(StartFrameIndex + 1, EndFrameIndex);
-						if (timeStampBlockFrameIndex >= 0)
+						if (timeStampBlockFrameIndex >= 0 || CurrentTick >= TriggerTick)
 						{
-							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f - (BlockSizeFrames - PlayFrameIndex - timeStampBlockFrameIndex) / SampleRate);
+							
+							
+							const auto startTickTime = MidiClockInPin->GetSongMaps().TickToMs(TriggerTick);
+							float seekTarget = (MidiClockInPin->GetCurrentHiResMs() - startTickTime) * 0.001f  - (BlockSizeFrames - PlayFrameIndex) / SampleRate  ;
+							float unmoddedSeek = (MidiClockInPin->GetCurrentHiResMs()) * 0.001f - (BlockSizeFrames - PlayFrameIndex) / SampleRate;
+							*StartTimeOutPin = FTime(seekTarget);
+							UE_LOG(LogTemp, Log, TEXT("We enter this block, the tick now is %d the tick to seek is %d, offset time %f, original seek %f"), CurrentTick, TriggerTick, seekTarget, unmoddedSeek)
 							PlayOutPin->TriggerFrame(PlayFrameIndex);
 						}
 						else {
-							//bPlaying = false;
-							//StopOutPin->TriggerFrame(StartFrameIndex);
+		
 							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
-							//return EMusicPlayerTransportState::Paused;
+				
 						}
 						// Assumes the MidiClock is playing for the remainder of the block.
 
