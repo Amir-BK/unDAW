@@ -154,6 +154,9 @@ namespace unDAWMetasound
 			bool isEnabled = true;
 			bool AfterStartTimeStamp = false;
 			int32 timeStampBlockFrameIndex = -1;
+
+	
+
 			if (isEnabled)
 			{
 				for (const FTickSpan& Span : TickSpans)
@@ -162,11 +165,27 @@ namespace unDAWMetasound
 					{
 						timeStampBlockFrameIndex = Span.BlockFrameIndex;
 						//this means we hit the timestamp, we need to check if we're before it or after it
-						//UE_LOG(LogTemp, Log, TEXT("TimeStamp Hit? blockFrameIndex %d"), timeStampBlockFrameIndex)
-						AfterStartTimeStamp = true;
+						UE_LOG(LogTemp, Log, TEXT("TimeStamp Hit? blockFrameIndex %d"), timeStampBlockFrameIndex)
+						if (CurrentTick < Span.BlockFrameIndex)
+						{
+							AfterStartTimeStamp = false;
+							timeStampBlockFrameIndex = -1;
+							
+						}
+						else {
+							AfterStartTimeStamp = true;
+						}
+						
 						break;
 					}
 				}
+			}
+
+			if (CurrentTick < TriggerTick && bPlaying == true)
+			{
+				//bPlaying = false;
+				timeStampBlockFrameIndex = -1;
+
 			}
 			TickSpans.Empty(8);
 
@@ -189,7 +208,7 @@ namespace unDAWMetasound
 						// Play from the beginning if we haven't received a seek call while we were stopped...
 						*StartTimeOutPin = FTime();
 					}
-					if(timeStampBlockFrameIndex >= 0)
+					if (timeStampBlockFrameIndex >= 0)
 					{
 						PlayOutPin->TriggerFrame(timeStampBlockFrameIndex);
 						bPlaying = true;
@@ -205,15 +224,25 @@ namespace unDAWMetasound
 					{
 						// Assumes the MidiClock is stopped for the remainder of the block.
 						*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+						if (CurrentTick < TriggerTick) return EMusicPlayerTransportState::Pausing;
 					}
 					else
 					{
 						StopOutPin->TriggerFrame(StartFrameIndex);
 						int32 PlayFrameIndex = FMath::Min(StartFrameIndex + 1, EndFrameIndex);
-
+						if (timeStampBlockFrameIndex >= 0)
+						{
+							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f - (BlockSizeFrames - PlayFrameIndex - timeStampBlockFrameIndex) / SampleRate);
+							PlayOutPin->TriggerFrame(PlayFrameIndex);
+						}
+						else {
+							//bPlaying = false;
+							//StopOutPin->TriggerFrame(StartFrameIndex);
+							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+							//return EMusicPlayerTransportState::Paused;
+						}
 						// Assumes the MidiClock is playing for the remainder of the block.
-						*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f - (BlockSizeFrames - PlayFrameIndex) / SampleRate);
-						PlayOutPin->TriggerFrame(PlayFrameIndex);
+
 					}
 					// Here we will return that we want to be in the same state we were in before this request to 
 					// seek since we can seek "instantaneously"...
