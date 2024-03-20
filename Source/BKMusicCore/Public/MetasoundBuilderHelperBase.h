@@ -19,13 +19,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper")
 	void InitBuilderHelepr();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
 	EMetaSoundOutputAudioFormat OutputFormat;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
 

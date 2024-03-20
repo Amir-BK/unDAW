@@ -18,10 +18,10 @@ USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
 struct FTimeStamppedWavContainer {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
 	FMusicTimestamp TimeStamp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
 	TObjectPtr <USoundWave> SoundWave;
 
 };
