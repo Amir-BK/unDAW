@@ -12,12 +12,18 @@
 #include "MetasoundPrimitives.h"
 #include "MetasoundTrigger.h"
 #include "MetasoundAudioBuffer.h"
+#include "HarmonixMetasound/DataTypes/MidiStream.h"
 #include "MetasoundWave.h"
 
 #define WRAP_TOKEN(token)  #token
 #define DECLARE_BK_PARAM(DisplayName, Description, LayerID, DataType, Init) { \
-    INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID) ), Init}},
+    INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID)), Init}},
 
+#define DECLARE_BK_PARAM_NOINIT(DisplayName, Description, LayerID, DataType) { \
+    INVTEXT(DisplayName), INVTEXT(Description), DataType, {FName(WRAP_TOKEN(LayerID)) }},
+
+#define DECLARE_BK_PARAM_OUT(DisplayName, Description, LayerID, DataType) { \
+    INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID) )}},
 
 
     namespace unDAW::Metasounds
@@ -57,21 +63,28 @@
 
 
             //so this is how we wind up declaring params, at least I don't have to do it 40 times 
-            const FInput GeneratedInputs[8] =
+            const FInput GeneratedInputs[2] =
             {
 
-                DECLARE_BK_PARAM("unDAW Instrument Sustain Pedal State","boolean representing the current state of the sustain pedal for the SFZ instrument performer controlling this metasound",
-                    unDAW Instrument.PedalState,
-                    Metasound::GetMetasoundDataTypeName<bool>(), false)
+                DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
+                    unDAW Instrument.MidiStream,
+                    Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+
+                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
+                    unDAW Instrument.MidiTrack,
+                    Metasound::GetMetasoundDataTypeName<int>(), 0)
 
             };
 
-            const FOutput GeneratedOutputs[8] =
+            const FOutput GeneratedOutputs[2] =
             {
 
-                DECLARE_BK_PARAM("unDAW Instrument Sustain Pedal State","boolean representing the current state of the sustain pedal for the SFZ instrument performer controlling this metasound",
-                    unDAW Instrument.PedalState,
-                    Metasound::GetMetasoundDataTypeName<bool>(), false)
+                DECLARE_BK_PARAM_OUT("Audio Out L","Instrument Audio Output",
+                    unDAW Instrument.Audio L,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+             DECLARE_BK_PARAM_OUT("Audio Out R","Instrument Audio Output",
+                    unDAW Instrument.Audio R,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
 
             };
 

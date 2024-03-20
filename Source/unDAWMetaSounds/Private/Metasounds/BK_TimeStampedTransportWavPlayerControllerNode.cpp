@@ -39,8 +39,8 @@ namespace unDAWMetasound
 			PlayOutPin(FTriggerWriteRef::CreateNew(InSettings)),
 			StopOutPin(FTriggerWriteRef::CreateNew(InSettings)),
 			StartTimeOutPin(FTimeWriteRef::CreateNew()),
-			BlockSizeFrames(InSettings.GetNumFramesPerBlock()),
 			TimestampInPin(InTimestamp),
+			BlockSizeFrames(InSettings.GetNumFramesPerBlock()),
 			SampleRate(InSettings.GetSampleRate())
 		{
 			Reset(InParams);
