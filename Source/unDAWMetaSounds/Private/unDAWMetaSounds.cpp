@@ -7,6 +7,7 @@
 #include "Misc/AssetRegistryInterface.h"
 #include "MetasoundSource.h"
 #include "MetasoundNodeRegistrationMacro.h"
+#include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "MetasoundDataTypeRegistrationMacro.h"
 
 
@@ -27,7 +28,7 @@ void unDAWMetaSoundsModule::StartupModule()
 	//
 	//FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
 
-	//FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces::RegisterInterface();
+	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
 	
 }
 

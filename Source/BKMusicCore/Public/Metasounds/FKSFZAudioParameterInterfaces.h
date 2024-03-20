@@ -71,45 +71,61 @@ namespace FK_SFZ::Metasounds
         FFKSFZAudioParameterInterfaces() : FParameterInterface("unDAW SFZ", {0, 1})
         {
            Inputs.Append(GeneratedInputs);
-          }
-         static Audio::FParameterInterfacePtr GetInterface();
+        }
 
-         static void RegisterInterface();
 
-        ~FFKSFZAudioParameterInterfaces();
+         static Audio::FParameterInterfacePtr GetInterface()
+         {
+             if (!singletonPointer.IsValid())
+             {
+                 singletonPointer = MakeShared<FFKSFZAudioParameterInterfaces>();
+             }
+
+             return singletonPointer;
+         }
+
+         static void RegisterInterface()
+         {
+             UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+             Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+             InterfaceRegistry.RegisterInterface(GetInterface());
+         }
+
+         ~FFKSFZAudioParameterInterfaces() {};
 
     private:
+
 #define WRAP_TOKEN(token)  #token
 #define DECLARE_SFZ_PARAM_INPUT(DisplayName, Description, LayerID, DataType, Init) { \
     INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID) ), Init}},
 
-
         //so this is how we wind up declaring params, at least I don't have to do it 40 times 
         const FInput GeneratedInputs[8] =
-            {
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Sustain Pedal State","boolean representing the current state of the sustain pedal for the SFZ instrument performer controlling this metasound",
-                FlyKick SFZ.Internals.PedalState,
+        {
+
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Sustain Pedal State","boolean representing the current state of the sustain pedal for the SFZ instrument performer controlling this metasound",
+                BK SFZ.Internals.PedalState,
                 Metasound::GetMetasoundDataTypeName<bool>(), false)
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Hard Note Off","Trigger that sends hard note off that is used to kill trigger the release state of the note even when sustain is engaged",
-                FlyKick SFZ.Internals.HardNoteOff,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Hard Note Off","Trigger that sends hard note off that is used to kill trigger the release state of the note even when sustain is engaged",
+                BK SFZ.Internals.HardNoteOff,
                 Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(), false)
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Layer 0 Data","Wraps all data for a certain region layer",
-                FlyKick SFZ.Layer_0_Region,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Layer 0 Data","Wraps all data for a certain region layer",
+                BK SFZ.Layer_0_Region,
                 Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Layer 1 Data","Wraps all data for a certain region layer",
-                FlyKick SFZ.Layer_1_Region,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Layer 1 Data","Wraps all data for a certain region layer",
+                BK SFZ.Layer_1_Region,
                 Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Layer 2 Data", "Wraps all data for a certain region layer",
-                                    FlyKick SFZ.Layer_2_Region,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Layer 2 Data", "Wraps all data for a certain region layer",
+                                    BK SFZ.Layer_2_Region,
                 Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Layer 3 Data", "Wraps all data for a certain region layer",
-                                    FlyKick SFZ.Layer_3_Region,
-                Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Release Layer 0 Data", "Release layers are played on note off",
-                                   FlyKick SFZ.Relase_0_Region,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Layer 3 Data", "Wraps all data for a certain region layer",
+                                    BK SFZ.Layer_3_Region, Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), 
+                                    static_cast<UObject*>(nullptr))
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Release Layer 0 Data", "Release layers are played on note off",
+                                   BK SFZ.Relase_0_Region,
                Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
-            DECLARE_SFZ_PARAM_INPUT("FlyKick SFZ Release Layer 1 Data", "Release layers are played on note off",
-                                   FlyKick SFZ.Release_1_Region,
+            DECLARE_SFZ_PARAM_INPUT("BK SFZ Release Layer 1 Data", "Release layers are played on note off",
+                                   BK SFZ.Release_1_Region,
                Metasound::GetMetasoundDataTypeName<Metasound::F_FK_SFZ_Region_Data>(), static_cast<UObject*>(nullptr))
 
             };
