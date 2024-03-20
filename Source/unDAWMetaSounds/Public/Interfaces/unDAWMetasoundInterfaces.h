@@ -89,7 +89,9 @@
             };
 
 
-#undef DECLARE_BK_PARAM_INPUT
+#undef DECLARE_BK_PARAM_NOINIT
+#undef DECLARE_BK_PARAM
+#undef DECLARE_BK_PARAM_OUT
 #undef  WRAP_TOKEN       
 
         };

@@ -41,15 +41,8 @@ public:
 					SNew(STextBlock).Text(FText::FromString(TEXT("Snapping Step Size")))
 
 				]
-				+ SHorizontalBox::Slot()
-				.VAlign(EVerticalAlignment::VAlign_Center)
-				[
-					SNew(SEnumComboBox, StaticEnum<EQuartzCommandQuantization>())
+	
 
-						.CurrentValue(this, &SMidiEditorBaseSettingsWidget::SnapQuantizationGetCurrentValue)
-						.OnEnumSelectionChanged(this, &SMidiEditorBaseSettingsWidget::SetSnapQuantizationValue)
-				
-				]
 		];
 
 	}
