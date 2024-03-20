@@ -18,11 +18,23 @@ Currently the plugin has packaging issues preventing it from being used in a pac
 ## Runtime - BK Musical Widgets 
 a collection of widgets that can be used both in Editor and in game (not yet!) to visualize and edit musical information, currently consisting of a Piano Roll graph and some basic transport widgets, planned to include full musical engraving capabilities using SMUFL fonts.
 
+### SPianoRoll Graph
+A native widget that hosts a fully pannable and zoomable canvas that allows comfortably viewing midi data.
+
 ## Runtime - BK Music Core
 Interactions between metasounds and the unreal world, the purpose of unreal daw is after all to create a dynamic musical session that can is controlled by the game world.
 
+## Runtime - unDAW Metasounds
+Interactions between metasounds and the unreal world, the purpose of unreal daw is after all to create a dynamic musical session that can is controlled by the game world.
+
+### Timestamped Wav Player Node
+A combination of the Timestamp to Trigger Node and Wav Player Transport nodes that allows fully syncing a wav file to a MIDI clock while giving it a timestamp start time and keeping it fully seekable. 
+
 ## Editor - BK Editor Utilities
 Editor widget for editing midifiles and creating Unreal DAW musical scenes in the editor, factory classes for mass importing Decent Sampler and SFZ libraries into Fusion Sampler Patches 
+
+### UMidiEditorBase
+An editor only wrapper for SPianoRollGraph that provides editor only functionality and allows wrapping the widget in an Editor Utility Widget 
 
 # Current Features - 
 
