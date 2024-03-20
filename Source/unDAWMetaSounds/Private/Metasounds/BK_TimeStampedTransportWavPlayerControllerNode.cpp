@@ -29,6 +29,7 @@ namespace unDAWMetasound
 	{
 	public:
 		FTimeStampedTransportWavePlayerControllerOperator(const FOperatorSettings& InSettings,
+									const FBuildOperatorParams& InParams,
 									const HarmonixMetasound::FMusicTransportEventStreamReadRef& InTransport,
 									const HarmonixMetasound::FMidiClockReadRef& InMidiClock,
 									const FMusicTimestampReadRef& InTimestamp ) :
@@ -42,6 +43,7 @@ namespace unDAWMetasound
 			TimestampInPin(InTimestamp),
 			SampleRate(InSettings.GetSampleRate())
 		{
+			Reset(InParams);
 		}
 
 		static const FVertexInterface& GetVertexInterface()
@@ -132,7 +134,7 @@ namespace unDAWMetasound
 			FMusicTimestampReadRef InTimestamp = InputData.GetOrConstructDataReadReference<FMusicTimestamp>(METASOUND_GET_PARAM_NAME(Inputs::Timestamp), 1, 1.0f);
 			FMidiClockReadRef InMidiClock = InputData.GetOrConstructDataReadReference<FMidiClock>(METASOUND_GET_PARAM_NAME(Inputs::MidiClock), InParams.OperatorSettings);
 			
-			return MakeUnique<FTimeStampedTransportWavePlayerControllerOperator>(InParams.OperatorSettings, InTransport, InMidiClock, InTimestamp);
+			return MakeUnique<FTimeStampedTransportWavePlayerControllerOperator>(InParams.OperatorSettings, InParams, InTransport, InMidiClock, InTimestamp);
 		}
 
 		void Execute()
@@ -142,7 +144,35 @@ namespace unDAWMetasound
 			PlayOutPin->AdvanceBlock();
 			StopOutPin->AdvanceBlock();
 
-			TransportSpanProcessor TransportHandler = [this](int32 StartFrameIndex, int32 EndFrameIndex, EMusicPlayerTransportState CurrentState)
+			// first let's see if our configuration has changed at all...
+			if (CurrentTimestamp != *TimestampInPin)
+			{
+				CurrentTimestamp = *TimestampInPin;
+		
+				CalculateAndInvalidateTriggerTick();
+			}
+			bool isEnabled = true;
+			bool AfterStartTimeStamp = false;
+			int32 timeStampBlockFrameIndex = -1;
+			if (isEnabled)
+			{
+				for (const FTickSpan& Span : TickSpans)
+				{
+					if (Span.FromTick < TriggerTick && Span.ThruTick >= TriggerTick)
+					{
+						timeStampBlockFrameIndex = Span.BlockFrameIndex;
+						//this means we hit the timestamp, we need to check if we're before it or after it
+						//UE_LOG(LogTemp, Log, TEXT("TimeStamp Hit? blockFrameIndex %d"), timeStampBlockFrameIndex)
+						AfterStartTimeStamp = true;
+						break;
+					}
+				}
+			}
+			TickSpans.Empty(8);
+
+			//UE_LOG(LogTemp, Log, TEXT("trigger tick %d"), TriggerTick)
+
+			TransportSpanProcessor TransportHandler = [this, timeStampBlockFrameIndex](int32 StartFrameIndex, int32 EndFrameIndex, EMusicPlayerTransportState CurrentState)
 			{
 				switch (CurrentState)
 				{
@@ -159,9 +189,13 @@ namespace unDAWMetasound
 						// Play from the beginning if we haven't received a seek call while we were stopped...
 						*StartTimeOutPin = FTime();
 					}
-					PlayOutPin->TriggerFrame(StartFrameIndex);
-					bPlaying = true;
-					return EMusicPlayerTransportState::Playing;
+					if(timeStampBlockFrameIndex >= 0)
+					{
+						PlayOutPin->TriggerFrame(timeStampBlockFrameIndex);
+						bPlaying = true;
+						return EMusicPlayerTransportState::Playing;
+					}
+					return EMusicPlayerTransportState::Starting;
 
 				case EMusicPlayerTransportState::Playing:
 					return EMusicPlayerTransportState::Playing;
@@ -226,28 +260,25 @@ namespace unDAWMetasound
 			StopOutPin->Reset();
 			*StartTimeOutPin = FTime();
 
+			FMidiPlayCursor::Reset(true);
+
+			SetMessageFilter(FMidiPlayCursor::EFilterPassFlags::None);
+			MidiClockInPin->RegisterHiResPlayCursor(this);
+
+			CurrentTimestamp = *TimestampInPin;
+
 			BlockSizeFrames = InParams.OperatorSettings.GetNumFramesPerBlock();
 			SampleRate = InParams.OperatorSettings.GetSampleRate();
 
 			bPlaying = false;
+
+			TriggerTick = 0;
+			CalculateAndInvalidateTriggerTick();
+
+			//UE_LOG(LogTemp,Log, TEXT("Do we get reset?"))
 		}
 
-		//void Reset(const FResetParams& ResetParams)
-		//{
-		//	PlayOutPin->Reset();
-
-		//	FMidiPlayCursor::Reset(true);
-
-		//	SetMessageFilter(FMidiPlayCursor::EFilterPassFlags::None);
-		//	MidiClockInPin->RegisterHiResPlayCursor(this);
-
-		//	CurrentTimestamp = *TimestampInPin;
-
-		//	TriggerTick = 0;
-		//	CalculateTriggerTick();
-		//}
-
-		void CalculateTriggerTick()
+		void CalculateAndInvalidateTriggerTick()
 		{
 			const FSongMaps& SongMaps = MidiClockInPin->GetSongMaps();
 			TriggerTick = SongMaps.CalculateMidiTick(CurrentTimestamp, Quantize);
@@ -272,11 +303,59 @@ namespace unDAWMetasound
 		bool bPlaying = false;
 
 
+		struct FTickSpan
+		{
+			int32 FromTick;
+			int32 ThruTick;
+			int32 BlockFrameIndex;
+			bool  bIsSeek;
+			FTickSpan(int32 InFromTick, int32 InThruTick, int32 InBlockFrameIndex, bool InIsSeek)
+				: FromTick(InFromTick)
+				, ThruTick(InThruTick)
+				, BlockFrameIndex(InBlockFrameIndex)
+				, bIsSeek(InIsSeek)
+			{}
+		};
+		
+		TArray<FTickSpan> TickSpans;
+
 		//** DATA (current state)
 		FMusicTimestamp CurrentTimestamp{ 1, 1.0f };
 		EMidiClockSubdivisionQuantization Quantize = EMidiClockSubdivisionQuantization::None;
 
 		int32 TriggerTick = 0;
+
+
+		//** BEGIN FMidiPlayCursor
+		virtual void SeekToTick(int32 Tick) override { SeekThruTick(Tick - 1); }
+		virtual void SeekThruTick(int32 Tick) override	{
+			int32 TickProceedingThisAdvance = CurrentTick;
+			FMidiPlayCursor::SeekThruTick(Tick);
+
+			// don't trigger if seeking backward or no progress being made...
+			if (Tick < TickProceedingThisAdvance || TickProceedingThisAdvance == CurrentTick)
+			{
+				return;
+			}
+
+			TickSpans.Emplace(TickProceedingThisAdvance, CurrentTick, MidiClockInPin->GetCurrentBlockFrameIndex(), true);
+		}
+	
+		virtual void AdvanceThruTick(int32 Tick, bool IsPreRoll) override {
+			int32 TickProceedingThisAdvance = CurrentTick;
+			FMidiPlayCursor::AdvanceThruTick(Tick, IsPreRoll);
+
+			// don't trigger during preroll or if no progress being made...
+			if (IsPreRoll || TickProceedingThisAdvance == CurrentTick)
+			{
+				return;
+			}
+			//UE_LOG(LogTemp, Log, TEXT("we get into the midi cursor events? %d"), TriggerTick)
+			TickSpans.Emplace(TickProceedingThisAdvance, CurrentTick, MidiClockInPin->GetCurrentBlockFrameIndex(), false);
+		}
+		// We have to override this to disambiguate the FMidiPlayCursor Reset and the MS operator Reset
+		virtual void Reset(bool ForceNoBroadcast) override { FMidiPlayCursor::Reset(ForceNoBroadcast); }
+		//** END FMidiPlayCursor
 
 
 
