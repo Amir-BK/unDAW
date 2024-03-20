@@ -34,6 +34,15 @@
 			]
 		},
 		{
+			"Name": "unDAWMetaSounds",
+			"Type": "Runtime",
+			"LoadingPhase": "EarliestPossible",
+			"PlatformAllowList": [
+				"Win64",
+				"Mac"
+			]
+		},
+		{
 			"Name": "BK_EditorUtilities",
 			"Type": "Editor",
 			"LoadingPhase": "PreDefault"
