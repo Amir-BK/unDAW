@@ -45,8 +45,8 @@ An editor only wrapper for SPianoRollGraph that provides editor only functionali
 
 # Depenencies & third parties
 All third party resources include their original licensing documents in the resources folder for the plugin, these should be included when used as per the specifications of the original licenses 
-- SMUFL Fonts - Bravura
-- SIMPLE UI icons
+- [SMUFL Fonts - Bravura](https://github.com/steinbergmedia/bravura)
+- [SIMPLE UI icons] (https://github.com/Semantic-Org/UI-Icon)
 - https://github.com/steinbergmedia/petaluma
 
 
