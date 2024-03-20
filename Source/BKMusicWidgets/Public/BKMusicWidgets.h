@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 //#include <SEngravingWidget.h>
 #include "EngravingSubsystem.h"
+#include "Framework/Application/SlateApplication.h"
 //#include "SimpleEngraving.generated.h"
 
 //#include <SEngravingWidget.h>

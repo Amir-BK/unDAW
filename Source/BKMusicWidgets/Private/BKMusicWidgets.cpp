@@ -5,6 +5,7 @@
 //#include "Serialization/JsonSerializer.h"
 //#include <EngineFontServices.h>
 #include "Fonts/FontCache.h"
+#include "Fonts/CompositeFont.h"
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h"
 #include "Runtime/Engine/Classes/Engine/RendererSettings.h"
 #include "Fonts/FontMeasure.h"

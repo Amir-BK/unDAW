@@ -14,7 +14,6 @@
 class BKMusicCoreModule : public IModuleInterface
 {
 public:
-	UPROPERTY(BlueprintReadOnly)
 	FString PluginContentDir;
 
 

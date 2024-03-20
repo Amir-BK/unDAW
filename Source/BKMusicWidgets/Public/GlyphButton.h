@@ -8,6 +8,7 @@
 #include <BK_MusicSceneManagerInterface.h>
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Misc/EnumRange.h"
+#include "Widgets/Text/STextBlock.h"
 //#include <MIDIEditorBase.h>
 #include "GlyphButton.generated.h"
 

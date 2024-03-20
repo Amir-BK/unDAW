@@ -2,6 +2,7 @@
 
 
 #include "MetasoundBuilderHelperBase.h"
+#include "Engine/Engine.h"
 
 void UMetasoundBuilderHelperBase::InitBuilderHelepr()
 {

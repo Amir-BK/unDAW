@@ -5,15 +5,21 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Dom/JsonValue.h"
-#include "EngineGlobals.h"
+#include "Engine/Engine.h"
+#include "Sound/QuartzQuantizationUtilities.h"
+#include "Misc/FileHelper.h"
+#include "Fonts/FontCache.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonReader.h"
+#include "Framework/Application/SlateApplication.h"
 
 //#include "Subsystems/Subsystem.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
 #include "Engine/Font.h"
-//#include "TimeSyncedPanel.h"
-//#include <SimpleEngraving.h>
+
 #include "EngravingSubsystem.generated.h"
 
 

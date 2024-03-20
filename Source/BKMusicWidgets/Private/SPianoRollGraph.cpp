@@ -824,8 +824,7 @@ void SPianoRollGraph::StopDraggingNote()
 	}
 
 	
-	if (HarmonixMidiFile->CanModify())
-	{
+
 
 		//add new events
 		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
@@ -848,10 +847,6 @@ void SPianoRollGraph::StopDraggingNote()
 		HarmonixMidiFile->MarkPackageDirty();
 
 		//NeedsRinitDelegate.Broadcast();
-	}
-	else {
-		UE_LOG(LogTemp,Log, TEXT("can't modify MIDI file"))
-	}
 
 }
 

@@ -10,6 +10,7 @@
 #include "BKMusicWidgets.h"
 #include "EngravingSubsystem.h"
 //#include <MidiObjects/MidiAsset.h>
+#include "EngineGlobals.h"
 #include "SEngravingWidget.generated.h"
 
 

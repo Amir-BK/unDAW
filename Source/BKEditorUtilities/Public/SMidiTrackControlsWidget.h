@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "EngineGlobals.h"
 #include "TimeSyncedPanel.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "UObject/Object.h"
 #include "ISinglePropertyView.h"
@@ -48,15 +50,7 @@ public:
 	}
 
 
-	int32 SnapQuantizationGetCurrentValue() const
-	{
-		return static_cast<int32>(parentMidiEditor->SnapQuantizationSize);
-	}
 
-	void SetSnapQuantizationValue(int32 InEnumValue, ESelectInfo::Type)
-	{
-		parentMidiEditor->SnapQuantizationSize = static_cast<EQuartzCommandQuantization>(InEnumValue);
-	}
 
 
 };

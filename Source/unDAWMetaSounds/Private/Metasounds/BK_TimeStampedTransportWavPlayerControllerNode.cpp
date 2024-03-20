@@ -36,10 +36,10 @@ namespace unDAWMetasound
 			HarmonixMetasound::FMusicTransportControllable(HarmonixMetasound::EMusicPlayerTransportState::Prepared),
 			TransportInPin(InTransport),
 			MidiClockInPin(InMidiClock),
+			TimestampInPin(InTimestamp),
 			PlayOutPin(FTriggerWriteRef::CreateNew(InSettings)),
 			StopOutPin(FTriggerWriteRef::CreateNew(InSettings)),
 			StartTimeOutPin(FTimeWriteRef::CreateNew()),
-			TimestampInPin(InTimestamp),
 			BlockSizeFrames(InSettings.GetNumFramesPerBlock()),
 			SampleRate(InSettings.GetSampleRate())
 		{

@@ -1,6 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "GlyphTester.h"
 //#include <SlateCore.h>
 //#include <EngravingSubsystem.h>
@@ -8,6 +6,8 @@
 #include "Fonts/FontCache.h"
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h"
 #include "Runtime/Engine/Classes/Engine/RendererSettings.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Engine/Engine.h"
 #include "Fonts/FontMeasure.h"
 
 

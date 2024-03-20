@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "EngravingSubsystem.h"
-
+#include "Blueprint/UserWidget.h"
 
 #include "GlyphTester.generated.h"
 

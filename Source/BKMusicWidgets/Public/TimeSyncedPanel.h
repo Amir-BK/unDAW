@@ -119,7 +119,6 @@ public:
 	//UPROPERTY(BlueprintAssignable)
 	//FOnTransportChanged TransportStateChanged;
 
-	EQuartzCommandQuantization SnapQuantizationSize = EQuartzCommandQuantization::Beat;
 	bool SnapToGrid;
 	int CurrentSelectionIndex = 0;
 

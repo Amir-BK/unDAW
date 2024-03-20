@@ -391,7 +391,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "BK Music|SFZ")
 	TMap<int, USFZGroupedRegions*> notesToGroupsMap;
 
-	virtual void GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const override;
+
 
 
 	//TUniquePtr<Audio::IProxyData> CreateNewProxyData(const Audio::FProxyDataInitParams& InitParams) override;

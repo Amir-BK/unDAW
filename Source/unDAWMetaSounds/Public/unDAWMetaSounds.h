@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/IPluginManager.h"
 #include "Modules/ModuleManager.h"
 
 
@@ -14,10 +13,6 @@
 class unDAWMetaSoundsModule : public IModuleInterface
 {
 public:
-	UPROPERTY(BlueprintReadOnly)
-	FString PluginContentDir;
-
-
 
 
 	/** IModuleInterface implementation */

@@ -102,10 +102,6 @@ void UFKSFZAsset::MapNotesToRanges()
 	}
 }
 
-void UFKSFZAsset::GetAssetRegistryTags(TArray<FAssetRegistryTag>& OutTags) const
-{
-	Super::GetAssetRegistryTags(OutTags);
-}
 
 TSharedPtr<Audio::IProxyData> UFKSFZAsset::CreateProxyData(const Audio::FProxyDataInitParams& InitParams)
 {
