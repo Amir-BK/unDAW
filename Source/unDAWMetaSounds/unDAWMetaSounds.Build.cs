@@ -45,6 +45,7 @@ public class unDAWMetaSounds : ModuleRules
 				"HarmonixDsp",
 				"HarmonixMidi",
 				"Harmonix",
+				"AudioExtensions"
 				
 				
 				
