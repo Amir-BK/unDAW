@@ -62,10 +62,16 @@ class BK_EDITORUTILITIES_API UMIDITrackCache : public UDataAsset
 	
 public:
 
-	UPROPERTY(EditAnywhere, Category = "BK Music|MIDI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
+	float MasterVolume = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache")
+	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
+
+	UPROPERTY(EditAnywhere, Category = "unDAW|Editor Cache")
 	TMap<FName, FTrackPlaybackData> TracksData;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache")
 	TObjectPtr<UMidiFile> lastUsedMidiFile;
 
 };
