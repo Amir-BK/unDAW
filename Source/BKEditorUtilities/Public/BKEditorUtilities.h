@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 #include "FFKSFZASampleBankAssetActions.h"
 #include "FKMidiEditorAssetActions.h"
+#include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 
 
 class BKEditorUtilitiesModule final : public IModuleInterface
@@ -34,4 +35,5 @@ public:
 private:
 	TSharedPtr< FFksfzaSampleBankAssetActions> SFZAssetTypeActions;
 	TSharedPtr< FFKMidiEditorAssetActions> FKMidiAssetTypeActions;
+	TSharedPtr< FDAWSequenceAssetActions> DAWAssetTypeActions;
 };

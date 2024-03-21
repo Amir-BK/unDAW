@@ -55,7 +55,7 @@ struct FTrackPlaybackData
 
 
 
-UCLASS(BlueprintType, Category = "BK Music|MIDI")
+UCLASS(BlueprintType, Category = "BK Music|MIDI", EditInlineNew)
 class BK_EDITORUTILITIES_API UMIDITrackCache : public UDataAsset
 {
 	GENERATED_BODY()
@@ -73,6 +73,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache")
 	TObjectPtr<UMidiFile> lastUsedMidiFile;
+
+	UPROPERTY(Instanced, EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache", meta = (ExposeOnSpawn = "true", EditInLine = "true"))
+	TMap<FName, UDAWSequencerData*> CachedSessions;
+
+	
+
 
 };
 
