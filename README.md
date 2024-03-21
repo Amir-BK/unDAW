@@ -1,3 +1,10 @@
+Some videos until I made a proper demo - https://drive.google.com/drive/folders/1-tbrrys2V091Wv94E5xbvGdLrwm_79i_?usp=sharing
+
+Esentially, drag a midi file into unreal, right click it, choose 'Edit in BK Editor', click on the 'refresh' icon to generate the metasound and then hit 'play', it will default to pianos on all channels, press F1 to switch to the mixer and switch Fusion patches and the such.
+
+Can also drag SFZ and Decent Preset sample files to unreal and it will auto create fusion patches, more documentation coming...
+
+
 ## V0.0.1! First public release! Currently only the Midi Editor Widget is substantially developed, can also use the Decent Sampler importer to quickly make fusion patches. More to come! 
 
 # Community & Support
