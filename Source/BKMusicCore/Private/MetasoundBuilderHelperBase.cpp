@@ -19,7 +19,10 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, EMetaSo
 	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 	EMetaSoundBuilderResult BuildResult;
 
+	OutputFormat = SourceOutputFormat;
+
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, OutputFormat, false);
+	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 
 }
 

@@ -19,6 +19,8 @@ class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
 	GENERATED_BODY()
 	
 public:
+	
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
 

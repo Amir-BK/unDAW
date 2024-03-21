@@ -6,6 +6,7 @@
 #include "MetasoundGeneratorHandle.h"
 #include "GameFramework/Actor.h"
 #include "BK_MusicSceneManagerInterface.h"
+#include "Components/AudioComponent.h"
 #include "MusicScenePlayerActor.generated.h"
 
 UCLASS()
@@ -16,6 +17,11 @@ class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSc
 public:	
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
+	TObjectPtr<UAudioComponent> Audio;
+
+
 
 	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
 	FOnPlaybackStateChanged PlaystateDelegate;
@@ -43,4 +49,6 @@ public:
 
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
+
+	UAudioComponent* GetAudioComponent_Implementation();
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "HarmonixMidi/BarMap.h"
+#include "HarmonixMidi/MidiFile.h"
 #include "Sound/SoundWave.h"
 #include "Curves/RichCurve.h"
 
@@ -12,7 +13,33 @@
 #include "Engine/DataAsset.h"
 #include "Curves/CurveFloat.h"
 
+#include "Metasound.h"
+#include "MetasoundBuilderSubsystem.h"
+
+#include "TrackPlaybackAndDisplayOptions.h"
 #include "BK_MusicSceneManagerInterface.generated.h"
+
+
+USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+struct FMasterChannelOutputSettings {
+	GENERATED_BODY()
+
+
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
+	float MasterVolume = 1.0f;
+
+
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
+	float ClickVolume = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	bool bClickActive = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
+	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
+
+};
+
 
 USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
 struct FTimeStamppedWavContainer {
@@ -39,16 +66,44 @@ public:
 
 };
 
+USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+struct FTimeStamppedMidiContainer {
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	FMusicTimestamp TimeStamp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	TObjectPtr<UMidiFile> MidiFile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	bool bIsClockSource;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
+	TArray<FTrackDisplayOptions> TracksMappings;
+
+};
+
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW|Music Scene Manager")
 class UDAWSequencerData : public UDataAsset
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0"))
+	FMasterChannelOutputSettings MasterOptions;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "2"))
 	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "1"))
+	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
+
 
 };
 
@@ -97,6 +152,8 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+	/** Please add a variable description */
+
 
 	
 	
@@ -107,5 +164,8 @@ public:
 	bool SendTransportCommand(const EBKTransportCommands InCommand);
 
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
+	UAudioComponent* GetAudioComponent();
 	
 };

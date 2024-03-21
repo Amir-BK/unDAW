@@ -10,6 +10,10 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Attachment Root"));
+	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	Audio->AutoAttachParent = RootComponent;
 
 }
 
@@ -50,4 +54,9 @@ void AMusicScenePlayerActor::UpdateWatchers()
 FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
 {
 	return &PlaystateDelegate;
+}
+
+UAudioComponent* AMusicScenePlayerActor::GetAudioComponent_Implementation()
+{
+	return Audio;
 }

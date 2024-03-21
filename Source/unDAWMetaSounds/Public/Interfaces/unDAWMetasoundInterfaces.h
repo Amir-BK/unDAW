@@ -13,6 +13,7 @@
 #include "MetasoundTrigger.h"
 #include "MetasoundAudioBuffer.h"
 #include "HarmonixMetasound/DataTypes/MidiStream.h"
+#include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
 #include "MetasoundWave.h"
 
 #define WRAP_TOKEN(token)  #token
@@ -162,7 +163,7 @@
             FunDAWMasterGraphInterface() : FParameterInterface("unDAW Session Renderer", { 0, 1 })
             {
                 Inputs.Append(GeneratedInputs);
-                Outputs.Append(GeneratedOutputs);
+                //Outputs.Append(GeneratedOutputs);
             }
 
             static Audio::FParameterInterfacePtr GetInterface()
@@ -187,30 +188,46 @@
 
 
             //so this is how we wind up declaring params, at least I don't have to do it 40 times 
-            const FInput GeneratedInputs[2] =
+            const FInput GeneratedInputs[9] =
             {
 
-                DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
-                    unDAW Session.MidiStream,
-                    Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+                DECLARE_BK_PARAM_NOINIT("Play","Play Trigger",
+                    unDAW.Transport.Play,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                 DECLARE_BK_PARAM_NOINIT("Prepare","Prepare Trigger",
+                    unDAW.Transport.Prepare,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                DECLARE_BK_PARAM_NOINIT("Pause","Pause Trigger",
+                    unDAW.Transport.Pause,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                 DECLARE_BK_PARAM_NOINIT("Stop","Stop Trigger",
+                    unDAW.Transport.Stop,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                 DECLARE_BK_PARAM_NOINIT("Kill","Kill Trigger",
+                    unDAW.Transport.Kill,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                  DECLARE_BK_PARAM_NOINIT("Seek","Seek Trigger",
+                    unDAW.Transport.Seek,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
+                  DECLARE_BK_PARAM_NOINIT("TimeStamp Seek","Timestamp Seek Trigger",
+                    unDAW.Transport.SeekTimeStamp,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
 
-                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
-                    unDAW Session.MidiTrack,
-                    Metasound::GetMetasoundDataTypeName<int>(), 0)
+                DECLARE_BK_PARAM("Seek Target","Time into the MIDI Clock to seek",
+                    unDAW.Transport.SeekTarget,
+                    Metasound::GetMetasoundDataTypeName<float>(), 0.0f)
+
+                 DECLARE_BK_PARAM_NOINIT("TimeStamp Seek Target","Timestamp into the MIDI Clock to seek",
+                    unDAW.Transport.SeekTimeStampTarget,
+                    Metasound::GetMetasoundDataTypeName<FMusicTimestamp>())
 
             };
 
-            const FOutput GeneratedOutputs[2] =
-            {
+            //const FOutput GeneratedOutputs[0] =
+            //{
 
-                DECLARE_BK_PARAM_OUT("Audio Out L","Instrument Audio Output",
-                    unDAW Session.Audio L,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
-             DECLARE_BK_PARAM_OUT("Audio Out R","Instrument Audio Output",
-                    unDAW Session.Audio R,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
 
-            };
+            //};
 
 
 
