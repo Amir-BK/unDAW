@@ -26,7 +26,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 //#include "SMidiNoteContainer.h"
 
-//#define PIANO_ROLL_DEBUG
+#define PIANO_ROLL_DEBUG
 
 struct FLinkedMidiEvents;
 
@@ -207,6 +207,11 @@ public:
 
 	float pixelsPerBeat = 1000.0f;
 	float drawLength = 0;
+
+	bool receivingDragUpdates = false;
+
+	int CurrentBeatAtMouseCursor = 0;
+	int CurrentBarAtMouseCursor = 0;
 
 	SPianoRollGraph() = default;
 	FString PluginDir;

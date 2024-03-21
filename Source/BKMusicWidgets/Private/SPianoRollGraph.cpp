@@ -254,13 +254,17 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 
 	//update cursor and the such 
-	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
-	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
-	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
-	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
-	//ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
-	if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+	if (!receivingDragUpdates)
+	{
+		int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+		CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
+		CurrentBarAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+		//int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
+		//int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+		ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
+		if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+
+	}
 
 
 }
@@ -350,8 +354,8 @@ void SPianoRollGraph::RecalcGrid()
 	visibleBeats.Empty();
 	float LeftMostTick = MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom);
 	float RightMostTick = MidiSongMap->MsToTick((GetCachedGeometry().GetLocalSize().X  -positionOffset.X) / horizontalZoom);
-	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Beat;
-	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Bar;
+	//int GridBeat = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Beat;
+	//int GridBars = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Bar;
 
 	
 	while(LeftMostTick <= RightMostTick)
@@ -678,8 +682,8 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
 	//int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
 	//int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
-	//int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
-	//int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
+	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
@@ -698,7 +702,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	*positionOffset.ToString(),
 	visibleBars.Num(),
 	MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom),
-		bar, beat)),
+		CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor)),
 	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 12),
 	ESlateDrawEffect::None,
 	FLinearColor::White);
@@ -786,19 +790,20 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 {
 
 	auto abs = MouseEvent.GetScreenSpacePosition();
-	auto local = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
+	localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
+	receivingDragUpdates = true;
 
 	//update cursor and the such 
-	int tickAtMouse = MidiSongMap->MsToTick(local.X / horizontalZoom);
-	int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
-	int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
-	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
-	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (beat - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+	CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
+	CurrentBarAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
+	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
 	ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
-	if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
+	//if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
-	hoveredPitch = 127 - FMath::Floor(local.Y / rowHeight);
-	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(local.Y / rowHeight);
+	hoveredPitch = 127 - FMath::Floor(localMousePosition.Y / rowHeight);
+	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(localMousePosition.Y / rowHeight);
 	slotMap[selectedNoteMapIndex].UpdateNotePitch(static_cast<uint8>(hoveredPitch));
 	UE_LOG(LogTemp, Log, TEXT("Time before we destroy it %f, after %d"), slotMap[selectedNoteMapIndex].time, ValueAtMouseCursorPostSnapping)
 	slotMap[selectedNoteMapIndex].UpdateNoteStartTime(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping), ValueAtMouseCursorPostSnapping);
@@ -812,7 +817,7 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 
 void SPianoRollGraph::StopDraggingNote()
 {
-
+	receivingDragUpdates = false;
 	auto& data = slotMap[selectedNoteMapIndex];
 	const int& trackID = slotMap[selectedNoteMapIndex].trackindexInHarmonixMidi;
 
