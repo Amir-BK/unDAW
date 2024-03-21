@@ -39,14 +39,12 @@
                 Outputs.Append(GeneratedOutputs);
             }
 
-
             static Audio::FParameterInterfacePtr GetInterface()
             {
                 if (!singletonPointer.IsValid())
                 {
                     singletonPointer = MakeShared<FunDAWInstrumentRendererInterface>();
                 }
-
                 return singletonPointer;
             }
 
@@ -89,12 +87,143 @@
             };
 
 
-#undef DECLARE_BK_PARAM_NOINIT
-#undef DECLARE_BK_PARAM
-#undef DECLARE_BK_PARAM_OUT
-#undef  WRAP_TOKEN       
+
+        };
+
+
+        class UNDAWMETASOUNDS_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
+        {
+            inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
+
+        public:
+            FunDAWCustomInsertInterface() : FParameterInterface("unDAW Custom Insert", { 0, 1 })
+            {
+                Inputs.Append(GeneratedInputs);
+                Outputs.Append(GeneratedOutputs);
+            }
+
+            static Audio::FParameterInterfacePtr GetInterface()
+            {
+                if (!singletonPointer.IsValid())
+                {
+                    singletonPointer = MakeShared<FunDAWCustomInsertInterface>();
+                }
+                return singletonPointer;
+            }
+
+            static void RegisterInterface()
+            {
+                //UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+                Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+                InterfaceRegistry.RegisterInterface(GetInterface());
+            }
+
+            ~FunDAWCustomInsertInterface() {};
+
+        private:
+
+
+            //so this is how we wind up declaring params, at least I don't have to do it 40 times 
+            const FInput GeneratedInputs[2] =
+            {
+
+                DECLARE_BK_PARAM_NOINIT("Audio In L","Insert audio input L",
+                    unDAW Insert.Audio In L,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+            DECLARE_BK_PARAM_NOINIT("Audio In R","Insert audio input R",
+                    unDAW Insert.Audio In R,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+
+    
+
+            };
+
+            const FOutput GeneratedOutputs[2] =
+            {
+
+                DECLARE_BK_PARAM_OUT("Audio Out L","Insert Audio Output",
+                    unDAW Insert.Audio L,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+                DECLARE_BK_PARAM_OUT("Audio Out R","Insert Audio Output",
+                    unDAW Insert.Audio R,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+
+            };
+
+
+
+        };
+
+        class UNDAWMETASOUNDS_API FunDAWMasterGraphInterface : public Audio::FParameterInterface
+        {
+            inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
+
+        public:
+            FunDAWMasterGraphInterface() : FParameterInterface("unDAW Session Renderer", { 0, 1 })
+            {
+                Inputs.Append(GeneratedInputs);
+                Outputs.Append(GeneratedOutputs);
+            }
+
+            static Audio::FParameterInterfacePtr GetInterface()
+            {
+                if (!singletonPointer.IsValid())
+                {
+                    singletonPointer = MakeShared<FunDAWMasterGraphInterface>();
+                }
+                return singletonPointer;
+            }
+
+            static void RegisterInterface()
+            {
+                //UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+                Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+                InterfaceRegistry.RegisterInterface(GetInterface());
+            }
+
+            ~FunDAWMasterGraphInterface() {};
+
+        private:
+
+
+            //so this is how we wind up declaring params, at least I don't have to do it 40 times 
+            const FInput GeneratedInputs[2] =
+            {
+
+                DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
+                    unDAW Session.MidiStream,
+                    Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+
+                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
+                    unDAW Session.MidiTrack,
+                    Metasound::GetMetasoundDataTypeName<int>(), 0)
+
+            };
+
+            const FOutput GeneratedOutputs[2] =
+            {
+
+                DECLARE_BK_PARAM_OUT("Audio Out L","Instrument Audio Output",
+                    unDAW Session.Audio L,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+             DECLARE_BK_PARAM_OUT("Audio Out R","Instrument Audio Output",
+                    unDAW Session.Audio R,
+                    Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+
+            };
+
+
 
         };
 
     }
 
+
+
+
+
+
+#undef DECLARE_BK_PARAM_NOINIT
+#undef DECLARE_BK_PARAM
+#undef DECLARE_BK_PARAM_OUT
+#undef  WRAP_TOKEN       

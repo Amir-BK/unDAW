@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
 	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInstrumentInterface();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
+	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
+
 };
 
 template<typename T>

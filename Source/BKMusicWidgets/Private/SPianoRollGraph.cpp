@@ -792,9 +792,12 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	auto abs = MouseEvent.GetScreenSpacePosition();
 	localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
 	receivingDragUpdates = true;
-
+	
 	//update cursor and the such 
 	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent.GetTick();
+	//int delta = tickAtNoteStart - tickAtMouse;
+	
 	CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
 	CurrentBarAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
 	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
@@ -832,17 +835,22 @@ void SPianoRollGraph::StopDraggingNote()
 
 
 		//add new events
-		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
-		HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->EndEvent);
-		HarmonixMidiFile->GetTrack(trackID)->Sort();
+	auto& rawEvents = HarmonixMidiFile->GetTrack(trackID)->GetRawEvents();
+	//rawEvents.
+	auto iterator = HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().CreateConstIterator();
+		
+		//HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->EndEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->Sort();
 		//HarmonixMidiFile->GetTrack(trackID)->
 	
 
 		//HarmonixMidiFile->
 		//remove existing note using event index
-		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->EndIndex);
+		//HarmonixMidiFile->GetTrack(trackID)->GetEvents().(data.MidiNoteData->EndIndex);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().RemoveAt(data.MidiNoteData->StartIndex);
+		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
+		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
 	
 		//call all the sorting functions I could find

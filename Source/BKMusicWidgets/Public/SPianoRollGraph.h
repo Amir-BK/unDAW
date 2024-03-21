@@ -60,6 +60,7 @@ public:
 	FLinkedMidiEvents* MidiNoteData;
 
 
+
 	FZoomablePanelSlotContainer(FLinkedMidiEvents* InNote, int32 InTrackId ): MidiNoteData(nullptr)
 	{
 		MidiNoteData = InNote;
@@ -73,9 +74,9 @@ public:
 	{
 		auto newStartMessage = FMidiMsg(MidiNoteData->StartEvent.GetMsg().Status, newPitch, MidiNoteData->StartEvent.GetMsg().Data2);
 		auto newEndMessage = FMidiMsg(MidiNoteData->EndEvent.GetMsg().Status, newPitch, MidiNoteData->EndEvent.GetMsg().Data2);
-		MidiNoteData->StartEvent.SetMsg(newStartMessage);
+		//MidiNoteData->StartEvent.SetMsg(newStartMessage);
 		//MidiNoteData->StartEvent
-		MidiNoteData->EndEvent.SetMsg(newEndMessage);
+		//MidiNoteData->EndEvent.SetMsg(newEndMessage);
 	}
 
 	void UpdateNoteStartTime(float newTime, int32 newTick)

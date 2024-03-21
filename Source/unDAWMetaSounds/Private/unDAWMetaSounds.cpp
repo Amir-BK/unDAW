@@ -18,17 +18,10 @@
 void unDAWMetaSoundsModule::StartupModule()
 {
 	
-	//using namespace Metasound::Engine;
-
-	////GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
-	//Metasound::RegisterDataTypeWithFrontend<Metasound::F_FK_SFZ_Instrument_Asset, Metasound::ELiteralType::UObjectProxy, UFKSFZAsset>();
-	//Metasound::RegisterDataTypeWithFrontend<Metasound::F_FK_SFZ_Region_Data, Metasound::ELiteralType::UObjectProxy, UFK_Region_Runtime_Performance_Data>();
-	////Metasound::RegisterDataTypeWithFrontend<Metasound::FFKSFKInstrument, Metasound::ELiteralType::UObjectProxy, UFKSFZSample>();
-	////Metasound::RegisterNodeWithFrontend<Metasound::FKSFZSamplePlayerNode>();
-	//
-	//FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
 
 	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWCustomInsertInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWMasterGraphInterface::RegisterInterface();
 	
 }
 

@@ -50,7 +50,22 @@ TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWith
 	for (const auto& patch : AllObjectsArray)
 	{
 		if (patch->GetDocumentChecked().Interfaces.Contains(Version)) OnlyImplementingArray.Add(patch);
-		//if (patch->Implements<unDAW::Metasounds::FunDAWInstrumentRendererInterface>()) 
+	}
+	return OnlyImplementingArray;
+}
+
+TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWithInsertInterface()
+{
+	auto AllObjectsArray = TArray<UMetaSoundPatch*>();
+	auto OnlyImplementingArray = TArray<UMetaSoundPatch*>();
+	GetObjectsOfClass<UMetaSoundPatch>(AllObjectsArray);
+	auto interface = unDAW::Metasounds::FunDAWCustomInsertInterface::GetInterface();
+
+	const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
+
+	for (const auto& patch : AllObjectsArray)
+	{
+		if (patch->GetDocumentChecked().Interfaces.Contains(Version)) OnlyImplementingArray.Add(patch);
 	}
 	return OnlyImplementingArray;
 }
