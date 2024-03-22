@@ -73,6 +73,11 @@ const EBKPlayState AMusicScenePlayerActor::GetCurrentPlaybackState()
 	return PlayState;
 }
 
+UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
+{
+	return SessionData;
+}
+
 void AMusicScenePlayerActor::SendTransportCommand(const EBKTransportCommands InCommand)
 {
 	//TODODOTOD	TODTO

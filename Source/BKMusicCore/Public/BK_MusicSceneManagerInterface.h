@@ -32,11 +32,15 @@ struct FMasterChannelOutputSettings {
 	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
 	float ClickVolume = 1.0f;
 
+
+
 	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
 	bool bClickActive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
 	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
+
+
 
 };
 
@@ -92,6 +96,12 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	float SequenceDuration = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
+	float TransportPosition = 0.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
@@ -104,6 +114,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
 
+	UFUNCTION(CallInEditor, Category = "unDAW|Music Scene Manager")
+	void CalculateSequenceDuration();
 
 };
 
@@ -154,15 +166,21 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
+	EBKPlayState PlayState;
+
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	/** Please add a variable description */
 
 
-	
+	//TObjectPtr<UDAWSequencerData> SequenceData
 	
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual const EBKPlayState GetCurrentPlaybackState() = 0;
+
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual void SetPlaybackState(EBKPlayState newPlayState) {};
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual void SendTransportCommand(EBKTransportCommands InCommand) {};
@@ -173,6 +191,9 @@ public:
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
 
 	virtual FOnTransportSeekCommand* GetSeekCommandDelegate() = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual UDAWSequencerData* GetActiveSessionData() = 0;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual UAudioComponent* GetAudioComponent() = 0;

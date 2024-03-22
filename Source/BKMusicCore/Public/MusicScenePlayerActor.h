@@ -33,7 +33,7 @@ public:
 	TObjectPtr<UAudioComponent> Audio;
 
 
-	UPROPERTY(BlueprintReadWrite,VisibleAnywhere, Category = "unDAW")
+	UPROPERTY(BlueprintReadOnly,VisibleAnywhere, Category = "unDAW")
 	UAudioComponent* AudioComponent;
 
 	UPROPERTY()
@@ -44,6 +44,9 @@ public:
 
 	UPROPERTY()
 	float PlaybackCursorPosition = 0.0f;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW")
+	TObjectPtr<UDAWSequencerData> SessionData;
 
 	//METHODS
 
@@ -82,4 +85,7 @@ public:
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	const EBKPlayState GetCurrentPlaybackState() override;
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	UDAWSequencerData* GetActiveSessionData() override;
 };

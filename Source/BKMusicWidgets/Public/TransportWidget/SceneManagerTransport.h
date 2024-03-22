@@ -67,7 +67,13 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	void SetTransportDuration(float newDuration)
+	{
+		if (PlayPosition) PlayPosition->SetMaxValue(newDuration);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	void SetTransportSeek(float NewSeek)
 	{
 		
@@ -80,7 +86,7 @@ public:
 
 	}
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	void SetTransportPlayState(EBKPlayState newPlayState)
 	{
 		TransportPlayState = newPlayState;

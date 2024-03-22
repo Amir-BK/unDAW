@@ -15,6 +15,7 @@
 #include "Engine/DataAsset.h"
 #include "Interfaces/MetasoundOutputFormatInterfaces.h"
 #include "TransportWidget/SceneManagerTransport.h"
+#include "Editor.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -89,7 +90,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTrackMidiEvent, FMidiEventBluepri
  * The midi editor base is the root for widgets that load a UMIDIAsset and display them via pianoroll graphs
  */
 UCLASS()
-class BK_EDITORUTILITIES_API UMIDIEditorBase : public UWidget, public ITimeSyncedPanel
+class BK_EDITORUTILITIES_API UMIDIEditorBase : public UWidget, public ITimeSyncedPanel, public IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
@@ -277,7 +278,7 @@ protected:
 
 	//this is a reference to the actor implementing the music scene manager interface, if this is null we'll be playing in preview only
 	UPROPERTY()
-	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager;
+	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager = this;
 
 	TArray<FMidiEvent> TempoEvents;
 	TArray<FMidiEvent> TimeSignatureEvents;
@@ -304,4 +305,18 @@ protected:
 
 	
 	
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	const EBKPlayState GetCurrentPlaybackState() override;
+
+	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
+
+	FOnTransportSeekCommand* GetSeekCommandDelegate() override;
+
+	UAudioComponent* GetAudioComponent() override;
+
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	UDAWSequencerData* GetActiveSessionData() override;
+
 };
