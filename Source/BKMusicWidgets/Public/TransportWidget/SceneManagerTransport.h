@@ -30,10 +30,19 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
 	FOnSeekValueChangedEvent TransportSeekCommand;
 
-protected:
-
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Transport")
 	TEnumAsByte<EBKPlayState> TransportPlayState;
+
+	UFUNCTION()
+	void ReceiveButtonClick(EBKTransportCommands newCommand)
+	{
+		TransportCalled.Broadcast(newCommand);
+	}
+
+
+protected:
+
+
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class USlider* PlayPosition;
@@ -56,20 +65,17 @@ protected:
 	UPROPERTY()
 	float CurrentSeek = 0;
 
-	UFUNCTION()
-	void ReceiveButtonClick(EBKTransportCommands newCommand)
-	{
-		TransportCalled.Broadcast(newCommand);
-	}
+public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetTransportSeek(float NewSeek)
 	{
-		TransportSeekCommand.Broadcast(NewSeek);
+		
 		if (NewSeek != CurrentSeek)
 		{
 			if (PlayPosition) PlayPosition->SetValue(NewSeek);
 			CurrentSeek = NewSeek;
+			TransportSeekCommand.Broadcast(NewSeek);
 		}
 
 	}

@@ -18,8 +18,7 @@ public:
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
-	TObjectPtr<UAudioComponent> Audio;
+	// DELEGATES!!!
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
 	FOnTransportSeekCommand TransportSeekDelegate;
@@ -27,11 +26,26 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "unDAW|Transport")
 	FOnPlaybackStateChanged PlaystateDelegate;
 
+
+	//PROPERTIES
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
+	TObjectPtr<UAudioComponent> Audio;
+
+
 	UPROPERTY(BlueprintReadWrite,VisibleAnywhere, Category = "unDAW")
 	UAudioComponent* AudioComponent;
 
 	UPROPERTY()
 	UMetasoundGeneratorHandle* GeneratorHandle;	
+
+	UPROPERTY()
+	TEnumAsByte<EBKPlayState> PlayState = EBKPlayState::NotReady;
+
+	UPROPERTY()
+	float PlaybackCursorPosition = 0.0f;
+
+	//METHODS
 
 protected:
 	// Called when the game starts or when spawned
@@ -40,10 +54,10 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-    
-    // TODO [$65cfdef41013620009101dda]: implement clock init in MusicSceneActor, register to clock events and route them to subscribers
-    UFUNCTION(BlueprintCallable, Category = "BK Music")
-    virtual void InitClock(float inBPM);
+	
+	// TODO [$65cfdef41013620009101dda]: implement clock init in MusicSceneActor, register to clock events and route them to subscribers
+	UFUNCTION(BlueprintCallable, Category = "BK Music")
+	virtual void InitClock(float inBPM);
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
@@ -52,9 +66,20 @@ public:
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
 
-	virtual UAudioComponent* GetAudioComponent_Implementation();
 
-	virtual void SendTransportCommand_Implementation(const EBKTransportCommands InCommand);
 
-	virtual void SendSeekCommand_Implementation(const float InSeek);
+	UFUNCTION()
+	void SendTransportCommand(EBKTransportCommands InCommand) override;
+
+	UFUNCTION()
+	void SendSeekCommand(float InSeek) override;
+
+	UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
+	void ReceivedSeekUpdate(float InSeek);
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	UAudioComponent* GetAudioComponent() override;
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	const EBKPlayState GetCurrentPlaybackState() override;
 };

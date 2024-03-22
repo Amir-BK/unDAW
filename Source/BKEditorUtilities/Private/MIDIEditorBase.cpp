@@ -23,11 +23,30 @@ struct FEventsWithIndex
 
 void UMIDIEditorBase::SetCurrentTimelinePosition(float inPosition)
 {
-	currentTimelineCursorPosition = inPosition;
+	
+	if (currentTimelineCursorPosition == inPosition) return;
+	
+	if (SceneManager)
+	{
+		SceneManager->SendSeekCommand(inPosition);
+
+	}
+	else {
+		//SeekEventDelegate.Broadcast(inPosition);
+		currentTimelineCursorPosition = inPosition;
+	}
+
+	if (TransportWidgetInstance)
+	{
+		TransportWidgetInstance->SetTransportSeek(inPosition);
+	}
+	
+	
 	for (const auto& graph : InternalGraphs)
 	{
 		graph->CurrentTimelinePosition = inPosition;
 	}
+	
 }
 
 void UMIDIEditorBase::AddDeltaToTimeLine(float inDelta)
@@ -51,6 +70,7 @@ TSharedRef<SWidget> UMIDIEditorBase::RebuildWidget()
 	if (TransportWidgetInstance)
 	{
 		TransportWidgetInstance->TransportCalled.AddUniqueDynamic(this, &UMIDIEditorBase::ReceiveTransportCommand);
+		TransportWidgetInstance->TransportSeekCommand.AddUniqueDynamic(this, &UMIDIEditorBase::SetCurrentPosition);
 	}
 	
 	tracksVerticalBox = SNew(SVerticalBox);
@@ -100,6 +120,7 @@ void UMIDIEditorBase::SetWorldContextObject(UObject* InWorldContextObject)
 void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
 {
 	SceneManager = InSceneManager;
+	UE_LOG(LogTemp,Log, TEXT("Set Scene Manager, Scene Manager is %s"), *SceneManager.GetObject()->GetName())
 }
 
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)
@@ -381,7 +402,13 @@ void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 	// if we have a scene manager we just pass the command 
 	if (SceneManager)
 	{
-
+		SceneManager->SendTransportCommand(newCommand);
+		if(TransportWidgetInstance)
+		{
+			TransportWidgetInstance->TransportPlayState = SceneManager->GetCurrentPlaybackState();
+		}
+		
+		
 		return;
 	}
 
@@ -494,7 +521,7 @@ FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
 void UMIDIEditorBase::SetCurrentPosition(float newCursorPosition)
 {
 	SetCurrentTimelinePosition(newCursorPosition);
-	SeekEventDelegate.Broadcast(newCursorPosition);
+	//SeekEventDelegate.Broadcast(newCursorPosition);
 }
 
 

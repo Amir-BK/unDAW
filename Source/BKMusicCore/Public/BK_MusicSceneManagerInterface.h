@@ -125,6 +125,7 @@ enum EBKTransportCommands : uint8
 UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
 enum EBKPlayState : uint8
 {
+	NotReady,
 	Preparing,
 	ReadyToPlay,
 	Playing,
@@ -139,7 +140,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCom
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportSeekCommand, float, NewSeekTarget);
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, Blueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
+
+UINTERFACE(MinimalAPI, NotBlueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
 class UBK_MusicSceneManagerInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -159,21 +161,21 @@ public:
 
 	
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
-	const EBKPlayState GetCurrentPlaybackState();
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual const EBKPlayState GetCurrentPlaybackState() = 0;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
-	void SendTransportCommand(const EBKTransportCommands InCommand);
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual void SendTransportCommand(EBKTransportCommands InCommand) {};
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
-	void SendSeekCommand(const float InSeek);
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual void SendSeekCommand(float InSeek) {};
 
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
 
 	virtual FOnTransportSeekCommand* GetSeekCommandDelegate() = 0;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
-	UAudioComponent* GetAudioComponent();
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	virtual UAudioComponent* GetAudioComponent() = 0;
 
 	
 	

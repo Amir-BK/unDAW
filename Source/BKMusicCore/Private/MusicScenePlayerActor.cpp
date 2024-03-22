@@ -61,19 +61,59 @@ FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
 	return &PlaystateDelegate;
 }
 
-UAudioComponent* AMusicScenePlayerActor::GetAudioComponent_Implementation()
+
+
+UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
 {
 	return Audio;
 }
 
-void AMusicScenePlayerActor::SendTransportCommand_Implementation(const EBKTransportCommands InCommand)
+const EBKPlayState AMusicScenePlayerActor::GetCurrentPlaybackState()
 {
-	//TODODOTODTODTO
-	
+	return PlayState;
+}
+
+void AMusicScenePlayerActor::SendTransportCommand(const EBKTransportCommands InCommand)
+{
+	//TODODOTOD	TODTO
+	UE_LOG(LogTemp, Log, TEXT("But do we enter here?"))
+
+	switch (InCommand)
+	{
+	case Init:
+		// create builder
+		UE_LOG(LogTemp, Log, TEXT("Received Init"))
+		break;
+	case Play:
+
+		UE_LOG(LogTemp,Log, TEXT("Received Play"))
+		break;
+	case Pause:
+		break;
+	case Stop:
+		break;
+	case Kill:
+		break;
+	case TransportBackward:
+		break;
+	case TransportForward:
+		break;
+	case NextMarker:
+		break;
+	case PrevMarker:
+		break;
+	default:
+		break;
+	}
+
 	
 }
 
-void AMusicScenePlayerActor::SendSeekCommand_Implementation(const float InSeek)
+void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
 {
-
+	PlaybackCursorPosition = InSeek;
+	TransportSeekDelegate.Broadcast(InSeek);
+	ReceivedSeekUpdate(InSeek);
 }
+
+

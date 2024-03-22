@@ -162,6 +162,7 @@ public:
 	virtual void SelectTrack(int trackID) override;
 	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) override;
 
+	UFUNCTION()
 	virtual void SetCurrentPosition(float newCursorPosition) override;
 
 	virtual TEnumAsByte<EPianoRollEditorMouseMode> getCurrentInputMode() override;
