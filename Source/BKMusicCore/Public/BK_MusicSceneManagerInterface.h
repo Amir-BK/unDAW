@@ -135,6 +135,7 @@ enum EBKPlayState : uint8
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCommands, NewCommand);
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Blueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
