@@ -50,5 +50,7 @@ public:
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
 
-	UAudioComponent* GetAudioComponent_Implementation();
+	virtual UAudioComponent* GetAudioComponent_Implementation();
+
+	virtual bool SendTransportCommand_Implementation(const EBKTransportCommands InCommand);
 };

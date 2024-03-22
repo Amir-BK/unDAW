@@ -60,3 +60,10 @@ UAudioComponent* AMusicScenePlayerActor::GetAudioComponent_Implementation()
 {
 	return Audio;
 }
+
+bool AMusicScenePlayerActor::SendTransportCommand_Implementation(const EBKTransportCommands InCommand)
+{
+	//TODODOTODTODTO
+	
+	return false;
+}

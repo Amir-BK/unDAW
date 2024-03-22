@@ -390,11 +390,11 @@ void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 	case Init:
 
 		// create builder
-		UE_LOG(LogTemp, Log, TEXT("Received Init"))
+		//UE_LOG(LogTemp, Log, TEXT("Received Init"))
 		break;
 	case Play:
 
-		UE_LOG(LogTemp,Log, TEXT("Received Play"))
+		//UE_LOG(LogTemp,Log, TEXT("Received Play"))
 		break;
 	case Pause:
 		break;

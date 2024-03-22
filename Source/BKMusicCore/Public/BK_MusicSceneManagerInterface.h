@@ -168,5 +168,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
 	UAudioComponent* GetAudioComponent();
+
+	
 	
 };
