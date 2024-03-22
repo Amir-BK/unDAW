@@ -423,8 +423,13 @@ void UMIDIEditorBase::UpdateDataAsset()
 		CacheForCurrentMidi = *MapRef;
 	}
 
+	//For now until we stop hacking it and allow more than one midi file we clear the array
+	CacheForCurrentMidi->TimeStampedMidis.Empty();
+
 	CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true, tracksDisplayOptions));
 	CacheForCurrentMidi->CalculateSequenceDuration();
+
+	if (TransportWidgetInstance) TransportWidgetInstance->SetTransportDuration(CacheForCurrentMidi->SequenceDuration * .001f);
 
 	MidiEditorCache->CachedSessions.Add(MidiName, CacheForCurrentMidi);
 	MidiEditorCache->MarkPackageDirty();

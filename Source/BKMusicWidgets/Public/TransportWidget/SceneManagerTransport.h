@@ -7,6 +7,7 @@
 #include "Components/Slider.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "GlyphButton.h"
+#include "Components/TextBlock.h"
 #include "SceneManagerTransport.generated.h"
 
 
@@ -62,6 +63,12 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UTransportGlyphButton* KillButton;
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	class UTextBlock* DurationText;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	class UTextBlock* CurrentPositionText;
+
 	UPROPERTY()
 	float CurrentSeek = 0;
 
@@ -71,6 +78,7 @@ public:
 	void SetTransportDuration(float newDuration)
 	{
 		if (PlayPosition) PlayPosition->SetMaxValue(newDuration);
+		if (DurationText) DurationText->SetText(FText::AsNumber(newDuration));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
@@ -80,6 +88,7 @@ public:
 		if (NewSeek != CurrentSeek)
 		{
 			if (PlayPosition) PlayPosition->SetValue(NewSeek);
+			if (CurrentPositionText) CurrentPositionText->SetText(FText::AsNumber(NewSeek));
 			CurrentSeek = NewSeek;
 			TransportSeekCommand.Broadcast(NewSeek);
 		}
