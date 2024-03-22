@@ -51,6 +51,11 @@ void AMusicScenePlayerActor::UpdateWatchers()
 	GeneratorHandle->UpdateWatchers();
 }
 
+FOnTransportSeekCommand* AMusicScenePlayerActor::GetSeekCommandDelegate()
+{
+	return &TransportSeekDelegate;
+}
+
 FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
 {
 	return &PlaystateDelegate;
@@ -61,9 +66,14 @@ UAudioComponent* AMusicScenePlayerActor::GetAudioComponent_Implementation()
 	return Audio;
 }
 
-bool AMusicScenePlayerActor::SendTransportCommand_Implementation(const EBKTransportCommands InCommand)
+void AMusicScenePlayerActor::SendTransportCommand_Implementation(const EBKTransportCommands InCommand)
 {
 	//TODODOTODTODTO
 	
-	return false;
+	
+}
+
+void AMusicScenePlayerActor::SendSeekCommand_Implementation(const float InSeek)
+{
+
 }

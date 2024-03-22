@@ -136,6 +136,7 @@ enum EBKPlayState : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCommands, NewCommand);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportSeekCommand, float, NewSeekTarget);
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Blueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
@@ -162,9 +163,14 @@ public:
 	const EBKPlayState GetCurrentPlaybackState();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
-	bool SendTransportCommand(const EBKTransportCommands InCommand);
+	void SendTransportCommand(const EBKTransportCommands InCommand);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
+	void SendSeekCommand(const float InSeek);
 
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
+
+	virtual FOnTransportSeekCommand* GetSeekCommandDelegate() = 0;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "unDAW|Transport")
 	UAudioComponent* GetAudioComponent();

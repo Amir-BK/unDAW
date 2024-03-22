@@ -9,8 +9,11 @@
 #include "GlyphButton.h"
 #include "SceneManagerTransport.generated.h"
 
-//macro to make declaring the transport actions easier
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSeekValueChangedEvent, float, Value);
+
+//macro to make declaring the transport actions easier
 #define TRANSPORTACTION(Button)		if (Button) { Button->TransportButtonClicked.AddUniqueDynamic(this, &USceneManagerTransportWidget::ReceiveButtonClick);}
 /**
  * Base class for the scene manager transport, you have to inherit this in UMG and use the button binds to make it work. See the BP example.
@@ -21,34 +24,16 @@ class BKMUSICWIDGETS_API USceneManagerTransportWidget : public UUserWidget
 	GENERATED_BODY()
 
 public: 
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
 	FOnTransportCommand TransportCalled;
 
-
-	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
+	FOnSeekValueChangedEvent TransportSeekCommand;
 
 protected:
 
-	UFUNCTION()
-	void ReceiveButtonClick(EBKTransportCommands newCommand)
-	{
-		TransportCalled.Broadcast(newCommand);
-	}
-
-	virtual void NativeConstruct() override
-	{
-		Super::NativeConstruct();
-		
-		bIsVariable = true;
-
-		TRANSPORTACTION(PauseButton)
-		TRANSPORTACTION(InitButton)
-		TRANSPORTACTION(StopButton)
-		TRANSPORTACTION(KillButton)
-		TRANSPORTACTION(PlayButton)
-		
-	}
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Transport")
+	TEnumAsByte<EBKPlayState> TransportPlayState;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class USlider* PlayPosition;
@@ -68,7 +53,50 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UTransportGlyphButton* KillButton;
 
+	UPROPERTY()
+	float CurrentSeek = 0;
 
+	UFUNCTION()
+	void ReceiveButtonClick(EBKTransportCommands newCommand)
+	{
+		TransportCalled.Broadcast(newCommand);
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void SetTransportSeek(float NewSeek)
+	{
+		TransportSeekCommand.Broadcast(NewSeek);
+		if (NewSeek != CurrentSeek)
+		{
+			if (PlayPosition) PlayPosition->SetValue(NewSeek);
+			CurrentSeek = NewSeek;
+		}
+
+	}
+
+	UFUNCTION(BlueprintCallable)
+	void SetTransportPlayState(EBKPlayState newPlayState)
+	{
+		TransportPlayState = newPlayState;
+	}
+
+	virtual void NativeConstruct() override
+	{
+		Super::NativeConstruct();
+
+		bIsVariable = true;
+
+		TRANSPORTACTION(PauseButton)
+		TRANSPORTACTION(InitButton)
+		TRANSPORTACTION(StopButton)
+		TRANSPORTACTION(KillButton)
+		TRANSPORTACTION(PlayButton)
+
+		if (PlayPosition)
+			{
+			PlayPosition->OnValueChanged.AddUniqueDynamic(this, &USceneManagerTransportWidget::SetTransportSeek);
+			}
+	}
 };
 
 #undef TRANSPORTACTION

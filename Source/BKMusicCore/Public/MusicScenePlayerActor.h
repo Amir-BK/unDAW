@@ -21,12 +21,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
 	TObjectPtr<UAudioComponent> Audio;
 
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
+	FOnTransportSeekCommand TransportSeekDelegate;
 
-
-	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
+	UPROPERTY(BlueprintAssignable, Category = "unDAW|Transport")
 	FOnPlaybackStateChanged PlaystateDelegate;
 
-	UPROPERTY(BlueprintReadWrite,VisibleAnywhere, Category = "BK Music")
+	UPROPERTY(BlueprintReadWrite,VisibleAnywhere, Category = "unDAW")
 	UAudioComponent* AudioComponent;
 
 	UPROPERTY()
@@ -47,10 +48,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
 
+	FOnTransportSeekCommand* GetSeekCommandDelegate() override;
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
 
 	virtual UAudioComponent* GetAudioComponent_Implementation();
 
-	virtual bool SendTransportCommand_Implementation(const EBKTransportCommands InCommand);
+	virtual void SendTransportCommand_Implementation(const EBKTransportCommands InCommand);
+
+	virtual void SendSeekCommand_Implementation(const float InSeek);
 };
