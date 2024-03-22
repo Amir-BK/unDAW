@@ -127,7 +127,21 @@ UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 {
-	return nullptr;
+	if (SceneManager == this)
+	{
+		const auto& MidiName = FName(HarmonixMidiFile->GetName());
+		UDAWSequencerData** MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+		UDAWSequencerData* CacheForCurrentMidi;
+		if (!MapRef)
+		{
+			CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache, MidiName);
+		}
+		else {
+			CacheForCurrentMidi = *MapRef;
+		}
+		return CacheForCurrentMidi;
+	}
+	return SceneManager->GetActiveSessionData();
 }
 
 

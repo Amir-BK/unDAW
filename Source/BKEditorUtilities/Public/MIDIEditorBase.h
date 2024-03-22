@@ -283,7 +283,7 @@ protected:
 	TArray<FMidiEvent> TempoEvents;
 	TArray<FMidiEvent> TimeSignatureEvents;
 
-	bool bSnapToQuantizationBorder = true;
+	
 
 	TSharedPtr<ITimeSyncedPanel> MidiEditorSharedPtr;
 	TWeakObjectPtr<ITimeSyncedPanel> MidiEditorWeakObjPtr;
