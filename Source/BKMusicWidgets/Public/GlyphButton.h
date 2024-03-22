@@ -25,8 +25,7 @@ class BKMUSICWIDGETS_API UTransportGlyphButton : public UWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
-	FOnButtonClickedEvent TransportButtonClicked;
+
 
 
 
@@ -43,6 +42,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Transport")
 	FLinearColor IconColor;
+
+	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
+	FOnButtonClickedEvent TransportButtonClicked;
 	
 protected:
 	//~ Begin UWidget Interface

@@ -14,6 +14,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Engine/DataAsset.h"
 #include "Interfaces/MetasoundOutputFormatInterfaces.h"
+#include "TransportWidget/SceneManagerTransport.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -93,6 +94,9 @@ class BK_EDITORUTILITIES_API UMIDIEditorBase : public UWidget, public ITimeSynce
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
+	USceneManagerTransportWidget* TransportWidgetInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetWorldContextObject, Category = "BK Music|MIDI")
 	UObject* WorldContextObject;
