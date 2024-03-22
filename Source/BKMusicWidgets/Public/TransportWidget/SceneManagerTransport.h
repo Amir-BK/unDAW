@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Widget.h"
+#include "Components/Slider.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "GlyphButton.h"
 #include "SceneManagerTransport.generated.h"
@@ -48,6 +49,9 @@ protected:
 		TRANSPORTACTION(PlayButton)
 		
 	}
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	class USlider* PlayPosition;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class UTransportGlyphButton* PlayButton;
