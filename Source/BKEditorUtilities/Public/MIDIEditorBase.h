@@ -209,7 +209,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void SetTransportPlayState(EBKPlayState newPlayState);
 
-
+	UFUNCTION()
+	void ReceiveTransportCommand(EBKTransportCommands newCommand);
 
 
 	UPROPERTY(EditAnywhere, Category = "BK Music|MIDI")
@@ -269,6 +270,7 @@ protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
+	//virtual void NativeConstruct() override; 
 
 	//~ End UWidget Interface
 

@@ -47,6 +47,12 @@ float UMIDIEditorBase::getCurrentTimelinePosition()
 TSharedRef<SWidget> UMIDIEditorBase::RebuildWidget()
 {
 
+	
+	if (TransportWidgetInstance)
+	{
+		TransportWidgetInstance->TransportCalled.AddUniqueDynamic(this, &UMIDIEditorBase::ReceiveTransportCommand);
+	}
+	
 	tracksVerticalBox = SNew(SVerticalBox);
 
 	
@@ -368,6 +374,46 @@ void UMIDIEditorBase::SetTransportPlayState(EBKPlayState newPlayState)
 	{
 		Graph->TransportPlaystate = newPlayState;
 	}
+}
+
+void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
+{
+	// if we have a scene manager we just pass the command 
+	if (SceneManager)
+	{
+
+		return;
+	}
+
+	switch (newCommand)
+	{
+	case Init:
+
+		// create builder
+		UE_LOG(LogTemp, Log, TEXT("Received Init"))
+		break;
+	case Play:
+
+		UE_LOG(LogTemp,Log, TEXT("Received Play"))
+		break;
+	case Pause:
+		break;
+	case Stop:
+		break;
+	case Kill:
+		break;
+	case TransportBackward:
+		break;
+	case TransportForward:
+		break;
+	case NextMarker:
+		break;
+	case PrevMarker:
+		break;
+	default:
+		break;
+	}
+
 }
 
 void UMIDIEditorBase::UpdatePatchInTrack(int TrackID, const TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass)

@@ -32,7 +32,6 @@ protected:
 	UFUNCTION()
 	void ReceiveButtonClick(EBKTransportCommands newCommand)
 	{
-		UE_LOG(LogTemp, Log, TEXT("We get in here and that's good enough"))
 		TransportCalled.Broadcast(newCommand);
 	}
 
