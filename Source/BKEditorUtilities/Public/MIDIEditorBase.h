@@ -15,7 +15,10 @@
 #include "Engine/DataAsset.h"
 #include "Interfaces/MetasoundOutputFormatInterfaces.h"
 #include "TransportWidget/SceneManagerTransport.h"
+#include "Editor/Blutility/Classes/EditorUtilityWidget.h"
 #include "Editor.h"
+#include "Components/ScrollBox.h"
+#include "Components/VerticalBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "MIDIEditorBase.generated.h"
 
@@ -28,35 +31,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTrackSelectedEvent, bool, select
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGridQuantizationUnitChanged, EMusicTimeSpanOffsetUnits, NewQuantizationUnit);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 
-/**
-* This is the 
-*/
-
-USTRUCT(BlueprintType)
-struct FMidiEventBlueprintWrapper {
-
-	GENERATED_BODY()
-
-	FMidiMsg DataPayload;
-};
-
-
-
 
 class SColorPicker;
-
-USTRUCT(BlueprintType, Category = "BK Music|MIDI")
-struct FTrackPlaybackData
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(VisibleAnywhere, Category = "BK Music|MIDI")
-	TArray<FTrackDisplayOptions> OptionsStruct;
-
-};
-
-
-
 
 UCLASS(BlueprintType, Category = "BK Music|MIDI", EditInlineNew)
 class BK_EDITORUTILITIES_API UMIDITrackCache : public UDataAsset
@@ -71,9 +47,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache")
 	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Editor Cache")
-	TMap<FName, FTrackPlaybackData> TracksData;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache")
 	TObjectPtr<UMidiFile> lastUsedMidiFile;
 
@@ -85,20 +58,19 @@ public:
 
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTrackMidiEvent, FMidiEventBlueprintWrapper, MidiData);
-
 /**
  * The midi editor base is the root for widgets that load a UMIDIAsset and display them via pianoroll graphs
  */
 UCLASS()
-class BK_EDITORUTILITIES_API UMIDIEditorBase : public UWidget, public ITimeSyncedPanel, public IBK_MusicSceneManagerInterface
+class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, public ITimeSyncedPanel, public IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
 public:
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
-	USceneManagerTransportWidget* TransportWidgetInstance;
+	USceneManagerTransportWidget* TransportWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFusionPatch> DefaultFusionPatch;
@@ -112,9 +84,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|SceneManager")
 	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI")
-	TArray<FTrackDisplayOptions> tracksDisplayOptions;
-
 	UPROPERTY(BlueprintReadWrite, BlueprintSetter = SetPerformanceComponent, Category = "BK Music|MIDI")
 	UAudioComponent* PerformanceComponent;
 
@@ -123,6 +92,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Harmonix Midi", Category = "BK Music|MIDI")
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Editor Preview Cache", Category = "unDAW|Editor Widget")
+	TObjectPtr<UDAWSequencerData> PreviewCache;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "MidiEditorCache", Category = "BK Music|MIDI")
 	TObjectPtr<UMIDITrackCache> MidiEditorCache;
@@ -140,9 +112,6 @@ public:
 	FOnPanelPopulated donePopulatingDelegate;
 
 	//event delegates
-
-	UPROPERTY(BlueprintAssignable, Category = "BK Music|MIDI|Interface")
-	FOnTrackMidiEvent MidiEventDelegate;
 
 	
 	UPROPERTY(BlueprintAssignable , Category = "BK Music|MIDI|Interface")
