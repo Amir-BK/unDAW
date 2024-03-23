@@ -9,6 +9,7 @@
 #include <HarmonixDsp/FusionSampler/FusionPatch.h>
 #include <MetasoundDocumentInterface.h>
 #include <HarmonixDsp/Public/HarmonixDsp/FusionSampler/FusionPatch.h>
+#include "UObject/ConstructorHelpers.h"
 #include "TrackPlaybackAndDisplayOptions.generated.h"
 
 

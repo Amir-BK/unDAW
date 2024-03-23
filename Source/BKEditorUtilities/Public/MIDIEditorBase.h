@@ -100,6 +100,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
 	USceneManagerTransportWidget* TransportWidgetInstance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
+	TObjectPtr<UFusionPatch> DefaultFusionPatch;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetWorldContextObject, Category = "BK Music|MIDI")
 	UObject* WorldContextObject;
 
@@ -199,6 +202,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void UpdateDataAsset();
+
+
+
 	
 	UPROPERTY()
 	bool bFollowCursor = false;

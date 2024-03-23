@@ -354,44 +354,38 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
 			
-			bool hasCache = IsValid(MidiEditorCache.Get()) && MidiEditorCache->CachedSessions.Contains(HarmonixMidiFile->GetFName());
+			bool hasCacheFile = IsValid(MidiEditorCache.Get()) && MidiEditorCache->CachedSessions.Contains(HarmonixMidiFile->GetFName());
+		
 
 		//if (track->contentEvents.IsEmpty()) continue;
 			for (auto& [channel, notes] : channelsMap)
 			{
 				FColorPickerArgs PickerArgs;
 				//this is the init code for the display options, should be moved to it's own functions
+				bool hasDataForTrack = false;
 
 				FTrackDisplayOptions newTrackDisplayOptions;
-				if (hasCache)
+				if (hasCacheFile)
 				{	
 					const auto TrackCache = *MidiEditorCache->CachedSessions.Find(HarmonixMidiFile->GetFName());
 					
-					if (TrackCache->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
+					if (TrackCache && TrackCache->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
 					{
 						newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
 						tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
-					}
-					else {
-						newTrackDisplayOptions = FTrackDisplayOptions();
-						newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
-						//for some reason if a track has only one channel harmonix will read the data in channel 0...
-						newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-						newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-						newTrackDisplayOptions.trackName = *track.GetName();
-						tracksDisplayOptions.Add(newTrackDisplayOptions);
-						
+						hasDataForTrack = true;
 					}
 					
 				}
-				else {
+				
+				if(!hasDataForTrack){
 					newTrackDisplayOptions = FTrackDisplayOptions();
+					newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
 					newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
 					newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
 					newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
 					newTrackDisplayOptions.trackName = *track.GetName();
 					tracksDisplayOptions.Add(newTrackDisplayOptions);
-					
 				}
 
 

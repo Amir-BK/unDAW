@@ -111,9 +111,14 @@ public:
 	{
 		if (InSceneManager) {
 			SceneManager = InSceneManager;
-			SetTransportDuration(SceneManager->GetActiveSessionData()->SequenceDuration * .001f);
-			SetTransportSeek(SceneManager->GetActiveSessionData()->TransportPosition);
-			SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
+			const auto& SessionData = SceneManager->GetActiveSessionData();
+			if (SessionData)
+			{
+				SetTransportDuration(SessionData->SequenceDuration * .001f);
+				SetTransportSeek(SessionData->TransportPosition);
+				SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
+			}
+
 		}
 	}
 
