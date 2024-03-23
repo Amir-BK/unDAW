@@ -117,9 +117,18 @@ FOnTransportSeekCommand* UMIDIEditorBase::GetSeekCommandDelegate()
 
 UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 {
-	if (SceneManager != this) return SceneManager->GetAudioComponent();
+	if (SceneManager != this)
+	{
+		return SceneManager->GetAudioComponent();
+	}
+	
+	if (!PerformanceComponent)
+	{
+	PerformanceComponent = UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
+	}
+	
 
-		return UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
+	return PerformanceComponent;
 }
 
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()

@@ -33,11 +33,7 @@ public:
 	TSubclassOf<UMetasoundBuilderHelperBase> BuilderBPInstance;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
-	TObjectPtr<UAudioComponent> Audio;
-
-
-	UPROPERTY(BlueprintReadOnly,VisibleAnywhere, Category = "unDAW")
-	UAudioComponent* AudioComponent;
+	UAudioComponent* Audio;
 
 	UPROPERTY()
 	UMetasoundGeneratorHandle* GeneratorHandle;	

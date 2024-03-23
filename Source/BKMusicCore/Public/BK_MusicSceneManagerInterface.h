@@ -8,6 +8,7 @@
 #include "HarmonixMidi/MidiFile.h"
 #include "Sound/SoundWave.h"
 #include "Curves/RichCurve.h"
+#include "Components/AudioComponent.h"
 
 #include "Curves/RealCurve.h"
 #include "Engine/DataAsset.h"
@@ -92,7 +93,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual void SetPlaybackState(EBKPlayState newPlayState) {};
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendTransportCommand(EBKTransportCommands InCommand);
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")

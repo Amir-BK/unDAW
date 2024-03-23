@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/AudioComponent.h"
 #include "Metasound.h"
 #include "MetasoundSource.h"
 #include "SequencerData.h"

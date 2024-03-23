@@ -23,7 +23,9 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 				InitializeAudioBlock();
 				break;
 		case Play:
+			if (!GetAudioComponent()->IsPlaying()) GetAudioComponent()->Play();
 
+			GetAudioComponent()->SetTriggerParameter(FName("Play"));
 			UE_LOG(LogTemp, Log, TEXT("Received Play"))
 				break;
 		case Pause:
@@ -52,8 +54,11 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 	BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
 
 	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;
-
+	//UAudioComponent* component = GetAudioComponent();
+	GetAudioComponent()->Stop();
 	BuilderHelperInstance->CurrentBuilder->Audition(this->_getUObject(), GetAudioComponent(), GeneratorCreated);
+	GetAudioComponent()->SetObjectParameter(FName("MidiFile"), GetActiveSessionData()->TimeStampedMidis[0].MidiFile);
+	GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
 
 	return BuilderHelperInstance;
 }
