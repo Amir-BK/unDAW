@@ -63,6 +63,11 @@ FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
 
 
 
+void AMusicScenePlayerActor::Entry_Initializations()
+{
+	BP_Initializations();
+}
+
 UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
 {
 	return Audio;
@@ -78,41 +83,6 @@ UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
 	return SessionData;
 }
 
-void AMusicScenePlayerActor::SendTransportCommand(const EBKTransportCommands InCommand)
-{
-	//TODODOTOD	TODTO
-	UE_LOG(LogTemp, Log, TEXT("But do we enter here?"))
-
-	switch (InCommand)
-	{
-	case Init:
-		// create builder
-		UE_LOG(LogTemp, Log, TEXT("Received Init"))
-		break;
-	case Play:
-
-		UE_LOG(LogTemp,Log, TEXT("Received Play"))
-		break;
-	case Pause:
-		break;
-	case Stop:
-		break;
-	case Kill:
-		break;
-	case TransportBackward:
-		break;
-	case TransportForward:
-		break;
-	case NextMarker:
-		break;
-	case PrevMarker:
-		break;
-	default:
-		break;
-	}
-
-	
-}
 
 void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
 {

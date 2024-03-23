@@ -13,3 +13,40 @@ void UDAWSequencerData::CalculateSequenceDuration()
 		SequenceDuration = TimeStampedMidis[0].MidiFile->GetSongMaps()->GetSongLengthMs();
 	}
 }
+
+void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
+{
+	//TODODOTOD	TODTO
+	UE_LOG(LogTemp, Log, TEXT("But do we enter here?"))
+
+		switch (InCommand)
+		{
+		case Init:
+			// create builder
+
+
+			Entry_Initializations();
+			UE_LOG(LogTemp, Log, TEXT("Received Init"))
+				break;
+		case Play:
+
+			UE_LOG(LogTemp, Log, TEXT("Received Play"))
+				break;
+		case Pause:
+			break;
+		case Stop:
+			break;
+		case Kill:
+			break;
+		case TransportBackward:
+			break;
+		case TransportForward:
+			break;
+		case NextMarker:
+			break;
+		case PrevMarker:
+			break;
+		default:
+			break;
+		}
+}

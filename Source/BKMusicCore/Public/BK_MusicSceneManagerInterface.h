@@ -84,7 +84,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	bool bIsClockSource;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
 	TArray<FTrackDisplayOptions> TracksMappings;
 
@@ -114,7 +113,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
 
-	UFUNCTION(CallInEditor, Category = "unDAW|Music Scene Manager")
+	UFUNCTION(CallInEditor, Category = "unDAW")
 	void CalculateSequenceDuration();
 
 };
@@ -166,7 +165,7 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
-	EBKPlayState PlayState;
+	EBKPlayState PlayState = EBKPlayState::NotReady;
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
@@ -176,14 +175,19 @@ public:
 	//TObjectPtr<UDAWSequencerData> SequenceData
 	
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	virtual const EBKPlayState GetCurrentPlaybackState() = 0;
+	virtual const EBKPlayState GetCurrentPlaybackState() {
+		return PlayState;
+	}
+
+	UFUNCTION(Category = "BK Music")
+	virtual void Entry_Initializations() {};
 
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual void SetPlaybackState(EBKPlayState newPlayState) {};
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	virtual void SendTransportCommand(EBKTransportCommands InCommand) {};
+	virtual void SendTransportCommand(EBKTransportCommands InCommand);
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual void SendSeekCommand(float InSeek) {};

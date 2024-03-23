@@ -45,7 +45,7 @@ public:
 	UPROPERTY()
 	float PlaybackCursorPosition = 0.0f;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW", meta=(DisplayPriority = "0"))
 	TObjectPtr<UDAWSequencerData> SessionData;
 
 	//METHODS
@@ -71,14 +71,19 @@ public:
 
 
 
-	UFUNCTION()
-	void SendTransportCommand(EBKTransportCommands InCommand) override;
+
 
 	UFUNCTION()
 	void SendSeekCommand(float InSeek) override;
 
+	//This blueprint implementable event can be used to update native widgets 
 	UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
 	void ReceivedSeekUpdate(float InSeek);
+
+	UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
+	void BP_Initializations();
+
+	virtual void Entry_Initializations() override;
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	UAudioComponent* GetAudioComponent() override;

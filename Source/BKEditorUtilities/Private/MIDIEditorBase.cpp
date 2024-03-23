@@ -105,36 +105,38 @@ void UMIDIEditorBase::ReleaseSlateResources(bool bReleaseChildren)
 	
 }
 
-const EBKPlayState UMIDIEditorBase::GetCurrentPlaybackState()
-{
-	return EBKPlayState();
-}
-
 FOnPlaybackStateChanged* UMIDIEditorBase::GetPlaybackStateDelegate()
 {
-	return nullptr;
+	return &PlaybackStateDelegate;
 }
 
 FOnTransportSeekCommand* UMIDIEditorBase::GetSeekCommandDelegate()
 {
-	return nullptr;
+	return &SeekEventDelegate;
 }
 
 UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 {
-	return nullptr;
+	if (SceneManager != this) return SceneManager->GetAudioComponent();
+
+		return UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
 }
 
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 {
 	if (SceneManager == this)
 	{
-		const auto& MidiName = FName(HarmonixMidiFile->GetName());
-		UDAWSequencerData** MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+		UDAWSequencerData** MapRef = nullptr;
+		if (HarmonixMidiFile != nullptr) {
+			
+			const auto& MidiName = FName(HarmonixMidiFile->GetName());
+			MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+		}
+	
 		UDAWSequencerData* CacheForCurrentMidi;
 		if (!MapRef)
 		{
-			CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache, MidiName);
+			CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache);
 		}
 		else {
 			CacheForCurrentMidi = *MapRef;
@@ -160,6 +162,9 @@ void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInte
 {
 	if (InSceneManager) {
 	SceneManager = InSceneManager;
+	HarmonixMidiFile = SceneManager->GetActiveSessionData()->TimeStampedMidis[0].MidiFile;
+
+	InitFromDataHarmonix();
 	}
 	else {
 		SceneManager = this;
@@ -254,11 +259,19 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 	int numTracks = 0;
 	int numTracksRaw = 0;
+	//GetActiveSessionData()->TimeStampedMidis.Empty();
 
-	PianoRollGraph->HarmonixMidiFile = HarmonixMidiFile;
+
+	PianoRollGraph->HarmonixMidiFile =  HarmonixMidiFile;
 	PianoRollGraph->KeyMappings = KeyMapDataAsset;
 	PianoRollGraph->selfSharedPtr = PianoRollGraph;
 
+
+	if (HarmonixMidiFile == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("No midi file! This is strange!"))
+			return;
+	}
 	for (auto& track : HarmonixMidiFile->GetTracks())
 	{
 		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
@@ -427,15 +440,24 @@ void UMIDIEditorBase::UpdateDataAsset()
 	const auto& MidiName = FName(HarmonixMidiFile->GetName());
 	FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true, tracksDisplayOptions);
 	//if(MidiEditorCache->CachedSessions.Conatains(MidiName))
-	UDAWSequencerData** MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+	
 	UDAWSequencerData* CacheForCurrentMidi;
-	if (!MapRef)
-	{
-		CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache, MidiName);
+	
+	if (SceneManager == this) {
+		UDAWSequencerData** MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+		
+		if (!MapRef)
+		{
+			CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache, MidiName);
+		}
+		else {
+			CacheForCurrentMidi = *MapRef;
+		}
 	}
 	else {
-		CacheForCurrentMidi = *MapRef;
+		CacheForCurrentMidi = GetActiveSessionData();
 	}
+
 
 	//For now until we stop hacking it and allow more than one midi file we clear the array
 	CacheForCurrentMidi->TimeStampedMidis.Empty();

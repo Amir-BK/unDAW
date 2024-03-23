@@ -16,6 +16,7 @@
 #include "Interfaces/MetasoundOutputFormatInterfaces.h"
 #include "TransportWidget/SceneManagerTransport.h"
 #include "Editor.h"
+#include "Kismet/GameplayStatics.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -142,7 +143,7 @@ public:
 
 	
 	UPROPERTY(BlueprintAssignable , Category = "BK Music|MIDI|Interface")
-	FOnSeekEvent SeekEventDelegate;
+	FOnTransportSeekCommand SeekEventDelegate;
 
 	UPROPERTY(BlueprintAssignable , Category = "BK Music|MIDI|Interface")
 	FOnTrackSelectedEvent OnTrackSelectedDelegate;
@@ -307,7 +308,7 @@ protected:
 	
 
 	// Inherited via IBK_MusicSceneManagerInterface
-	const EBKPlayState GetCurrentPlaybackState() override;
+	//const EBKPlayState GetCurrentPlaybackState() override;
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;
 

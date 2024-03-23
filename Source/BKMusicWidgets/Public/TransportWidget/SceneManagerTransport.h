@@ -72,7 +72,12 @@ protected:
 	UPROPERTY()
 	float CurrentSeek = 0;
 
+	UPROPERTY()
+	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager = nullptr;
+
 public:
+
+
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	void SetTransportDuration(float newDuration)
@@ -81,7 +86,7 @@ public:
 		if (DurationText) DurationText->SetText(FText::AsNumber(newDuration));
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW|Transport")
 	void SetTransportSeek(float NewSeek)
 	{
 		
@@ -99,6 +104,17 @@ public:
 	void SetTransportPlayState(EBKPlayState newPlayState)
 	{
 		TransportPlayState = newPlayState;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
+	{
+		if (InSceneManager) {
+			SceneManager = InSceneManager;
+			SetTransportDuration(SceneManager->GetActiveSessionData()->SequenceDuration * .001f);
+			SetTransportSeek(SceneManager->GetActiveSessionData()->TransportPosition);
+			SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
+		}
 	}
 
 	virtual void NativeConstruct() override
