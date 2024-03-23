@@ -29,6 +29,9 @@ public:
 
 	//PROPERTIES
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Audio Setup", meta = (ExposeOnSpawn = true))
+	TSubclassOf<UMetasoundBuilderHelperBase> BuilderBPInstance;
+
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
 	TObjectPtr<UAudioComponent> Audio;
 
@@ -93,4 +96,7 @@ public:
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	UDAWSequencerData* GetActiveSessionData() override;
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() override;
 };

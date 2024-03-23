@@ -83,6 +83,11 @@ UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
 	return SessionData;
 }
 
+TSubclassOf<UMetasoundBuilderHelperBase> AMusicScenePlayerActor::GetBuilderBPClass()
+{
+	return BuilderBPInstance;
+}
+
 
 void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
 {

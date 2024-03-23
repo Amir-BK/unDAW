@@ -8,7 +8,7 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
-void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, EMetaSoundOutputAudioFormat SourceOutputFormat)
+void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName)
 {
 	UE_LOG(LogTemp,Log, TEXT("Test"))
 
@@ -19,10 +19,12 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, EMetaSo
 	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 	EMetaSoundBuilderResult BuildResult;
 
-	OutputFormat = SourceOutputFormat;
-
-	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, OutputFormat, false);
+	//OutputFormat = SourceOutputFormat;
+	//SessionData->MasterOptions.OutputFormat
+	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
+
+	PerformBpInitialization();
 
 }
 

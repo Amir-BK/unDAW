@@ -151,6 +151,11 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 	return SceneManager->GetActiveSessionData();
 }
 
+TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
+{
+	return BuilderBPInstance;
+}
+
 
 
 
@@ -489,7 +494,7 @@ void UMIDIEditorBase::SetTransportPlayState(EBKPlayState newPlayState)
 void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 {
 	// if we have a scene manager we just pass the command 
-	if (SceneManager)
+	if (SceneManager != this)
 	{
 		SceneManager->SendTransportCommand(newCommand);
 		if(TransportWidget)
@@ -647,7 +652,7 @@ TMap<int32, UFusionPatch*> UMIDIEditorBase::GetTracksMap()
 
 void UMIDIEditorBase::InitAudioBlock()
 {
-	if (SceneManager == nullptr)
+	if (SceneManager == this)
 	{
 		UE_LOG(BKMidiLogs, Verbose, TEXT("Initializing Audio Block with no Scene Manager, Editor Preview Only"))
 	}

@@ -6,19 +6,11 @@
 
 // Add default functionality here for any IBK_MusicSceneManagerInterface functions that are not pure virtual.
 
-void UDAWSequencerData::CalculateSequenceDuration()
-{
-	if (!TimeStampedMidis.IsEmpty())
-	{
-		SequenceDuration = TimeStampedMidis[0].MidiFile->GetSongMaps()->GetSongLengthMs();
-	}
-}
+
 
 void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 {
 	//TODODOTOD	TODTO
-	UE_LOG(LogTemp, Log, TEXT("But do we enter here?"))
-
 		switch (InCommand)
 		{
 		case Init:
@@ -27,6 +19,8 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 
 			Entry_Initializations();
 			UE_LOG(LogTemp, Log, TEXT("Received Init"))
+
+				InitializeAudioBlock();
 				break;
 		case Play:
 
@@ -49,4 +43,17 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 		default:
 			break;
 		}
+}
+
+UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBlock()
+{
+	UMetasoundBuilderHelperBase* BuilderHelperInstance = NewObject<UMetasoundBuilderHelperBase>(this->_getUObject(), GetBuilderBPClass());
+	BuilderHelperInstance->SessionData = GetActiveSessionData();
+	BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
+
+	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;
+
+	BuilderHelperInstance->CurrentBuilder->Audition(this->_getUObject(), GetAudioComponent(), GeneratorCreated);
+
+	return BuilderHelperInstance;
 }

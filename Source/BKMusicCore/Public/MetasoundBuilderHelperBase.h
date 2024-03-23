@@ -8,6 +8,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Metasound.h"
 #include "MetasoundSource.h"
+#include "SequencerData.h"
 #include "MetasoundBuilderHelperBase.generated.h"
 
 /**
@@ -20,12 +21,14 @@ class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
 	
 public:
 	
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
+	UDAWSequencerData* SessionData;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper")
-	void InitBuilderHelper(FString BuilderName, EMetaSoundOutputAudioFormat SourceOutputFormat);
+	void InitBuilderHelper(FString BuilderName);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
 	EMetaSoundOutputAudioFormat OutputFormat;

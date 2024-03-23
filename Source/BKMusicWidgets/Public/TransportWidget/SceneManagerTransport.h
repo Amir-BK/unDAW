@@ -8,6 +8,7 @@
 #include "BK_MusicSceneManagerInterface.h"
 #include "GlyphButton.h"
 #include "Components/TextBlock.h"
+#include "SequencerData.h"
 #include "SceneManagerTransport.generated.h"
 
 

@@ -7,6 +7,7 @@
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "AssetTypeActions_Base.h"
+#include "SequencerData.h"
 #include "BKMusicSequenceDataFactory.generated.h"
 
 

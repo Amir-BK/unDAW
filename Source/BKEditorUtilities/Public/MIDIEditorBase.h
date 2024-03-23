@@ -20,6 +20,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/VerticalBox.h"
 #include "Kismet/GameplayStatics.h"
+#include "SequencerData.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -68,6 +69,8 @@ class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, publ
 
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Audio Setup", meta = (ExposeOnSpawn = true))
+	TSubclassOf<UMetasoundBuilderHelperBase> BuilderBPInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Widget", meta = (ExposeOnSpawn = true))
 	USceneManagerTransportWidget* TransportWidget;
@@ -294,5 +297,9 @@ protected:
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	UDAWSequencerData* GetActiveSessionData() override;
+
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() override;
 
 };
