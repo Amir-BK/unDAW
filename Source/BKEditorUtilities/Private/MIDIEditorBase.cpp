@@ -172,7 +172,7 @@ TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
 
 void UMIDIEditorBase::Entry_Initializations()
 {
-	UE_LOG(BKMidiLogs, Verbose, TEXT("World Context Object: %s"), *WorldContextObject->GetName())
+	//UE_LOG(BKMidiLogs, Verbose, TEXT("World Context Object: %s"), *WorldContextObject->GetName())
 		//BP_Initializations();
 
 }
