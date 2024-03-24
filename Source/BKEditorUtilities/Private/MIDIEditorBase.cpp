@@ -165,6 +165,8 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 
 TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
 {
+	if (SceneManager != this) return SceneManager->GetBuilderBPClass();
+	
 	return BuilderBPInstance;
 }
 
@@ -182,6 +184,8 @@ void UMIDIEditorBase::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHel
 
 UMetasoundBuilderHelperBase* UMIDIEditorBase::GetBuilderHelper()
 {
+	if (SceneManager != this) return SceneManager->GetBuilderHelper();
+	
 	return BuilderHelper;
 }
 
@@ -192,6 +196,8 @@ void UMIDIEditorBase::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorH
 
 UMetasoundGeneratorHandle* UMIDIEditorBase::GetGeneratorHandle()
 {
+	if (SceneManager != this) return SceneManager->GetGeneratorHandle();
+	
 	return GeneratorHandle;
 }
 
