@@ -15,6 +15,9 @@
 
 DEFINE_LOG_CATEGORY(BKMidiLogs);
 
+#define TRANSACT(Name) 	if (GEditor && GEditor->CanTransact() && ensure(!GIsTransacting)) \
+GEditor->BeginTransaction(TEXT(""), INVTEXT(Name), nullptr);
+
 struct FEventsWithIndex
 {
 	FMidiEvent event;
@@ -579,13 +582,26 @@ void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 
 void UMIDIEditorBase::UpdatePatchInTrack(int TrackID, const TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass)
 {
+	
+	TRANSACT("Update Patch Data")
+
+		
 	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].MidiPatchClass = MidiPatchClass;
+	GetActiveSessionData()->MarkPackageDirty();
+	if (GEditor) GEditor->EndTransaction();
 }
 
 void UMIDIEditorBase::UpdateVolumeInTrack(int TrackID, float newGain)
 
 {
+	if (GEditor && GEditor->CanTransact() && ensure(!GIsTransacting))
+		GEditor->BeginTransaction(TEXT(""), INVTEXT("Update DAW Sequence"), nullptr);
+	
+	
 	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].TrackVolume = newGain;
+	GetActiveSessionData()->MarkPackageDirty();
+
+	if (GEditor) GEditor->EndTransaction();
 }
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTrackOptionsRef(int TrackID)
@@ -722,7 +738,11 @@ void UMIDIEditorBase::ExecuteAudioParamOnPerformanceComponent(FString InName, fl
 
 void UMIDIEditorBase::UpdateElementInDisplayOptions(int ElementID, UPARAM(ref)FTrackDisplayOptions& InTrackOptions)
 {
+	TRANSACT("Update Track Data")
+	
 	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ElementID] = InTrackOptions;
+	GetActiveSessionData()->MarkPackageDirty();
+	if (GEditor) GEditor->EndTransaction();
 }
 
 

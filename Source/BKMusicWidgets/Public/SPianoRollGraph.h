@@ -26,7 +26,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 //#include "SMidiNoteContainer.h"
 
-#define PIANO_ROLL_DEBUG
+//#define PIANO_ROLL_DEBUG
 
 struct FLinkedMidiEvents;
 

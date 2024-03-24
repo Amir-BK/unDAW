@@ -38,6 +38,7 @@ public:
 	UFUNCTION()
 	void ReceiveButtonClick(EBKTransportCommands newCommand)
 	{
+		UE_LOG(LogTemp, Log, TEXT("%s received command %s"), *this->GetName(), *UEnum::GetValueAsString(newCommand))
 		TransportCalled.Broadcast(newCommand);
 	}
 
