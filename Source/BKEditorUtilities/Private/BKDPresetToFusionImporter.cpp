@@ -7,6 +7,7 @@
 #include "FileUtilities/ZipArchiveReader.h"
 #include <XmlNode.h>
 #include <AssetToolsModule.h>
+//#include "HarmonixDspEditor/Private/FusionPatchImportOptions.h"
 
 
 
@@ -90,6 +91,10 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 
 	}
 	
+	//UFusionPatchCreateOptions::FArgs Args;
+	//bool WasOkayPressed = false;
+
+	//UFusionPatchCreateOptions::GetWithDialog(MoveTemp(Args), WasOkayPressed);
 
 	newSettings.Adsr->Target = EAdsrTarget::Volume;
 	newSettings.Adsr->SustainLevel = 1.0f;

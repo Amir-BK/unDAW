@@ -9,6 +9,7 @@
 #include <HarmonixDsp/FusionSampler/FusionPatch.h>
 #include <MetasoundDocumentInterface.h>
 #include <HarmonixDsp/Public/HarmonixDsp/FusionSampler/FusionPatch.h>
+#include "UObject/ConstructorHelpers.h"
 #include "TrackPlaybackAndDisplayOptions.generated.h"
 
 
@@ -22,7 +23,7 @@ enum ETrackRendererMode : uint8
 
 // struct that describes some crucial settings used to set up a MIDI track in the render metasound built by the Meta Sound Graph Builder
 USTRUCT(BlueprintType, Category = "BK Music|Track Settings")
-struct FTrackDisplayOptions
+struct BKMUSICCORE_API FTrackDisplayOptions
 {
 	GENERATED_BODY()
 

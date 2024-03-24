@@ -23,11 +23,30 @@ struct FEventsWithIndex
 
 void UMIDIEditorBase::SetCurrentTimelinePosition(float inPosition)
 {
-	currentTimelineCursorPosition = inPosition;
+	
+	if (currentTimelineCursorPosition == inPosition) return;
+	
+	if (SceneManager)
+	{
+		SceneManager->SendSeekCommand(inPosition);
+
+	}
+	else {
+		//SeekEventDelegate.Broadcast(inPosition);
+		currentTimelineCursorPosition = inPosition;
+	}
+
+	if (TransportWidget)
+	{
+		TransportWidget->SetTransportSeek(inPosition);
+	}
+	
+	
 	for (const auto& graph : InternalGraphs)
 	{
 		graph->CurrentTimelinePosition = inPosition;
 	}
+	
 }
 
 void UMIDIEditorBase::AddDeltaToTimeLine(float inDelta)
@@ -47,6 +66,13 @@ float UMIDIEditorBase::getCurrentTimelinePosition()
 TSharedRef<SWidget> UMIDIEditorBase::RebuildWidget()
 {
 
+	
+	if (TransportWidget)
+	{
+		TransportWidget->TransportCalled.AddUniqueDynamic(this, &UMIDIEditorBase::ReceiveTransportCommand);
+		TransportWidget->TransportSeekCommand.AddUniqueDynamic(this, &UMIDIEditorBase::SetCurrentPosition);
+	}
+	
 	tracksVerticalBox = SNew(SVerticalBox);
 
 	
@@ -79,6 +105,93 @@ void UMIDIEditorBase::ReleaseSlateResources(bool bReleaseChildren)
 	
 }
 
+FOnPlaybackStateChanged* UMIDIEditorBase::GetPlaybackStateDelegate()
+{
+	return &PlaybackStateDelegate;
+}
+
+FOnTransportSeekCommand* UMIDIEditorBase::GetSeekCommandDelegate()
+{
+	return &SeekEventDelegate;
+}
+
+UAudioComponent* UMIDIEditorBase::GetAudioComponent()
+{
+	if (SceneManager != this)
+	{
+		return SceneManager->GetAudioComponent();
+	}
+	
+	if (!PerformanceComponent)
+	{
+	//PerformanceComponent = UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
+	}
+	
+
+	return PerformanceComponent;
+}
+
+UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
+{
+	if (SceneManager == this)
+	{
+	
+		return PreviewCache;
+		//UDAWSequencerData** MapRef = nullptr;
+		//if (HarmonixMidiFile != nullptr) {
+		//	
+		//	const auto& MidiName = FName(HarmonixMidiFile.Get()->GetName());
+		//	MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
+		//}
+	
+		//UDAWSequencerData* CacheForCurrentMidi;
+		//if (!MapRef)
+		//{
+		//	//const auto& MidiName = FName(HarmonixMidiFile->GetName());
+		//	CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache);
+		//	CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
+		//	MidiEditorCache->CachedSessions.Add(FName(HarmonixMidiFile.Get()->GetName()), CacheForCurrentMidi);
+		//}
+		//else {
+		//	CacheForCurrentMidi = *MapRef;
+		//}
+		//return CacheForCurrentMidi;
+	}
+	return SceneManager->GetActiveSessionData();
+}
+
+TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
+{
+	return BuilderBPInstance;
+}
+
+void UMIDIEditorBase::Entry_Initializations()
+{
+	UE_LOG(BKMidiLogs, Verbose, TEXT("World Context Object: %s"), *WorldContextObject->GetName())
+		//BP_Initializations();
+
+}
+
+void UMIDIEditorBase::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
+{
+	BuilderHelper = InBuilderHelper;
+}
+
+UMetasoundBuilderHelperBase* UMIDIEditorBase::GetBuilderHelper()
+{
+	return BuilderHelper;
+}
+
+void UMIDIEditorBase::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
+{
+	GeneratorHandle = InGeneratorHandle;
+}
+
+UMetasoundGeneratorHandle* UMIDIEditorBase::GetGeneratorHandle()
+{
+	return GeneratorHandle;
+}
+
 
 
 
@@ -93,14 +206,30 @@ void UMIDIEditorBase::SetWorldContextObject(UObject* InWorldContextObject)
 
 void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
 {
+	if (InSceneManager) {
 	SceneManager = InSceneManager;
+	HarmonixMidiFile = SceneManager->GetActiveSessionData()->TimeStampedMidis[0].MidiFile;
+	InitFromDataHarmonix();
+	}
+	else {
+		SceneManager = this;
+		InitFromDataHarmonix();
+	}
+	
+	
+	UE_LOG(BKMidiLogs,Log, TEXT("Set Scene Manager, Scene Manager is %s"), *SceneManager.GetObject()->GetFullName())
+}
+
+const UObject* UMIDIEditorBase::GetCurrentSceneManager()
+{
+	return SceneManager.GetObjectRef();
 }
 
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)
 {
-	for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;
+	//for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;
 
-	PerformanceComponent = InPerformanceComponent;
+	//PerformanceComponent = InPerformanceComponent;
 }
 
 void UMIDIEditorBase::AddHorizontalOffset(float deltaX)
@@ -130,7 +259,8 @@ void UMIDIEditorBase::ResizePanel(int panelID, int DeltaSize)
 FLinearColor UMIDIEditorBase::TrackColorPickerClicked(int indexInTrackOptionsArray)
 {
 	//SColorPicker-
-	return tracksDisplayOptions[indexInTrackOptionsArray].trackColor;
+	
+	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[indexInTrackOptionsArray].trackColor;
 }
 
 
@@ -138,15 +268,14 @@ FLinearColor UMIDIEditorBase::TrackColorPickerClicked(int indexInTrackOptionsArr
 void UMIDIEditorBase::InitFromDataHarmonix()
 {
 
-	for (auto& tempopoint : HarmonixMidiFile->GetSongMaps()->GetTempoMap().GetTempoPoints())
-	{
-		UE_LOG(LogTemp, Log, TEXT("%f"), tempopoint.GetBPM())
-	};
+
+	auto CurrentData = GetActiveSessionData();
+	CurrentData->TimeStampedMidis.Empty();
+
+	GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
 
 
-	
-
-	tracksDisplayOptions.Empty();
+	//tracksDisplayOptions.Empty();
 	InternalGraphs.Empty();
 
 	//TSharedPtr<SVerticalBox> trackMenuArea;
@@ -187,11 +316,27 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 	int numTracks = 0;
 	int numTracksRaw = 0;
+	//GetActiveSessionData()->TimeStampedMidis.Empty();
 
-	PianoRollGraph->HarmonixMidiFile = HarmonixMidiFile;
+
+	PianoRollGraph->HarmonixMidiFile =  HarmonixMidiFile;
 	PianoRollGraph->KeyMappings = KeyMapDataAsset;
 	PianoRollGraph->selfSharedPtr = PianoRollGraph;
+	
+	
 
+	//auto TrackCache = MidiEditorCache->CachedSessions.Find(HarmonixMidiFile->GetFName());
+	//if (!TrackCache)
+	//{
+	//	*TrackCache = NewObject<UDAWSequencerData>();
+	//	MidiEditorCache->CachedSessions.Add(FName(HarmonixMidiFile->GetFName()), *TrackCache);
+	//}
+
+	if (HarmonixMidiFile == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("No midi file! This is strange!"))
+			return;
+	}
 	for (auto& track : HarmonixMidiFile->GetTracks())
 	{
 		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
@@ -203,7 +348,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		
 
 		TArray<FLinkedMidiEvents*> linkedNotes;
-		//TMap<int32, FMidiEvent> unlinkedNotes;
+
 		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
 		
 		//track.GetEvent(32)
@@ -272,43 +417,36 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		
 		if(channelsMap.IsEmpty()) continue;
 
-		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
-			
-			bool hasCache = IsValid(MidiEditorCache.Get()) && MidiEditorCache->TracksData.Contains(HarmonixMidiFile->GetFName());
+		//init data asset MIDI if not init
 
-		//if (track->contentEvents.IsEmpty()) continue;
+		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
+	
 			for (auto& [channel, notes] : channelsMap)
 			{
 				FColorPickerArgs PickerArgs;
 				//this is the init code for the display options, should be moved to it's own functions
+				bool hasDataForTrack = false;
 
-				FTrackDisplayOptions newTrackDisplayOptions;
-				if (hasCache)
-				{	
-					if (MidiEditorCache->TracksData.Find(HarmonixMidiFile->GetFName())->OptionsStruct.IsValidIndex(numTracks))
-					{
-						newTrackDisplayOptions = MidiEditorCache->TracksData.Find(HarmonixMidiFile->GetFName())->OptionsStruct[numTracks];
-						tracksDisplayOptions.Add(MidiEditorCache->TracksData.Find(HarmonixMidiFile->GetFName())->OptionsStruct[numTracks]);
-					}
-					else {
-						newTrackDisplayOptions = FTrackDisplayOptions();
-						newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
-						//for some reason if a track has only one channel harmonix will read the data in channel 0...
-						newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-						newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-						newTrackDisplayOptions.trackName = *track.GetName();
-						tracksDisplayOptions.Add(newTrackDisplayOptions);
-					}
-					
+			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
+				{
+					//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
+					//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
+					hasDataForTrack = true;
+		
 				}
-				else {
-					newTrackDisplayOptions = FTrackDisplayOptions();
-					newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
-					newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-					newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-					newTrackDisplayOptions.trackName = *track.GetName();
-					tracksDisplayOptions.Add(newTrackDisplayOptions);
+			if(!hasDataForTrack){
+				FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
+				newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
+				newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
+				newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
+				newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
+				newTrackDisplayOptions.trackName = *track.GetName();
+				CurrentData->TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
 				}
+
+				//UpdateDataAsset();
+
+				UE_LOG(LogTemp, Log, TEXT("%s"), HarmonixMidiFile->GetFName());
 
 				if (!notes.IsEmpty())
 				{
@@ -317,12 +455,14 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 						PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
 					}
 				}
-				numTracks++;
-			
-			
+
+			numTracks++;
+
 			}
 
 	};
+
+	
 
 	tracksVerticalBox->AddSlot()
 		[
@@ -340,14 +480,36 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	
 	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
 
-	donePopulatingDelegate.Broadcast();
+	
 
 	PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
+	donePopulatingDelegate.Broadcast();
 }
 
 void UMIDIEditorBase::UpdateDataAsset()
 {
-	MidiEditorCache->TracksData.Add(HarmonixMidiFile->GetFName(), FTrackPlaybackData{ tracksDisplayOptions });
+	if (GEditor && GEditor->CanTransact() && ensure(!GIsTransacting))
+		GEditor->BeginTransaction(TEXT(""), INVTEXT("Update DAW Sequence"), nullptr);
+	const auto& MidiName = FName(HarmonixMidiFile->GetName());
+	
+	//if(MidiEditorCache->CachedSessions.Conatains(MidiName))
+	
+	UDAWSequencerData* CacheForCurrentMidi = GetActiveSessionData();
+
+
+	//For now until we stop hacking it and allow more than one midi file we clear the array
+	CacheForCurrentMidi->TimeStampedMidis.Empty();
+
+	//CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true, tracksDisplayOptions));
+	CacheForCurrentMidi->CalculateSequenceDuration();
+	CacheForCurrentMidi->MarkPackageDirty();
+
+	if (TransportWidget) TransportWidget->SetTransportDuration(CacheForCurrentMidi->SequenceDuration * .001f);
+
+	//MidiEditorCache->CachedSessions.Add(MidiName, CacheForCurrentMidi);
+	//MidiEditorCache->MarkPackageDirty();
+	if (GEditor) GEditor->EndTransaction();
+
 }
 
 bool UMIDIEditorBase::getFollowCursor()
@@ -370,20 +532,65 @@ void UMIDIEditorBase::SetTransportPlayState(EBKPlayState newPlayState)
 	}
 }
 
+void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
+{
+	// if we have a scene manager we just pass the command 
+	if (SceneManager != this)
+	{
+		SceneManager->SendTransportCommand(newCommand);
+		if(TransportWidget)
+		{
+			TransportWidget->TransportPlayState = SceneManager->GetCurrentPlaybackState();
+		}
+		
+		
+		return;
+	}
+	switch (newCommand)
+	{
+	case Init:
+		UpdateDataAsset();
+		// create builder
+		//UE_LOG(LogTemp, Log, TEXT("Received Init"))
+		break;
+	case Play:
+
+		//UE_LOG(LogTemp,Log, TEXT("Received Play"))
+		break;
+	case Pause:
+		break;
+	case Stop:
+		break;
+	case Kill:
+		break;
+	case TransportBackward:
+		break;
+	case TransportForward:
+		break;
+	case NextMarker:
+		break;
+	case PrevMarker:
+		break;
+	default:
+		break;
+	}
+
+}
+
 void UMIDIEditorBase::UpdatePatchInTrack(int TrackID, const TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass)
 {
-	tracksDisplayOptions[TrackID].MidiPatchClass = MidiPatchClass;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].MidiPatchClass = MidiPatchClass;
 }
 
 void UMIDIEditorBase::UpdateVolumeInTrack(int TrackID, float newGain)
 
 {
-	tracksDisplayOptions[TrackID].TrackVolume = newGain;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].TrackVolume = newGain;
 }
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTrackOptionsRef(int TrackID)
 {
-	return tracksDisplayOptions[TrackID];
+	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID];
 }
 
 void UMIDIEditorBase::SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantization)
@@ -402,19 +609,19 @@ void UMIDIEditorBase::SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantizat
 
 void UMIDIEditorBase::ToggleTrackVisibility(int trackID, bool inIsVisible)
 {
-	tracksDisplayOptions[trackID].isVisible = inIsVisible;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isVisible = inIsVisible;
 }
 
 void UMIDIEditorBase::SelectTrack(int trackID)
 {
 	if (CurrentSelectionIndex == trackID)
 	{
-		tracksDisplayOptions[trackID].isSelected = false;
+		GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected = false;
 	}
-	tracksDisplayOptions[CurrentSelectionIndex].isSelected = false;
-	tracksDisplayOptions[trackID].isSelected = true;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[CurrentSelectionIndex].isSelected = false;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected = true;
 
-	OnTrackSelectedDelegate.Broadcast(tracksDisplayOptions[trackID].isSelected, trackID);
+	OnTrackSelectedDelegate.Broadcast(GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected, trackID);
 
 	CurrentSelectionIndex = trackID;
 	for (auto graph : InternalGraphs)
@@ -427,7 +634,7 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 			graph.Get().someTrackIsSelected = false;
 		}else {
 	
-			graph.Get().availableSamplesMap = tracksDisplayOptions[trackID].SampleAvailabilityMap;
+			graph.Get().availableSamplesMap = GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].SampleAvailabilityMap;
 			graph.Get().someTrackIsSelected = true;
 			graph.Get().selectedTrackIndex = trackID;
 			graph.Get().UpdateSlotsZOrder();
@@ -440,7 +647,7 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
 {
-	return tracksDisplayOptions[ID];
+	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ID];
 }
 
 
@@ -448,7 +655,7 @@ FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
 void UMIDIEditorBase::SetCurrentPosition(float newCursorPosition)
 {
 	SetCurrentTimelinePosition(newCursorPosition);
-	SeekEventDelegate.Broadcast(newCursorPosition);
+	//SeekEventDelegate.Broadcast(newCursorPosition);
 }
 
 
@@ -476,7 +683,7 @@ FReply UMIDIEditorBase::TrackVisibilityClicked(const FGeometry& MyGeometry, cons
 TMap<int32, UFusionPatch*> UMIDIEditorBase::GetTracksMap()
 {
 	TMap<int32, UFusionPatch*> newTrackMap;
-	for (auto& track : tracksDisplayOptions)
+	for (auto& track : GetActiveSessionData()->TimeStampedMidis[0].TracksMappings)
 	{
 		newTrackMap.Add(TTuple<int32, UFusionPatch*>(track.TrackIndexInParentMidi, track.fusionPatch.Get()));
 	}
@@ -486,7 +693,7 @@ TMap<int32, UFusionPatch*> UMIDIEditorBase::GetTracksMap()
 
 void UMIDIEditorBase::InitAudioBlock()
 {
-	if (SceneManager == nullptr)
+	if (SceneManager == this)
 	{
 		UE_LOG(BKMidiLogs, Verbose, TEXT("Initializing Audio Block with no Scene Manager, Editor Preview Only"))
 	}
@@ -497,7 +704,10 @@ void UMIDIEditorBase::InitAudioBlock()
 
 TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
 {
-	return tracksDisplayOptions;
+	
+	//GetActiveSessionData()->TimeStampedMidis[0].TracksMappings
+
+	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings;
 }
 
 void UMIDIEditorBase::ExecuteAudioParamOnPerformanceComponent(FString InName, float inValue)
@@ -512,7 +722,7 @@ void UMIDIEditorBase::ExecuteAudioParamOnPerformanceComponent(FString InName, fl
 
 void UMIDIEditorBase::UpdateElementInDisplayOptions(int ElementID, UPARAM(ref)FTrackDisplayOptions& InTrackOptions)
 {
-	tracksDisplayOptions[ElementID] = InTrackOptions;
+	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ElementID] = InTrackOptions;
 }
 
 

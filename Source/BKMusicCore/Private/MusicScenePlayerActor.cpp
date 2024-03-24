@@ -2,7 +2,7 @@
 
 
 #include "MusicScenePlayerActor.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "MetasoundGeneratorHandle.h"
 
 // Sets default values
@@ -10,6 +10,11 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	//Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Attachment Root"));
+	
+	//Audio->AutoAttachParent = RootComponent;
 
 }
 
@@ -17,6 +22,10 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 void AMusicScenePlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
+	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true);
+	//PerformanceAudioComponent->AddToRoot();
+	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
+	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	
 }
 
@@ -47,7 +56,71 @@ void AMusicScenePlayerActor::UpdateWatchers()
 	GeneratorHandle->UpdateWatchers();
 }
 
+FOnTransportSeekCommand* AMusicScenePlayerActor::GetSeekCommandDelegate()
+{
+	return &TransportSeekDelegate;
+}
+
 FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
 {
 	return &PlaystateDelegate;
 }
+
+
+
+void AMusicScenePlayerActor::Entry_Initializations()
+{
+	BP_Initializations();
+}
+
+UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
+{
+	UE_LOG(LogTemp, Log, TEXT("We 100% go into here"))
+	
+	return PerformanceAudioComponent;
+}
+
+const EBKPlayState AMusicScenePlayerActor::GetCurrentPlaybackState()
+{
+	return PlayState;
+}
+
+UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
+{
+	return SessionData;
+}
+
+TSubclassOf<UMetasoundBuilderHelperBase> AMusicScenePlayerActor::GetBuilderBPClass()
+{
+	return BuilderBPInstance;
+}
+
+void AMusicScenePlayerActor::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
+{
+	BuilderHelper = InBuilderHelper;
+}
+
+UMetasoundBuilderHelperBase* AMusicScenePlayerActor::GetBuilderHelper()
+{
+	return BuilderHelper;
+}
+
+void AMusicScenePlayerActor::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
+{
+	GeneratorHandle = InGeneratorHandle;
+}
+
+UMetasoundGeneratorHandle* AMusicScenePlayerActor::GetGeneratorHandle()
+{
+	return GeneratorHandle;
+}
+
+
+void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
+{
+	PlaybackCursorPosition = InSeek;
+	TransportSeekDelegate.Broadcast(InSeek);
+	ReceivedSeekUpdate(InSeek);
+}
+
+

@@ -7,6 +7,7 @@
 #include "UObject/UObjectArray.h"
 #include "Serialization/JsonSerializer.h"
 
+
 #define LOCTEXT_NAMESPACE "BKEditorUtilitiesModule"
 
 
@@ -17,9 +18,11 @@ void BKEditorUtilitiesModule::StartupModule()
 {
         //GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
     SFZAssetTypeActions = MakeShared<FFksfzaSampleBankAssetActions>();
-    FKMidiAssetTypeActions = MakeShared<FFKMidiEditorAssetActions>();
+    DAWAssetTypeActions = MakeShared<FDAWSequenceAssetActions>();
     FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
+    FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(DAWAssetTypeActions.ToSharedRef());
     //FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(FKMidiAssetTypeActions.ToSharedRef());
+ 
 
     FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser"));
     TArray<FContentBrowserMenuExtender_SelectedAssets>& CBMenuAssetExtenderDelegates = ContentBrowserModule.GetAllAssetViewContextMenuExtenders();
@@ -34,7 +37,8 @@ void BKEditorUtilitiesModule::ShutdownModule()
 
     if (!FModuleManager::Get().IsModuleLoaded("AssetTools")) return;
     FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
-    FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(FKMidiAssetTypeActions.ToSharedRef());
+    FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(DAWAssetTypeActions.ToSharedRef());
+    //FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(FKMidiAssetTypeActions.ToSharedRef());
 }
 
 void BKEditorUtilitiesModule::AddPianoRollToMidiAsset(FMenuBuilder& MenuBuilder,
