@@ -167,8 +167,8 @@ TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
 
 void UMIDIEditorBase::Entry_Initializations()
 {
-
-		BP_Initializations();
+	UE_LOG(BKMidiLogs, Verbose, TEXT("World Context Object: %s"), *WorldContextObject->GetName())
+		//BP_Initializations();
 
 }
 
@@ -217,7 +217,12 @@ void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInte
 	}
 	
 	
-	UE_LOG(LogTemp,Log, TEXT("Set Scene Manager, Scene Manager is %s"), *SceneManager.GetObject()->GetName())
+	UE_LOG(BKMidiLogs,Log, TEXT("Set Scene Manager, Scene Manager is %s"), *SceneManager.GetObject()->GetFullName())
+}
+
+const UObject* UMIDIEditorBase::GetCurrentSceneManager()
+{
+	return SceneManager.GetObjectRef();
 }
 
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)

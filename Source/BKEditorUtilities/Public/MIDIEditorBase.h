@@ -92,6 +92,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|SceneManager")
 	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager);
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW|SceneManager")
+	const UObject* GetCurrentSceneManager();
+
 	UPROPERTY(BlueprintReadWrite, BlueprintSetter = SetPerformanceComponent, Category = "BK Music|MIDI")
 	UAudioComponent* PerformanceComponent;
 

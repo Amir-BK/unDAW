@@ -12,7 +12,7 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 {
 	//TODODOTOD	TODTO
 	
-	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s (%s): ReceivedCommand: %s, "), *this->_getUObject()->GetName(), this->_getUObject()->GetWorld() ? *this->_getUObject()->GetWorld()->GetName() : TEXT("No world"), *UEnum::GetValueAsString(InCommand))
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s (%s): ReceivedCommand: %s, "), *this->_getUObject()->GetFullName(), this->_getUObject()->GetWorld() ? *this->_getUObject()->GetWorld()->GetName() : TEXT("No world"), *UEnum::GetValueAsString(InCommand))
 
 	switch (InCommand)
 		{
@@ -20,28 +20,32 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 		case Init:
 			// create builder
 
-
-			
 			
 
 			InitializeAudioBlock();
-				break;
+			break;
 		case Play:
+			
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s: Audio Component: %s, "), *this->_getUObject()->GetName(), *GetAudioComponent()->GetName())
 			//GetAudioComponent()->Activate();
 			GetAudioComponent()->Play();
-			GetAudioComponent()->SetTriggerParameter(FName("Play"));
-			GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
+			//GetAudioComponent()->SetTriggerParameter(FName("Play"));
+			//GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
 			GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
 			//UE.Source.OnPlay
 			GetAudioComponent()->SetTriggerParameter(FName("Play"));
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
 				break;
 		case Pause:
+			SetPlaybackState(EBKPlayState::Paused);
+			GetAudioComponent()->SetTriggerParameter(FName("Pause"));
 			break;
 		case Stop:
+			SetPlaybackState(EBKPlayState::ReadyToPlay);
+			GetAudioComponent()->SetTriggerParameter(FName("Stop"));
 			break;
 		case Kill:
+			GetAudioComponent()->SetTriggerParameter(FName("Kill"));
 			break;
 		case TransportBackward:
 			break;
@@ -79,6 +83,7 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 	// 
 	//hopefully this will get us the opportunity to create an audio component in BP.
 	Entry_Initializations();
+	SetPlaybackState(EBKPlayState::ReadyToPlay);
 
 	//BuilderHelperInstance->CurrentBuilder->Audition(this->_getUObject(), GetAudioComponent(), GeneratorCreated, true);
 
