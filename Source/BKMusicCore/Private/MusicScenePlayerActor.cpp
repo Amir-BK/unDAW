@@ -2,7 +2,7 @@
 
 
 #include "MusicScenePlayerActor.h"
-
+#include "Kismet/GameplayStatics.h"
 #include "MetasoundGeneratorHandle.h"
 
 // Sets default values
@@ -10,10 +10,11 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
+	//Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Attachment Root"));
-	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	Audio->AutoAttachParent = RootComponent;
+	
+	//Audio->AutoAttachParent = RootComponent;
 
 }
 
@@ -21,6 +22,10 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 void AMusicScenePlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
+	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true);
+	//PerformanceAudioComponent->AddToRoot();
+	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
+	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	
 }
 
@@ -70,7 +75,9 @@ void AMusicScenePlayerActor::Entry_Initializations()
 
 UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
 {
-	return Audio;
+	UE_LOG(LogTemp, Log, TEXT("We 100% go into here"))
+	
+	return PerformanceAudioComponent;
 }
 
 const EBKPlayState AMusicScenePlayerActor::GetCurrentPlaybackState()
@@ -86,6 +93,26 @@ UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
 TSubclassOf<UMetasoundBuilderHelperBase> AMusicScenePlayerActor::GetBuilderBPClass()
 {
 	return BuilderBPInstance;
+}
+
+void AMusicScenePlayerActor::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
+{
+	BuilderHelper = InBuilderHelper;
+}
+
+UMetasoundBuilderHelperBase* AMusicScenePlayerActor::GetBuilderHelper()
+{
+	return BuilderHelper;
+}
+
+void AMusicScenePlayerActor::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
+{
+	GeneratorHandle = InGeneratorHandle;
+}
+
+UMetasoundGeneratorHandle* AMusicScenePlayerActor::GetGeneratorHandle()
+{
+	return GeneratorHandle;
 }
 
 

@@ -21,14 +21,20 @@ class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
 	GENERATED_BODY()
 	
 public:
+
+	UPROPERTY(BlueprintReadWrite, Category = "unDAW|MetaSound Builder Helper")
+	UAudioComponent* AuditionComponent;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
+	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
+
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
 	UDAWSequencerData* SessionData;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper")
+	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper", CallInEditor)
 	void InitBuilderHelper(FString BuilderName);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
@@ -52,6 +58,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
 	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper");
+	TScriptInterface<IMetaSoundDocumentInterface> GeneratedMetaSound;
+
+	UFUNCTION()
+	void AuditionAC(UAudioComponent* AudioComponent);
+
 
 };
 

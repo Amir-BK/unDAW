@@ -94,7 +94,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	bool bIsClockSource;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "trackName"))
 	TArray<FTrackDisplayOptions> TracksMappings;
 
 };
@@ -120,10 +120,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "MidiFile", ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void CalculateSequenceDuration();
 
 };
+

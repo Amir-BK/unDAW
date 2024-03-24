@@ -16,10 +16,15 @@
 
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
+#include "MetasoundGeneratorHandle.h"
 #include "MetasoundBuilderHelperBase.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "BK_MusicSceneManagerInterface.generated.h"
+
+
+
+BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
 //forward declaration
 
@@ -86,7 +91,7 @@ public:
 		return PlayState;
 	}
 
-	UFUNCTION(Category = "BK Music")
+	
 	virtual void Entry_Initializations() {};
 
 
@@ -96,7 +101,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendTransportCommand(EBKTransportCommands InCommand);
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendSeekCommand(float InSeek) {};
 
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
@@ -112,10 +117,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
 	virtual TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() = 0;
 
+	UFUNCTION()
+	virtual void SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper) = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
+	virtual UMetasoundBuilderHelperBase* GetBuilderHelper() = 0;
+
+
+	UFUNCTION()
+	virtual void SetGeneratorHandle(UMetasoundGeneratorHandle* GeneratorHandle) = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
+	virtual UMetasoundGeneratorHandle* GetGeneratorHandle() = 0;
+
+	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;
 	
 	//for internal non BP calls to actually setup the metasound builder system
 	UMetasoundBuilderHelperBase* InitializeAudioBlock();
 
+	UFUNCTION(BlueprintCallable, CallInEditor)
+	virtual void OnMetasoundHandleGenerated(UMetasoundGeneratorHandle* GeneratorHandle);
 	
 	
 };

@@ -6,27 +6,36 @@
 
 // Add default functionality here for any IBK_MusicSceneManagerInterface functions that are not pure virtual.
 
-
+BKMUSICCORE_API DEFINE_LOG_CATEGORY(BKMusicInterfaceLogs);
 
 void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 {
 	//TODODOTOD	TODTO
-		switch (InCommand)
+	
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s (%s): ReceivedCommand: %s, "), *this->_getUObject()->GetName(), this->_getUObject()->GetWorld() ? *this->_getUObject()->GetWorld()->GetName() : TEXT("No world"), *UEnum::GetValueAsString(InCommand))
+
+	switch (InCommand)
 		{
+		
 		case Init:
 			// create builder
 
 
-			Entry_Initializations();
-			UE_LOG(LogTemp, Log, TEXT("Received Init"))
+			
+			
 
-				InitializeAudioBlock();
+			InitializeAudioBlock();
 				break;
 		case Play:
-			if (!GetAudioComponent()->IsPlaying()) GetAudioComponent()->Play();
-
+			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s: Audio Component: %s, "), *this->_getUObject()->GetName(), *GetAudioComponent()->GetName())
+			//GetAudioComponent()->Activate();
+			GetAudioComponent()->Play();
 			GetAudioComponent()->SetTriggerParameter(FName("Play"));
-			UE_LOG(LogTemp, Log, TEXT("Received Play"))
+			GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
+			GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
+			//UE.Source.OnPlay
+			GetAudioComponent()->SetTriggerParameter(FName("Play"));
+			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
 				break;
 		case Pause:
 			break;
@@ -53,12 +62,39 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 	BuilderHelperInstance->SessionData = GetActiveSessionData();
 	BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
 
-	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;
+	SetBuilderHelper(BuilderHelperInstance);
+
+
+	
 	//UAudioComponent* component = GetAudioComponent();
-	GetAudioComponent()->Stop();
-	BuilderHelperInstance->CurrentBuilder->Audition(this->_getUObject(), GetAudioComponent(), GeneratorCreated);
-	GetAudioComponent()->SetObjectParameter(FName("MidiFile"), GetActiveSessionData()->TimeStampedMidis[0].MidiFile);
-	GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
+	//if (GetAudioComponent()) GetAudioComponent()->Stop();
+	
+	GeneratorCreated.BindDynamic(this, &IBK_MusicSceneManagerInterface::OnMetasoundHandleGenerated);
+
+	FMetaSoundBuilderOptions options = FMetaSoundBuilderOptions();
+	options.bForceUniqueClassName = true;
+
+
+	//BuilderHelperInstance->GeneratedMetaSound = BuilderHelperInstance->CurrentBuilder->Build(this->_getUObject(), options);
+	// 
+	//hopefully this will get us the opportunity to create an audio component in BP.
+	Entry_Initializations();
+
+	//BuilderHelperInstance->CurrentBuilder->Audition(this->_getUObject(), GetAudioComponent(), GeneratorCreated, true);
+
 
 	return BuilderHelperInstance;
+}
+
+void IBK_MusicSceneManagerInterface::OnMetasoundHandleGenerated(UMetasoundGeneratorHandle* GeneratorHandle)
+{
+	GetAudioComponent()->SetObjectParameter(FName("MidiFile"), GetActiveSessionData()->TimeStampedMidis[0].MidiFile);
+	GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
+	
+	//we call this overriden function to let us 
+	
+	SetGeneratorHandle(GeneratorHandle);
+
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s : Generated Handle, Generator Handle name %s"), *this->_getUObject()->GetName(), *GeneratorHandle->GetName())
+	//return inFromDelegate;
 }

@@ -14,7 +14,7 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName)
 
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 
-	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
+	//FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
 	FMetaSoundBuilderNodeInputHandle OnFinished;
 	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 	EMetaSoundBuilderResult BuildResult;
@@ -22,7 +22,7 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName)
 	//OutputFormat = SourceOutputFormat;
 	//SessionData->MasterOptions.OutputFormat
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
-	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
+	//CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 
 	PerformBpInitialization();
 
@@ -73,6 +73,11 @@ TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWith
 		if (patch->GetDocumentChecked().Interfaces.Contains(Version)) OnlyImplementingArray.Add(patch);
 	}
 	return OnlyImplementingArray;
+}
+
+void UMetasoundBuilderHelperBase::AuditionAC(UAudioComponent* AudioComponent)
+{
+
 }
 
 

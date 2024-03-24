@@ -32,8 +32,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Audio Setup", meta = (ExposeOnSpawn = true))
 	TSubclassOf<UMetasoundBuilderHelperBase> BuilderBPInstance;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UAudioComponent* Audio;
+
+	UPROPERTY()
+	UMetasoundBuilderHelperBase* BuilderHelper;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
+	UAudioComponent* PerformanceAudioComponent;
 
 	UPROPERTY()
 	UMetasoundGeneratorHandle* GeneratorHandle;	
@@ -95,4 +99,10 @@ public:
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() override;
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	void SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper) override;
+	UMetasoundBuilderHelperBase* GetBuilderHelper() override;
+	void SetGeneratorHandle(UMetasoundGeneratorHandle* GeneratorHandle) override;
+	UMetasoundGeneratorHandle* GetGeneratorHandle() override;
 };

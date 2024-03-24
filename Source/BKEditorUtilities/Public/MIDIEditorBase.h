@@ -68,6 +68,11 @@ class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, publ
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
+	UMetasoundBuilderHelperBase* BuilderHelper;
+
+	UPROPERTY()
+	UMetasoundGeneratorHandle* GeneratorHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Audio Setup", meta = (ExposeOnSpawn = true))
 	TSubclassOf<UMetasoundBuilderHelperBase> BuilderBPInstance;
@@ -245,6 +250,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "BK Music|MIDI")
 	EMetaSoundOutputAudioFormat OutputFormat;
 
+	UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
+	void BP_Initializations();
+
 protected:
 
 	//~ Begin UWidget Interface
@@ -301,5 +309,16 @@ protected:
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() override;
+
+	void Entry_Initializations() override;
+
+	// Inherited via IBK_MusicSceneManagerInterface
+	void SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper) override;
+
+	UMetasoundBuilderHelperBase* GetBuilderHelper() override;
+
+	void SetGeneratorHandle(UMetasoundGeneratorHandle* GeneratorHandle) override;
+
+	UMetasoundGeneratorHandle* GetGeneratorHandle() override;
 
 };

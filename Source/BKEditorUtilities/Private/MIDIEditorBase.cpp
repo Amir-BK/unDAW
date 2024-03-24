@@ -124,7 +124,7 @@ UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 	
 	if (!PerformanceComponent)
 	{
-	PerformanceComponent = UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
+	//PerformanceComponent = UGameplayStatics::CreateSound2D(WorldContextObject, nullptr, 1.0f, 1.0f, 0.0f);
 	}
 	
 
@@ -165,6 +165,33 @@ TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
 	return BuilderBPInstance;
 }
 
+void UMIDIEditorBase::Entry_Initializations()
+{
+
+		BP_Initializations();
+
+}
+
+void UMIDIEditorBase::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
+{
+	BuilderHelper = InBuilderHelper;
+}
+
+UMetasoundBuilderHelperBase* UMIDIEditorBase::GetBuilderHelper()
+{
+	return BuilderHelper;
+}
+
+void UMIDIEditorBase::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
+{
+	GeneratorHandle = InGeneratorHandle;
+}
+
+UMetasoundGeneratorHandle* UMIDIEditorBase::GetGeneratorHandle()
+{
+	return GeneratorHandle;
+}
+
 
 
 
@@ -195,9 +222,9 @@ void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInte
 
 void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComponent)
 {
-	for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;
+	//for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;
 
-	PerformanceComponent = InPerformanceComponent;
+	//PerformanceComponent = InPerformanceComponent;
 }
 
 void UMIDIEditorBase::AddHorizontalOffset(float deltaX)
