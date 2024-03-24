@@ -75,7 +75,6 @@ void AMusicScenePlayerActor::Entry_Initializations()
 
 UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
 {
-	UE_LOG(LogTemp, Log, TEXT("We 100% go into here"))
 	
 	return PerformanceAudioComponent;
 }

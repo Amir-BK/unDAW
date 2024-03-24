@@ -453,9 +453,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 				CurrentData->TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
 				}
 
-				//UpdateDataAsset();
 
-				UE_LOG(LogTemp, Log, TEXT("%s"), HarmonixMidiFile->GetFName());
 
 				if (!notes.IsEmpty())
 				{
