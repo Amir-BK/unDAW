@@ -32,7 +32,7 @@
     {
         class UNDAWMETASOUNDS_API FunDAWInstrumentRendererInterface : public Audio::FParameterInterface
         {
-            inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
+            inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
         public:
             FunDAWInstrumentRendererInterface() : FParameterInterface("unDAW Instrument Renderer", { 0, 1 })
@@ -43,11 +43,11 @@
 
             static Audio::FParameterInterfacePtr GetInterface()
             {
-                if (!singletonPointer.IsValid())
+                if (!InstancePointer.IsValid())
                 {
-                    singletonPointer = MakeShared<FunDAWInstrumentRendererInterface>();
+                    InstancePointer = MakeShared<FunDAWInstrumentRendererInterface>();
                 }
-                return singletonPointer;
+                return InstancePointer;
             }
 
             static void RegisterInterface()
@@ -95,7 +95,7 @@
 
         class UNDAWMETASOUNDS_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
         {
-            inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
+            inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
         public:
             FunDAWCustomInsertInterface() : FParameterInterface("unDAW Custom Insert", { 0, 1 })
@@ -106,11 +106,11 @@
 
             static Audio::FParameterInterfacePtr GetInterface()
             {
-                if (!singletonPointer.IsValid())
+                if (!InstancePointer.IsValid())
                 {
-                    singletonPointer = MakeShared<FunDAWCustomInsertInterface>();
+                    InstancePointer = MakeShared<FunDAWCustomInsertInterface>();
                 }
-                return singletonPointer;
+                return InstancePointer;
             }
 
             static void RegisterInterface()
@@ -158,87 +158,72 @@
 
         class UNDAWMETASOUNDS_API FunDAWMasterGraphInterface : public Audio::FParameterInterface
         {
-            inline static Audio::FParameterInterfacePtr singletonPointer = nullptr;
+            inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
-        public:
+
+            public:
+
+
+            // This determines the name of the interface as shown in the MetaSounds graphs and when interacted with by the builder system,
+            // the versioning is actually important as the graphs are picky about inserting nodes and interfaces with mismatching versions
+            // This interface has both inputs and outputs so we append both arrays, but in case an interface only has one just don't append the array.
             FunDAWMasterGraphInterface() : FParameterInterface("unDAW Session Renderer", { 0, 1 })
             {
                 Inputs.Append(GeneratedInputs);
                 Outputs.Append(GeneratedOutputs);
             }
 
+            // Boiler plate really, I'm actually not 100% sure what this does, I think some of the epic interfaces are templated and you can create different variants
+            // For my purposes there's no real value in templating the interfaces so they're each a singleton, the only purpose of this function is allow registering this interface to the engine
+            // The interface is being registered in the Module .cpp file in the 'InitModule' method.
             static Audio::FParameterInterfacePtr GetInterface()
             {
-                if (!singletonPointer.IsValid())
+                if (!InstancePointer.IsValid())
                 {
-                    singletonPointer = MakeShared<FunDAWMasterGraphInterface>();
+                    InstancePointer = MakeShared<FunDAWMasterGraphInterface>();
                 }
-                return singletonPointer;
+                return InstancePointer;
             }
 
+            //this is the method that gets called by the module init method. 
             static void RegisterInterface()
             {
-                //UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
                 Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
                 InterfaceRegistry.RegisterInterface(GetInterface());
             }
 
             ~FunDAWMasterGraphInterface() {};
 
-        private:
+            private:
 
 
-            //so this is how we wind up declaring params, at least I don't have to do it 40 times 
+            //so adding I/Os is essentially done here by creating const arrays which are append when the interface is constructed,
+            // I think this method is not so bad given that interfaces are not really mutable anyway, there are more options that can be given to each
+            // I/O, I only use a few, it's important to observe the namespaces of the data types, the harmonix data types are in a new name space. 
+            // DO NOTE: the declared size of the array must match the number of elements, otherwise the code won't compile. 
             const FInput GeneratedInputs[10] =
             {
-
-                DECLARE_BK_PARAM_NOINIT("Play","Play Trigger",
-                    unDAW.Transport.Play,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                 DECLARE_BK_PARAM_NOINIT("Prepare","Prepare Trigger",
-                    unDAW.Transport.Prepare,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                DECLARE_BK_PARAM_NOINIT("Pause","Pause Trigger",
-                    unDAW.Transport.Pause,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                 DECLARE_BK_PARAM_NOINIT("Stop","Stop Trigger",
-                    unDAW.Transport.Stop,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                 DECLARE_BK_PARAM_NOINIT("Kill","Kill Trigger",
-                    unDAW.Transport.Kill,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                  DECLARE_BK_PARAM_NOINIT("Seek","Seek Trigger",
-                    unDAW.Transport.Seek,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-                  DECLARE_BK_PARAM_NOINIT("TimeStamp Seek","Timestamp Seek Trigger",
-                    unDAW.Transport.SeekTimeStamp,
-                    Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>())
-
-                DECLARE_BK_PARAM("Seek Target","Time into the MIDI Clock to seek",
-                    unDAW.Transport.SeekTarget,
-                    Metasound::GetMetasoundDataTypeName<float>(), 0.0f)
-
-                 DECLARE_BK_PARAM_NOINIT("TimeStamp Seek Target","Timestamp into the MIDI Clock to seek",
-                    unDAW.Transport.SeekTimeStampTarget,
-                    Metasound::GetMetasoundDataTypeName<FMusicTimestamp>())
-
+                { INVTEXT("Play"), INVTEXT("Play Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Play") } },
+                { INVTEXT("Prepare"), INVTEXT("Prepare Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Prepare") }},
+                { INVTEXT("Pause"), INVTEXT("Pause Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Pause") }},
+                { INVTEXT("Stop"), INVTEXT("Stop Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Stop") } },
+                { INVTEXT("Kill"), INVTEXT("Kill Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Kill") } },
+                { INVTEXT("Seek"), INVTEXT("Seek Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Seek") } },
+                { INVTEXT("TimeStamp Seek"), INVTEXT("Timestamp Seek Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.SeekTimeStamp") } },
+                { INVTEXT("Seek Target"), INVTEXT("Time into the MIDI Clock to seek"), Metasound::GetMetasoundDataTypeName<float>(),{ ("unDAW.Transport.SeekTarget"), 0.0f } },
+                { INVTEXT("TimeStamp Seek Target"), INVTEXT("Timestamp into the MIDI Clock to seek"), Metasound::GetMetasoundDataTypeName<FMusicTimestamp>(),{ FName("unDAW.Transport.SeekTimeStampTarget") } },
             };
 
-            //The macros are a pointless waste of time and readibility, I'll remove all of them
-            //just declare the inputs/outputs with a list initializer like this, it's a lot easier
-
+            
+            //same trick for outputs
             const FOutput GeneratedOutputs[2] =
             {
                 {INVTEXT("MidiClock"), INVTEXT("Midi Clock Output"),  Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiClock>(), {FName(TEXT("unDAW.Midi Clock"))}},
-                {INVTEXT("MidiStream"), INVTEXT("Midi Stream Output"),  Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(), {FName(TEXT("unDAW.Midi Stream"))}}
-
-            };
-
-
-
+                 {INVTEXT("MidiStream"), INVTEXT("Midi Stream Output"),  Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(), {FName(TEXT("unDAW.Midi Stream"))}}
         };
+    };
 
-    }
+ }
 
 
 
