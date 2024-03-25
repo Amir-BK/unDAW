@@ -22,7 +22,7 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName)
 	//OutputFormat = SourceOutputFormat;
 	//SessionData->MasterOptions.OutputFormat
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
-	//CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
+	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 
 	PerformBpInitialization();
 

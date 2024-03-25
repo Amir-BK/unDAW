@@ -13,6 +13,7 @@
 #include "MetasoundTrigger.h"
 #include "MetasoundAudioBuffer.h"
 #include "HarmonixMetasound/DataTypes/MidiStream.h"
+#include "HarmonixMetasound/DataTypes/MidiClock.h"
 #include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
 #include "MetasoundWave.h"
 
@@ -163,7 +164,7 @@
             FunDAWMasterGraphInterface() : FParameterInterface("unDAW Session Renderer", { 0, 1 })
             {
                 Inputs.Append(GeneratedInputs);
-                //Outputs.Append(GeneratedOutputs);
+                Outputs.Append(GeneratedOutputs);
             }
 
             static Audio::FParameterInterfacePtr GetInterface()
@@ -188,7 +189,7 @@
 
 
             //so this is how we wind up declaring params, at least I don't have to do it 40 times 
-            const FInput GeneratedInputs[9] =
+            const FInput GeneratedInputs[10] =
             {
 
                 DECLARE_BK_PARAM_NOINIT("Play","Play Trigger",
@@ -223,11 +224,15 @@
 
             };
 
-            //const FOutput GeneratedOutputs[0] =
-            //{
+            //The macros are a pointless waste of time and readibility, I'll remove all of them
+            //just declare the inputs/outputs with a list initializer like this, it's a lot easier
 
+            const FOutput GeneratedOutputs[2] =
+            {
+                {INVTEXT("MidiClock"), INVTEXT("Midi Clock Output"),  Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiClock>(), {FName(TEXT("unDAW.Midi Clock"))}},
+                {INVTEXT("MidiStream"), INVTEXT("Midi Stream Output"),  Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(), {FName(TEXT("unDAW.Midi Stream"))}}
 
-            //};
+            };
 
 
 
