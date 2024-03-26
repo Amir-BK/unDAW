@@ -105,6 +105,9 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
+	TObjectPtr<UMetaSoundSource> PerformanceMetaSound;
+
 	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
 	float SequenceDuration = 100.0f;
 

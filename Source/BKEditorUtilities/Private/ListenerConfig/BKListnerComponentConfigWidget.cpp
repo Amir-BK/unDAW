@@ -3,7 +3,7 @@
 
 #include "ListenerConfig/BKListnerComponentConfigWidget.h"
 #include "Widgets/Text/STextBlock.h"
-#include "ListenerComponent/DAWListenerComponent.h"
+
 
 inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedObject)
 {

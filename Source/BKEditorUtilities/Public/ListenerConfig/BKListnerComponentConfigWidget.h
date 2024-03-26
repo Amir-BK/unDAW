@@ -5,13 +5,16 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/Selection.h"
+#include "Editor/Blutility/Classes/EditorUtilityWidget.h"
+#include "ListenerComponent/DAWListenerComponent.h"
+#include "MusicScenePlayerActor.h"
 #include "BKListnerComponentConfigWidget.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UUserWidget
+class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
 
@@ -22,6 +25,11 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UUserWidge
 
 	FString SelectedObjectName = "";
 
+	UPROPERTY()
+	TObjectPtr<AMusicScenePlayerActor> DefaultSceneManager;
+
+	UPROPERTY()
+	UDAWListenerComponent* ControlledComponent;
 
 protected:
 
