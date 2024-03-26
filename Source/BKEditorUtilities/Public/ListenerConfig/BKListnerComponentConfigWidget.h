@@ -8,6 +8,7 @@
 #include "Editor/Blutility/Classes/EditorUtilityWidget.h"
 #include "ListenerComponent/DAWListenerComponent.h"
 #include "MusicScenePlayerActor.h"
+#include "Components/DetailsView.h"
 #include "BKListnerComponentConfigWidget.generated.h"
 
 /**
@@ -23,7 +24,7 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 
 	virtual void OnSelectNone();
 
-	FString SelectedObjectName = "";
+
 
 	UPROPERTY()
 	TObjectPtr<AMusicScenePlayerActor> DefaultSceneManager;
@@ -31,10 +32,29 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 	UPROPERTY()
 	UDAWListenerComponent* ControlledComponent;
 
+
+
+
+public:
+
+	virtual void NativeConstruct() override;
+
+	UPROPERTY(BlueprintReadOnly)
+	FString SelectedObjectName = "";
+
 protected:
 
+
+	UFUNCTION(BlueprintImplementableEvent, CallInEditor)
+	void OnListenerComponentSelected(UDAWListenerComponent* SelectedComponent);
+
+
+	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	//class UDetailsView* ComponentDetailsView;
+
+
 	//~ Begin UWidget Interface
-	virtual TSharedRef<SWidget> RebuildWidget() override;
+	//virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	//virtual void NativeConstruct() override; 

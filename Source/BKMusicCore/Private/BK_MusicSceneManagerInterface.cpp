@@ -31,21 +31,21 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 			GetAudioComponent()->Play();
 			//GetAudioComponent()->SetTriggerParameter(FName("Play"));
 			//GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
-			GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
+			//GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
 			//UE.Source.OnPlay
-			GetAudioComponent()->SetTriggerParameter(FName("Play"));
+			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Play"));
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
 				break;
 		case Pause:
 			SetPlaybackState(EBKPlayState::Paused);
-			GetAudioComponent()->SetTriggerParameter(FName("Pause"));
+			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Pause"));
 			break;
 		case Stop:
 			SetPlaybackState(EBKPlayState::ReadyToPlay);
-			GetAudioComponent()->SetTriggerParameter(FName("Stop"));
+			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Stop"));
 			break;
 		case Kill:
-			GetAudioComponent()->SetTriggerParameter(FName("Kill"));
+			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Kill"));
 			break;
 		case TransportBackward:
 			break;

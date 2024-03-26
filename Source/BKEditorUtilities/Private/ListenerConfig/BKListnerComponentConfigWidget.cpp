@@ -18,6 +18,8 @@ inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedOb
 			if (ListenerComponent)
 			{
 				SelectedObjectName.Append(ListenerComponent->GetName());
+				OnListenerComponentSelected(ListenerComponent);
+				//if(ComponentDetailsView) ComponentDetailsView->
 			}
 		}
 	}
@@ -32,19 +34,26 @@ void UBKListnerComponentConfigWidget::OnSelectNone()
 	SelectedObjectName = "";
 }
 
-TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
+void UBKListnerComponentConfigWidget::NativeConstruct()
 {
 	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
 	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
-	
-	return SNew(STextBlock)
-		.Text_Lambda([&]() {
-
-		return FText::FromString(SelectedObjectName);
-			});
-
 }
+
+//TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
+//{
+//	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
+//	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
+//	
+//	return SNew(STextBlock)
+//		.Text_Lambda([&]() {
+//
+//		return FText::FromString(SelectedObjectName);
+//			});
+//
+//}
 
 void UBKListnerComponentConfigWidget::ReleaseSlateResources(bool bReleaseChildren)
 {
+
 }
