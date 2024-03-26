@@ -15,16 +15,22 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UUserWidge
 {
 	GENERATED_BODY()
 
-	void Test() 
-	{
-		USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
-	}
 
-	virtual void OnObjectSlected(UObject* SelectedObject)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Test"))
+	virtual void OnObjectSlected(UObject* SelectedObject);
 
-	};
+	virtual void OnSelectNone();
 
+	FString SelectedObjectName = "";
+
+
+protected:
+
+	//~ Begin UWidget Interface
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+
+	//virtual void NativeConstruct() override; 
+
+	//~ End UWidget Interface
 	
 };

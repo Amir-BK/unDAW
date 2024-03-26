@@ -7,7 +7,7 @@
 #include "DAWListenerComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(unDAW), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable )
 class BKMUSICCORE_API UDAWListenerComponent : public UActorComponent
 {
 	GENERATED_BODY()
