@@ -28,6 +28,9 @@ inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedOb
 		SelectedObjectName = "";
 	}
 
+	MainViewArea->ClearChildren();
+	InitFromData();
+
 }
 
 void UBKListnerComponentConfigWidget::OnSelectNone()
@@ -35,34 +38,24 @@ void UBKListnerComponentConfigWidget::OnSelectNone()
 	SelectedObjectName = "";
 }
 
-void UBKListnerComponentConfigWidget::NativeConstruct()
+void UBKListnerComponentConfigWidget::InitFromData()
 {
-	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
-	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
-}
-
-TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
-{
-	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
-	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
-	
-	return SNew(SVerticalBox)
-		+ SVerticalBox::Slot()
+	MainViewArea->AddSlot()
 		.AutoHeight()
 		.Padding(5)
 		[
 			SNew(STextBlock)
 				.Text_Lambda([&]() {return FText::FromString(SelectedObjectName); })
-		]
-		+ SVerticalBox::Slot()
+		];
+	MainViewArea->AddSlot()
 		.AutoHeight()
 		.Padding(5)
 		[
 
 			SNew(STextBlock)
 				.Text_Lambda([&]() {return FText::FromString((ControlledComponent && ControlledComponent->SceneManager) ? ControlledComponent->SceneManager->GetName() : TEXT("No scene manager"));	})
-		]
-		+ SVerticalBox::Slot()
+		];
+	MainViewArea->AddSlot()
 		.AutoHeight()
 		.Padding(5)
 		[
@@ -84,6 +77,21 @@ TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
 				]
 
 		];
+}
+
+void UBKListnerComponentConfigWidget::NativeConstruct()
+{
+	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
+	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
+}
+
+TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
+{
+	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
+	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
+	
+	return SAssignNew(MainViewArea, SVerticalBox);
+
 }
 
 

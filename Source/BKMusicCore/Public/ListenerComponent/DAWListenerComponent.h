@@ -31,6 +31,11 @@ protected:
 
 	TArray<TRange<int>> NoteFilters;
 	FName MidiOutputName;
+	int IndexInSceneManager;
+
+	
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager)
 	TObjectPtr<AMusicScenePlayerActor> SceneManager;
@@ -38,6 +43,7 @@ protected:
 	UFUNCTION(BlueprintSetter)
 	void SetSceneManager(AMusicScenePlayerActor* inSceneManager);
 
+	// Implement this event to add extra initializations to the actor that should happen after it already received the relevant scene data
 	UFUNCTION(BlueprintImplementableEvent)
 	void InitEvent();
 

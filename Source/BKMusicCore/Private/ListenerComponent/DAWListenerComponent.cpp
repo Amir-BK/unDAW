@@ -38,9 +38,17 @@ void UDAWListenerComponent::PostInitProperties()
 }
 
 
+
+
 void UDAWListenerComponent::SetSceneManager(AMusicScenePlayerActor* inSceneManager)
 {
 	SceneManager = inSceneManager;
+
+
+
+
+
+	InitEvent();
 
 }
 

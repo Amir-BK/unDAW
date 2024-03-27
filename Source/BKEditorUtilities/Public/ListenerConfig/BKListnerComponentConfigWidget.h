@@ -24,6 +24,8 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 
 	virtual void OnSelectNone();
 
+	void InitFromData();
+
 
 
 	UPROPERTY()
@@ -32,6 +34,8 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 	UPROPERTY()
 	UDAWListenerComponent* ControlledComponent;
 
+
+	TSharedPtr<SVerticalBox> MainViewArea;
 
 
 
