@@ -54,7 +54,7 @@ protected:
 
 
 	//~ Begin UWidget Interface
-	//virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	//virtual void NativeConstruct() override; 

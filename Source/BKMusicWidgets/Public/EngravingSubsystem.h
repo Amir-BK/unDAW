@@ -314,7 +314,7 @@ public:
 		return false;
 	}
 	
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|Engraving|Tests")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|Utilities")
 	static bool isNoteInCDiatonic(int const note) {
 	
 		return IsNoteInCmajor(note);
@@ -336,7 +336,8 @@ static char *combineStrings(char* inputA, char* inputB) {
 	
 #define NOTESYMBOL(c) return FString(TEXT(c))
 	
-	static FString const pitchNumToStringRepresentation(int const noteIn)
+UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|Utilities")
+static FString const pitchNumToStringRepresentation(int const noteIn)
 	{
 		int mod12 = noteIn % 12;
 		//char* octave = TCHAR::From noteIn / 12;

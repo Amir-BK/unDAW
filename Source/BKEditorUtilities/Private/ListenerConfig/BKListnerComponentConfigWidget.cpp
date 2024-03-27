@@ -40,20 +40,20 @@ void UBKListnerComponentConfigWidget::NativeConstruct()
 	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
 }
 
-//TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
-//{
-//	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
-//	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
-//	
-//	return SNew(STextBlock)
-//		.Text_Lambda([&]() {
-//
-//		return FText::FromString(SelectedObjectName);
-//			});
-//
-//}
+TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
+{
+	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
+	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
+	
+	return SNew(STextBlock)
+		.Text_Lambda([&]() {
+
+		return FText::FromString(SelectedObjectName);
+			});
+
+}
 
 void UBKListnerComponentConfigWidget::ReleaseSlateResources(bool bReleaseChildren)
 {
-
+	Super::ReleaseSlateResources(bReleaseChildren);
 }

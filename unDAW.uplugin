@@ -23,12 +23,12 @@
 		{
 			"Name": "BKMusicCore",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "EarliestPossible"
 		},
 		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "EarliestPossible"
 
 		},
 		{
