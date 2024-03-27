@@ -27,10 +27,19 @@ protected:
 
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void PostInitProperties() override;
 
+	TArray<TRange<int>> NoteFilters;
+	FName MidiOutputName;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager)
 	TObjectPtr<AMusicScenePlayerActor> SceneManager;
+
+	UFUNCTION(BlueprintSetter)
+	void SetSceneManager(AMusicScenePlayerActor* inSceneManager);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void InitEvent();
 
 public:	
 	// Called every frame

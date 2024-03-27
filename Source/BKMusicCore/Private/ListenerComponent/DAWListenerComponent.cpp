@@ -10,6 +10,7 @@ UDAWListenerComponent::UDAWListenerComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
+
 	// ...
 }
 
@@ -23,6 +24,25 @@ void UDAWListenerComponent::BeginPlay()
 	
 }
 
+void UDAWListenerComponent::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	if (SceneManager)
+	{
+		UE_LOG(LogTemp, Log, TEXT("we have a scene manager"))
+	}
+	else {
+		UE_LOG(LogTemp, Log, TEXT("we don't have a scene manager"))
+	}
+}
+
+
+void UDAWListenerComponent::SetSceneManager(AMusicScenePlayerActor* inSceneManager)
+{
+	SceneManager = inSceneManager;
+
+}
 
 // Called every frame
 void UDAWListenerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
