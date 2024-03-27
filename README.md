@@ -1,3 +1,5 @@
+https://www.youtube.com/watch?v=YTt5HZMRCAk
+
 Some videos until I make a proper demo - https://drive.google.com/drive/folders/1-tbrrys2V091Wv94E5xbvGdLrwm_79i_?usp=sharing
 
 Esentially, drag a midi file into unreal, right click it, choose 'Edit in BK Editor', click on the 'refresh' icon to generate the metasound and then hit 'play', it will default to pianos on all channels, press F1 to switch to the mixer and switch Fusion patches and the such. Ctrl/Shift + Mouse Wheel to zoom in and out in the editor. 
