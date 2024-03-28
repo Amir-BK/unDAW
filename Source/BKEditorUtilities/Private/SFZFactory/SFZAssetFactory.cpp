@@ -449,7 +449,8 @@ UObject* USFZAssetFactory::FactoryCreateFile(UClass* InClass, UObject* InParent,
 
 		//FKeyzoneArgs newZoneArgs = FKeyzoneArgs();
 		//newZoneArgs.MaxNote = processedSFZRegion->hiNote;
-		
+		// we don't want keyzones without wavs... 
+		if (!processedSFZRegion->WavAsset) continue;
 		FKeyzoneSettings newKeyzone = FKeyzoneSettings();
 		newKeyzone.SoundWave = TObjectPtr<USoundWave>(processedSFZRegion->WavAsset);
 

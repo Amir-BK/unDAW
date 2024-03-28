@@ -97,6 +97,7 @@ public:
 	virtual void Entry_Initializations() override;
 
 	// Inherited via IBK_MusicSceneManagerInterface
+	//UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
 	UAudioComponent* GetAudioComponent() override;
 
 	// Inherited via IBK_MusicSceneManagerInterface

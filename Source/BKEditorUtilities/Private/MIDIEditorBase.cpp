@@ -134,6 +134,11 @@ UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 	return PerformanceComponent;
 }
 
+void UMIDIEditorBase::SetPlaybackState(EBKPlayState newPlayState)
+{
+	SceneManager->SetPlaybackState(newPlayState);
+}
+
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 {
 	if (SceneManager == this)
@@ -160,7 +165,10 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 		//}
 		//return CacheForCurrentMidi;
 	}
-	return SceneManager->GetActiveSessionData();
+
+	if(SceneManager)	return SceneManager->GetActiveSessionData();
+
+	return nullptr;
 }
 
 TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
@@ -503,6 +511,16 @@ void UMIDIEditorBase::UpdateMidiFile()
 	InitFromDataHarmonix();
 }
 
+void UMIDIEditorBase::FindSceneManagerPieCounterpart()
+{
+	if(SceneManager != this) SceneManager = EditorUtilities::GetSimWorldCounterpartActor((AActor*&) SceneManager);
+}
+
+void UMIDIEditorBase::FindSceneManagerEditorCounterpart()
+{
+	if (SceneManager != this) SceneManager = EditorUtilities::GetEditorWorldCounterpartActor((AActor*&)SceneManager);
+}
+
 void UMIDIEditorBase::UpdateDataAsset()
 {
 	if (GEditor && GEditor->CanTransact() && ensure(!GIsTransacting))
@@ -512,20 +530,23 @@ void UMIDIEditorBase::UpdateDataAsset()
 	//if(MidiEditorCache->CachedSessions.Conatains(MidiName))
 	
 	UDAWSequencerData* CacheForCurrentMidi = GetActiveSessionData();
+	if (CacheForCurrentMidi)
+	{
+		//For now until we stop hacking it and allow more than one midi file we clear the array
+		CacheForCurrentMidi->TimeStampedMidis.Empty();
+
+		//CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true, tracksDisplayOptions));
+		CacheForCurrentMidi->CalculateSequenceDuration();
+		CacheForCurrentMidi->MarkPackageDirty();
+
+		if (TransportWidget) TransportWidget->SetTransportDuration(CacheForCurrentMidi->SequenceDuration * .001f);
+
+		//MidiEditorCache->CachedSessions.Add(MidiName, CacheForCurrentMidi);
+		//MidiEditorCache->MarkPackageDirty();
+		if (GEditor) GEditor->EndTransaction();
+	}
 
 
-	//For now until we stop hacking it and allow more than one midi file we clear the array
-	CacheForCurrentMidi->TimeStampedMidis.Empty();
-
-	//CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true, tracksDisplayOptions));
-	CacheForCurrentMidi->CalculateSequenceDuration();
-	CacheForCurrentMidi->MarkPackageDirty();
-
-	if (TransportWidget) TransportWidget->SetTransportDuration(CacheForCurrentMidi->SequenceDuration * .001f);
-
-	//MidiEditorCache->CachedSessions.Add(MidiName, CacheForCurrentMidi);
-	//MidiEditorCache->MarkPackageDirty();
-	if (GEditor) GEditor->EndTransaction();
 
 }
 
@@ -563,34 +584,8 @@ void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 		
 		return;
 	}
-	switch (newCommand)
-	{
-	case Init:
-		UpdateDataAsset();
-		// create builder
-		//UE_LOG(LogTemp, Log, TEXT("Received Init"))
-		break;
-	case Play:
 
-		//UE_LOG(LogTemp,Log, TEXT("Received Play"))
-		break;
-	case Pause:
-		break;
-	case Stop:
-		break;
-	case Kill:
-		break;
-	case TransportBackward:
-		break;
-	case TransportForward:
-		break;
-	case NextMarker:
-		break;
-	case PrevMarker:
-		break;
-	default:
-		break;
-	}
+	SendTransportCommand(newCommand);
 
 }
 
@@ -677,6 +672,7 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
 {
+
 	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ID];
 }
 
@@ -732,17 +728,18 @@ void UMIDIEditorBase::InitAudioBlock()
 	}
 }
 
-TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
+const TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
 {
 	
 	//GetActiveSessionData()->TimeStampedMidis[0].TracksMappings
-
 	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings;
+	
+	
 }
 
 void UMIDIEditorBase::ExecuteAudioParamOnPerformanceComponent(FString InName, float inValue)
 {
-	if (IsValid(PerformanceComponent)) {
+	if (IsValid(GetAudioComponent())) {
 		PerformanceComponent->SetParameter(FAudioParameter(FName(InName), inValue));
 		
 	}

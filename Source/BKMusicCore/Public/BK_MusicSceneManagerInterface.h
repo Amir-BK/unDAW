@@ -96,7 +96,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	virtual void SetPlaybackState(EBKPlayState newPlayState) {};
+	virtual void SetPlaybackState(EBKPlayState newPlayState) { PlayState = newPlayState; };
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendTransportCommand(EBKTransportCommands InCommand);
@@ -111,7 +111,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual UDAWSequencerData* GetActiveSessionData() = 0;
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW|Transport")
 	virtual UAudioComponent* GetAudioComponent() = 0;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")

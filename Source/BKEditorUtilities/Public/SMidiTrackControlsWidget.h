@@ -237,8 +237,13 @@ public:
 							[
 								SNew(SColorBlock)
 									.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
-
+									if (parentMidiEditor->GetActiveSessionData() && !parentMidiEditor->GetActiveSessionData()->TimeStampedMidis.IsEmpty()
+										&& parentMidiEditor->GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(slotInParentID))
+									{
 									return parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+									}
+									return FLinearColor::Gray;
+
 										})))
 									.Size(FVector2D(350.0f, 20.0f))
 											.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)

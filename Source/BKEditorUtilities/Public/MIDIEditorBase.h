@@ -35,6 +35,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGridQuantizationUnitChanged, EMus
 
 
 class SColorPicker;
+class SMIDITrackControls;
+
 
 UCLASS(BlueprintType, Category = "BK Music|MIDI", EditInlineNew)
 class BK_EDITORUTILITIES_API UMIDITrackCache : public UDataAsset
@@ -171,7 +173,7 @@ public:
 	void InitAudioBlock();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
-	UPARAM(ref) TArray<FTrackDisplayOptions>& GetTrackDisplayOptions();
+	UPARAM(ref) const TArray<FTrackDisplayOptions>& GetTrackDisplayOptions();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void ExecuteAudioParamOnPerformanceComponent(FString InName, float inValue);
@@ -185,6 +187,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void UpdateMidiFile();
 
+	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
+	void FindSceneManagerPieCounterpart();
+
+	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
+	void FindSceneManagerEditorCounterpart();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void UpdateDataAsset();
@@ -261,6 +268,8 @@ public:
 
 protected:
 
+	friend class SMIDITrackControls;
+
 	//~ Begin UWidget Interface
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
@@ -308,6 +317,7 @@ protected:
 
 	UAudioComponent* GetAudioComponent() override;
 
+	virtual void SetPlaybackState(EBKPlayState newPlayState) override;
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	UDAWSequencerData* GetActiveSessionData() override;

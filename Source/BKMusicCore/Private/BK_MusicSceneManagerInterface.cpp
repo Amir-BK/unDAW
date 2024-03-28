@@ -26,16 +26,41 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 			break;
 		case Play:
 			
+			UE_LOG(LogTemp, Log, TEXT("Received Play Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
+			switch (GetCurrentPlaybackState())
+			{
+			case ReadyToPlay:
+				if (GetAudioComponent())
+				{
+					GetAudioComponent()->Play();
+					GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Play"));
+					SetPlaybackState(Playing);
+				}
+				break;
+
+
+			default:
+				if (GetAudioComponent())
+				{
+					GetAudioComponent()->Play();
+					GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Play"));
+					SetPlaybackState(Playing);
+				}
+				break;
+
+
+			}
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s: Audio Component: %s, "), *this->_getUObject()->GetName(), *GetAudioComponent()->GetName())
 			//GetAudioComponent()->Activate();
-			GetAudioComponent()->Play();
+
+		
 			//GetAudioComponent()->SetTriggerParameter(FName("Play"));
 			//GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
 			//GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
 			//UE.Source.OnPlay
-			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Play"));
+			
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
-			SetPlaybackState(Playing);
+			
 				break;
 		case Pause:
 			SetPlaybackState(EBKPlayState::Paused);
