@@ -1,4 +1,4 @@
-[![VPiano Test](https://img.youtube.com/vi/YTt5HZMRCAk/0.jpg)](https://www.youtube.com/watch?v=YTt5HZMRCAk)
+[![VPiano Test](https://img.youtube.com/vi/NkY0bB5pHyE/0.jpg)](https://www.youtube.com/watch?v=NkY0bB5pHyE)
 
 
 Some videos until I make a proper demo - https://drive.google.com/drive/folders/1-tbrrys2V091Wv94E5xbvGdLrwm_79i_?usp=sharing
