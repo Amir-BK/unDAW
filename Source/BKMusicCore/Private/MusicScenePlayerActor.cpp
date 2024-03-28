@@ -12,7 +12,7 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 	PrimaryActorTick.bCanEverTick = true;
 	//Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Attachment Root"));
+	//RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Attachment Root"));
 	
 	//Audio->AutoAttachParent = RootComponent;
 
@@ -22,11 +22,29 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 void AMusicScenePlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
-	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true);
-	//PerformanceAudioComponent->AddToRoot();
+
+	
 	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	if (GetActiveSessionData() && GetActiveSessionData()->PerformanceMetaSound)
+	{
+		//GetActiveSessionData()->PerformanceMetaSound->OnGeneratorInstanceCreated.Add(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
+		PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->PerformanceMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
+		//PerformanceAudioComponent->AddToRoot();
+		//PerformanceAudioComponent->SetSound();
+		UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(PerformanceAudioComponent);
+	} 
 	
+}
+
+void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated(TSharedPtr<Metasound::FMetasoundGenerator> GeneratorPointer, ESPMode UserPolicy)
+{
+	UE_LOG(LogTemp, Log, TEXT("Yes Hello?"))
+}
+
+void AMusicScenePlayerActor::PerformanceMetasoundGeneratorDestroyed(uint64 GeneratorPointer)
+{
+	UE_LOG(LogTemp, Log, TEXT("Good bye ?"))
 }
 
 // Called every frame
@@ -106,12 +124,12 @@ UMetasoundBuilderHelperBase* AMusicScenePlayerActor::GetBuilderHelper()
 
 void AMusicScenePlayerActor::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
 {
-	GeneratorHandle = InGeneratorHandle;
+	GeneratorHandle = TSharedPtr<UMetasoundGeneratorHandle>(InGeneratorHandle);
 }
 
 UMetasoundGeneratorHandle* AMusicScenePlayerActor::GetGeneratorHandle()
 {
-	return GeneratorHandle;
+	return GeneratorHandle.Get();
 }
 
 

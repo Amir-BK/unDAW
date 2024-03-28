@@ -7,7 +7,11 @@
 #include "GameFramework/Actor.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "Components/AudioComponent.h"
+
+#include "Delegates/DelegateBase.h"
+#include "Delegates/DelegateSettings.h"
 #include "MusicScenePlayerActor.generated.h"
+
 
 UCLASS()
 class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
@@ -39,8 +43,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UAudioComponent* PerformanceAudioComponent;
 
-	UPROPERTY()
-	UMetasoundGeneratorHandle* GeneratorHandle;	
+	//UPROPERTY()
+	TSharedPtr<UMetasoundGeneratorHandle> GeneratorHandle;	
 
 	UPROPERTY()
 	TEnumAsByte<EBKPlayState> PlayState = EBKPlayState::NotReady;
@@ -56,6 +60,10 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void PerformanceMetasoundGeneratorCreated(TSharedPtr<Metasound::FMetasoundGenerator> GeneratorPointer, ESPMode UserPolicy);
+
+	void PerformanceMetasoundGeneratorDestroyed(uint64 GeneratorPointer);
 
 public:	
 	// Called every frame

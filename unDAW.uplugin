@@ -28,7 +28,7 @@
 		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible"
+			"LoadingPhase": "PreDefault"
 
 		},
 		{
