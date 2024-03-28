@@ -35,10 +35,12 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 			//UE.Source.OnPlay
 			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Play"));
 			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
+			SetPlaybackState(Playing);
 				break;
 		case Pause:
 			SetPlaybackState(EBKPlayState::Paused);
 			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Pause"));
+			SetPlaybackState(Paused);
 			break;
 		case Stop:
 			SetPlaybackState(EBKPlayState::ReadyToPlay);

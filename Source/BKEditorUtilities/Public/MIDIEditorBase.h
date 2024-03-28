@@ -26,6 +26,7 @@
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
  
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPanelPopulated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSessionInitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSeekEvent, float, NewSeek);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTrackSelectedEvent, bool, selected, int, trackID);
 
@@ -117,13 +118,14 @@ public:
 	TArray<float> panelSlotSizes;
 
 	
+	//event delegates
 
 	
 	UPROPERTY(BlueprintAssignable, Category = "BK Music|MIDI|Internal")
 	FOnPanelPopulated donePopulatingDelegate;
 
-	//event delegates
-
+	UPROPERTY(BlueprintAssignable, Category = "unDAW|Internal")
+	FOnSessionInitialized OnMetaBuilderReady;
 	
 	UPROPERTY(BlueprintAssignable , Category = "BK Music|MIDI|Interface")
 	FOnTransportSeekCommand SeekEventDelegate;
@@ -179,6 +181,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void InitFromDataHarmonix();
+
+	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
+	void UpdateMidiFile();
+
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void UpdateDataAsset();
@@ -252,9 +258,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "BK Music|MIDI")
 	EMetaSoundOutputAudioFormat OutputFormat;
-
-	UFUNCTION(BlueprintImplementableEvent, CallInEditor, Category = "BK Music")
-	void BP_Initializations();
 
 protected:
 

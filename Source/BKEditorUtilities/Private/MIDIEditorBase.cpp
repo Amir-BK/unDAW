@@ -172,9 +172,8 @@ TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
 
 void UMIDIEditorBase::Entry_Initializations()
 {
-	//UE_LOG(BKMidiLogs, Verbose, TEXT("World Context Object: %s"), *WorldContextObject->GetName())
-		//BP_Initializations();
-
+	UE_LOG(LogTemp, Log, TEXT("Entry initializations %s"), *this->GetName())
+	OnMetaBuilderReady.Broadcast();
 }
 
 void UMIDIEditorBase::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
@@ -279,9 +278,13 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 
 	auto CurrentData = GetActiveSessionData();
-	CurrentData->TimeStampedMidis.Empty();
+	//CurrentData->TimeStampedMidis.Empty();
 
+	if (GetActiveSessionData()->TimeStampedMidis.IsEmpty())
+	{
 	GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
+	}
+
 
 
 	//tracksDisplayOptions.Empty();
@@ -491,6 +494,13 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 	PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
 	donePopulatingDelegate.Broadcast();
+}
+
+void UMIDIEditorBase::UpdateMidiFile()
+{
+	auto CurrentData = GetActiveSessionData();
+	CurrentData->TimeStampedMidis.Empty();
+	InitFromDataHarmonix();
 }
 
 void UMIDIEditorBase::UpdateDataAsset()

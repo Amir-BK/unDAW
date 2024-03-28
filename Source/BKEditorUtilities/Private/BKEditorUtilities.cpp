@@ -133,7 +133,7 @@ void BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(UMidiFile* Midi
     
 
         widgetAsEngraving->HarmonixMidiFile = MidiFilePointer;
-        widgetAsEngraving->InitFromDataHarmonix();
+        widgetAsEngraving->UpdateMidiFile();
 
     
 }
