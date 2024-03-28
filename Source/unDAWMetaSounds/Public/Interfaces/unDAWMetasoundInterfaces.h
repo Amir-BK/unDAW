@@ -201,7 +201,7 @@
             // I think this method is not so bad given that interfaces are not really mutable anyway, there are more options that can be given to each
             // I/O, I only use a few, it's important to observe the namespaces of the data types, the harmonix data types are in a new name space. 
             // DO NOTE: the declared size of the array must match the number of elements, otherwise the code won't compile. 
-            const FInput GeneratedInputs[10] =
+            const FInput GeneratedInputs[9] =
             {
                 { INVTEXT("Play"), INVTEXT("Play Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Play") } },
                 { INVTEXT("Prepare"), INVTEXT("Prepare Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Prepare") }},
