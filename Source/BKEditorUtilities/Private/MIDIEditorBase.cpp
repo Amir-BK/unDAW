@@ -740,7 +740,7 @@ const TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
 void UMIDIEditorBase::ExecuteAudioParamOnPerformanceComponent(FString InName, float inValue)
 {
 	if (IsValid(GetAudioComponent())) {
-		PerformanceComponent->SetParameter(FAudioParameter(FName(InName), inValue));
+		GetAudioComponent()->SetParameter(FAudioParameter(FName(InName), inValue));
 		
 	}
 }

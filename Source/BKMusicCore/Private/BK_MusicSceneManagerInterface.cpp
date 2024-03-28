@@ -40,6 +40,8 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 
 
 			default:
+
+				// This is hack - must figure this out
 				if (GetAudioComponent())
 				{
 					GetAudioComponent()->Play();
