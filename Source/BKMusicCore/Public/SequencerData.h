@@ -108,7 +108,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
 	TObjectPtr<UMetaSoundSource> PerformanceMetaSound;
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	float SequenceDuration = 100.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
