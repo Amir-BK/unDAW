@@ -74,7 +74,7 @@ protected:
 	UPROPERTY()
 	float CurrentSeek = 0;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager = nullptr;
 
 public:

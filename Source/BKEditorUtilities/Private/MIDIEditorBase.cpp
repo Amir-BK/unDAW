@@ -68,7 +68,8 @@ float UMIDIEditorBase::getCurrentTimelinePosition()
 
 TSharedRef<SWidget> UMIDIEditorBase::RebuildWidget()
 {
-
+	InvalidTrackRef = FTrackDisplayOptions();
+	InvalidTrackRef.trackColor = FLinearColor::Gray;
 	
 	if (TransportWidget)
 	{
@@ -165,8 +166,9 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 		//}
 		//return CacheForCurrentMidi;
 	}
-
-	if(SceneManager)	return SceneManager->GetActiveSessionData();
+	else {
+		return SceneManager->GetActiveSessionData();
+	}
 
 	return nullptr;
 }
@@ -225,6 +227,7 @@ void UMIDIEditorBase::SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInte
 	if (InSceneManager) {
 	SceneManager = InSceneManager;
 	HarmonixMidiFile = SceneManager->GetActiveSessionData()->TimeStampedMidis[0].MidiFile;
+	//DataPointer = InSceneManager->GetActiveSessionData();
 	InitFromDataHarmonix();
 	}
 	else {
@@ -513,12 +516,12 @@ void UMIDIEditorBase::UpdateMidiFile()
 
 void UMIDIEditorBase::FindSceneManagerPieCounterpart()
 {
-	if(SceneManager != this) SceneManager = EditorUtilities::GetSimWorldCounterpartActor((AActor*&) SceneManager);
+	if(SceneManager && SceneManager != this) SceneManager = EditorUtilities::GetSimWorldCounterpartActor((AActor*&) SceneManager);
 }
 
 void UMIDIEditorBase::FindSceneManagerEditorCounterpart()
 {
-	if (SceneManager != this) SceneManager = EditorUtilities::GetEditorWorldCounterpartActor((AActor*&)SceneManager);
+	if (SceneManager && SceneManager != this) SceneManager = EditorUtilities::GetEditorWorldCounterpartActor((AActor*&)SceneManager);
 }
 
 void UMIDIEditorBase::UpdateDataAsset()
@@ -672,8 +675,14 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
 {
-
+	if (GetActiveSessionData() && !GetActiveSessionData()->TimeStampedMidis.IsEmpty() && GetActiveSessionData()->TimeStampedMidis.IsValidIndex(ID))
+	{
 	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ID];
+	}
+	else
+	{
+	return InvalidTrackRef;
+	}
 }
 
 
@@ -728,6 +737,7 @@ void UMIDIEditorBase::InitAudioBlock()
 	}
 }
 
+//Too risky...
 const TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
 {
 	

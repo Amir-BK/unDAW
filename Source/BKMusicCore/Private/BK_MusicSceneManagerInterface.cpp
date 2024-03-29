@@ -89,6 +89,12 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 		}
 }
 
+void IBK_MusicSceneManagerInterface::SetPlayrate(float newPlayrate)
+{
+	GetAudioComponent()->SetFloatParameter(FName("unDAW.Midi.Speed"), newPlayrate);
+	Playrate = newPlayrate;
+}
+
 UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBlock()
 {
 	UMetasoundBuilderHelperBase* BuilderHelperInstance = NewObject<UMetasoundBuilderHelperBase>(this->_getUObject(), GetBuilderBPClass());

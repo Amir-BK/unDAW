@@ -71,6 +71,11 @@ class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, publ
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY()
+	FTrackDisplayOptions InvalidTrackRef;
+
+
 	UPROPERTY()
 	UMetasoundBuilderHelperBase* BuilderHelper;
 
