@@ -296,7 +296,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
 	}
 
-
+	GetActiveSessionData()->CalculateSequenceDuration();
 
 	//tracksDisplayOptions.Empty();
 	InternalGraphs.Empty();
