@@ -28,6 +28,15 @@ void BKEditorUtilitiesModule::StartupModule()
     TArray<FContentBrowserMenuExtender_SelectedAssets>& CBMenuAssetExtenderDelegates = ContentBrowserModule.GetAllAssetViewContextMenuExtenders();
     CBMenuAssetExtenderDelegates.Add(FContentBrowserMenuExtender_SelectedAssets::CreateStatic(&BKEditorUtilitiesModule::OnExtendMidiAssetSelectionMenu));
 
+    FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+    const auto& section = PropertyModule.FindOrCreateSection("Actor", "unDAW", INVTEXT("unDAW"));
+    section->AddCategory("unDAW");
+    section->AddCategory("BK Music");
+
+    const auto& componentSection = PropertyModule.FindOrCreateSection("ActorComponent", "unDAW", INVTEXT("unDAW"));
+    componentSection->AddCategory("unDAW");
+    componentSection->AddCategory("BK Music");
 }
 
 void BKEditorUtilitiesModule::ShutdownModule()

@@ -37,10 +37,10 @@ protected:
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager, Category="unDAW")
 	TObjectPtr<AMusicScenePlayerActor> SceneManager;
 
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintSetter, Category = "unDAW")
 	void SetSceneManager(AMusicScenePlayerActor* inSceneManager);
 
 	// Implement this event to add extra initializations to the actor that should happen after it already received the relevant scene data
