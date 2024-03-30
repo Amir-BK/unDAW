@@ -1,3 +1,5 @@
+Quick and dirty quick start guide - https://www.youtube.com/watch?v=-Hr0XsmlV8Y
+
 [![VPiano Test](https://img.youtube.com/vi/NkY0bB5pHyE/0.jpg)](https://www.youtube.com/watch?v=NkY0bB5pHyE)
 
 
