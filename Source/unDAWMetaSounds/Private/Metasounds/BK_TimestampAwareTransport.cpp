@@ -23,6 +23,7 @@ namespace unDAWMetasound
 	namespace TimeStampedTransportVertexNames
 	{
 		METASOUND_PARAM(TriggerDuringSeek, "Trigger During Seek", "Whether a trigger should be generated is a seek over the timestamp is detected.")
+		METASOUND_PARAM(LoopTimeStamp, "Loop", "If set to false the timestamp will only fire once until it changes")
 	}
 
 	class FTriggerAndTimestampToTransportOperator : public TExecutableOperator<FTriggerAndTimestampToTransportOperator>, public FMidiPlayCursor
@@ -42,6 +43,7 @@ namespace unDAWMetasound
 									const FTriggerReadRef&         InTriggerSeek,
 									const FMusicSeekTargetReadRef& InSeekDestination,
 									const FBoolReadRef& InTriggerDuringSeek,
+									const FBoolReadRef& InLoopTimeStamp,
 									const FMusicTimestampReadRef& InTimestamp);
 
 		virtual void BindInputs(FInputVertexInterfaceData& InVertexData) override;
@@ -72,10 +74,10 @@ namespace unDAWMetasound
 		FMusicTimestampReadRef                       TimestampInPin;
 		//FEnumMidiClockSubdivisionQuantizationReadRef QuantizeUnitInPin;
 		FBoolReadRef		                         TriggerDuringSeekInPin;
+		FBoolReadRef		                         LoopTimeStampInPin;
 
 		//** OUTPUTS
 		HarmonixMetasound::FMusicTransportEventStreamWriteRef TransportOutPin;
-
 
 
 		//Midi play cursor thingies 
@@ -130,8 +132,8 @@ namespace unDAWMetasound
 			Info.ClassName        = { TEXT("unDAW"), TEXT("EnhancedTriggerToTransport"), TEXT("") };
 			Info.MajorVersion     = 0;
 			Info.MinorVersion     = 2;
-			Info.DisplayName      = METASOUND_LOCTEXT("TriggerToTransportNode_DisplayName", "Trigger To Music Transport");
-			Info.Description      = METASOUND_LOCTEXT("TriggerToTransportNode_Description", "Combines input triggers into meaningful music transport requests.");
+			Info.DisplayName      = INVTEXT("unDAW TimeStamped Music Transport");
+			Info.Description      = INVTEXT("Adds an innate time stamp trigger to to the transport which enables musically accurrate jumping and looping");
 			Info.Author           = TEXT("Amir Ben-Kiki");
 			Info.PromptIfMissing  = PluginNodeMissingPrompt;
 			Info.DefaultInterface = GetVertexInterface();
@@ -157,7 +159,10 @@ namespace unDAWMetasound
 				TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::TransportStop)),
 				TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::TransportKill)),
 				TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::TriggerSeek)),
-				TInputDataVertex<FMusicSeekTarget>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::SeekDestination))
+				TInputDataVertex<FMusicSeekTarget>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::SeekDestination)),
+				TInputDataVertex<FMusicTimestamp>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::Timestamp)),
+				TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(TimeStampedTransportVertexNames::TriggerDuringSeek), false),
+				TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(TimeStampedTransportVertexNames::LoopTimeStamp), false)
 
 			),
 			FOutputVertexInterface(
@@ -182,6 +187,7 @@ namespace unDAWMetasound
 		FTriggerReadRef InTriggerSeek             = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TriggerSeek), InParams.OperatorSettings);
 		FMusicSeekTargetReadRef InSeekDestination = InputData.GetOrConstructDataReadReference<FMusicSeekTarget>(METASOUND_GET_PARAM_NAME(Inputs::SeekDestination));
 		FBoolReadRef  InTriggerDuringSeek = InputData.GetOrCreateDefaultDataReadReference<bool>(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::TriggerDuringSeek), InParams.OperatorSettings);
+		FBoolReadRef  InLoopTimeStamp = InputData.GetOrCreateDefaultDataReadReference<bool>(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::LoopTimeStamp), InParams.OperatorSettings);
 
 
 		//FMusicTransportEventStreamReadRef InTransport = InputData.GetOrConstructDataReadReference<FMusicTransportEventStream>(METASOUND_GET_PARAM_NAME(Inputs::Transport), InParams.OperatorSettings);
@@ -197,6 +203,7 @@ namespace unDAWMetasound
 			InTriggerSeek,
 			InSeekDestination,
 			InTriggerDuringSeek,
+			InLoopTimeStamp,
 			InTimestamp);
 	}
 
@@ -210,6 +217,8 @@ namespace unDAWMetasound
 															 const FTriggerReadRef&   InTriggerSeek,
 															 const FMusicSeekTargetReadRef& InSeekDestination,
 															const FBoolReadRef& InTriggerDuringSeek,
+															const FBoolReadRef& InLoopTimeStamp,
+
 															const FMusicTimestampReadRef& InTimestamp)
 		: PrepareInPin(InTriggerPrepare)
 		, PlayInPin(InTriggerPlay)
@@ -221,6 +230,7 @@ namespace unDAWMetasound
 		, SeekDestinationInPin(InSeekDestination)
 		,TimestampInPin(InTimestamp)
 		,TriggerDuringSeekInPin(InTriggerDuringSeek)
+		,LoopTimeStampInPin(InLoopTimeStamp)
 		,TransportOutPin(HarmonixMetasound::FMusicTransportEventStreamWriteRef::CreateNew(InParams.OperatorSettings))
 	{
 		Reset(InParams);
@@ -238,6 +248,9 @@ namespace unDAWMetasound
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportKill), KillInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TriggerSeek), TriggerSeekInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::SeekDestination), SeekDestinationInPin);
+		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::Timestamp), TimestampInPin);
+		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::TriggerDuringSeek), TriggerDuringSeekInPin);
+		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::LoopTimeStamp), LoopTimeStampInPin);
 	}
 
 	void FTriggerAndTimestampToTransportOperator::BindOutputs(FOutputVertexInterfaceData& InVertexData)
@@ -266,11 +279,23 @@ namespace unDAWMetasound
 	void FTriggerAndTimestampToTransportOperator::Reset(const FResetParams& ResetParams)
 	{
 		TransportOutPin->Reset();
+
+		FMidiPlayCursor::Reset(true);
+
+		CalculateTriggerTick();
 	}
 
 	void FTriggerAndTimestampToTransportOperator::Execute()
 	{
 		TransportOutPin->Reset();
+
+		// first let's see if our configuration has changed at all...
+		if (CurrentTimestamp != *TimestampInPin)
+		{
+			CurrentTimestamp = *TimestampInPin;
+
+			CalculateTriggerTick();
+		}
 
 		// early out if no transport changes are pending...
 		if (!PrepareInPin->IsTriggeredInBlock() &&

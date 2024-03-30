@@ -13,7 +13,7 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 	//TODODOTOD	TODTO
 	
 	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s (%s): ReceivedCommand: %s, "), *this->_getUObject()->GetFullName(), this->_getUObject()->GetWorld() ? *this->_getUObject()->GetWorld()->GetName() : TEXT("No world"), *UEnum::GetValueAsString(InCommand))
-
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
 	switch (InCommand)
 		{
 		
@@ -26,7 +26,7 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 			break;
 		case Play:
 			
-			UE_LOG(LogTemp, Log, TEXT("Received Play Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
+			
 			switch (GetCurrentPlaybackState())
 			{
 			case ReadyToPlay:
@@ -52,17 +52,7 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 
 
 			}
-			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("%s: Audio Component: %s, "), *this->_getUObject()->GetName(), *GetAudioComponent()->GetName())
-			//GetAudioComponent()->Activate();
 
-		
-			//GetAudioComponent()->SetTriggerParameter(FName("Play"));
-			//GetAudioComponent()->SetTriggerParameter(FName("UE.Source.OnPlay"));
-			//GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
-			//UE.Source.OnPlay
-			
-			//UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Play"))
-			
 			break;
 		case Pause:
 			SetPlaybackState(EBKPlayState::Paused);
@@ -70,8 +60,25 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 			SetPlaybackState(Paused);
 			break;
 		case Stop:
-			SetPlaybackState(EBKPlayState::ReadyToPlay);
-			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Stop"));
+			switch (GetCurrentPlaybackState())
+			{
+			case Playing:
+				if (GetAudioComponent())
+				{
+					SetPlaybackState(EBKPlayState::ReadyToPlay);
+					GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Stop"));
+					//SetPlaybackState(Re);
+				}
+				break;
+
+
+			default:
+
+				UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Some other state"))
+				break;
+
+			}
+		
 			break;
 		case Kill:
 			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Kill"));

@@ -121,7 +121,7 @@ FOnTransportSeekCommand* UMIDIEditorBase::GetSeekCommandDelegate()
 
 UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 {
-	if (SceneManager != this)
+	if (SceneManager && SceneManager != this)
 	{
 		return SceneManager->GetAudioComponent();
 	}
@@ -137,12 +137,17 @@ UAudioComponent* UMIDIEditorBase::GetAudioComponent()
 
 void UMIDIEditorBase::SetPlaybackState(EBKPlayState newPlayState)
 {
-	SceneManager->SetPlaybackState(newPlayState);
+	UE_LOG(BKMidiLogs, Log, TEXT("Received set playbackstate in MidiEditor, %s"), *UEnum::GetValueAsString(newPlayState))
+		if (SceneManager) { SceneManager->SetPlaybackState(newPlayState); }
+		else {
+			UE_LOG(BKMidiLogs, Log, TEXT("No Scene Manager, %s"), *UEnum::GetValueAsString(newPlayState))
+		}
+
 }
 
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 {
-	if (SceneManager == this)
+	if (SceneManager && SceneManager == this)
 	{
 	
 		return PreviewCache;
@@ -167,7 +172,7 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 		//return CacheForCurrentMidi;
 	}
 	else {
-		return SceneManager->GetActiveSessionData();
+		if(SceneManager)	return SceneManager->GetActiveSessionData();
 	}
 
 	return nullptr;
@@ -576,7 +581,7 @@ void UMIDIEditorBase::SetTransportPlayState(EBKPlayState newPlayState)
 void UMIDIEditorBase::ReceiveTransportCommand(EBKTransportCommands newCommand)
 {
 	// if we have a scene manager we just pass the command 
-	if (SceneManager != this)
+	if (SceneManager && SceneManager != this)
 	{
 		SceneManager->SendTransportCommand(newCommand);
 		if(TransportWidget)
