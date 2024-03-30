@@ -92,6 +92,9 @@ public:
 	void SetTransportSeek(float NewSeek)
 	{
 		
+		if(SceneManager) SceneManager->SendSeekCommand(NewSeek);
+
+
 		if (NewSeek != CurrentSeek)
 		{
 			if (PlayPosition) PlayPosition->SetValue(NewSeek);

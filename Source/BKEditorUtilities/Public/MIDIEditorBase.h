@@ -317,6 +317,16 @@ protected:
 		return PlayState;
 	}
 
+	void SendSeekCommand(float InSeek) override
+	{
+		if (SceneManager && SceneManager != this)
+		{
+			SceneManager->SendSeekCommand(InSeek);
+		}
+		else {
+			IBK_MusicSceneManagerInterface::SendSeekCommand(InSeek);
+		}
+	}
 
 	//const EBKPlayState GetCurrentPlaybackState() override;
 

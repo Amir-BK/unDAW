@@ -484,7 +484,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 			{
 			case seek:
 
-				parentMidiEditor->SetCurrentPosition(localMousePosition.X / (horizontalZoom * 1000.0f));
+				parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
 				break;
 
 			case notesSelect:

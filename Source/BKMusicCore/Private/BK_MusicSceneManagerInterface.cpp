@@ -102,6 +102,31 @@ void IBK_MusicSceneManagerInterface::SetPlayrate(float newPlayrate)
 	Playrate = newPlayrate;
 }
 
+void IBK_MusicSceneManagerInterface::SendSeekCommand(float InSeek)
+{
+	switch (GetCurrentPlaybackState())
+	{
+	case Playing:
+		if (GetAudioComponent())
+		{
+			//SetPlaybackState(EBKPlayState::ReadyToPlay);
+			GetAudioComponent()->SetFloatParameter(FName("unDAW.Transport.SeekTarget"), InSeek * 1000.f);
+			GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Seek"));
+			//SetPlaybackState(Re);
+		}
+		break;
+
+
+	default:
+
+		UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Some other state"))
+			break;
+
+	}
+
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Seek Command"))
+}
+
 UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBlock()
 {
 	UMetasoundBuilderHelperBase* BuilderHelperInstance = NewObject<UMetasoundBuilderHelperBase>(this->_getUObject(), GetBuilderBPClass());

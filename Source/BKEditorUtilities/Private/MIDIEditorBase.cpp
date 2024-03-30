@@ -27,10 +27,13 @@ struct FEventsWithIndex
 void UMIDIEditorBase::SetCurrentTimelinePosition(float inPosition)
 {
 	
+	UE_LOG(BKMidiLogs, Verbose, TEXT("Received Seek Request %f"), inPosition);
+	
 	if (currentTimelineCursorPosition == inPosition) return;
 	
 	if (SceneManager)
 	{
+		UE_LOG(BKMidiLogs, Verbose, TEXT("We have a scene manager... %f"), inPosition);
 		SceneManager->SendSeekCommand(inPosition);
 
 	}

@@ -110,7 +110,7 @@ public:
 	float Playrate = 1.0f;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
-	virtual void SendSeekCommand(float InSeek) {};
+	virtual void SendSeekCommand(float InSeek);
 
 	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
 

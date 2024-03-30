@@ -8,7 +8,7 @@
 // Sets default values
 AMusicScenePlayerActor::AMusicScenePlayerActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	//Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Scene Audio Component"));
 
@@ -51,8 +51,8 @@ void AMusicScenePlayerActor::PerformanceMetasoundGeneratorDestroyed(uint64 Gener
 void AMusicScenePlayerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-    
-    // TODO [$65cfdef41013620009101dd9]: implement time keeping and cursor updates vs. the game thread
+	
+	// TODO [$65cfdef41013620009101dd9]: implement time keeping and cursor updates vs. the game thread
 
 }
 
@@ -63,10 +63,10 @@ void delegateFunc(FName Output, const FMetaSoundOutput& MetaSoundOutput)
 
 void AMusicScenePlayerActor::InitClock(float inBPM)
 {
-    //AudioComponent;
+	//AudioComponent;
 	//GeneratorHandle = UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(AudioComponent);
 	//GeneratorHandle->WatchOutput(FName("Midi Stream"), delegateFunc);
-    
+	
 }
 
 void AMusicScenePlayerActor::UpdateWatchers()
@@ -134,6 +134,8 @@ void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
 	PlaybackCursorPosition = InSeek;
 	TransportSeekDelegate.Broadcast(InSeek);
 	ReceivedSeekUpdate(InSeek);
+
+	IBK_MusicSceneManagerInterface::SendSeekCommand(InSeek);
 }
 
 
