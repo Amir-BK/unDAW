@@ -112,7 +112,6 @@ public:
 	UAudioComponent* GetAudioComponent() override;
 
 	// Inherited via IBK_MusicSceneManagerInterface
-	const EBKPlayState GetCurrentPlaybackState() override;
 
 	// Inherited via IBK_MusicSceneManagerInterface
 	UDAWSequencerData* GetActiveSessionData() override;

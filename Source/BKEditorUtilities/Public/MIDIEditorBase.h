@@ -310,10 +310,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|MIDI|Interface")
 	TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
 
-	
-	
-
 	// Inherited via IBK_MusicSceneManagerInterface
+	
+	virtual const EBKPlayState GetCurrentPlaybackState() override {
+		if (SceneManager && SceneManager != this) return SceneManager->GetCurrentPlaybackState();
+		return PlayState;
+	}
+
+
 	//const EBKPlayState GetCurrentPlaybackState() override;
 
 	FOnPlaybackStateChanged* GetPlaybackStateDelegate() override;

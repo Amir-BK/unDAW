@@ -97,10 +97,6 @@ UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
 	return PerformanceAudioComponent;
 }
 
-const EBKPlayState AMusicScenePlayerActor::GetCurrentPlaybackState()
-{
-	return PlayState;
-}
 
 UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
 {

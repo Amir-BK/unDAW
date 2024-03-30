@@ -77,13 +77,13 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
-	EBKPlayState PlayState = EBKPlayState::NotReady;
+	
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	/** Please add a variable description */
 
-
+	EBKPlayState PlayState = EBKPlayState::NotReady;
 	//TObjectPtr<UDAWSequencerData> SequenceData
 	
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
