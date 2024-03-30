@@ -7,6 +7,9 @@
 #include "GameFramework/Actor.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "Components/AudioComponent.h"
+#include "HarmonixMetasound/Components/MusicClockComponent.h"
+#include "HarmonixMetasound/Components/MusicTempometerComponent.h"
+#include "HarmonixMidi/MidiSongPos.h"
 
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateSettings.h"
@@ -42,6 +45,14 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UAudioComponent* PerformanceAudioComponent;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
+	UMusicClockComponent* VideoSyncedMidiClock;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
+	UMusicTempometerComponent* MusicTempometer;
+
+
 
 	//UPROPERTY()
 	TSharedPtr<UMetasoundGeneratorHandle> GeneratorHandle;	
