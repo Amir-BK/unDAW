@@ -80,26 +80,6 @@ enum EPianoRollEditorMouseMode
 // Filename:      midifile/include/MidiEventList.h
 // Website:       http://midifile.sapp.org
 
-//USTRUCT()
-struct FLinkedMidiEvents
-{
-	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
-		: StartEvent(StartEvent),
-		  EndEvent(EndEvent),
-		StartIndex(inStartIndex),
-		EndIndex(inEndindex)
-		
-	{
-	}
-
-	//GENERATED_BODY()
-
-
-	FMidiEvent StartEvent;
-	FMidiEvent EndEvent;
-	int32 StartIndex;
-	int32 EndIndex;
-};
 
 //An interface allowing content slate widgets to pass info back to the parent widget which may sync multiple widgets
 UINTERFACE(BlueprintType)

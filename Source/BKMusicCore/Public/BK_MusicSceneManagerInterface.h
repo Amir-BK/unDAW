@@ -26,8 +26,6 @@
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
-//forward declaration
-
 
 
 UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
@@ -146,5 +144,6 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 	virtual void OnMetasoundHandleGenerated(UMetasoundGeneratorHandle* GeneratorHandle);
 	
+
 	
 };

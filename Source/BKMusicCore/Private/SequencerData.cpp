@@ -10,3 +10,14 @@ void UDAWSequencerData::CalculateSequenceDuration()
 		SequenceDuration = TimeStampedMidis[0].MidiFile->GetSongMaps()->GetSongLengthMs();
 	}
 }
+
+TArray<FBPMidiStruct> UDAWSequencerData::GetMidiDataForTrack(const int trackID)
+{
+	return TArray<FBPMidiStruct>();
+}
+
+bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance)
+{
+	
+	return FMath::IsNearlyZero(value, tolerance);
+}

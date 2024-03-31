@@ -20,6 +20,45 @@
 #include "TrackPlaybackAndDisplayOptions.h"
 
 #include "SequencerData.generated.h"
+
+
+
+
+struct FLinkedMidiEvents
+{
+
+
+	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
+		: StartEvent(StartEvent),
+		EndEvent(EndEvent),
+		StartIndex(inStartIndex),
+		EndIndex(inEndindex)
+
+	{
+	}
+
+	//GENERATED_BODY()
+	FMidiEvent StartEvent;
+	FMidiEvent EndEvent;
+	int32 StartIndex;
+	int32 EndIndex;
+};
+
+
+USTRUCT(BlueprintType)
+struct FBPMidiStruct {
+
+GENERATED_BODY()
+
+	int StartTick = 0;
+	int EndTick = 0;
+	int Duration = 0;
+	int Pitch = 0;
+	int Velocity = 0;
+};
+
+
+
 /**
  * 
  */
@@ -128,6 +167,15 @@ public:
 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void CalculateSequenceDuration();
+
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW")
+	virtual TArray<FBPMidiStruct> GetMidiDataForTrack(const int trackID);
+
+	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
+
+	UFUNCTION(BlueprintCallable,BlueprintPure)
+	static bool IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance);
+
 
 };
 
