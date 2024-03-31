@@ -203,7 +203,7 @@
             // DO NOTE: the declared size of the array must match the number of elements, otherwise the code won't compile. 
 
             // Declaring too many elements in the array will throw an exception when starting the editor or game.
-            const FInput GeneratedInputs[10] =
+            const FInput GeneratedInputs[11] =
             {
                 { INVTEXT("Play"), INVTEXT("Play Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Play") } },
                 { INVTEXT("Prepare"), INVTEXT("Prepare Trigger"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW.Transport.Prepare") }},
@@ -215,6 +215,7 @@
                 { INVTEXT("Seek Target"), INVTEXT("Time into the MIDI Clock to seek"), Metasound::GetMetasoundDataTypeName<float>(),{ ("unDAW.Transport.SeekTarget"), 0.0f } },
                 { INVTEXT("Midi Playrate"), INVTEXT("Playrate of MIDI clock"), Metasound::GetMetasoundDataTypeName<float>(),{ ("unDAW.Midi.Speed"), 1.0f } },
                 { INVTEXT("TimeStamp Seek Target"), INVTEXT("Timestamp into the MIDI Clock to seek"), Metasound::GetMetasoundDataTypeName<FMusicTimestamp>(),{ FName("unDAW.Transport.SeekTimeStampTarget") } },
+                { INVTEXT("Playrate affects pitch"), INVTEXT("Should MIDI pitch be affected by playrate"), Metasound::GetMetasoundDataTypeName<bool>(),{ FName("unDAW.Midi.PlayratePitch") } },
             };
 
             
