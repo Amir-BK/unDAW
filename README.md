@@ -1,3 +1,6 @@
+Creating new fusion patches with unDAW from existing SFZ and DSPreset instruments found online - https://www.youtube.com/watch?v=yBUht2z7a2Y
+
+
 Quick and dirty quick start guide - https://www.youtube.com/watch?v=-Hr0XsmlV8Y
 
 [![VPiano Test](https://img.youtube.com/vi/NkY0bB5pHyE/0.jpg)](https://www.youtube.com/watch?v=NkY0bB5pHyE)
