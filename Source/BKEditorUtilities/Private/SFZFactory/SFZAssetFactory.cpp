@@ -453,6 +453,7 @@ UObject* USFZAssetFactory::FactoryCreateFile(UClass* InClass, UObject* InParent,
 		if (!processedSFZRegion->WavAsset) continue;
 		FKeyzoneSettings newKeyzone = FKeyzoneSettings();
 		newKeyzone.SoundWave = TObjectPtr<USoundWave>(processedSFZRegion->WavAsset);
+		newKeyzone.SoundWave->OverrideLoadingBehavior(ESoundWaveLoadingBehavior::RetainOnLoad);
 
 		newKeyzone.RootNote = processedSFZRegion->centerNoteValue;
 		newKeyzone.MaxNote = processedSFZRegion->hiNote;

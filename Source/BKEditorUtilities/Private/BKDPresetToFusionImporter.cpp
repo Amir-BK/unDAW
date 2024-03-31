@@ -25,7 +25,7 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 
 	FXmlFile MyXMLfile = FXmlFile();
 
-	FName newName = FName(InName.ToString().Append(TEXT("_DSPRESET")));
+	//FName newName = FName(InName.ToString().Append(TEXT("")));
 
 	UFusionPatch* NewFusionPatch = NewObject<UFusionPatch>(InParent, InClass, InName, Flags);
 	
@@ -39,6 +39,7 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 	FScopedSlowTask ParseDSPresetRegionsTask(KeyZoneArray.Num(), FText::FromString(TEXT("Processing DSPreset file and importing samples")));
 
 	ParseDSPresetRegionsTask.MakeDialog();
+	TArray<FKeyzoneSettings> ToAddArray;
 
 
 	for (auto& keyzone : KeyZoneArray) {
@@ -70,12 +71,15 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 			if (!ResultArray.IsEmpty())
 			{
 				keyzone.SoundWave = Cast<USoundWave>(ResultArray[0]);
+				keyzone.SoundWave->OverrideLoadingBehavior(ESoundWaveLoadingBehavior::RetainOnLoad);
 				//Region->ObjectPtrWavAsset = TObjectPtr<USoundWave>(Region->WavAsset);
 				//Factory->ImportedWavsMap.Add(FName(value), Region->WavAsset);
+				ToAddArray.Add(keyzone);
 			}
 			else
 			{
 				NumFilesFailedToImport++;
+				
 			}
 			GEditor->GetEditorSubsystem<UImportSubsystem>()->
 				BroadcastAssetPostImport(this, keyzone.SoundWave);
@@ -102,11 +106,9 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 
 	//newSettings.KeyzoneSelectMode = EKeyzoneSelectMode::Layers;
 
-
-
 	newSettings.Adsr->Calculate();
 	NewFusionPatch->UpdateSettings(newSettings);
-	NewFusionPatch->UpdateKeyzones(KeyZoneArray);
+	NewFusionPatch->UpdateKeyzones(ToAddArray);
 
 
 	//if(MyXMLfile.GetRotNoode()) 
