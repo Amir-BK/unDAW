@@ -357,24 +357,40 @@ void SPianoRollGraph::RecalcGrid()
 	//int GridBeat = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Beat;
 	//int GridBars = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Bar;
 
+	visibleBars.Empty();
 	
-	while(LeftMostTick <= RightMostTick)
+	//populate subdiv array
+	float subDivTick = LeftMostTick;
+	while(subDivTick <= RightMostTick)
 	{
-		visibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick), TimeSpanToSubDiv(QuantizationGridUnit)));
-		LeftMostTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), LeftMostTick);
+		visibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(QuantizationGridUnit)));
+		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
+		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
 			
 	}
 
 
-	visibleBars.Empty();
-	int bars = 0;
-	while (bars <= MidiSongMap->GetSongLengthBars())
+	//populate bar array 
+	// can probably just leave it as time, rather than calculate back and forth...
+	float barTick = LeftMostTick;
+	while(barTick <= RightMostTick)
 	{
-		visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
-		bars++;
+		//MidiSongMap->GetBarMap()
+		visibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(barTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));
+		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
+		barTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars), barTick);
+			
 	}
 
-	drawLength = -1 * positionOffset.X + GetCachedGeometry().GetAbsoluteSize().X;
+
+	//int bars = 0;
+	//MidiSongMap->bars
+	//while (bars <= MidiSongMap->GetSongLengthBars())
+	//{
+	//	bars++;
+	//}
+
+	//drawLength = -1 * positionOffset.X + GetCachedGeometry().GetAbsoluteSize().X;
 
 	
 	gridLine.Empty(2);
@@ -856,7 +872,7 @@ void SPianoRollGraph::StopDraggingNote()
 		//call all the sorting functions I could find
 		
 		HarmonixMidiFile->SortAllTracks();
-		HarmonixMidiFile->TracksChanged();
+		//HarmonixMidiFile->TracksChanged();
 		HarmonixMidiFile->MarkPackageDirty();
 
 		//NeedsRinitDelegate.Broadcast();
