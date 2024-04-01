@@ -50,20 +50,44 @@ struct FBPMidiStruct {
 
 GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadOnly, Category="unDAW|Midi|Note Data")
 	int StartTick = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
 	int EndTick = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
 	int Duration = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
 	int Pitch = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
 	int Velocity = 0;
 };
 
 
+
+//Helper object used by the pianoroll and other visualizers to easily query the end time of a playing note and the next note on a give track/pitch
+UCLASS(BlueprintType)
+class BKMUSICCORE_API UParsedMidiTrack : public UObject
+{
+	
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi Data")
+	int TrackUniqueIndex = -1;
+
+	
+	//This can't be a UPROPERTY, we need to expose functions to interact with this data
+	TArray<FLinkedMidiEvents> TrackData;
+
+
+};
 
 /**
  * 
  */
 class BKMUSICCORE_API SequencerData
 {
+	
 public:
 	
 };
@@ -135,6 +159,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "trackName"))
 	TArray<FTrackDisplayOptions> TracksMappings;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	TMap<int, UParsedMidiTrack*> TrackMidiDataMap;
 
 };
 
