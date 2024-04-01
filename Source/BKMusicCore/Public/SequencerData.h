@@ -22,6 +22,8 @@
 #include "SequencerData.generated.h"
 
 
+BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
+
 
 
 struct FLinkedMidiEvents
@@ -171,6 +173,9 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Defaults", meta = (ExposeOnSpawn = true))
+	TObjectPtr<UFusionPatch> DefaultFusionPatch;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
 	TObjectPtr<UMetaSoundSource> PerformanceMetaSound;
 
@@ -202,6 +207,13 @@ public:
 
 	UFUNCTION(BlueprintCallable,BlueprintPure)
 	static bool IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance);
+
+	UFUNCTION()
+	void PopulateFromMidiFile(UMidiFile* inMidiFile);
+
+
+	TArray<FMidiEvent> TempoEvents;
+	TArray<FMidiEvent> TimeSignatureEvents;
 
 
 };

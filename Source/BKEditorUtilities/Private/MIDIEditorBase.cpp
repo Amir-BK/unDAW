@@ -18,6 +18,7 @@ DEFINE_LOG_CATEGORY(BKMidiLogs);
 #define TRANSACT(Name) 	if (GEditor && GEditor->CanTransact() && ensure(!GIsTransacting)) \
 GEditor->BeginTransaction(TEXT(""), INVTEXT(Name), nullptr);
 
+
 struct FEventsWithIndex
 {
 	FMidiEvent event;
@@ -154,25 +155,6 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 	{
 	
 		return PreviewCache;
-		//UDAWSequencerData** MapRef = nullptr;
-		//if (HarmonixMidiFile != nullptr) {
-		//	
-		//	const auto& MidiName = FName(HarmonixMidiFile.Get()->GetName());
-		//	MapRef = MidiEditorCache->CachedSessions.Find(MidiName);
-		//}
-	
-		//UDAWSequencerData* CacheForCurrentMidi;
-		//if (!MapRef)
-		//{
-		//	//const auto& MidiName = FName(HarmonixMidiFile->GetName());
-		//	CacheForCurrentMidi = NewObject<UDAWSequencerData>(MidiEditorCache);
-		//	CacheForCurrentMidi->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
-		//	MidiEditorCache->CachedSessions.Add(FName(HarmonixMidiFile.Get()->GetName()), CacheForCurrentMidi);
-		//}
-		//else {
-		//	CacheForCurrentMidi = *MapRef;
-		//}
-		//return CacheForCurrentMidi;
 	}
 	else {
 		if(SceneManager)	return SceneManager->GetActiveSessionData();
@@ -304,6 +286,8 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
 	}
 
+	//we'll call this, and we can assume we have the linked notes and the such in the data asset
+	GetActiveSessionData()->PopulateFromMidiFile(HarmonixMidiFile.Get());
 	GetActiveSessionData()->CalculateSequenceDuration();
 
 	//tracksDisplayOptions.Empty();
