@@ -213,6 +213,7 @@ public:
 
 
 	TArray<FMidiEvent> TempoEvents;
+
 	TArray<FMidiEvent> TimeSignatureEvents;
 
 

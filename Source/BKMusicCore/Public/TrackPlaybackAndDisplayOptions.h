@@ -27,10 +27,10 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	bool isVisible;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	bool isSelected;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
@@ -51,24 +51,29 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
 	int ChannelIndexInParentMidi;
 
-	//Can be used to visualize the available KeyZones the used fusion patch exposes 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
-	TMap<int, bool> SampleAvailabilityMap;
+	//the desired render mode, if Custom Patch is selected a custom metasound patch will be inserted into the graph by the builder. Make sure this patch can receive a MIDI stream and output audio, consult the example instrument for reference.
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	TEnumAsByte<ETrackRendererMode> RenderMode = ETrackRendererMode::FusionPatch;
+
+
 
 	//the fusion patch to use in case 'Fusion Patch' mode is selected
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::FusionPatch", EditConditionHides))
 	TObjectPtr<UFusionPatch> fusionPatch;
 
 	/** Please add a function description */
 	//UFUNCTION(BlueprintCallable)
 	//void BK Meta Builder(UPARAM(ref) TArray<FTrackDisplayOptions>& Tracks, const TScriptInterface<IMetaSoundDocumentInterface>& MidiPatchClass, UObject* MidiToPlay, UObject* __WorldContext, bool& Success, UMetaSoundSourceBuilder*& Source Builder, FString& Result, UMetaSoundSourceBuilder* Builder, FMetaSoundBuilderNodeOutputHandle MidiOutputHandle, FMetaSoundBuilderNodeOutputHandle PlayInputHandle, FMetaSoundBuilderNodeOutputHandle OnPlayInput, TArray<FMetaSoundBuilderNodeInputHandle> AudioOutputs, FMetaSoundNodeHandle CurrentTrackNode, FMetaSoundBuilderNodeOutputHandle PrepareInput);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::CustomPatch", EditConditionHides))
 	TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass;
 
-	//the desired render mode, if Custom Patch is selected a custom metasound patch will be inserted into the graph by the builder. Make sure this patch can receive a MIDI stream and output audio, consult the example instrument for reference.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
-	TEnumAsByte<ETrackRendererMode> RenderMode = ETrackRendererMode::FusionPatch;
+
+	//Can be used to visualize the available KeyZones the used fusion patch exposes 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	TMap<int, bool> SampleAvailabilityMap;
+
+
 
 	FTrackDisplayOptions()
 	{
