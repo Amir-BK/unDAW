@@ -63,7 +63,7 @@ public:
 };
 
 /**
- * The midi editor base is the root for widgets that load a UMIDIAsset and display them via pianoroll graphs
+ * The midi editor base is the root for widgets that load a Standard Midi File and display them via pianoroll graphs
  */
 UCLASS()
 class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, public ITimeSyncedPanel, public IBK_MusicSceneManagerInterface
