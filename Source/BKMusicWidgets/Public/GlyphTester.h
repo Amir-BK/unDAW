@@ -12,7 +12,7 @@
 /**
  * Abstract widget class to derive blueprint types from. Used to view SMUFL font glyphs and metadata for easier debug of engraving widgets. 
  */
-UCLASS(Abstract)
+UCLASS()
 class BKMUSICWIDGETS_API UGlyphTester : public UUserWidget
 {
 	GENERATED_BODY()

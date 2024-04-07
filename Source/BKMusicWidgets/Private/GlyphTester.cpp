@@ -13,7 +13,7 @@
 
 UGlyphTester::UGlyphTester(const FObjectInitializer& objectInitializer) :Super(objectInitializer)
 {
-	ConstructorHelpers::FClassFinder<UUserWidget> UGlyphTester(TEXT("Glyph Tester Window"));
+	//ConstructorHelpers::FClassFinder<UUserWidget> UGlyphTester(TEXT("Glyph Tester Window"));
 }
 
 void UGlyphTester::UpdateGlyphString(FName newString)
