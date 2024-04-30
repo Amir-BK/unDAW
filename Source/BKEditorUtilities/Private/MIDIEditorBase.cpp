@@ -432,6 +432,8 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		
 		if(channelsMap.IsEmpty()) continue;
 
+		PianoRollGraph->InitFromLinkedMidiData(channelsMap);
+
 		//init data asset MIDI if not init
 
 		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
@@ -461,13 +463,13 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 
 
-				if (!notes.IsEmpty())
-				{
-					for (const auto& foundPair : notes)
-					{
-						PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
-					}
-				}
+				//if (!notes.IsEmpty())
+				//{
+				//	for (const auto& foundPair : notes)
+				//	{
+				//		PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
+				//	}
+				//}
 
 			numTracks++;
 

@@ -186,6 +186,12 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot, int in
 	slotMap.Add(totalNotes, newSlot);
 
 }
+void SPianoRollGraph::InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap)
+{
+	UE_LOG(LogTemp, Log, TEXT("Init from linked midi data"))
+	MidiSongMap = HarmonixMidiFile->GetSongMaps();
+		LinkedNoteDataMap.Append(inLinkedNoteDataMap);
+}
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	//this is the zoom smoothing function, it is not stable.
@@ -780,6 +786,24 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	
 #endif
+
+	for (auto& track : LinkedNoteDataMap)
+	{
+		
+		
+		for (auto& note : track.Value)
+		{
+			double duration = note->EndEvent.GetTick() - note->StartEvent.GetTick();
+			
+			FSlateDrawElement::MakeBox(OutDrawElements,
+				postCanvasLayerID++,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartEvent.GetTick() * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+				&gridBrush,
+				ESlateDrawEffect::None,
+				parentMidiEditor->GetTracksDisplayOptions(track.Key).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+			);
+		}
+	}
 
 	//snapped mouse cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,

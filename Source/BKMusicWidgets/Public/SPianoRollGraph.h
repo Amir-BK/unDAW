@@ -247,7 +247,9 @@ public:
 	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
+	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
 
+	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 
