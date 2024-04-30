@@ -190,7 +190,7 @@ void SPianoRollGraph::InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*
 {
 	UE_LOG(LogTemp, Log, TEXT("Init from linked midi data"))
 	MidiSongMap = HarmonixMidiFile->GetSongMaps();
-		LinkedNoteDataMap.Append(inLinkedNoteDataMap);
+	LinkedNoteDataMap.Append(inLinkedNoteDataMap);
 }
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
@@ -709,6 +709,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
+#define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
 
 	FSlateDrawElement::MakeText(OutDrawElements,
@@ -793,14 +794,16 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		
 		for (auto& note : track.Value)
 		{
-			double duration = note->EndEvent.GetTick() - note->StartEvent.GetTick();
+			//double duration = note->EndEvent.GetTick() - note->StartEvent.GetTick();
+			//MyCullingRect.DoRectanglesIntersect(FSlateRect::FromPointAndExtent(FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)), FVector2D(note->Duration * horizontalZoom, rowHeight)));)
+			if (!FSlateRect::DoRectanglesIntersect(MyCullingRect.OffsetBy(-positionOffset), FSlateRect::FromPointAndExtent(FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)), FVector2D(note->Duration * horizontalZoom, rowHeight)))) continue;
 			
 			FSlateDrawElement::MakeBox(OutDrawElements,
 				postCanvasLayerID++,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartEvent.GetTick() * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
 				&gridBrush,
 				ESlateDrawEffect::None,
-				parentMidiEditor->GetTracksDisplayOptions(track.Key).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+				parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
 			);
 		}
 	}

@@ -391,6 +391,8 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 							
 							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
+							foundPair->TrackID = midiChannel;
+							foundPair->CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(foundPair);
 							// sort the tracks into channels
 							if (channelsMap.Contains(midiChannel))
@@ -444,7 +446,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 				//this is the init code for the display options, should be moved to it's own functions
 				bool hasDataForTrack = false;
 
-			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
+			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracksInternal))
 				{
 					//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
 					//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);

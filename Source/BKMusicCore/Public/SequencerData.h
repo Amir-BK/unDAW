@@ -44,6 +44,17 @@ struct FLinkedMidiEvents
 	FMidiEvent EndEvent;
 	int32 StartIndex;
 	int32 EndIndex;
+
+	int32 TrackID = -1;
+	double Duration = 0.0;
+	double StartTime = 0.0;
+
+	void CalculateDuration(FSongMaps* SongsMap)
+	{
+		StartTime = SongsMap->TickToMs(StartEvent.GetTick());
+		Duration = SongsMap->TickToMs(EndEvent.GetTick()) - StartTime;
+		
+	}
 };
 
 
