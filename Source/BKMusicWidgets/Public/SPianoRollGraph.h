@@ -28,6 +28,10 @@
 
 //#define PIANO_ROLL_DEBUG
 
+
+BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPIANOROLLLOG, Verbose, All);
+
+
 struct FLinkedMidiEvents;
 
 
@@ -193,6 +197,7 @@ public:
 	FVector2f positionOffset;
 	float LastTickTimelinePosition;
 	int32 hoveredPitch;
+	int32 hoveredNoteIndex = -1;
 	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
 	TMap<int, bool> availableSamplesMap;
@@ -247,9 +252,17 @@ public:
 	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
+
+	//tempo and time events
+	TArray<FMidiEvent> TempoEvents;
+	TArray<FMidiEvent> TimeSignatureEvents;
+
+
+
 	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
 
+	void InitFromMidiFile(UMidiFile* inMidiFile);
 	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;

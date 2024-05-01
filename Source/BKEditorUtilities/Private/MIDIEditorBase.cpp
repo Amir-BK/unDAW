@@ -278,17 +278,17 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 {
 
 
-	auto CurrentData = GetActiveSessionData();
-	//CurrentData->TimeStampedMidis.Empty();
+	//auto CurrentData = GetActiveSessionData();
+	////CurrentData->TimeStampedMidis.Empty();
 
-	if (GetActiveSessionData()->TimeStampedMidis.IsEmpty())
-	{
-	GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
-	}
+	//if (GetActiveSessionData()->TimeStampedMidis.IsEmpty())
+	//{
+	//GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
+	//}
 
-	//we'll call this, and we can assume we have the linked notes and the such in the data asset
-	GetActiveSessionData()->PopulateFromMidiFile(HarmonixMidiFile.Get());
-	GetActiveSessionData()->CalculateSequenceDuration();
+	////we'll call this, and we can assume we have the linked notes and the such in the data asset
+	//GetActiveSessionData()->PopulateFromMidiFile(HarmonixMidiFile.Get());
+	//GetActiveSessionData()->CalculateSequenceDuration();
 
 	//tracksDisplayOptions.Empty();
 	InternalGraphs.Empty();
@@ -337,176 +337,84 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	PianoRollGraph->HarmonixMidiFile =  HarmonixMidiFile;
 	PianoRollGraph->KeyMappings = KeyMapDataAsset;
 	PianoRollGraph->selfSharedPtr = PianoRollGraph;
-	
-	
-
-	//auto TrackCache = MidiEditorCache->CachedSessions.Find(HarmonixMidiFile->GetFName());
-	//if (!TrackCache)
-	//{
-	//	*TrackCache = NewObject<UDAWSequencerData>();
-	//	MidiEditorCache->CachedSessions.Add(FName(HarmonixMidiFile->GetFName()), *TrackCache);
-	//}
-
-	if (HarmonixMidiFile == nullptr)
-	{
-		UE_LOG(LogTemp, Log, TEXT("No midi file! This is strange!"))
-			return;
-	}
-	for (auto& track : HarmonixMidiFile->GetTracks())
-	{
-		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
-		int numTracksInternal = numTracksRaw++;
-		if(track.GetEvents().IsEmpty()) continue;
-		
-		TMap<int, TArray<FLinkedMidiEvents*>> channelsMap;
-		
-		
-
-		TArray<FLinkedMidiEvents*> linkedNotes;
-
-		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
-		
-		//track.GetEvent(32)
-
-		// sort events, right now only notes 
-		for (int32 index = 0; const auto& MidiEvent : track.GetEvents())
-		{
-			switch(MidiEvent.GetMsg().Type) {
-			case FMidiMsg::EType::Std:
-				if(MidiEvent.GetMsg().IsNoteOn())
-				{
-					//unlinkedNotes.Add(MidiEvent.GetMsg().GetStdData1(), MidiEvent);
-					unlinkedNotesIndexed.Add(MidiEvent.GetMsg().GetStdData1(), FEventsWithIndex{ MidiEvent, index });
-				};
-
-				if(MidiEvent.GetMsg().IsNoteOff())
-				{
-					if(unlinkedNotesIndexed.Contains(MidiEvent.GetMsg().GetStdData1()))
-					{
-						const int midiChannel = MidiEvent.GetMsg().GetStdChannel();
-						//MidiEvent.GetMsg().
-						//unlinkedNotesIndexed
-						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
-						{
-							
-							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
-								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
-							foundPair->TrackID = midiChannel;
-							foundPair->CalculateDuration(HarmonixMidiFile->GetSongMaps());
-							linkedNotes.Add(foundPair);
-							// sort the tracks into channels
-							if (channelsMap.Contains(midiChannel))
-							{
-								channelsMap[midiChannel].Add(foundPair);
-							}
-							else {
-								channelsMap.Add(TTuple<int, TArray<FLinkedMidiEvents*>>(midiChannel, TArray<FLinkedMidiEvents*>()));
-								channelsMap[midiChannel].Add(foundPair);
-							}
-						
-						}
-
-					}
-				};
-
-				break;
-			case FMidiMsg::EType::Tempo:
-				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
-					//MidiEvent.GetMsg().Data1
-					TempoEvents.Add(MidiEvent);
-				break;
-			case FMidiMsg::EType::TimeSig:
-				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a time signature event!"))
-					TimeSignatureEvents.Add(MidiEvent);
-				break;
-			case FMidiMsg::EType::Text:
-				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
-				break;
-			case FMidiMsg::EType::Runtime:
-				UE_LOG(BKMidiLogs, Verbose, TEXT("We receive a runtime event???"))
-				break;
-			}
-
-			++index;
-		
-		}
-		// if we couldn't find any linked notes this track is a control track, contains no notes.
-		
-		if(channelsMap.IsEmpty()) continue;
-
-		PianoRollGraph->InitFromLinkedMidiData(channelsMap);
-
-		//init data asset MIDI if not init
-
-		UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
-	
-			for (auto& [channel, notes] : channelsMap)
-			{
-				FColorPickerArgs PickerArgs;
-				//this is the init code for the display options, should be moved to it's own functions
-				bool hasDataForTrack = false;
-
-			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
-				{
-					//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
-					//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
-					hasDataForTrack = true;
-		
-				}
-			if(!hasDataForTrack){
-				FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
-				newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
-				newTrackDisplayOptions.TrackIndexInParentMidi = numTracks;
-				newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-				newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-				newTrackDisplayOptions.trackName = *track.GetName();
-				CurrentData->TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
-				}
-
-
-
-				//if (!notes.IsEmpty())
-				//{
-				//	for (const auto& foundPair : notes)
-				//	{
-				//		PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
-				//	}
-				//}
-
-			numTracks++;
-
-			}
-
-	};
-
-	
-
-	tracksVerticalBox->AddSlot()
-		[
-			SNew(SBorder)
-				.Padding(5.0f)
-					[ 
-						SNew(SMidiEditorBaseSettingsWidget)
-						.parentMidiEditor(MidiEditorSharedPtr)
-					]
-		];
-
-
+	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
+	PianoRollGraph->InitFromMidiFile(HarmonixMidiFile.Get());
 	InternalGraphs.Add(PianoRollGraph.ToSharedRef());
 
-	
-	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
 
-	
+	//	PianoRollGraph->InitFromLinkedMidiData(channelsMap);
 
-	PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
-	donePopulatingDelegate.Broadcast();
+	//	//init data asset MIDI if not init
+
+	//	UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
+	//
+	//		for (auto& [channel, notes] : channelsMap)
+	//		{
+	//			FColorPickerArgs PickerArgs;
+	//			//this is the init code for the display options, should be moved to it's own functions
+	//			bool hasDataForTrack = false;
+
+	//		if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
+	//			{
+	//				//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
+	//				//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
+	//				hasDataForTrack = true;
+	//	
+	//			}
+	//		if(!hasDataForTrack){
+	//			FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
+	//			newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
+	//			newTrackDisplayOptions.TrackIndexInParentMidi = numTracks;
+	//			newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
+	//			newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
+	//			newTrackDisplayOptions.trackName = *track.GetName();
+	//			CurrentData->TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
+	//			}
+
+
+
+	//			//if (!notes.IsEmpty())
+	//			//{
+	//			//	for (const auto& foundPair : notes)
+	//			//	{
+	//			//		PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
+	//			//	}
+	//			//}
+
+	//		numTracks++;
+
+	//		}
+
+	//};
+
+	//
+
+	//tracksVerticalBox->AddSlot()
+	//	[
+	//		SNew(SBorder)
+	//			.Padding(5.0f)
+	//				[ 
+	//					SNew(SMidiEditorBaseSettingsWidget)
+	//					.parentMidiEditor(MidiEditorSharedPtr)
+	//				]
+	//	];
+
+
+	//InternalGraphs.Add(PianoRollGraph.ToSharedRef());
+
+	//
+	//PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
+
+	//
+
+	//PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
+	//donePopulatingDelegate.Broadcast();
 }
 
 void UMIDIEditorBase::UpdateMidiFile()
 {
 	auto CurrentData = GetActiveSessionData();
-	CurrentData->TimeStampedMidis.Empty();
+	//CurrentData->TimeStampedMidis.Empty();
 	InitFromDataHarmonix();
 }
 
