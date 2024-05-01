@@ -197,6 +197,11 @@ public:
 						SNew(SEditableTextBox)
 							.Text(InArgs._trackName)
 					]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+						.Text(FText::Format(INVTEXT("{0}"),InArgs._slotInParentID))
+				]
 					//+ SVerticalBox::Slot()
 					//[
 					//	SNew(SComboBox<TSharedPtr<FString>>)

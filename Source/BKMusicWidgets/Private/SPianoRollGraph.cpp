@@ -388,6 +388,30 @@ void SPianoRollGraph::RecalcGrid()
 			
 	}
 
+	//cull notes
+	CulledNotesArray.Empty();
+
+	for (auto& track : LinkedNoteDataMap)
+	{
+		for (auto& note : track.Value)
+		{
+			bool NoteInRightBound = note->StartEvent.GetTick() <= RightMostTick;
+
+			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop
+			if(!NoteInRightBound) break;
+
+			if (note->EndEvent.GetTick() >= LeftMostTick)
+			{
+				//if notes are too small, don't draw 
+				//if(note->Duration * horizontalZoom >= 1.0f)	
+					
+				CulledNotesArray.Add(note);
+			}
+
+
+		}
+	}
+
 
 	//int bars = 0;
 	//MidiSongMap->bars
@@ -638,7 +662,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Blue.CopyWithNewOpacity(0.3f),
+			FLinearColor::Blue.CopyWithNewOpacity(0.5f * horizontalZoom),
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
 	}
@@ -715,15 +739,15 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	FSlateDrawElement::MakeText(OutDrawElements,
 	postCanvasLayerID++,
 	AllottedGeometry.ToPaintGeometry(),
-	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num bars %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
+	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num notes %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
 
-	OffsetGeometryChild.GetLayoutBoundingRect().Left, OffsetGeometryChild.GetLayoutBoundingRect().Right,
+	MyCullingRect.Left, MyCullingRect.Right,
 	*OffsetGeometryChild.AbsoluteToLocal(FVector2d::Zero()).ToString(),
 	*OffsetGeometryChild.GetLocalSize().ToString(),
 	*localMousePosition.ToString(),
 	horizontalZoom, verticalZoom,
 	*positionOffset.ToString(),
-	visibleBars.Num(),
+	CulledNotesArray.Num(),
 	MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom),
 		CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor)),
 	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 12),
@@ -788,16 +812,10 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 #endif
 
-	for (auto& track : LinkedNoteDataMap)
-	{
-		
-		
-		for (auto& note : track.Value)
+
+		for (auto& note : CulledNotesArray)
 		{
-			//double duration = note->EndEvent.GetTick() - note->StartEvent.GetTick();
-			//MyCullingRect.DoRectanglesIntersect(FSlateRect::FromPointAndExtent(FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)), FVector2D(note->Duration * horizontalZoom, rowHeight)));)
-			if (!FSlateRect::DoRectanglesIntersect(MyCullingRect.OffsetBy(-positionOffset), FSlateRect::FromPointAndExtent(FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)), FVector2D(note->Duration * horizontalZoom, rowHeight)))) continue;
-			
+
 			FSlateDrawElement::MakeBox(OutDrawElements,
 				postCanvasLayerID++,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
@@ -806,7 +824,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 				parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
 			);
 		}
-	}
+
 
 	//snapped mouse cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,

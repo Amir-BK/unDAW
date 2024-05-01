@@ -248,6 +248,7 @@ public:
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
 	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
+	TArray<FLinkedMidiEvents*> CulledNotesArray;
 
 	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
 

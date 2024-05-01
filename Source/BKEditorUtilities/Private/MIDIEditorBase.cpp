@@ -446,7 +446,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 				//this is the init code for the display options, should be moved to it's own functions
 				bool hasDataForTrack = false;
 
-			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracksInternal))
+			if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
 				{
 					//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
 					//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
@@ -456,7 +456,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 			if(!hasDataForTrack){
 				FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
 				newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
-				newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
+				newTrackDisplayOptions.TrackIndexInParentMidi = numTracks;
 				newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
 				newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
 				newTrackDisplayOptions.trackName = *track.GetName();
