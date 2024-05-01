@@ -499,7 +499,7 @@ void SPianoRollGraph::RecalcGrid()
 	{
 		for (auto& note : track.Value)
 		{
-			bool NoteInRightBound = note->StartEvent.GetTick() <= RightMostTick;
+			bool NoteInRightBound = note->StartEvent.GetTick() < RightMostTick;
 
 			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop
 			if(!NoteInRightBound) break;
@@ -516,15 +516,6 @@ void SPianoRollGraph::RecalcGrid()
 		}
 	}
 
-
-	//int bars = 0;
-	//MidiSongMap->bars
-	//while (bars <= MidiSongMap->GetSongLengthBars())
-	//{
-	//	bars++;
-	//}
-
-	//drawLength = -1 * positionOffset.X + GetCachedGeometry().GetAbsoluteSize().X;
 
 	
 	gridLine.Empty(2);
