@@ -256,7 +256,7 @@ public:
 	//tempo and time events
 	TArray<FMidiEvent> TempoEvents;
 	TArray<FMidiEvent> TimeSignatureEvents;
-
+	TArray<int> FoundChannels;
 
 
 	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;

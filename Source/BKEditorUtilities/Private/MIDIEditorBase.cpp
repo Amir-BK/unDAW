@@ -278,20 +278,12 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 {
 
 
-	//auto CurrentData = GetActiveSessionData();
-	////CurrentData->TimeStampedMidis.Empty();
-
-	//if (GetActiveSessionData()->TimeStampedMidis.IsEmpty())
-	//{
-	//GetActiveSessionData()->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, HarmonixMidiFile.Get(), true));
-	//}
-
-	////we'll call this, and we can assume we have the linked notes and the such in the data asset
-	//GetActiveSessionData()->PopulateFromMidiFile(HarmonixMidiFile.Get());
-	//GetActiveSessionData()->CalculateSequenceDuration();
-
-	//tracksDisplayOptions.Empty();
 	InternalGraphs.Empty();
+	UDAWSequencerData* SessionPtr;
+
+	if(MidiEditorCache) MidiEditorCache->GetOrCreateSessionDataForMidiFile(HarmonixMidiFile.Get(), SessionPtr);
+
+	PreviewCache = SessionPtr;
 
 	//TSharedPtr<SVerticalBox> trackMenuArea;
 	MidiEditorSharedPtr = TSharedPtr<ITimeSyncedPanel>(this);
@@ -339,76 +331,14 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	PianoRollGraph->selfSharedPtr = PianoRollGraph;
 	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
 	PianoRollGraph->InitFromMidiFile(HarmonixMidiFile.Get());
+
+
+	//PianoRollGraph->InitFromLinkedMidiData();
 	InternalGraphs.Add(PianoRollGraph.ToSharedRef());
 
-
-	//	PianoRollGraph->InitFromLinkedMidiData(channelsMap);
-
-	//	//init data asset MIDI if not init
-
-	//	UE_LOG(BKMidiLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
-	//
-	//		for (auto& [channel, notes] : channelsMap)
-	//		{
-	//			FColorPickerArgs PickerArgs;
-	//			//this is the init code for the display options, should be moved to it's own functions
-	//			bool hasDataForTrack = false;
-
-	//		if (GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
-	//			{
-	//				//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
-	//				//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
-	//				hasDataForTrack = true;
-	//	
-	//			}
-	//		if(!hasDataForTrack){
-	//			FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
-	//			newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
-	//			newTrackDisplayOptions.TrackIndexInParentMidi = numTracks;
-	//			newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-	//			newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-	//			newTrackDisplayOptions.trackName = *track.GetName();
-	//			CurrentData->TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
-	//			}
+	PopulateTracksFromData();
 
 
-
-	//			//if (!notes.IsEmpty())
-	//			//{
-	//			//	for (const auto& foundPair : notes)
-	//			//	{
-	//			//		PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
-	//			//	}
-	//			//}
-
-	//		numTracks++;
-
-	//		}
-
-	//};
-
-	//
-
-	//tracksVerticalBox->AddSlot()
-	//	[
-	//		SNew(SBorder)
-	//			.Padding(5.0f)
-	//				[ 
-	//					SNew(SMidiEditorBaseSettingsWidget)
-	//					.parentMidiEditor(MidiEditorSharedPtr)
-	//				]
-	//	];
-
-
-	//InternalGraphs.Add(PianoRollGraph.ToSharedRef());
-
-	//
-	//PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
-
-	//
-
-	//PianoRollGraph->NeedsRinitDelegate.AddDynamic(this, &UMIDIEditorBase::InitFromDataHarmonix);
-	//donePopulatingDelegate.Broadcast();
 }
 
 void UMIDIEditorBase::UpdateMidiFile()
@@ -454,6 +384,11 @@ void UMIDIEditorBase::UpdateDataAsset()
 	}
 
 
+
+}
+
+void UMIDIEditorBase::PopulateTracksFromData()
+{
 
 }
 
@@ -577,19 +512,6 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 	
 }
 
-FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
-{
-	if (GetActiveSessionData() && !GetActiveSessionData()->TimeStampedMidis.IsEmpty() && GetActiveSessionData()->TimeStampedMidis.IsValidIndex(ID))
-	{
-	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ID];
-	}
-	else
-	{
-	return InvalidTrackRef;
-	}
-}
-
-
 
 void UMIDIEditorBase::SetCurrentPosition(float newCursorPosition)
 {
@@ -670,5 +592,18 @@ void UMIDIEditorBase::UpdateElementInDisplayOptions(int ElementID, UPARAM(ref)FT
 	if (GEditor) GEditor->EndTransaction();
 }
 
-
-
+void UMIDITrackCache::GetOrCreateSessionDataForMidiFile(UMidiFile* MidiFile, UDAWSequencerData*& OutSessionData)
+{
+	const FString MidiName = MidiFile->GetName();
+	
+	if (CachedSessions.Contains(MidiName))
+	{
+		OutSessionData = CachedSessions[MidiName];
+	}
+	else {
+		OutSessionData = NewObject<UDAWSequencerData>();
+		OutSessionData->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, MidiFile, true, TArray<FTrackDisplayOptions>()));
+		OutSessionData->PopulateFromMidiFile(MidiFile);
+		CachedSessions.Add(MidiName, OutSessionData);
+	}
+}

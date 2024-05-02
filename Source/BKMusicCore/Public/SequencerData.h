@@ -30,6 +30,7 @@ struct FLinkedMidiEvents
 {
 
 
+
 	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
 		: StartEvent(StartEvent),
 		EndEvent(EndEvent),
@@ -38,6 +39,8 @@ struct FLinkedMidiEvents
 
 	{
 	}
+
+
 
 	//GENERATED_BODY()
 	FMidiEvent StartEvent;
@@ -48,6 +51,8 @@ struct FLinkedMidiEvents
 	int32 TrackID = -1;
 	double Duration = 0.0;
 	double StartTime = 0.0;
+
+	float cornerRadius = 0.0f;
 
 	void CalculateDuration(FSongMaps* SongsMap)
 	{
@@ -222,10 +227,18 @@ public:
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
+	UPROPERTY()
+	UMidiFile* HarmonixMidiFile;
 
+	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
 
+	UPROPERTY()
 	TArray<FMidiEvent> TimeSignatureEvents;
+
+	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
+
+	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
 
 
 };

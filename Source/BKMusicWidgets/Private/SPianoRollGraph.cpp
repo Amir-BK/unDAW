@@ -212,11 +212,14 @@ void SPianoRollGraph::InitFromMidiFile(UMidiFile* inMidiFile)
 		int numTracksInternal = numTracksRaw++;
 		if (track.GetEvents().IsEmpty()) continue;
 
+		int TrackMainChannel = track.GetPrimaryMidiChannel();
+
 		TMap<int, TArray<FLinkedMidiEvents*>> channelsMap;
 		TArray<FLinkedMidiEvents*> linkedNotes;
 		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
 
 		//track.GetEvent(32)
+		
 
 		// sort events, right now only notes 
 		for (int32 index = 0; const auto & MidiEvent : track.GetEvents())
@@ -241,7 +244,9 @@ void SPianoRollGraph::InitFromMidiFile(UMidiFile* inMidiFile)
 
 							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
-							foundPair->TrackID = midiChannel;
+			
+							foundPair->TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
+							FoundChannels.AddUnique(foundPair->TrackID);
 							foundPair->CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(foundPair);
 							// sort the tracks into channels
@@ -283,6 +288,21 @@ void SPianoRollGraph::InitFromMidiFile(UMidiFile* inMidiFile)
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
 
 		if (channelsMap.IsEmpty()) continue;
+
+		FoundChannels.Sort();
+		parentMidiEditor->InitTracksFromFoundArray(FoundChannels);
+		
+		for(auto& channel : FoundChannels)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Channel %d"), channel)
+			//parentMidiEditor->GetTracksDisplayOptions(channel);
+		}
+
+		for (auto& [key, val] : channelsMap)
+		{
+	
+			UE_LOG(SPIANOROLLLOG, Verbose, TEXT("Channel Map %d"), key)
+		}
 
 		InitFromLinkedMidiData(channelsMap);
 
@@ -510,6 +530,7 @@ void SPianoRollGraph::RecalcGrid()
 				//if(note->Duration * horizontalZoom >= 1.0f)	
 					
 				CulledNotesArray.Add(note);
+				//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
 			}
 
 
@@ -845,7 +866,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
-#define PIANO_ROLL_DEBUG
+//#define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
 
 
@@ -953,17 +974,24 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 #endif
 
-
+	
 		for (auto& note : CulledNotesArray)
 		{
-
-			FSlateDrawElement::MakeBox(OutDrawElements,
+			TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor) };
+			FSlateDrawElement::MakeGradient(OutDrawElements,
 				postCanvasLayerID++,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
-				&gridBrush,
-				ESlateDrawEffect::None,
-				parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
+				FVector4f::One() * note->cornerRadius
 			);
+
+			//FSlateDrawElement::MakeBox(OutDrawElements,
+			//	postCanvasLayerID++,
+			//	OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+			//	&gridBrush,
+			//	ESlateDrawEffect::None,
+			//	parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+			//);
 		}
 
 		//paint hovered note

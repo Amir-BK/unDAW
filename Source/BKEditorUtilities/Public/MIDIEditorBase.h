@@ -55,10 +55,13 @@ public:
 	TObjectPtr<UMidiFile> lastUsedMidiFile;
 
 	UPROPERTY(Instanced, EditAnywhere, BlueprintReadWrite, Category = "unDAW|Editor Cache", meta = (ExposeOnSpawn = "true", EditInLine = "true"))
-	TMap<FName, UDAWSequencerData*> CachedSessions;
+	TMap<FString, UDAWSequencerData*> CachedSessions;
 
-	
+	UFUNCTION()
+	void GetOrCreateSessionDataForMidiFile(UMidiFile* MidiFile, UDAWSequencerData*& OutSessionData);
 
+	//UPROPERTY()
+	//TMap<FName, TMap<int, FTrackDisplayOptions>> TrackDisplayOptions;
 
 };
 
@@ -154,7 +157,7 @@ public:
 	virtual void ResizePanel(int panelID, int DeltaSize) override;
 	void ToggleTrackVisibility(int trackID, bool inIsVisible) override;
 	virtual void SelectTrack(int trackID) override;
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) override;
+	//virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) override;
 
 	UFUNCTION()
 	virtual void SetCurrentPosition(float newCursorPosition) override;
@@ -201,6 +204,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void UpdateDataAsset();
 
+	void PopulateTracksFromData();
 
 
 	

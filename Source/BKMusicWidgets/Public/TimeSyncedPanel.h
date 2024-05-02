@@ -104,14 +104,28 @@ public:
 	int CurrentSelectionIndex = 0;
 
 	//virtual FOnTrackMidiEvent GetMidiEventDelegate() {};
-	
 
+	
+	FTrackDisplayOptions InvalidTrackRef;
+	TArray<FTrackDisplayOptions> TrackDisplayOptions;
+	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
 	float currentTimelineCursorPosition = 0;
 
 	virtual void SetCurrentPosition(float newCursorPosition) {};
 
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) = 0;
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) 
+	{
+		if (TrackDisplayOptionsMap.Contains(ID))
+		{
+			return TrackDisplayOptionsMap[ID];
+		}
+		else
+		{
+			return InvalidTrackRef;
+		}
+	};
+
 	virtual void AddHorizontalOffset(float deltaX) {};
 	virtual void UpdateTemporalZoom(float newTemporalZoom, const FVector2D& WidgetSpaceZoomOrigin) {};
 	virtual void UpdateZoomVector(FVector2D newZoomVector, const FVector2D& WidgetSpaceZoomOrigin) {};
@@ -122,11 +136,18 @@ public:
 	virtual void AddDeltaToTimeLine(float inDelta) {};
 	virtual TEnumAsByte<EPianoRollEditorMouseMode> getCurrentInputMode() { return EPianoRollEditorMouseMode::empty; };
 	
+	virtual void InitTracksFromFoundArray(TArray<int> InTracks) {
+		TrackDisplayOptionsMap.Empty();
+		for(int i = 0; i < InTracks.Num(); i++)
+		{
+			FTrackDisplayOptions newTrack;
+			newTrack.ChannelIndexInParentMidi = InTracks[i];
+			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(i);
+			TrackDisplayOptionsMap.Add(InTracks[i], newTrack);
+		}
+	};
 
-	/// <summary>
-	/// Gets the follow cursor.
-	/// </summary>
-	/// <returns>success</returns>
+
 	virtual bool getFollowCursor() { return false; };
 	virtual void setFollowCursor(bool inFollowCursor) {};
 
