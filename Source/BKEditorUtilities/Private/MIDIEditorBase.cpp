@@ -154,7 +154,7 @@ UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 	if (SceneManager && SceneManager == this)
 	{
 	
-		return PreviewCache;
+		return PreviewCache.Get();
 	}
 	else {
 		if(SceneManager)	return SceneManager->GetActiveSessionData();
@@ -279,11 +279,11 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 
 	InternalGraphs.Empty();
-	UDAWSequencerData* SessionPtr;
+	UDAWSequencerData* SessionPtr = nullptr;
 
 	if(MidiEditorCache) MidiEditorCache->GetOrCreateSessionDataForMidiFile(HarmonixMidiFile.Get(), SessionPtr);
 
-	PreviewCache = SessionPtr;
+	PreviewCache = TSharedPtr<UDAWSequencerData>(SessionPtr);
 
 	//TSharedPtr<SVerticalBox> trackMenuArea;
 	MidiEditorSharedPtr = TSharedPtr<ITimeSyncedPanel>(this);
@@ -300,7 +300,8 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 		.accidentalGridColor(accidentalGridLineColor)
 		.cNoteColor(cNoteColor)
 		.noteColor(noteColor)
-		.pixelsPerBeat(100);
+		.pixelsPerBeat(100)
+		.SessionData(PreviewCache);
 
 
 	SAssignNew(tracksVerticalBox, SVerticalBox);
@@ -330,13 +331,13 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 	PianoRollGraph->KeyMappings = KeyMapDataAsset;
 	PianoRollGraph->selfSharedPtr = PianoRollGraph;
 	PianoRollGraph->parentMidiEditor = MidiEditorSharedPtr;
-	PianoRollGraph->InitFromMidiFile(HarmonixMidiFile.Get());
+	//PianoRollGraph->InitFromMidiFile(HarmonixMidiFile.Get());
 
 
 	//PianoRollGraph->InitFromLinkedMidiData();
 	InternalGraphs.Add(PianoRollGraph.ToSharedRef());
 
-	PopulateTracksFromData();
+	//PopulateTracksFromData();
 
 
 }
@@ -601,9 +602,10 @@ void UMIDITrackCache::GetOrCreateSessionDataForMidiFile(UMidiFile* MidiFile, UDA
 		OutSessionData = CachedSessions[MidiName];
 	}
 	else {
-		OutSessionData = NewObject<UDAWSequencerData>();
+		OutSessionData = NewObject<UDAWSequencerData>(this);
 		OutSessionData->TimeStampedMidis.Add(FTimeStamppedMidiContainer(FMusicTimestamp{ 0,0 }, MidiFile, true, TArray<FTrackDisplayOptions>()));
 		OutSessionData->PopulateFromMidiFile(MidiFile);
 		CachedSessions.Add(MidiName, OutSessionData);
+		MarkPackageDirty();
 	}
 }

@@ -115,8 +115,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Harmonix Midi", Category = "BK Music|MIDI")
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName = "Editor Preview Cache", Category = "unDAW|Editor Widget")
-	TObjectPtr<UDAWSequencerData> PreviewCache;
+
+	TSharedPtr<UDAWSequencerData> PreviewCache;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "MidiEditorCache", Category = "BK Music|MIDI")
 	TObjectPtr<UMIDITrackCache> MidiEditorCache;

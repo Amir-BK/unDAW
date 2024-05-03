@@ -34,7 +34,7 @@ bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
 	TArray<int> FoundChannels;
-
+	LinkedNoteDataMap.Empty();
 	HarmonixMidiFile = inMidiFile;
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
@@ -54,7 +54,6 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 
 		int TrackMainChannel = track.GetPrimaryMidiChannel();
 
-		TMap<int, TArray<FLinkedMidiEvents*>> channelsMap;
 		TArray<FLinkedMidiEvents*> linkedNotes;
 		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
 
@@ -90,13 +89,13 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 							foundPair->CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(foundPair);
 							// sort the tracks into channels
-							if (channelsMap.Contains(midiChannel))
+							if (LinkedNoteDataMap.Contains(midiChannel))
 							{
-								channelsMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap[midiChannel].Add(foundPair);
 							}
 							else {
-								channelsMap.Add(TTuple<int, TArray<FLinkedMidiEvents*>>(midiChannel, TArray<FLinkedMidiEvents*>()));
-								channelsMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents*>>(midiChannel, TArray<FLinkedMidiEvents*>()));
+								LinkedNoteDataMap[midiChannel].Add(foundPair);
 							}
 
 						}
@@ -127,7 +126,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		}
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
 
-		if (channelsMap.IsEmpty()) continue;
+		if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		FoundChannels.Sort();
 	}

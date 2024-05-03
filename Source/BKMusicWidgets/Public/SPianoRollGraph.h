@@ -171,6 +171,7 @@ public:
 		SLATE_ARGUMENT(FLinearColor, cNoteColor)
 		SLATE_ARGUMENT(FLinearColor, noteColor)
 		SLATE_ARGUMENT(float, pixelsPerBeat)
+		SLATE_ARGUMENT(TSharedPtr<UDAWSequencerData>, SessionData)
 		//SLATE_ARGUMENT(TSharedPtr<UMIDIEditorBase>, parentMidiEditor)
 	SLATE_END_ARGS()
 
@@ -192,6 +193,8 @@ public:
 
 	double LastMeasuredAudioTime = 0.0;
 	double CurrentTimelinePosition = 0.0;
+
+	TSharedPtr<UDAWSequencerData> SessionData;
 
 	FLinearColor noteColor;
 	FVector2f positionOffset;
@@ -261,9 +264,11 @@ public:
 
 	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
+	FLinkedMidiEvents* SelectedNote = nullptr;
 
 	void InitFromMidiFile(UMidiFile* inMidiFile);
 	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
+	void Init();
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 

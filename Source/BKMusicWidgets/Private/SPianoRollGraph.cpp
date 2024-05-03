@@ -91,7 +91,7 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	bCanSupportFocus = true;
 	//tick
 
-
+	SessionData = InArgs._SessionData;
 	gridColor = InArgs._gridColor;
 	accidentalGridColor = InArgs._accidentalGridColor;
 	cNoteColor = InArgs._cNoteColor;
@@ -118,6 +118,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	}
 
 	FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
+
+	Init();
 	//UE_LOGFMT(LogTemp, Log, "consexpr test: {0}", test);
 }
 void SPianoRollGraph::RecalculateSlotOffsets()
@@ -141,6 +143,7 @@ void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot, int in
 
 	//this is very bad code nuke it soon.
 	// month later still not nuked... 
+	// it's gone actually... 
 	int totalNotes = slotsContainer.Add(newSlot);
 	newSlot.uniqueMapKey = totalNotes;
 
@@ -314,6 +317,12 @@ void SPianoRollGraph::InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*
 	UE_LOG(LogTemp, Log, TEXT("Init from linked midi data"))
 	MidiSongMap = HarmonixMidiFile->GetSongMaps();
 	LinkedNoteDataMap.Append(inLinkedNoteDataMap);
+}
+
+void SPianoRollGraph::Init()
+{
+	MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
+	LinkedNoteDataMap = SessionData->LinkedNoteDataMap;
 }
 
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -642,20 +651,19 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		
 		int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
 		hoveredNoteIndex = -1;
-		for(int i = 0; i < CulledNotesArray.Num(); i++)
-		{
-			if(tickAtMouse >= CulledNotesArray[i]->StartEvent.GetTick() && tickAtMouse <= CulledNotesArray[i]->EndEvent.GetTick())
+		CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+			if (tickAtMouse >= note->StartEvent.GetTick() && tickAtMouse <= note->EndEvent.GetTick())
 			{
-				//UE_LOG(LogTemp, Log, TEXT("Hovered over note!"))
-				if (CulledNotesArray[i]->StartEvent.GetMsg().Data1 == hoveredPitch)
+				if (note->StartEvent.GetMsg().Data1 == hoveredPitch)
 				{
-					//UE_LOG(LogTemp, Log, TEXT("Hovered over note!"))
-						hoveredNoteIndex = i;
+					SelectedNote = note;
+					return true;
 				}
 			}
-			
+			SelectedNote = nullptr;
+			return false;
+		});
 
-		}
 
 		if (bLMBdown) {
 	
@@ -866,7 +874,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
-//#define PIANO_ROLL_DEBUG
+#define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
 
 
@@ -995,9 +1003,9 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		}
 
 		//paint hovered note
-		if (hoveredNoteIndex >= 0)
+		if (SelectedNote != nullptr)
 		{
-			auto& note = CulledNotesArray[hoveredNoteIndex]	;
+			auto& note = SelectedNote;
 			FSlateDrawElement::MakeBox(OutDrawElements,
 				postCanvasLayerID++,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
