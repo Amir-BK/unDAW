@@ -68,7 +68,7 @@ public:
 	FZoomablePanelSlotContainer(FLinkedMidiEvents* InNote, int32 InTrackId ): MidiNoteData(nullptr)
 	{
 		MidiNoteData = InNote;
-		pitch = 127 - MidiNoteData->StartEvent.GetMsg().Data1;
+		pitch = 127 - MidiNoteData->pitch;
 		//time = MidiNoteData.StartEvent->GetTick();
 		//duration = MidiNoteData.EndEvent->GetTick() - time;
 		trackID = InTrackId;
@@ -76,8 +76,8 @@ public:
 
 	void UpdateNotePitch(uint8 newPitch)
 	{
-		auto newStartMessage = FMidiMsg(MidiNoteData->StartEvent.GetMsg().Status, newPitch, MidiNoteData->StartEvent.GetMsg().Data2);
-		auto newEndMessage = FMidiMsg(MidiNoteData->EndEvent.GetMsg().Status, newPitch, MidiNoteData->EndEvent.GetMsg().Data2);
+		//auto newStartMessage = FMidiMsg(MidiNoteData->StartEvent.GetMsg().Status, newPitch, MidiNoteData->StartEvent.GetMsg().Data2);
+		//auto newEndMessage = FMidiMsg(MidiNoteData->EndEvent.GetMsg().Status, newPitch, MidiNoteData->EndEvent.GetMsg().Data2);
 		//MidiNoteData->StartEvent.SetMsg(newStartMessage);
 		//MidiNoteData->StartEvent
 		//MidiNoteData->EndEvent.SetMsg(newEndMessage);
@@ -85,9 +85,9 @@ public:
 
 	void UpdateNoteStartTime(float newTime, int32 newTick)
 	{
-		time = newTime;
-		MidiNoteData->StartEvent = FMidiEvent(newTick, MidiNoteData->StartEvent.GetMsg());
-		MidiNoteData->EndEvent = FMidiEvent(newTick, MidiNoteData->EndEvent.GetMsg());
+		//time = newTime;
+		//MidiNoteData->StartEvent = FMidiEvent(newTick, MidiNoteData->StartEvent.GetMsg());
+		//MidiNoteData->EndEvent = FMidiEvent(newTick, MidiNoteData->EndEvent.GetMsg());
 	}
 };
 
@@ -262,7 +262,7 @@ public:
 	TArray<int> FoundChannels;
 
 
-	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
+	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
 	FLinkedMidiEvents* SelectedNote = nullptr;
 

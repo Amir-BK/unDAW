@@ -25,42 +25,73 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 
 
-
+USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {
 
-
+	GENERATED_BODY()
 
 	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
-		: StartEvent(StartEvent),
-		EndEvent(EndEvent),
-		StartIndex(inStartIndex),
+		:StartIndex(inStartIndex),
 		EndIndex(inEndindex)
 
 	{
+		StartTick = StartEvent.GetTick();
+		EndTick = EndEvent.GetTick();
+		pitch = StartEvent.GetMsg().Data1;
 	}
 
+	FLinkedMidiEvents()
+	{
+
+	}
+
+	//
+	//FMidiEvent StartEvent;
+	//FMidiEvent EndEvent;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 StartIndex = 0;
 
 
-	//GENERATED_BODY()
-	FMidiEvent StartEvent;
-	FMidiEvent EndEvent;
-	int32 StartIndex;
-	int32 EndIndex;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 EndIndex = 0;
 
 
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	uint8 pitch = 0;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 StartTick = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 EndTick = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 TrackID = -1;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	double Duration = 0.0;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	double StartTime = 0.0;
 
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	float cornerRadius = 0.0f;
 
 	void CalculateDuration(FSongMaps* SongsMap)
 	{
-		StartTime = SongsMap->TickToMs(StartEvent.GetTick());
-		Duration = SongsMap->TickToMs(EndEvent.GetTick()) - StartTime;
+		StartTime = SongsMap->TickToMs(StartTick);
+		Duration = SongsMap->TickToMs(EndTick) - StartTime;
 		
 	}
+};
+
+USTRUCT(BlueprintType)
+struct FLinkedNotesTrack
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
 
@@ -189,6 +220,34 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 {
 	GENERATED_BODY()
 public:
+	
+	FTrackDisplayOptions InvalidTrackRef;
+	
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
+	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
+
+	void InitTracksFromFoundArray(TArray<int> InTracks) {
+		TrackDisplayOptionsMap.Empty();
+		for (int i = 0; i < InTracks.Num(); i++)
+		{
+			FTrackDisplayOptions newTrack;
+			newTrack.ChannelIndexInParentMidi = InTracks[i];
+			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(i);
+			TrackDisplayOptionsMap.Add(InTracks[i], newTrack);
+		}
+	};
+
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID)
+	{
+		if (TrackDisplayOptionsMap.Contains(ID))
+		{
+			return TrackDisplayOptionsMap[ID];
+		}
+		else
+		{
+			return InvalidTrackRef;
+		}
+	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Defaults", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFusionPatch> DefaultFusionPatch;
@@ -239,7 +298,8 @@ public:
 
 	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
 
-	TMap<int, TArray<FLinkedMidiEvents*>> LinkedNoteDataMap;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
 
 };

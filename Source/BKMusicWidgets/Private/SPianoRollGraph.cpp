@@ -131,71 +131,7 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 	vertLine.Add(FVector2f(0.0f, 128 * rowHeight));
 
 }
-void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot, int inInternalMidiTrackID)
 
-{
-	MidiSongMap = HarmonixMidiFile->GetSongMaps();
-	auto newSlot = FZoomablePanelSlotContainer(&inNote, inTrackSlot);
-	newSlot.trackindexInHarmonixMidi = inInternalMidiTrackID;
-	newSlot.time = MidiSongMap->TickToMs(inNote.StartEvent.GetTick());
-	newSlot.duration = MidiSongMap->TickToMs(inNote.EndEvent.GetTick()) - newSlot.time ;
-
-
-	//this is very bad code nuke it soon.
-	// month later still not nuked... 
-	// it's gone actually... 
-	int totalNotes = slotsContainer.Add(newSlot);
-	newSlot.uniqueMapKey = totalNotes;
-
-	float velocity = inNote.StartEvent.GetMsg().Data2;
-
-	FString noteName = UEngravingSubsystem::pitchNumToStringRepresentation(inNote.StartEvent.GetMsg().Data1);
-	TSharedPtr<SMidiNoteContainer> TempButton;
-	FString tooltext = FString::Printf(TEXT("Time in miliseconds %f \n Pitch: %d \n Velocity: %f, Name: %s \n TrackID: %d"), newSlot.time, inNote.StartEvent.GetMsg().Data1, velocity, *noteName, inInternalMidiTrackID);
-	
-
-	RootConstraintCanvas->AddSlot()
-		.Offset(TAttribute<FMargin>::Create(TAttribute<FMargin>::FGetter::CreateLambda([&, data = newSlot]()
-			{
-				FZoomablePanelSlotContainer slotInLambda = data;
-
-				float Left = slotMap[data.uniqueMapKey].time * horizontalZoom;
-				float top = slotMap[data.uniqueMapKey].pitch * rowHeight;
-
-				return FMargin(Left, top);
-
-			})))
-		.AutoSize(true)
-		.Alignment(FVector2D(0.0f, 0.0f))
-		.ZOrder(inTrackSlot)
-		.Expose(newSlot.slotPointer)
-		[
-			SAssignNew(TempButton, SMidiNoteContainer)
-
-				.ToolTipText(FText::FromString(tooltext))
-				.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&, data = inTrackSlot, data2 = newSlot]() {
-					//UE_LOG(LogTemp, Log, TEXT("The value is %f"), static_cast<float>(data2.MidiNoteData->StartEvent.GetMsg().GetStdData2()))
-						return parentMidiEditor->GetTracksDisplayOptions(data).trackColor.CopyWithNewOpacity(static_cast<float>(data2.MidiNoteData->StartEvent.GetMsg().GetStdData2()) * (1.5f/127.0f));
-					})))
-					.Size(TAttribute<FVector2D>::Create(TAttribute<FVector2D>::FGetter::CreateLambda([&, data = newSlot]() {
-
-						return FVector2D(data.duration * horizontalZoom, rowHeight);
-					})))
-				.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([&, data = inTrackSlot](){
-					EVisibility viewState = EVisibility::Visible;
-					viewState = parentMidiEditor->GetTracksDisplayOptions(data).isVisible ? EVisibility::Visible : EVisibility::Hidden;
-					return viewState;
-					
-					})))
-				.CornerRadius(FVector4(1.0f, 1.0f, 1.0f, 1.0f))
-				.UIDinParent(totalNotes)
-
-		];
-
-	TempButton.Get()->SetParentSharedPtr(selfSharedPtr);
-	slotMap.Add(totalNotes, newSlot);
-
-}
 void SPianoRollGraph::InitFromMidiFile(UMidiFile* inMidiFile)
 {
 	HarmonixMidiFile = inMidiFile;
@@ -316,7 +252,7 @@ void SPianoRollGraph::InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*
 {
 	UE_LOG(LogTemp, Log, TEXT("Init from linked midi data"))
 	MidiSongMap = HarmonixMidiFile->GetSongMaps();
-	LinkedNoteDataMap.Append(inLinkedNoteDataMap);
+	//LinkedNoteDataMap.Append(inLinkedNoteDataMap);
 }
 
 void SPianoRollGraph::Init()
@@ -526,19 +462,19 @@ void SPianoRollGraph::RecalcGrid()
 
 	for (auto& track : LinkedNoteDataMap)
 	{
-		for (auto& note : track.Value)
+		for (auto& note : track.Value.LinkedNotes)
 		{
-			bool NoteInRightBound = note->StartEvent.GetTick() < RightMostTick;
+			bool NoteInRightBound = note.StartTick < RightMostTick;
 
 			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop
 			if(!NoteInRightBound) break;
 
-			if (note->EndEvent.GetTick() >= LeftMostTick)
+			if (note.EndTick >= LeftMostTick)
 			{
 				//if notes are too small, don't draw 
 				//if(note->Duration * horizontalZoom >= 1.0f)	
 					
-				CulledNotesArray.Add(note);
+				CulledNotesArray.Add(&note);
 				//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
 			}
 
@@ -652,9 +588,9 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
 		hoveredNoteIndex = -1;
 		CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-			if (tickAtMouse >= note->StartEvent.GetTick() && tickAtMouse <= note->EndEvent.GetTick())
+			if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
 			{
-				if (note->StartEvent.GetMsg().Data1 == hoveredPitch)
+				if (note->pitch == hoveredPitch)
 				{
 					SelectedNote = note;
 					return true;
@@ -827,7 +763,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 	if (parentMidiEditor.IsValid() && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
 	{
-		FLinearColor trackColor = parentMidiEditor->GetTracksDisplayOptions(selectedTrackIndex).trackColor;
+		FLinearColor trackColor = SessionData->GetTracksDisplayOptions(selectedTrackIndex).trackColor;
 		FLinearColor offTracksColor = trackColor.Desaturate(0.5);
 		FLinearColor colorNegative = FLinearColor::White.operator-(trackColor);
 
@@ -985,10 +921,10 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 		for (auto& note : CulledNotesArray)
 		{
-			TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor) };
+			TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackID).trackColor) };
 			FSlateDrawElement::MakeGradient(OutDrawElements,
 				postCanvasLayerID++,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
 				FVector4f::One() * note->cornerRadius
 			);
@@ -1008,7 +944,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			auto& note = SelectedNote;
 			FSlateDrawElement::MakeBox(OutDrawElements,
 				postCanvasLayerID++,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 				&gridBrush,
 				ESlateDrawEffect::None,
 				FLinearColor::Red
@@ -1046,7 +982,7 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	
 	//update cursor and the such 
 	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent.GetTick();
+	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartTick;
 	//int delta = tickAtNoteStart - tickAtMouse;
 	
 	CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
@@ -1100,15 +1036,15 @@ void SPianoRollGraph::StopDraggingNote()
 		//remove existing note using event index
 		//HarmonixMidiFile->GetTrack(trackID)->GetEvents().(data.MidiNoteData->EndIndex);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
-		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
 	
 		//call all the sorting functions I could find
 		
-		HarmonixMidiFile->SortAllTracks();
+		//HarmonixMidiFile->SortAllTracks();
 		//HarmonixMidiFile->TracksChanged();
-		HarmonixMidiFile->MarkPackageDirty();
+		//HarmonixMidiFile->MarkPackageDirty();
 
 		//NeedsRinitDelegate.Broadcast();
 

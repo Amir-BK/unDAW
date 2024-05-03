@@ -81,21 +81,21 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
 						{
 
-							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
+							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
 
-							foundPair->TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
-							FoundChannels.AddUnique(foundPair->TrackID);
-							foundPair->CalculateDuration(HarmonixMidiFile->GetSongMaps());
-							linkedNotes.Add(foundPair);
+							foundPair.TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
+							FoundChannels.AddUnique(foundPair.TrackID);
+							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
+							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
 							if (LinkedNoteDataMap.Contains(midiChannel))
 							{
-								LinkedNoteDataMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
 							}
 							else {
-								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents*>>(midiChannel, TArray<FLinkedMidiEvents*>()));
-								LinkedNoteDataMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(midiChannel, TArray<FLinkedMidiEvents>()));
+								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
 							}
 
 						}
@@ -129,5 +129,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		FoundChannels.Sort();
+
+		InitTracksFromFoundArray(FoundChannels);
 	}
 }
