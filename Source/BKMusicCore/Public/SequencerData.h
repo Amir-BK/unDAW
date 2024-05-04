@@ -249,6 +249,18 @@ public:
 		}
 	};
 
+	FTrackDisplayOptions& GetTrackOptionsRef(int TrackID)
+	{
+		if (TrackDisplayOptionsMap.Contains(TrackID))
+		{
+			return TrackDisplayOptionsMap[TrackID];
+		}
+		else
+		{
+			return InvalidTrackRef;
+		}
+	}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Defaults", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFusionPatch> DefaultFusionPatch;
 

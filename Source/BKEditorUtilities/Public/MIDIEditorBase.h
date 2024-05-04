@@ -156,8 +156,8 @@ public:
 	void UpdateTemporalZoom(float newTemporalZoom, const FVector2D& WidgetSpaceZoomOrigin) override;
 	virtual void ResizePanel(int panelID, int DeltaSize) override;
 	void ToggleTrackVisibility(int trackID, bool inIsVisible) override;
-	virtual void SelectTrack(int trackID) override;
-	//virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) override;
+	virtual void SelectTrack(int trackID);
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) override;
 
 	UFUNCTION()
 	virtual void SetCurrentPosition(float newCursorPosition) override;
@@ -181,7 +181,7 @@ public:
 	void InitAudioBlock();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
-	UPARAM(ref) const TArray<FTrackDisplayOptions>& GetTrackDisplayOptions();
+	UPARAM(ref) const TMap<int, FTrackDisplayOptions>& GetTrackDisplayOptions();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|MIDI")
 	void ExecuteAudioParamOnPerformanceComponent(FString InName, float inValue);

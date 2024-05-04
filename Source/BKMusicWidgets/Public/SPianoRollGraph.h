@@ -150,6 +150,9 @@ public:
 };
 
 
+DECLARE_DELEGATE(FOnInitComplete)
+
+
 /**
  * 
  */
@@ -182,6 +185,8 @@ public:
 	FString debugData;
 #endif
 	
+	FOnInitComplete OnInitCompleteDelegate;
+
 	UAudioComponent* PerformanceComponent;
 	UBKEditorUtilsKeyboardMappings* KeyMappings;
 

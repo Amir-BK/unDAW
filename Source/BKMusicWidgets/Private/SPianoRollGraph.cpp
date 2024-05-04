@@ -259,6 +259,8 @@ void SPianoRollGraph::Init()
 {
 	MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
 	LinkedNoteDataMap = SessionData->LinkedNoteDataMap;
+
+	OnInitCompleteDelegate.ExecuteIfBound();
 }
 
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)

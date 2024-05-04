@@ -151,16 +151,12 @@ void UMIDIEditorBase::SetPlaybackState(EBKPlayState newPlayState)
 
 UDAWSequencerData* UMIDIEditorBase::GetActiveSessionData()
 {
-	if (SceneManager && SceneManager == this)
+	if (SceneManager && SceneManager != this)
 	{
-	
-		return PreviewCache.Get();
+		return SceneManager->GetActiveSessionData();
+		
 	}
-	else {
-		if(SceneManager)	return SceneManager->GetActiveSessionData();
-	}
-
-	return nullptr;
+	return PreviewCache.Get();
 }
 
 TSubclassOf<UMetasoundBuilderHelperBase> UMIDIEditorBase::GetBuilderBPClass()
@@ -269,7 +265,7 @@ FLinearColor UMIDIEditorBase::TrackColorPickerClicked(int indexInTrackOptionsArr
 {
 	//SColorPicker-
 	
-	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[indexInTrackOptionsArray].trackColor;
+	return GetActiveSessionData()->TrackDisplayOptionsMap[indexInTrackOptionsArray].trackColor;
 }
 
 
@@ -336,7 +332,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 	//PianoRollGraph->InitFromLinkedMidiData();
 	InternalGraphs.Add(PianoRollGraph.ToSharedRef());
-
+	donePopulatingDelegate.Broadcast();
 	//PopulateTracksFromData();
 
 
@@ -438,7 +434,7 @@ void UMIDIEditorBase::UpdatePatchInTrack(int TrackID, const TScriptInterface<IMe
 	TRANSACT("Update Patch Data")
 
 		
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].MidiPatchClass = MidiPatchClass;
+	GetActiveSessionData()->TrackDisplayOptionsMap[TrackID].MidiPatchClass = MidiPatchClass;
 	GetActiveSessionData()->MarkPackageDirty();
 	if (GEditor) GEditor->EndTransaction();
 }
@@ -450,7 +446,7 @@ void UMIDIEditorBase::UpdateVolumeInTrack(int TrackID, float newGain)
 		GEditor->BeginTransaction(TEXT(""), INVTEXT("Update DAW Sequence"), nullptr);
 	
 	
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID].TrackVolume = newGain;
+	GetActiveSessionData()->TrackDisplayOptionsMap[TrackID].TrackVolume = newGain;
 	GetActiveSessionData()->MarkPackageDirty();
 
 	if (GEditor) GEditor->EndTransaction();
@@ -458,7 +454,7 @@ void UMIDIEditorBase::UpdateVolumeInTrack(int TrackID, float newGain)
 
 FTrackDisplayOptions& UMIDIEditorBase::GetTrackOptionsRef(int TrackID)
 {
-	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[TrackID];
+	return GetActiveSessionData()->GetTrackOptionsRef(TrackID);
 }
 
 void UMIDIEditorBase::SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantization)
@@ -477,19 +473,20 @@ void UMIDIEditorBase::SetGridQuantization(EMusicTimeSpanOffsetUnits newQuantizat
 
 void UMIDIEditorBase::ToggleTrackVisibility(int trackID, bool inIsVisible)
 {
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isVisible = inIsVisible;
+	GetActiveSessionData()->TrackDisplayOptionsMap[trackID].isVisible = inIsVisible;
 }
 
 void UMIDIEditorBase::SelectTrack(int trackID)
 {
 	if (CurrentSelectionIndex == trackID)
 	{
-		GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected = false;
+		GetActiveSessionData()->TrackDisplayOptionsMap[trackID].isSelected = false;
 	}
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[CurrentSelectionIndex].isSelected = false;
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected = true;
 
-	OnTrackSelectedDelegate.Broadcast(GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].isSelected, trackID);
+	if(CurrentSelectionIndex != -1)	GetActiveSessionData()->TrackDisplayOptionsMap[CurrentSelectionIndex].isSelected = false;
+	GetActiveSessionData()->TrackDisplayOptionsMap[trackID].isSelected = true;
+
+	OnTrackSelectedDelegate.Broadcast(GetActiveSessionData()->TrackDisplayOptionsMap[trackID].isSelected, trackID);
 
 	CurrentSelectionIndex = trackID;
 	for (auto graph : InternalGraphs)
@@ -502,7 +499,7 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 			graph.Get().someTrackIsSelected = false;
 		}else {
 	
-			graph.Get().availableSamplesMap = GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[trackID].SampleAvailabilityMap;
+			graph.Get().availableSamplesMap = GetActiveSessionData()->TrackDisplayOptionsMap[trackID].SampleAvailabilityMap;
 			graph.Get().someTrackIsSelected = true;
 			graph.Get().selectedTrackIndex = trackID;
 			graph.Get().UpdateSlotsZOrder();
@@ -511,6 +508,11 @@ void UMIDIEditorBase::SelectTrack(int trackID)
 
 	}
 	
+}
+
+FTrackDisplayOptions& UMIDIEditorBase::GetTracksDisplayOptions(int ID)
+{
+	return GetActiveSessionData()->GetTracksDisplayOptions(ID); // TODO: insert return statement here
 }
 
 
@@ -545,7 +547,7 @@ FReply UMIDIEditorBase::TrackVisibilityClicked(const FGeometry& MyGeometry, cons
 TMap<int32, UFusionPatch*> UMIDIEditorBase::GetTracksMap()
 {
 	TMap<int32, UFusionPatch*> newTrackMap;
-	for (auto& track : GetActiveSessionData()->TimeStampedMidis[0].TracksMappings)
+	for (const auto& [index, track] : GetActiveSessionData()->TrackDisplayOptionsMap)
 	{
 		newTrackMap.Add(TTuple<int32, UFusionPatch*>(track.TrackIndexInParentMidi, track.fusionPatch.Get()));
 	}
@@ -565,11 +567,11 @@ void UMIDIEditorBase::InitAudioBlock()
 }
 
 //Too risky...
-const TArray<FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
+const TMap<int, FTrackDisplayOptions>& UMIDIEditorBase::GetTrackDisplayOptions()
 {
 	
-	//GetActiveSessionData()->TimeStampedMidis[0].TracksMappings
-	return GetActiveSessionData()->TimeStampedMidis[0].TracksMappings;
+	//GetActiveSessionData()->TrackDisplayOptionsMap
+	return GetActiveSessionData()->TrackDisplayOptionsMap;
 	
 	
 }
@@ -588,7 +590,7 @@ void UMIDIEditorBase::UpdateElementInDisplayOptions(int ElementID, UPARAM(ref)FT
 {
 	TRANSACT("Update Track Data")
 	
-	GetActiveSessionData()->TimeStampedMidis[0].TracksMappings[ElementID] = InTrackOptions;
+	//GetActiveSessionData()->TrackDisplayOptionsMap[ElementID] = InTrackOptions;
 	GetActiveSessionData()->MarkPackageDirty();
 	if (GEditor) GEditor->EndTransaction();
 }

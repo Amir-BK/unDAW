@@ -101,7 +101,7 @@ public:
 	//FOnTransportChanged TransportStateChanged;
 
 	bool SnapToGrid;
-	int CurrentSelectionIndex = 0;
+	int CurrentSelectionIndex = -1;
 
 	//virtual FOnTrackMidiEvent GetMidiEventDelegate() {};
 
@@ -116,6 +116,7 @@ public:
 
 	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) 
 	{
+		
 		if (TrackDisplayOptionsMap.Contains(ID))
 		{
 			return TrackDisplayOptionsMap[ID];
@@ -131,7 +132,7 @@ public:
 	virtual void UpdateZoomVector(FVector2D newZoomVector, const FVector2D& WidgetSpaceZoomOrigin) {};
 	virtual void ResizePanel(int panelID, int DeltaSize) {};
 	virtual void ToggleTrackVisibility(int trackID, bool inIsVisible) {};
-	virtual void SelectTrack(int trackID) {};
+	//virtual void SelectTrack(int trackID) {};
 	virtual void SetInputMode(EPianoRollEditorMouseMode newMode) {};
 	virtual void AddDeltaToTimeLine(float inDelta) {};
 	virtual TEnumAsByte<EPianoRollEditorMouseMode> getCurrentInputMode() { return EPianoRollEditorMouseMode::empty; };
