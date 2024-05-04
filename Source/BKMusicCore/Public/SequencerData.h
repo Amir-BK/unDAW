@@ -226,15 +226,17 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
-	void InitTracksFromFoundArray(TArray<int> InTracks) {
+	void InitTracksFromFoundArray(TMap<int, int> InTracks) {
 		TrackDisplayOptionsMap.Empty();
-		for (int i = 0; i < InTracks.Num(); i++)
+		for (const auto& [trackID, channelID] : InTracks)
 		{
 			FTrackDisplayOptions newTrack;
-			newTrack.ChannelIndexInParentMidi = InTracks[i];
-			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(i);
-			TrackDisplayOptionsMap.Add(InTracks[i], newTrack);
+			newTrack.ChannelIndexInParentMidi = channelID;
+			newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName();
+			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
+			TrackDisplayOptionsMap.Add(channelID, newTrack);
 		}
+
 	};
 
 	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID)
@@ -310,7 +312,7 @@ public:
 
 	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	UPROPERTY()
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
 

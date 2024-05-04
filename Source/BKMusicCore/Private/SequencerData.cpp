@@ -33,7 +33,7 @@ bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM
 
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
-	TArray<int> FoundChannels;
+	TMap<int, int> FoundChannels;
 	LinkedNoteDataMap.Empty();
 	HarmonixMidiFile = inMidiFile;
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
@@ -85,7 +85,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
 
 							foundPair.TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
-							FoundChannels.AddUnique(foundPair.TrackID);
+							FoundChannels.Add(numTracksRaw, foundPair.TrackID);
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
@@ -128,7 +128,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 
 		if (LinkedNoteDataMap.IsEmpty()) continue;
 
-		FoundChannels.Sort();
+		//FoundChannels.Sort();
 
 		InitTracksFromFoundArray(FoundChannels);
 	}
