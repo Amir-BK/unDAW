@@ -195,7 +195,9 @@ public:
 					+ SVerticalBox::Slot()
 					[
 						SNew(SEditableTextBox)
-							.Text_Lambda([this]() {return FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName); })
+							//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
+							.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
+							.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
 					]
 				+ SVerticalBox::Slot()
 				[

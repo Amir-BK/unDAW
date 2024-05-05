@@ -4,6 +4,7 @@
 #include "SPianoRollGraph.h"
 #include "SlateOptMacros.h"
 #include "Logging/StructuredLog.h"
+#include "Algo/BinarySearch.h"
 #include <SMidiNoteContainer.h>
 //#include <BKMusicWidgets.h>
 
@@ -484,6 +485,8 @@ void SPianoRollGraph::RecalcGrid()
 		}
 	}
 
+	CulledNotesArray.Sort([](const FLinkedMidiEvents& A, const FLinkedMidiEvents& B) { return A.StartTick < B.StartTick; });
+
 
 	
 	gridLine.Empty(2);
@@ -575,6 +578,8 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 
 	return FReply::Unhandled();
 }
+
+
 FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	const bool bIsRightMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
@@ -586,21 +591,27 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		auto abs = MouseEvent.GetScreenSpacePosition();
 		localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
 		hoveredPitch = 127 -FMath::Floor(localMousePosition.Y / rowHeight);
+
+	
 		
-		int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-		hoveredNoteIndex = -1;
-		CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-			if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
+		int32 tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+		hoveredNotePitch = -1;
+
+  
+
+		SelectedNote = nullptr;
+	CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+		if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
+		{
+			if (note->pitch == hoveredPitch)
 			{
-				if (note->pitch == hoveredPitch)
-				{
-					SelectedNote = note;
-					return true;
-				}
+				SelectedNote = note;
+				return true;
 			}
-			SelectedNote = nullptr;
-			return false;
-		});
+		}
+		;
+		return false;
+	});
 
 
 		if (bLMBdown) {
@@ -868,6 +879,18 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50,0)))),
 		FText::FromString(FString::Printf(TEXT("mouse %s \n time at mouse %f \n cursor position %f \n Tick at mouse %f"),	* localMousePosition.ToString()
 			, localMousePosition.X / horizontalZoom, CurrentTimelinePosition, MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom))),
+		FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 8),
+		ESlateDrawEffect::None,
+		FLinearColor::White);
+
+	FString noteString = SelectedNote != nullptr ? SelectedNote->GetFormmatedString() : "No Note Selected";
+
+
+	//cursor tests
+	FSlateDrawElement::MakeText(OutDrawElements,
+		postCanvasLayerID++,
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50, 100)))),
+		FText::FromString(*noteString),
 		FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 8),
 		ESlateDrawEffect::None,
 		FLinearColor::White);

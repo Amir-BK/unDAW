@@ -205,7 +205,7 @@ public:
 	FVector2f positionOffset;
 	float LastTickTimelinePosition;
 	int32 hoveredPitch;
-	int32 hoveredNoteIndex = -1;
+	int32 hoveredNotePitch = -1;
 	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
 	TMap<int, bool> availableSamplesMap;

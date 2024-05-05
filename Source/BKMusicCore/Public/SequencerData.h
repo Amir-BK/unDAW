@@ -68,7 +68,7 @@ struct FLinkedMidiEvents
 	int32 EndTick = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
-	int32 TrackID = -1;
+	int32 TrackID = INDEX_NONE;
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	double Duration = 0.0;
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -83,6 +83,12 @@ struct FLinkedMidiEvents
 		Duration = SongsMap->TickToMs(EndTick) - StartTime;
 		
 	}
+
+	FString GetFormmatedString()
+	{
+		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackID);
+	}
+
 };
 
 USTRUCT(BlueprintType)
@@ -232,7 +238,9 @@ public:
 		{
 			FTrackDisplayOptions newTrack;
 			newTrack.ChannelIndexInParentMidi = channelID;
-			newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName();
+
+			//FString::AppendInt(channelID, newTrack.trackName);
+			newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID - 1);
 			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
 			TrackDisplayOptionsMap.Add(channelID, newTrack);
 		}
