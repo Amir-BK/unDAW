@@ -17,13 +17,14 @@
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 
+
 #include "TrackPlaybackAndDisplayOptions.h"
 
 #include "SequencerData.generated.h"
 
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
-
+class UMetasoundBuilderHelperBase;
 
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
@@ -298,8 +299,6 @@ public:
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void CalculateSequenceDuration();
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW")
-	virtual TArray<FBPMidiStruct> GetMidiDataForTrack(const int trackID);
 
 	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
@@ -308,6 +307,9 @@ public:
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
+
+	UFUNCTION()
+	void CreateBuilderHelper();
 
 	UPROPERTY()
 	UMidiFile* HarmonixMidiFile;
@@ -322,6 +324,9 @@ public:
 
 	UPROPERTY()
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	TObjectPtr<UMetasoundBuilderHelperBase> MetasoundBuilderHelper;
 
 
 };

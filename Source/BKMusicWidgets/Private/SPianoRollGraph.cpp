@@ -823,6 +823,43 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
+		//paint hovered note
+	if (SelectedNote != nullptr)
+	{
+	//	FSlateDrawElement::bord
+
+			auto& note = SelectedNote;
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, 1.2 * rowHeight), FSlateLayoutTransform(1.2f, FVector2D(note->StartTime * horizontalZoom - 5, rowHeight * (127 - note->pitch) - 0.5 * rowHeight))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			FLinearColor::Red
+		);
+	}
+
+
+	for (auto& note : CulledNotesArray)
+	{
+		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackID).trackColor) };
+		FSlateDrawElement::MakeGradient(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
+			FVector4f::One() * note->cornerRadius
+		);
+
+		//FSlateDrawElement::MakeBox(OutDrawElements,
+		//	postCanvasLayerID++,
+		//	OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+		//	&gridBrush,
+		//	ESlateDrawEffect::None,
+		//	parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+		//);
+	}
+
+
+
 #define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
 
@@ -943,38 +980,6 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 #endif
 
-	
-		for (auto& note : CulledNotesArray)
-		{
-			TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackID).trackColor) };
-			FSlateDrawElement::MakeGradient(OutDrawElements,
-				postCanvasLayerID++,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
-				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
-				FVector4f::One() * note->cornerRadius
-			);
-
-			//FSlateDrawElement::MakeBox(OutDrawElements,
-			//	postCanvasLayerID++,
-			//	OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
-			//	&gridBrush,
-			//	ESlateDrawEffect::None,
-			//	parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
-			//);
-		}
-
-		//paint hovered note
-		if (SelectedNote != nullptr)
-		{
-			auto& note = SelectedNote;
-			FSlateDrawElement::MakeBox(OutDrawElements,
-				postCanvasLayerID++,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
-				&gridBrush,
-				ESlateDrawEffect::None,
-				FLinearColor::Red
-			);
-		}
 
 
 	//snapped mouse cursor

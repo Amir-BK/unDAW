@@ -179,9 +179,8 @@ void UMIDIEditorBase::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHel
 
 UMetasoundBuilderHelperBase* UMIDIEditorBase::GetBuilderHelper()
 {
-	if (SceneManager != this) return SceneManager->GetBuilderHelper();
-	
-	return BuilderHelper;
+
+	return GetActiveSessionData()->MetasoundBuilderHelper;
 }
 
 void UMIDIEditorBase::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)

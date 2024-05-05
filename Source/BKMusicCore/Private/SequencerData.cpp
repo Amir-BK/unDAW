@@ -2,6 +2,7 @@
 
 
 #include "SequencerData.h"
+#include "MetasoundBuilderHelperBase.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -16,14 +17,10 @@ void UDAWSequencerData::CalculateSequenceDuration()
 {
 	if (!TimeStampedMidis.IsEmpty())
 	{
-		SequenceDuration = TimeStampedMidis[0].MidiFile->GetSongMaps()->GetSongLengthMs();
+		SequenceDuration = HarmonixMidiFile->GetSongMaps()->GetSongLengthMs();
 	}
 }
 
-TArray<FBPMidiStruct> UDAWSequencerData::GetMidiDataForTrack(const int trackID)
-{
-	return TArray<FBPMidiStruct>();
-}
 
 bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance)
 {
@@ -131,5 +128,15 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		//FoundChannels.Sort();
 
 		InitTracksFromFoundArray(FoundChannels);
+		CreateBuilderHelper();
 	}
+}
+
+void UDAWSequencerData::CreateBuilderHelper()
+{
+	MetasoundBuilderHelper = NewObject<UMetasoundBuilderHelperBase>(this);
+	MetasoundBuilderHelper->SessionData = this;
+	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
+	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;
+	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer");
 }

@@ -30,6 +30,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
 	UDAWSequencerData* SessionData;
+
+	//the array of tracks/channels found in the midi file
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
+	TMap<int, FTrackDisplayOptions> MidiTracks;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
@@ -66,6 +70,26 @@ public:
 	UFUNCTION()
 	void AuditionAC(UAudioComponent* AudioComponent);
 
+	UFUNCTION()
+	void CreateInputsFromMidiTracks();
+
+	UFUNCTION()
+	bool CreateMidiPlayerBlock();
+
+	UFUNCTION(CallInEditor, Category = "unDAW|MetaSound Builder Helper")
+	void CreateAndAuditionPreviewAudioComponent();
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Created Nodes")
+	FMetaSoundNodeHandle MidiPlayerNode;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
+	UAudioComponent* AuditionComponentRef;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
+	UMetasoundGeneratorHandle* GeneratorHandle;
+
+	UFUNCTION()
+	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
 
 };
 
