@@ -233,7 +233,7 @@ void UMIDIEditorBase::SetPerformanceComponent(UAudioComponent* InPerformanceComp
 {
 	//for (auto& graph : InternalGraphs) graph->PerformanceComponent = InPerformanceComponent;
 
-	//PerformanceComponent = InPerformanceComponent;
+	PerformanceComponent = InPerformanceComponent;
 }
 
 void UMIDIEditorBase::AddHorizontalOffset(float deltaX)
@@ -331,7 +331,10 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 	//PianoRollGraph->InitFromLinkedMidiData();
 	InternalGraphs.Add(PianoRollGraph.ToSharedRef());
+
+	PreviewCache->CreateBuilderHelper(PerformanceComponent);
 	donePopulatingDelegate.Broadcast();
+
 	//PopulateTracksFromData();
 
 
@@ -339,7 +342,7 @@ void UMIDIEditorBase::InitFromDataHarmonix()
 
 void UMIDIEditorBase::UpdateMidiFile()
 {
-	auto CurrentData = GetActiveSessionData();
+	//auto CurrentData = GetActiveSessionData();
 	//CurrentData->TimeStampedMidis.Empty();
 	InitFromDataHarmonix();
 }

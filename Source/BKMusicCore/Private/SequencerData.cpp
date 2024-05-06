@@ -128,15 +128,15 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		//FoundChannels.Sort();
 
 		InitTracksFromFoundArray(FoundChannels);
-		CreateBuilderHelper();
+		//CreateBuilderHelper();
 	}
 }
 
-void UDAWSequencerData::CreateBuilderHelper()
+void UDAWSequencerData::CreateBuilderHelper(UAudioComponent* AuditionComponent)
 {
 	MetasoundBuilderHelper = NewObject<UMetasoundBuilderHelperBase>(this);
 	MetasoundBuilderHelper->SessionData = this;
 	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
 	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;
-	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer");
+	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 }

@@ -131,7 +131,7 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 {
 	UMetasoundBuilderHelperBase* BuilderHelperInstance = NewObject<UMetasoundBuilderHelperBase>(this->_getUObject(), GetBuilderBPClass());
 	BuilderHelperInstance->SessionData = GetActiveSessionData();
-	BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
+	//BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
 
 	SetBuilderHelper(BuilderHelperInstance);
 

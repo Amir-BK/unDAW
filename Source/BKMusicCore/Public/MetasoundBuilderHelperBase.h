@@ -9,6 +9,7 @@
 #include "Components/AudioComponent.h"
 #include "Metasound.h"
 #include "MetasoundSource.h"
+#include "MetasoundGeneratorHandle.h"
 #include "SequencerData.h"
 #include "MetasoundBuilderHelperBase.generated.h"
 
@@ -22,11 +23,18 @@ class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
 	
 public:
 
+	UPROPERTY()
+	UWorld* ParentWorld;
+
 	UPROPERTY(BlueprintReadWrite, Category = "unDAW|MetaSound Builder Helper")
 	UAudioComponent* AuditionComponent;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
+
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
+
+	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
 	UDAWSequencerData* SessionData;
@@ -39,7 +47,7 @@ public:
 	void PerformBpInitialization();
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper", CallInEditor)
-	void InitBuilderHelper(FString BuilderName);
+	void InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
 	EMetaSoundOutputAudioFormat OutputFormat;
@@ -70,8 +78,22 @@ public:
 	UFUNCTION()
 	void AuditionAC(UAudioComponent* AudioComponent);
 
+#define WITH_TESTS 1
+#ifdef WITH_TESTS
+
+
+	void CreateTestWavPlayerBlock();
+
+#endif //WITH_TESTS
 	UFUNCTION()
 	void CreateInputsFromMidiTracks();
+
+	UFUNCTION()
+	void CreateMixerPatchBlock(); //doesn't work
+
+	UFUNCTION()
+	void CreateMixerNodesSpaghettiBlock(); //very ugly
+
 
 	UFUNCTION()
 	bool CreateMidiPlayerBlock();

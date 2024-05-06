@@ -309,7 +309,7 @@ public:
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
 	UFUNCTION()
-	void CreateBuilderHelper();
+	void CreateBuilderHelper(UAudioComponent* AuditionComponent);
 
 	UPROPERTY()
 	UMidiFile* HarmonixMidiFile;
@@ -325,7 +325,7 @@ public:
 	UPROPERTY()
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
 	TObjectPtr<UMetasoundBuilderHelperBase> MetasoundBuilderHelper;
 
 
