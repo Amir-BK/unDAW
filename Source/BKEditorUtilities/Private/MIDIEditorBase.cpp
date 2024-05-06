@@ -9,6 +9,8 @@
 #include <Customizations/ColorStructCustomization.h>
 #include "Quartz/AudioMixerClockHandle.h"
 #include "SEnumCombo.h"
+#include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
+#include "IAssetTools.h"
 #include <Quartz/QuartzSubsystem.h>
 
 #include "SMidiTrackControlsWidget.h"
@@ -197,6 +199,25 @@ UMetasoundGeneratorHandle* UMIDIEditorBase::GetGeneratorHandle()
 
 
 
+
+bool UMIDIEditorBase::SaveSequenceDataToAssetWithDialog()
+{
+	FString NewAssetName = GetActiveSessionData()->HarmonixMidiFile->GetName() + TEXT("_DAWSequence");
+	FString PackagePath = TEXT("/Game/DAWSequences/");
+	FAssetToolsModule& Module = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools");
+	auto NewAsset = Module.Get().CreateAssetWithDialog(UDAWSequencerData::StaticClass(), NewObject<UBKMusicSequenceDataFactory>());
+
+	
+	//UAssetToolsHelpers::GetAssetTools()->CreateAssetsFrom<UDAWSequencerData>(GetActiveSessionData(), UDAWSequencerData::StaticClass(), TEXT(""), [](UDAWSequencerData* SourceSequence))
+	//auto NewAsset =	UAssetToolsHelpers::GetAssetTools()->CreateAssetWithDialog();
+	if (NewAsset) {
+		//NewAsset->
+		UEngine::CopyPropertiesForUnrelatedObjects(GetActiveSessionData(), NewAsset);
+		
+		return true;
+		}
+		return false;
+}
 
 void UMIDIEditorBase::SetWorldContextObject(UObject* InWorldContextObject)
 {

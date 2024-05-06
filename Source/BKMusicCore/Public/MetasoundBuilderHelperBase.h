@@ -26,6 +26,8 @@ public:
 	UPROPERTY()
 	UWorld* ParentWorld;
 
+	FMetaSoundBuilderNodeOutputHandle MainMidiStreamOutput;
+
 	UPROPERTY(BlueprintReadWrite, Category = "unDAW|MetaSound Builder Helper")
 	UAudioComponent* AuditionComponent;
 	
@@ -45,6 +47,9 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
+	TSet<FName> MidiOutputNames;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper", CallInEditor)
 	void InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent);
@@ -78,6 +83,17 @@ public:
 	UFUNCTION()
 	void AuditionAC(UAudioComponent* AudioComponent);
 
+	UFUNCTION()
+	void CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef);
+
+	UFUNCTION()
+	void CreateFusionPlayerForMidiTrack();
+
+	UFUNCTION()
+	void CreateCustomPatchPlayerForMidiTrack();
+
+
+
 #define WITH_TESTS 1
 #ifdef WITH_TESTS
 
@@ -85,8 +101,11 @@ public:
 	void CreateTestWavPlayerBlock();
 
 #endif //WITH_TESTS
+
+
 	UFUNCTION()
 	void CreateInputsFromMidiTracks();
+
 
 	UFUNCTION()
 	void CreateMixerPatchBlock(); //doesn't work

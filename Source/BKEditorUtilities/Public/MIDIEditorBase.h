@@ -21,6 +21,8 @@
 #include "Components/VerticalBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "SequencerData.h"
+#include "EditorAssetLibrary.h"
+#include "IAssetTools.h"
 #include "MIDIEditorBase.generated.h"
 
 BK_EDITORUTILITIES_API DECLARE_LOG_CATEGORY_EXTERN(BKMidiLogs, Verbose, All);
@@ -60,6 +62,8 @@ public:
 	UFUNCTION()
 	void GetOrCreateSessionDataForMidiFile(UMidiFile* MidiFile, UDAWSequencerData*& OutSessionData);
 
+
+
 	//UPROPERTY()
 	//TMap<FName, TMap<int, FTrackDisplayOptions>> TrackDisplayOptions;
 
@@ -74,6 +78,9 @@ class BK_EDITORUTILITIES_API UMIDIEditorBase : public UEditorUtilityWidget, publ
 	GENERATED_BODY()
 
 public:
+
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "unDAW|Asset Management")
+	bool SaveSequenceDataToAssetWithDialog();
 
 	UPROPERTY()
 	FTrackDisplayOptions InvalidTrackRef;

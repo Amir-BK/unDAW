@@ -18,7 +18,8 @@ enum ETrackRendererMode : uint8
 {
 	FusionPatch,
 	CustomPatch,
-	NoAudio
+	NoAudio,
+
 };
 
 // struct that describes some crucial settings used to set up a MIDI track in the render metasound built by the Meta Sound Graph Builder
@@ -55,7 +56,8 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	TEnumAsByte<ETrackRendererMode> RenderMode = ETrackRendererMode::FusionPatch;
 
-
+	UPROPERTY()
+	bool CreateMidiOutput = true;
 
 	//the fusion patch to use in case 'Fusion Patch' mode is selected
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::FusionPatch", EditConditionHides))

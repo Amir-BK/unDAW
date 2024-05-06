@@ -11,6 +11,13 @@
 void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
+
+	if (AuditionComponentRef)
+	{
+		AuditionComponentRef->Stop();
+		AuditionComponentRef->DestroyComponent();
+	}
+
 	AuditionComponentRef = InAuditionComponent;
 
 
@@ -86,6 +93,28 @@ TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWith
 void UMetasoundBuilderHelperBase::AuditionAC(UAudioComponent* AudioComponent)
 {
 
+}
+
+void UMetasoundBuilderHelperBase::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
+{
+	// if we render this track in a channel OR output midi, we need to create this track
+	bool NeedToCreate = (TrackRef.RenderMode != NoAudio) || TrackRef.CreateMidiOutput;
+	EMetaSoundBuilderResult BuildResult;
+	if (NeedToCreate)
+	{
+		CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MidiChannelFilterNode"))), BuildResult, 0);
+		MidiOutputNames.Add(FName(TrackRef.trackName));
+	}
+
+
+}
+
+void UMetasoundBuilderHelperBase::CreateFusionPlayerForMidiTrack()
+{
+}
+
+void UMetasoundBuilderHelperBase::CreateCustomPatchPlayerForMidiTrack()
+{
 }
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
@@ -185,8 +214,9 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 void UMetasoundBuilderHelperBase::CreateInputsFromMidiTracks()
 {
 	// Create the inputs from the midi tracks
-	for (const auto& [trackID, trackOptions] : MidiTracks)
+	for (auto& [trackID, trackOptions] : MidiTracks)
 	{
+		CreateAndRegisterMidiOutput(trackOptions);
 		// Create the input node
 		//FMetaSoundBuilderNodeInputHandle InputNode = CurrentBuilder->CreateInputNode(FName(*trackOptions.trackName), trackOptions.trackColor, trackOptions.ChannelIndexInParentMidi)
 	}
@@ -242,7 +272,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 {
 		// Create the midi player block
 	EMetaSoundBuilderResult BuildResult;
-	FSoftObjectPath MidiPlayerAssetRef(TEXT("/Script/MetasoundEngine.MetaSoundPatch'/unDAW/BKSystems/MetaSoundBuilderHelperBP_V1/InternalPatches/BK_MetaClockManager.BK_MetaClockManager'"));
+	FSoftObjectPath MidiPlayerAssetRef(TEXT("/unDAW/BKSystems/MetaSoundBuilderHelperBP_V1/InternalPatches/BK_MetaClockManager.BK_MetaClockManager"));
 	TScriptInterface<IMetaSoundDocumentInterface> MidiPlayerDocument = MidiPlayerAssetRef.TryLoad();
 	MidiPlayerNode = CurrentBuilder->AddNode(MidiPlayerDocument, BuildResult);
 
@@ -257,17 +287,10 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 	}
 
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
-	if (SwitchOnBuildResult(BuildResult))
-	{
-		//auto midiaudioparameter = FAudioParameter(FName(TEXT("MIDI File")), SessionData->HarmonixMidiFile);
-		FMetasoundFrontendLiteral MidiFileLiteral;
-		MidiFileLiteral.Set(SessionData->HarmonixMidiFile);
-		CurrentBuilder->SetNodeInputDefault(MidiFileInput, MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
-		UE_LOG(LogTemp, Log, TEXT("Midi File Input Set! %s"), SwitchOnBuildResult(BuildResult) ? TEXT("yay") : TEXT("nay"))
-	}
-	else {
-		UE_LOG(LogTemp, Log, TEXT("Midi File Input Not Set! %s"), SwitchOnBuildResult(BuildResult) ? TEXT("yay") : TEXT("nay"))
-	}
+	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
+	auto MidiInputPinOutputHandle = CurrentBuilder->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
+	CurrentBuilder->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
+
 
 	return SwitchOnBuildResult(BuildResult);
 

@@ -46,6 +46,8 @@ public:
 	//~ UFactory Interface
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext) override;
 
+
+
 	virtual bool ShouldShowInNewMenu() const override;
 
 	UBKMusicSequenceDataFactory();

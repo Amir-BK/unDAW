@@ -35,7 +35,7 @@ public class BK_EditorUtilities : ModuleRules
                 "HarmonixMidi",
                 "Harmonix", "Blutility", "BKMusicWidgets", "HarmonixDsp",
                 "EditorWidgets", "XmlParser", "FileUtilities", "MetasoundFrontend", "MetasoundEngine",
-				"BKMusicCore", "ScriptableEditorWidgets"
+				"BKMusicCore", "ScriptableEditorWidgets", "EditorScriptingUtilities", "AssetTools"
 
                 // ... add other public dependencies that you statically link with here ...
 			}
@@ -47,7 +47,6 @@ public class BK_EditorUtilities : ModuleRules
 			{
 				"CoreUObject",
                 "UnrealEd",
-				"AssetTools",
 				"Engine",
 				"Slate",
 				"SlateCore",
