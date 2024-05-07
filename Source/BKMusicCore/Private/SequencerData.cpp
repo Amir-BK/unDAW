@@ -15,7 +15,7 @@ struct FEventsWithIndex
 
 void UDAWSequencerData::CalculateSequenceDuration()
 {
-	if (!TimeStampedMidis.IsEmpty())
+	if (HarmonixMidiFile)
 	{
 		SequenceDuration = HarmonixMidiFile->GetSongMaps()->GetSongLengthMs();
 	}
@@ -121,7 +121,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		//FoundChannels.Sort();
-
+		CalculateSequenceDuration();
 		InitTracksFromFoundArray(FoundChannels);
 		//CreateBuilderHelper();
 	}
@@ -134,4 +134,18 @@ void UDAWSequencerData::CreateBuilderHelper(UAudioComponent* AuditionComponent)
 	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
 	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;
 	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
+}
+
+void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	bool bIsDirty = false;
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (PropertyName == TEXT("HarmonixMidiFile"))
+	{
+		PopulateFromMidiFile(HarmonixMidiFile);
+		OnMidiDataChanged.Broadcast();
+	}
+
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }

@@ -185,6 +185,8 @@ public:
 	FString debugData;
 #endif
 	
+	bool bIsInitialized = false;
+
 	FOnInitComplete OnInitCompleteDelegate;
 
 	UAudioComponent* PerformanceComponent;
@@ -206,7 +208,7 @@ public:
 	float LastTickTimelinePosition;
 	int32 hoveredPitch;
 	int32 hoveredNotePitch = -1;
-	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
+	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
 	TMap<int, bool> availableSamplesMap;
 	
@@ -348,6 +350,9 @@ protected:
 
 	TOptional<EMouseCursor::Type> GetCursor() const override
 	{
+		if (InputMode == empty) return EMouseCursor::Default;
+		
+			
 		return EMouseCursor::None;
 
 

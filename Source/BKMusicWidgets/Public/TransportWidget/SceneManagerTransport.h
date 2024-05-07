@@ -120,7 +120,7 @@ public:
 			if (SessionData)
 			{
 				SetTransportDuration(SessionData->SequenceDuration * .001f);
-				SetTransportSeek(SessionData->TransportPosition);
+				//SetTransportSeek(SessionData->TransportPosition);
 				//SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
 			}
 

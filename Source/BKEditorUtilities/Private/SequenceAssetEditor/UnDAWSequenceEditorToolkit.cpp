@@ -1,6 +1,11 @@
 // Copyright 2022 Jan Klimaschewski. All Rights Reserved.
 
 #include "UnDAWSequenceEditorToolkit.h"
+#include "DetailLayoutBuilder.h"
+#include "DetailCategoryBuilder.h"
+#include "DetailWidgetRow.h"
+#include "Widgets/Layout/SGridPanel.h"
+#include "Widgets/Layout/SScaleBox.h"
 
 void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
@@ -59,17 +64,32 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
     .SetDisplayName(INVTEXT("PDF"))
     .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
-    InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([=](const FSpawnTabArgs&)
+    InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
         {
-            return SNew(SDockTab)
+            auto DockTab = SNew(SDockTab)
                 [
-                    SNew(STextBlock)
-                        .Text(INVTEXT("TEST 222!"))
-
+                    SAssignNew(PianoRollGraph, SPianoRollGraph)
+                      .SessionData(SequenceData->GetSelfSharedPtr())
+                        .Clipping(EWidgetClipping::ClipToBounds)
+                        //.gridBrush(GridBrush)
+                        .gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
+                        .accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
+                        .cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
                 ];
+
+            if (SequenceData->HarmonixMidiFile) PianoRollGraph->Init();
+
+            SequenceData->OnMidiDataChanged.AddLambda([&]()
+                {
+				PianoRollGraph->Init();
+			});
+
+            return DockTab;
         }))
         .SetDisplayName(INVTEXT("PianoRoll"))
             .SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+        //if (SequenceData->HarmonixMidiFile) PianoRollGraph->Init();
  
     FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
     FDetailsViewArgs DetailsViewArgs;
@@ -92,4 +112,27 @@ void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class F
     FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
     InTabManager->UnregisterTabSpawner("NormalDistributionPDFTab");
     InTabManager->UnregisterTabSpawner("NormalDistributionDetailsTab");
+}
+
+inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
+{
+    SequenceData->OnMidiDataChanged.RemoveAll(this);
+    PianoRollGraph.Reset();
+}
+
+void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+    TArray<TWeakObjectPtr<UObject>> Outers;
+	DetailBuilder.GetObjectsBeingCustomized(Outers);
+	if (Outers.Num() == 0) return;
+	SequenceData = Cast<UDAWSequencerData>(Outers[0].Get());
+
+	DetailBuilder.EditCategory("Un DAW")
+	    .AddCustomRow(FText::FromString("Tracks"))
+		.WholeRowContent()
+        [
+			SNew(SButton)
+			.Text(FText::FromString(SequenceData->HarmonixMidiFile->GetName()))
+              
+		];
 }

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Widget.h"
-#include <MIDIEditorBase.h>
+
 #include "WTrackControlsWidget.generated.h"
 
 
@@ -18,8 +18,8 @@ class BK_EDITORUTILITIES_API UWTrackControlsWidget : public UWidget
 
 
 	
-	UFUNCTION(BlueprintCallable, Category = "BK Music|Track Settings")
-	void SetMidiEditorParentWidget(UMIDIEditorBase* inEditor);
+
+	//void SetMidiEditorParentWidget(UMIDIEditorBase* inEditor);
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|Track Settings")
 	void InitFromData();
@@ -32,8 +32,8 @@ protected:
 
 	TSharedPtr<SVerticalBox> tracksVerticalBox;
 
-	TWeakObjectPtr<UMIDIEditorBase> MidiEditorSharedPtr;
-	UMIDIEditorBase* ParentMidiEditor;
+	//TWeakObjectPtr<UMIDIEditorBase> MidiEditorSharedPtr;
+	//UMIDIEditorBase* ParentMidiEditor;
 
 
 	

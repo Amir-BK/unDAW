@@ -5,6 +5,7 @@
 #include "ContentBrowserModule.h"
 
 #include "UObject/UObjectArray.h"
+#include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 #include "Serialization/JsonSerializer.h"
 
 
@@ -33,6 +34,8 @@ void BKEditorUtilitiesModule::StartupModule()
     const auto& section = PropertyModule.FindOrCreateSection("Actor", "unDAW", INVTEXT("unDAW"));
     section->AddCategory("unDAW");
     section->AddCategory("BK Music");
+
+    PropertyModule.RegisterCustomClassLayout("DAWSequencerData", FOnGetDetailCustomizationInstance::CreateStatic(&FSequenceAssetDetails::MakeInstance));
 
     const auto& componentSection = PropertyModule.FindOrCreateSection("ActorComponent", "unDAW", INVTEXT("unDAW"));
     componentSection->AddCategory("unDAW");
@@ -66,8 +69,8 @@ void BKEditorUtilitiesModule::AddPianoRollToMidiAsset(FMenuBuilder& MenuBuilder,
                 MenuBuilder.BeginSection("BK Midi Utils", FText::FromString("BK Midi Editor"));
                 {
                     MenuBuilder.AddMenuEntry(
-                INVTEXT("Edit Midi File in BK Midi Editor"),
-                INVTEXT("Allows modifying an existing midi asset or creating a new one within UE!"),
+                INVTEXT("Create unDAW Sequence Data From MidiAsset"),
+                INVTEXT("Creates creates a new asset and populates it with the info from the midi file!"),
                 FSlateIcon(),//FLinterStyle::GetStyleSetName(), "Linter.Toolbar.Icon"),
                 FUIAction(FExecuteAction::CreateLambda([Asset]()
                 {
@@ -100,52 +103,27 @@ void BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(FSoftObjectPath
 {
     //OpenSelectedMidiFileInEditorWidget(MidiFileSoftPath);
     UObject* MidiFileObject = MidiFileSoftPath.TryLoad();
-    if(MidiFileObject != nullptr)
+    if (MidiFileObject != nullptr)
     {
         UMidiFile* ObjectAsMidi = Cast<UMidiFile>(MidiFileObject);
-        if(ObjectAsMidi != nullptr)
+        if (ObjectAsMidi != nullptr)
         {
-            BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(ObjectAsMidi);
+            FString NewAssetName = ObjectAsMidi->GetName() + TEXT("_DAWSequence");
+            FString PackagePath = TEXT("/Game/DAWSequences/");
+            FAssetToolsModule& Module = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools");
+            auto NewAsset = Module.Get().CreateAssetWithDialog(NewAssetName, PackagePath, UDAWSequencerData::StaticClass(), NewObject<UBKMusicSequenceDataFactory>());
+
+            if (NewAsset != nullptr)
+            {
+                UDAWSequencerData* NewSequenceData = Cast<UDAWSequencerData>(NewAsset);
+                NewSequenceData->PopulateFromMidiFile(ObjectAsMidi);
+                Module.Get().OpenEditorForAssets(TArray<UObject*>{NewAsset});
+            }
+            //BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(ObjectAsMidi);
         }
-    }
-}
+    };
+};
 
-void BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(UMidiFile* MidiFilePointer)
-{
-
-        const FSoftObjectPath widgetAssetPath("/Script/Blutility.EditorUtilityWidgetBlueprint'/unDAW/EditorWidget/PianoRoll/BK_MidiPianoRoll.BK_MidiPianoRoll'");
-
-        UObject* widgetAssetLoaded = widgetAssetPath.TryLoad();
-        if (widgetAssetLoaded == nullptr) {
-            UE_LOG(LogTemp, Warning, TEXT("Missing Expected widget class at : /LevelValidationTools/EUW_LevelValidator.EUW_LevelValidator"));
-            return;
-        }
-
-        UEditorUtilityWidgetBlueprint* widget = Cast<UEditorUtilityWidgetBlueprint>(widgetAssetLoaded);
-
-        if (widget == nullptr) {
-            UE_LOG(LogTemp, Warning, TEXT("Couldnt cast /LevelValidationTools/EUW_LevelValidator.EUW_LevelValidator to UEditorUtilityWidgetBlueprint"));
-            return;
-        }
-
-
-        UEditorUtilitySubsystem* EditorUtilitySubsystem = GEditor->GetEditorSubsystem<UEditorUtilitySubsystem>();
-        auto spawnedWidget = EditorUtilitySubsystem->SpawnAndRegisterTab(widget);
-        
-        auto EngPanel = spawnedWidget->WidgetTree.Get()->FindWidget(FName(TEXT("MIDIEditorBase")));
-        UMIDIEditorBase* widgetAsEngraving = Cast<UMIDIEditorBase>(EngPanel);
-        if (widgetAsEngraving == nullptr) {
-            //spawnedWidget->GetRootWidget()->Slot.Get().
-            UE_LOG(LogTemp, Warning, TEXT("Couldnt cast to base CPP class"));
-            return;
-        }
-    
-
-        widgetAsEngraving->HarmonixMidiFile = MidiFilePointer;
-        widgetAsEngraving->UpdateMidiFile();
-
-    
-}
 
 #undef LOCTEXT_NAMESPACE
     

@@ -222,13 +222,30 @@ public:
 
 };
 
+DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
+
+//This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
+//it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
+
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW|Music Scene Manager")
 class BKMUSICCORE_API UDAWSequencerData : public UObject
 {
 	GENERATED_BODY()
 public:
+
+	FMidiDataChanged OnMidiDataChanged;
 	
-	FTrackDisplayOptions InvalidTrackRef;
+	TSharedPtr<UDAWSequencerData, ESPMode::ThreadSafe> SelfSharedPtr;
+
+	TSharedPtr<UDAWSequencerData> GetSelfSharedPtr()
+	{
+		if (SelfSharedPtr.IsValid() == false)
+		{
+			SelfSharedPtr = TSharedPtr<UDAWSequencerData>(this);
+		}
+		
+		return SelfSharedPtr;
+	}
 	
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
@@ -278,17 +295,13 @@ public:
 		}
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Defaults", meta = (ExposeOnSpawn = true))
-	TObjectPtr<UFusionPatch> DefaultFusionPatch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
-	TObjectPtr<UMetaSoundSource> PerformanceMetaSound;
+	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	float SequenceDuration = 100.0f;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
-	float TransportPosition = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
@@ -299,10 +312,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "MidiFile", ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
-	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
-
-	UFUNCTION(CallInEditor, Category = "unDAW")
+	UFUNCTION()
 	void CalculateSequenceDuration();
 
 
@@ -315,8 +325,10 @@ public:
 	UFUNCTION()
 	void CreateBuilderHelper(UAudioComponent* AuditionComponent);
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
+
+	
 
 	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
@@ -332,6 +344,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
 	TObjectPtr<UMetasoundBuilderHelperBase> MetasoundBuilderHelper;
 
+	//override UObject PostEditChangeProperty
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+
+	private:
+		FTrackDisplayOptions InvalidTrackRef;
 
 };
 

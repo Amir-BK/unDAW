@@ -39,12 +39,11 @@ public:
 };
 
 
-
 /**
  * 
  */
 UCLASS()
-class UBKMusicSequenceDataFactory : public UFactory
+class BK_EDITORUTILITIES_API UBKMusicSequenceDataFactory : public UFactory
 {
 	GENERATED_BODY()
 	

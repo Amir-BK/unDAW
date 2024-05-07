@@ -34,7 +34,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	bool isSelected;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	FLinearColor trackColor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
@@ -43,7 +43,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	float TrackVolume = 1.0f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	FString trackName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
