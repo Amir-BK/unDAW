@@ -22,11 +22,6 @@ void UDAWSequencerData::CalculateSequenceDuration()
 }
 
 
-bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance)
-{
-	
-	return FMath::IsNearlyZero(value, tolerance);
-}
 
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {

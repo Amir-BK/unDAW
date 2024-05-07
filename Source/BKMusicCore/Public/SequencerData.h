@@ -308,8 +308,6 @@ public:
 
 	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
-	UFUNCTION(BlueprintCallable,BlueprintPure)
-	static bool IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance);
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);

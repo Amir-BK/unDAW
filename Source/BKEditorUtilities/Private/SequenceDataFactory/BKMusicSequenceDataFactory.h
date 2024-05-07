@@ -7,6 +7,7 @@
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "AssetTypeActions_Base.h"
+#include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "SequencerData.h"
 #include "BKMusicSequenceDataFactory.generated.h"
 
@@ -29,6 +30,11 @@ public:
 	uint32 GetCategories() override
 	{
 		return EAssetTypeCategories::Media;
+	}
+
+	void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor) override
+	{
+		MakeShared<FUnDAWSequenceEditorToolkit>()->InitEditor(InObjects);
 	}
 };
 

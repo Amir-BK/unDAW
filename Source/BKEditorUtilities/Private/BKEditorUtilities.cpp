@@ -3,7 +3,7 @@
 #include "BKEditorUtilities.h"
 
 #include "ContentBrowserModule.h"
-#include "FKMidiEditorAssetActions.h"
+
 #include "UObject/UObjectArray.h"
 #include "Serialization/JsonSerializer.h"
 
