@@ -31,11 +31,11 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioC
 	//SessionData->MasterOptions.OutputFormat
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
+	CreateMixerNodesSpaghettiBlock();
 	CreateMidiPlayerBlock();
 	CreateInputsFromMidiTracks();
-	CreateMixerNodesSpaghettiBlock();
 
-#ifdef WITH_TESTS
+#ifdef WITH_METABUILDERHELPER_TESTS
 	CreateTestWavPlayerBlock();
 #endif //WITH_TESTS
 
@@ -95,14 +95,74 @@ void UMetasoundBuilderHelperBase::AuditionAC(UAudioComponent* AudioComponent)
 
 }
 
+void UMetasoundBuilderHelperBase::SetupFusionNode(FTrackDisplayOptions& TrackRef)
+{
+	EMetaSoundBuilderResult BuildResult;
+	auto FusionNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("FusionSamplerStereo"))), BuildResult, 0);
+	auto FusionInputs = CurrentBuilder->FindNodeInputs(FusionNode, BuildResult);
+	FMetaSoundBuilderNodeInputHandle PatchInput;
+	for (const auto& Input : FusionInputs)
+	{
+		//MSBuilderSystem->Get GetNodeInput(FusionNode, Input, PatchInput, BuildResult);
+		FName NodeName;
+		FName DataType;
+		CurrentBuilder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+		if (NodeName == FName(TEXT("Patch")))
+		{
+			auto Patch = TrackRef.fusionPatch.Get();
+			if (Patch)
+			{
+				FName PatchInputName = FName(FString::Printf(TEXT("Track_[%d].Patch"), TrackRef.ChannelIndexInParentMidi));
+				auto PatchLiteral = MSBuilderSystem->CreateObjectMetaSoundLiteral(Patch);
+				auto PatchInputNodeOutput = CurrentBuilder->AddGraphInputNode(PatchInputName, TEXT("FusionPatchAsset"), PatchLiteral, BuildResult);
+				//CurrentBuilder->SetNodeInputDefault(Input, PatchLiteral, BuildResult);
+				CurrentBuilder->ConnectNodes(PatchInputNodeOutput, Input, BuildResult);
+			}
+		}
+		else if (NodeName == FName(TEXT("MIDI Stream")))
+		{
+			CurrentBuilder->ConnectNodes(MainMidiStreamOutput, Input, BuildResult);
+		}
+		else if (NodeName == FName(TEXT("Track Number")))
+		{
+			FName OutDataType;
+			FName TrackInputName = FName(FString::Printf(TEXT("Track_[%d].TrackNum"), TrackRef.ChannelIndexInParentMidi));
+			auto ChannelLiteral = MSBuilderSystem->CreateIntMetaSoundLiteral(TrackRef.ChannelIndexInParentMidi, OutDataType);
+			auto PatchTrackNodeOutput = CurrentBuilder->AddGraphInputNode(TrackInputName, TEXT("int32"), ChannelLiteral, BuildResult);
+			//auto PatchInputNodeOutput = CurrentBuilder->AddGraphInputNode(TEXT("Patch"), TEXT("FusionPatchAsset"), ChannelLiteral, BuildResult);
+			//CurrentBuilder->SetNodeInputDefault(Input, ChannelLiteral, BuildResult);
+			CurrentBuilder->ConnectNodes(PatchTrackNodeOutput, Input, BuildResult);
+		}
+
+	}
+
+	auto FusionOutputs = CurrentBuilder->FindNodeOutputs(FusionNode, BuildResult);
+	//auto AudioOuts = GetAvailableOutput();
+	bool usedLeft = false;
+	for (const auto& Output : FusionOutputs)
+	{
+		FName NodeName;
+		FName DataType;
+		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+		auto FreeOutputs = GetFreeAudioOutput();
+		if (DataType == FName(TEXT("Audio")))
+		{
+			CurrentBuilder->ConnectNodes(Output, FreeOutputs[usedLeft ? 0 : 1], BuildResult);
+			usedLeft = true;
+
+		}
+	}
+
+}
+
 void UMetasoundBuilderHelperBase::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
 {
 	// if we render this track in a channel OR output midi, we need to create this track
 	bool NeedToCreate = (TrackRef.RenderMode != NoAudio) || TrackRef.CreateMidiOutput;
-	EMetaSoundBuilderResult BuildResult;
+	//EMetaSoundBuilderResult BuildResult;
 	if (NeedToCreate)
 	{
-		CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MidiChannelFilterNode"))), BuildResult, 0);
+		SetupFusionNode(TrackRef);
 		MidiOutputNames.Add(FName(TrackRef.trackName));
 	}
 
@@ -133,7 +193,7 @@ bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
 	}
 }
 
-#ifdef WITH_TESTS
+#ifdef WITH_METABUILDERHELPER_TESTS
 void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 {
 	EMetaSoundBuilderResult BuildResult;
@@ -209,7 +269,7 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 	}	
 }
 
-#endif //WITH_TESTS
+#endif //WITH_METABUILDERHELPER_TESTS
 
 void UMetasoundBuilderHelperBase::CreateInputsFromMidiTracks()
 {
@@ -265,8 +325,64 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 
 	void UMetasoundBuilderHelperBase::CreateMixerNodesSpaghettiBlock()
 	{
+		// create master mixer
+		EMetaSoundBuilderResult BuildResult;
+		const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
+			, BuildResult);
 
+		auto MixerOutputs = CurrentBuilder->FindNodeOutputs(MasterMixerNode, BuildResult);
+		//auto AudioOuts = GetAvailableOutput();
+		bool usedLeft = false;
+		for (const auto& Output : MixerOutputs)
+		{
+			FName NodeName;
+			FName DataType;
+			CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+			if (DataType == FName(TEXT("Audio")))
+			{
+				CurrentBuilder->ConnectNodes(Output, AudioOuts[usedLeft ? 1 : 0], BuildResult);
+				usedLeft = true;
+
+			}
+		}
+
+		MasterOutputsArray.Append(CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
+		
 	}
+
+
+
+	void UMetasoundBuilderHelperBase::AttachAnotherMasterMixerToOutput()
+	{
+		EMetaSoundBuilderResult BuildResult;
+		const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
+			, BuildResult);
+		
+				auto MixerOutputs = CurrentBuilder->FindNodeOutputs(MasterMixerNode, BuildResult);
+				//auto AudioOuts = GetAvailableOutput();
+				CurrentBuilder->ConnectNodes(MixerOutputs[1], MasterOutputsArray.Pop(), BuildResult);
+				CurrentBuilder->ConnectNodes(MixerOutputs[0], MasterOutputsArray.Pop(), BuildResult);
+				MasterOutputsArray.Append(CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
+	}
+
+	TArray<FMetaSoundBuilderNodeInputHandle> UMetasoundBuilderHelperBase::GetFreeAudioOutput()
+	{
+		TArray<FMetaSoundBuilderNodeInputHandle> FreeOutputs;
+		
+		if (MasterOutputsArray.Num() > 2)
+		{
+			FreeOutputs.Add(MasterOutputsArray.Pop());
+			FreeOutputs.Add(MasterOutputsArray.Pop());
+			return FreeOutputs;
+		}
+		else
+		{
+			AttachAnotherMasterMixerToOutput();
+			return GetFreeAudioOutput();
+		}
+	}
+
+
 
 	bool UMetasoundBuilderHelperBase::CreateMidiPlayerBlock()
 {
@@ -313,7 +429,9 @@ void UMetasoundBuilderHelperBase::OnMetaSoundGeneratorHandleCreated(UMetasoundGe
 {
 	UE_LOG(LogTemp, Log, TEXT("Handle Created!"))
 	GeneratorHandle = Handle;
-	
+	AuditionComponentRef->GetSound()->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
+	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
+	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 }
 
 

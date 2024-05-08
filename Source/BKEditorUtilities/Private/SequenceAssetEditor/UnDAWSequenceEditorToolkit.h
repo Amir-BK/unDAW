@@ -23,6 +23,10 @@ public:
 private:
     UDAWSequencerData* SequenceData = nullptr;
 
+    TSharedPtr<SVerticalBox> MidiInputTracks;
+
+    void UpdateMidiInputTracks();
+
     // This function will create a new instance of this class as a shared pointer
 };
 
@@ -40,10 +44,22 @@ public:
     FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
     FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
 
+
+    void ExtendToolbar();
+
     ~FUnDAWSequenceEditorToolkit();
 
 protected:
     UDAWSequencerData* SequenceData;
 
     TSharedPtr<SPianoRollGraph> PianoRollGraph;
+
+    TSharedPtr<STextBlock> VariationScoreText;
+    TSharedPtr<SHorizontalBox> TransportControls;
+
+    void PreviewAudio();
+    void PlayAudioComponent();
+    void StopAudioComponent();
+
+    UAudioComponent* AudioComponent = nullptr;
 };

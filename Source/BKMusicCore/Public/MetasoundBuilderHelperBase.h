@@ -13,8 +13,11 @@
 #include "SequencerData.h"
 #include "MetasoundBuilderHelperBase.generated.h"
 
+
+
+
 /**
- * 
+ * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
  */
 UCLASS(BlueprintType, Blueprintable)
 class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
@@ -51,6 +54,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
 	TSet<FName> MidiOutputNames;
 
+	//this is the main entry point for the performer to start building the nodes and connections
 	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper", CallInEditor)
 	void InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent);
 
@@ -94,8 +98,8 @@ public:
 
 
 
-#define WITH_TESTS 1
-#ifdef WITH_TESTS
+//#define WITH_METABUILDERHELPER_TESTS
+#ifdef WITH_METABUILDERHELPER_TESTS
 
 
 	void CreateTestWavPlayerBlock();
@@ -114,6 +118,14 @@ public:
 	void CreateMixerNodesSpaghettiBlock(); //very ugly
 
 
+
+
+	void AttachAnotherMasterMixerToOutput();
+	//returns an array of two free audio outputs, should create ones if we're missing
+	TArray<FMetaSoundBuilderNodeInputHandle> GetFreeAudioOutput();
+
+	TArray<FMetaSoundBuilderNodeInputHandle> MasterOutputsArray;
+
 	UFUNCTION()
 	bool CreateMidiPlayerBlock();
 
@@ -131,6 +143,8 @@ public:
 
 	UFUNCTION()
 	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
+
+	void SetupFusionNode(FTrackDisplayOptions& TrackRef);
 
 };
 

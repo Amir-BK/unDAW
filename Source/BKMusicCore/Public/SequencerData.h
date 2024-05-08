@@ -246,6 +246,12 @@ public:
 		
 		return SelfSharedPtr;
 	}
+
+	~UDAWSequencerData()
+	{
+		SelfSharedPtr.Reset();
+	}
+
 	
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
@@ -294,6 +300,7 @@ public:
 			return InvalidTrackRef;
 		}
 	}
+
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")

@@ -13,6 +13,9 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+
+	
+
 void UDAWSequencerData::CalculateSequenceDuration()
 {
 	if (HarmonixMidiFile)
