@@ -17,33 +17,88 @@
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 
+
 #include "TrackPlaybackAndDisplayOptions.h"
 
 #include "SequencerData.generated.h"
 
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
+class UMetasoundBuilderHelperBase;
 
-
-
+USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {
 
+	GENERATED_BODY()
 
 	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
-		: StartEvent(StartEvent),
-		EndEvent(EndEvent),
-		StartIndex(inStartIndex),
+		:StartIndex(inStartIndex),
 		EndIndex(inEndindex)
 
 	{
+		StartTick = StartEvent.GetTick();
+		EndTick = EndEvent.GetTick();
+		pitch = StartEvent.GetMsg().Data1;
 	}
 
-	//GENERATED_BODY()
-	FMidiEvent StartEvent;
-	FMidiEvent EndEvent;
-	int32 StartIndex;
-	int32 EndIndex;
+	FLinkedMidiEvents()
+	{
+
+	}
+
+	//
+	//FMidiEvent StartEvent;
+	//FMidiEvent EndEvent;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 StartIndex = 0;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 EndIndex = 0;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	uint8 pitch = 0;
+
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 StartTick = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 EndTick = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 TrackID = INDEX_NONE;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	double Duration = 0.0;
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	double StartTime = 0.0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	float cornerRadius = 0.0f;
+
+	void CalculateDuration(FSongMaps* SongsMap)
+	{
+		StartTime = SongsMap->TickToMs(StartTick);
+		Duration = SongsMap->TickToMs(EndTick) - StartTime;
+		
+	}
+
+	FString GetFormmatedString()
+	{
+		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackID);
+	}
+
+};
+
+USTRUCT(BlueprintType)
+struct FLinkedNotesTrack
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
 
@@ -167,23 +222,93 @@ public:
 
 };
 
+DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
+
+//This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
+//it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
+
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW|Music Scene Manager")
 class BKMUSICCORE_API UDAWSequencerData : public UObject
 {
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Defaults", meta = (ExposeOnSpawn = true))
-	TObjectPtr<UFusionPatch> DefaultFusionPatch;
+	FMidiDataChanged OnMidiDataChanged;
+	
+	TSharedPtr<UDAWSequencerData, ESPMode::ThreadSafe> SelfSharedPtr;
+
+	TSharedPtr<UDAWSequencerData> GetSelfSharedPtr()
+	{
+		if (SelfSharedPtr.IsValid() == false)
+		{
+			SelfSharedPtr = TSharedPtr<UDAWSequencerData>(this);
+		}
+		
+		return SelfSharedPtr;
+	}
+
+	~UDAWSequencerData()
+	{
+		SelfSharedPtr.Reset();
+	}
+
+	
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
+	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
+
+	void InitTracksFromFoundArray(TMap<int, int> InTracks) {
+
+		auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
+
+		UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
+		TrackDisplayOptionsMap.Empty();
+		for (const auto& [trackID, channelID] : InTracks)
+		{
+
+			FTrackDisplayOptions newTrack;
+			newTrack.ChannelIndexInParentMidi = channelID;
+
+			//FString::AppendInt(channelID, newTrack.trackName);
+			newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID - 1);
+			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
+			newTrack.fusionPatch = PianoPatch;
+			TrackDisplayOptionsMap.Add(channelID, newTrack);
+		}
+
+	};
+
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID)
+	{
+		if (TrackDisplayOptionsMap.Contains(ID))
+		{
+			return TrackDisplayOptionsMap[ID];
+		}
+		else
+		{
+			return InvalidTrackRef;
+		}
+	};
+
+	FTrackDisplayOptions& GetTrackOptionsRef(int TrackID)
+	{
+		if (TrackDisplayOptionsMap.Contains(TrackID))
+		{
+			return TrackDisplayOptionsMap[TrackID];
+		}
+		else
+		{
+			return InvalidTrackRef;
+		}
+	}
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
-	TObjectPtr<UMetaSoundSource> PerformanceMetaSound;
+	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	float SequenceDuration = 100.0f;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
-	float TransportPosition = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
@@ -194,28 +319,44 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "MidiFile", ShowInnerProperties = "true", DisplayPriority = "1", ExposeOnSpawn = "true", EditInLine = "true"))
-	TArray<FTimeStamppedMidiContainer> TimeStampedMidis;
-
-	UFUNCTION(CallInEditor, Category = "unDAW")
+	UFUNCTION()
 	void CalculateSequenceDuration();
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW")
-	virtual TArray<FBPMidiStruct> GetMidiDataForTrack(const int trackID);
 
 	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
-	UFUNCTION(BlueprintCallable,BlueprintPure)
-	static bool IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance);
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
+	UFUNCTION()
+	void CreateBuilderHelper(UAudioComponent* AuditionComponent);
 
+	UPROPERTY(EditAnywhere, Category = "unDAW")
+	UMidiFile* HarmonixMidiFile;
+
+	
+
+	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
 
+	UPROPERTY()
 	TArray<FMidiEvent> TimeSignatureEvents;
 
+	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
+
+	UPROPERTY()
+	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
+	TObjectPtr<UMetasoundBuilderHelperBase> MetasoundBuilderHelper;
+
+	//override UObject PostEditChangeProperty
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+
+	private:
+		FTrackDisplayOptions InvalidTrackRef;
 
 };
 

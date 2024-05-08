@@ -131,7 +131,7 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 {
 	UMetasoundBuilderHelperBase* BuilderHelperInstance = NewObject<UMetasoundBuilderHelperBase>(this->_getUObject(), GetBuilderBPClass());
 	BuilderHelperInstance->SessionData = GetActiveSessionData();
-	BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
+	//BuilderHelperInstance->InitBuilderHelper(TEXT("unDAW_Session_Builder"));
 
 	SetBuilderHelper(BuilderHelperInstance);
 
@@ -160,8 +160,8 @@ UMetasoundBuilderHelperBase* IBK_MusicSceneManagerInterface::InitializeAudioBloc
 
 void IBK_MusicSceneManagerInterface::OnMetasoundHandleGenerated(UMetasoundGeneratorHandle* GeneratorHandle)
 {
-	GetAudioComponent()->SetObjectParameter(FName("MidiFile"), GetActiveSessionData()->TimeStampedMidis[0].MidiFile);
-	GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
+	//GetAudioComponent()->SetObjectParameter(FName("MidiFile"), GetActiveSessionData()->TimeStampedMidis[0].MidiFile);
+	//GetAudioComponent()->SetTriggerParameter(FName("Prepare"));
 	
 	//we call this overriden function to let us 
 	

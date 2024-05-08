@@ -26,10 +26,10 @@ void AMusicScenePlayerActor::BeginPlay()
 	
 	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	if (GetActiveSessionData() && GetActiveSessionData()->PerformanceMetaSound)
+	if (GetActiveSessionData() && GetActiveSessionData()->SavedMetaSound)
 	{
 		//GetActiveSessionData()->PerformanceMetaSound->OnGeneratorInstanceCreated.Add(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
-		PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->PerformanceMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
+		PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->SavedMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
 		//PerformanceAudioComponent->AddToRoot();
 		//PerformanceAudioComponent->SetSound();
 		UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(PerformanceAudioComponent);

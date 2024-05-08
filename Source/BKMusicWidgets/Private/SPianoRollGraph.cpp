@@ -4,11 +4,19 @@
 #include "SPianoRollGraph.h"
 #include "SlateOptMacros.h"
 #include "Logging/StructuredLog.h"
-#include <SMidiNoteContainer.h>
+#include "Algo/BinarySearch.h"
+
 //#include <BKMusicWidgets.h>
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
+DEFINE_LOG_CATEGORY(SPIANOROLLLOG);
+
+struct FEventsWithIndex
+{
+	FMidiEvent event;
+	int32 eventIndex;
+};
 
 // internal function that converts between the enum types
 EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inTimeSpan)
@@ -80,11 +88,15 @@ EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inT
 void SPianoRollGraph::Construct(const FArguments& InArgs)
 {	
 	PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
-	
+	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/EditorWidget/PianoRoll/Internals/InputActions/MidiEditorKeyBindings.MidiEditorKeyBindings");
+	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
+
 	bCanSupportFocus = true;
+	//we don't want to tick unless there's a midi file
+	SetCanTick(false);
 	//tick
 
-
+	SessionData = InArgs._SessionData;
 	gridColor = InArgs._gridColor;
 	accidentalGridColor = InArgs._accidentalGridColor;
 	cNoteColor = InArgs._cNoteColor;
@@ -111,6 +123,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	}
 
 	FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
+
+	//Init();
 	//UE_LOGFMT(LogTemp, Log, "consexpr test: {0}", test);
 }
 void SPianoRollGraph::RecalculateSlotOffsets()
@@ -122,70 +136,31 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 	vertLine.Add(FVector2f(0.0f, 128 * rowHeight));
 
 }
-void SPianoRollGraph::AddNote(FLinkedMidiEvents& inNote, int inTrackSlot, int inInternalMidiTrackID)
 
+
+
+void SPianoRollGraph::Init()
 {
-	MidiSongMap = HarmonixMidiFile->GetSongMaps();
-	auto newSlot = FZoomablePanelSlotContainer(&inNote, inTrackSlot);
-	newSlot.trackindexInHarmonixMidi = inInternalMidiTrackID;
-	newSlot.time = MidiSongMap->TickToMs(inNote.StartEvent.GetTick());
-	newSlot.duration = MidiSongMap->TickToMs(inNote.EndEvent.GetTick()) - newSlot.time ;
-
-
-	//this is very bad code nuke it soon.
-	// month later still not nuked... 
-	int totalNotes = slotsContainer.Add(newSlot);
-	newSlot.uniqueMapKey = totalNotes;
-
-	float velocity = inNote.StartEvent.GetMsg().Data2;
-
-	FString noteName = UEngravingSubsystem::pitchNumToStringRepresentation(inNote.StartEvent.GetMsg().Data1);
-	TSharedPtr<SMidiNoteContainer> TempButton;
-	FString tooltext = FString::Printf(TEXT("Time in miliseconds %f \n Pitch: %d \n Velocity: %f, Name: %s \n TrackID: %d"), newSlot.time, inNote.StartEvent.GetMsg().Data1, velocity, *noteName, inInternalMidiTrackID);
 	
+	
+	if (SessionData->HarmonixMidiFile)
+	{
+		SetCanTick(true);
+		MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
+		LinkedNoteDataMap = SessionData->LinkedNoteDataMap;
+		bIsInitialized = true;
+		InputMode = drawNotes;
 
-	RootConstraintCanvas->AddSlot()
-		.Offset(TAttribute<FMargin>::Create(TAttribute<FMargin>::FGetter::CreateLambda([&, data = newSlot]()
-			{
-				FZoomablePanelSlotContainer slotInLambda = data;
-
-				float Left = slotMap[data.uniqueMapKey].time * horizontalZoom;
-				float top = slotMap[data.uniqueMapKey].pitch * rowHeight;
-
-				return FMargin(Left, top);
-
-			})))
-		.AutoSize(true)
-		.Alignment(FVector2D(0.0f, 0.0f))
-		.ZOrder(inTrackSlot)
-		.Expose(newSlot.slotPointer)
-		[
-			SAssignNew(TempButton, SMidiNoteContainer)
-
-				.ToolTipText(FText::FromString(tooltext))
-				.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&, data = inTrackSlot, data2 = newSlot]() {
-					//UE_LOG(LogTemp, Log, TEXT("The value is %f"), static_cast<float>(data2.MidiNoteData->StartEvent.GetMsg().GetStdData2()))
-						return parentMidiEditor->GetTracksDisplayOptions(data).trackColor.CopyWithNewOpacity(static_cast<float>(data2.MidiNoteData->StartEvent.GetMsg().GetStdData2()) * (1.5f/127.0f));
-					})))
-					.Size(TAttribute<FVector2D>::Create(TAttribute<FVector2D>::FGetter::CreateLambda([&, data = newSlot]() {
-
-						return FVector2D(data.duration * horizontalZoom, rowHeight);
-					})))
-				.Visibility(TAttribute<EVisibility>::Create(TAttribute<EVisibility>::FGetter::CreateLambda([&, data = inTrackSlot](){
-					EVisibility viewState = EVisibility::Visible;
-					viewState = parentMidiEditor->GetTracksDisplayOptions(data).isVisible ? EVisibility::Visible : EVisibility::Hidden;
-					return viewState;
-					
-					})))
-				.CornerRadius(FVector4(1.0f, 1.0f, 1.0f, 1.0f))
-				.UIDinParent(totalNotes)
-
-		];
-
-	TempButton.Get()->SetParentSharedPtr(selfSharedPtr);
-	slotMap.Add(totalNotes, newSlot);
-
+	}
+	else {
+		bIsInitialized = false;
+		SetCanTick(false);
+		InputMode = empty;
+	}
+	
+	OnInitCompleteDelegate.ExecuteIfBound();
 }
+
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	//this is the zoom smoothing function, it is not stable.
@@ -241,12 +216,12 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	}
 
 	
-	if (parentMidiEditor->getFollowCursor())
-	{
-			float currentTickTimeLinePosition = parentMidiEditor->currentTimelineCursorPosition;
-			positionOffset.X -= (currentTickTimeLinePosition - LastTickTimelinePosition) * horizontalZoom * 1000.0f;
-			LastTickTimelinePosition = currentTickTimeLinePosition;
-	}
+	//if (parentMidiEditor->getFollowCursor())
+	//{
+	//		float currentTickTimeLinePosition = parentMidiEditor->currentTimelineCursorPosition;
+	//		positionOffset.X -= (currentTickTimeLinePosition - LastTickTimelinePosition) * horizontalZoom * 1000.0f;
+	//		LastTickTimelinePosition = currentTickTimeLinePosition;
+	//}
 
 	positionOffset.X = FMath::Min(positionOffset.X, 0.0f);
 
@@ -310,9 +285,9 @@ void SPianoRollGraph::UpdateSlotsZOrder()
 {
 	for (auto slot = slotMap.CreateIterator(); slot; ++slot)
 	{
-		float slotZorder = parentMidiEditor->GetTracksDisplayOptions(slot.Value().trackID).isSelected ? 1.0f : 0.0f;
+		//float slotZorder = parentMidiEditor->GetTracksDisplayOptions(slot.Value().trackID).isSelected ? 1.0f : 0.0f;
 		
-		slot.Value().slotPointer->SetZOrder(slotZorder);
+		//slot.Value().slotPointer->SetZOrder(slotZorder);
 	};
 }
 
@@ -344,7 +319,7 @@ void SPianoRollGraph::NotePressedVoid(FZoomablePanelSlotContainer notedata)
 
 void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::CacheDesiredSize(InLayoutScaleMultiplier)
 {
-		RecalcGrid();
+		if(SessionData->HarmonixMidiFile) RecalcGrid();
 };
 
 void SPianoRollGraph::RecalcGrid()
@@ -382,15 +357,33 @@ void SPianoRollGraph::RecalcGrid()
 			
 	}
 
+	//cull notes
+	CulledNotesArray.Empty();
 
-	//int bars = 0;
-	//MidiSongMap->bars
-	//while (bars <= MidiSongMap->GetSongLengthBars())
-	//{
-	//	bars++;
-	//}
+	for (auto& track : LinkedNoteDataMap)
+	{
+		for (auto& note : track.Value.LinkedNotes)
+		{
+			bool NoteInRightBound = note.StartTick < RightMostTick;
 
-	//drawLength = -1 * positionOffset.X + GetCachedGeometry().GetAbsoluteSize().X;
+			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop
+			if(!NoteInRightBound) break;
+
+			if (note.EndTick >= LeftMostTick)
+			{
+				//if notes are too small, don't draw 
+				//if(note->Duration * horizontalZoom >= 1.0f)	
+					
+				CulledNotesArray.Add(&note);
+				//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
+			}
+
+
+		}
+	}
+
+	CulledNotesArray.Sort([](const FLinkedMidiEvents& A, const FLinkedMidiEvents& B) { return A.StartTick < B.StartTick; });
+
 
 	
 	gridLine.Empty(2);
@@ -458,7 +451,7 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 		//const int32 ZoomLevelDelta = FMath::FloorToInt(InMouseEvent.GetWheelDelta());
 		
 
-		parentMidiEditor->UpdateTemporalZoom(hZoomTarget, WidgetSpaceCursorPos);
+		//parentMidiEditor->UpdateTemporalZoom(hZoomTarget, WidgetSpaceCursorPos);
 
 		absMousePosition = InMouseEvent.GetScreenSpacePosition();
 		return FReply::Handled();
@@ -482,8 +475,12 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 
 	return FReply::Unhandled();
 }
+
+
 FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	if(!bIsInitialized) return FReply::Unhandled();
+	
 	const bool bIsRightMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
 	const bool bIsLeftMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton);
 	const bool bIsMiddleMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton);
@@ -494,19 +491,41 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
 		hoveredPitch = 127 -FMath::Floor(localMousePosition.Y / rowHeight);
 
+	
+		
+		int32 tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+		hoveredNotePitch = -1;
+
+  
+
+		SelectedNote = nullptr;
+	CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+		if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
+		{
+			if (note->pitch == hoveredPitch)
+			{
+				SelectedNote = note;
+				return true;
+			}
+		}
+		;
+		return false;
+	});
+
+
 		if (bLMBdown) {
 	
-			switch (parentMidiEditor->getCurrentInputMode())
+			switch (InputMode)
 			{
 			case seek:
 
-				parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
+				//parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
 				break;
 
 			case notesSelect:
 		
 				positionOffset.Y += MouseEvent.GetCursorDelta().Y;
-				parentMidiEditor->AddHorizontalOffset(MouseEvent.GetCursorDelta().X);
+				AddHorizontalX(MouseEvent.GetCursorDelta().X);
 			default:
 
 				break;
@@ -552,7 +571,7 @@ FReply SPianoRollGraph::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
 		}
 	}
 
-	parentMidiEditor->SetInputMode(InputMode);
+	SetInputMode(InputMode);
 
 	return FReply::Unhandled();
 }
@@ -570,6 +589,8 @@ FReply SPianoRollGraph::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& In
 int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	
+	if (!bIsInitialized) return LayerId;
+
 	// bad stupid code, this should happen in the tick event
 	auto PaintPosVector = positionOffset;
 
@@ -632,7 +653,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Blue.CopyWithNewOpacity(0.3f),
+			FLinearColor::Blue.CopyWithNewOpacity(0.5f * horizontalZoom),
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
 	}
@@ -654,9 +675,9 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	//if in note draw mode, draw note overlay 
 	
-	if (parentMidiEditor.IsValid() && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
+	if (false)// && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
 	{
-		FLinearColor trackColor = parentMidiEditor->GetTracksDisplayOptions(selectedTrackIndex).trackColor;
+		FLinearColor trackColor = SessionData->GetTracksDisplayOptions(selectedTrackIndex).trackColor;
 		FLinearColor offTracksColor = trackColor.Desaturate(0.5);
 		FLinearColor colorNegative = FLinearColor::White.operator-(trackColor);
 
@@ -692,7 +713,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 	//mouse crosshairs
-	FLinearColor trackColor = selectedTrackIndex >= 0 ? parentMidiEditor->GetTracksDisplayOptions(selectedTrackIndex).trackColor : FLinearColor::White;
+	FLinearColor trackColor = selectedTrackIndex >= 0 ? SessionData->GetTracksDisplayOptions(selectedTrackIndex).trackColor : FLinearColor::White;
 
 	////ugly code, can't be in the paint event, needs to be in the mouse move or tick methods. 
 	//int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
@@ -703,20 +724,88 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
+		//paint hovered note
+
+
+
+	for (auto& note : CulledNotesArray)
+	{
+		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackID).trackColor) };
+		FSlateDrawElement::MakeGradient(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
+			FVector4f::One() * note->cornerRadius
+		);
+
+		//FSlateDrawElement::MakeBox(OutDrawElements,
+		//	postCanvasLayerID++,
+		//	OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->StartEvent.GetMsg().Data1)))),
+		//	&gridBrush,
+		//	ESlateDrawEffect::None,
+		//	parentMidiEditor->GetTracksDisplayOptions(note->TrackID).trackColor.CopyWithNewOpacity(note->StartEvent.GetMsg().Data2 / 127.0f)
+		//);
+	}
+
+	if (SelectedNote != nullptr)
+	{
+		//	FSlateDrawElement::bord
+
+		auto& note = SelectedNote;
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			FLinearColor::Red
+		);
+	}
+
+
+#define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
+
+
+	for (const auto& TempoEvent : TempoEvents)
+	{
+		//draw a line for every tempo event
+		FSlateDrawElement::MakeLines(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TempoEvent.GetTick()) * horizontalZoom, 0))),
+			vertLine,
+			ESlateDrawEffect::None,
+			FLinearColor::Red,
+			false,
+			FMath::Max(2.0f * horizontalZoom, 1.0f));
+	
+	}
+
+	//draw a line for every time signature event
+	for (const auto& TimeSigEvent : TimeSignatureEvents)
+	{
+		FSlateDrawElement::MakeLines(OutDrawElements,
+			postCanvasLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSigEvent.GetTick()) * horizontalZoom, 0))),
+			vertLine,
+			ESlateDrawEffect::None,
+			FLinearColor::Green,
+			false,
+			FMath::Max(2.0f * horizontalZoom, 1.0f));
+	}
+
 
 	FSlateDrawElement::MakeText(OutDrawElements,
 	postCanvasLayerID++,
 	AllottedGeometry.ToPaintGeometry(),
-	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num bars %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
+	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num notes %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
 
-	OffsetGeometryChild.GetLayoutBoundingRect().Left, OffsetGeometryChild.GetLayoutBoundingRect().Right,
+	MyCullingRect.Left, MyCullingRect.Right,
 	*OffsetGeometryChild.AbsoluteToLocal(FVector2d::Zero()).ToString(),
 	*OffsetGeometryChild.GetLocalSize().ToString(),
 	*localMousePosition.ToString(),
 	horizontalZoom, verticalZoom,
 	*positionOffset.ToString(),
-	visibleBars.Num(),
+	CulledNotesArray.Num(),
 	MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom),
 		CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor)),
 	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 12),
@@ -729,6 +818,18 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50,0)))),
 		FText::FromString(FString::Printf(TEXT("mouse %s \n time at mouse %f \n cursor position %f \n Tick at mouse %f"),	* localMousePosition.ToString()
 			, localMousePosition.X / horizontalZoom, CurrentTimelinePosition, MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom))),
+		FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 8),
+		ESlateDrawEffect::None,
+		FLinearColor::White);
+
+	FString noteString = SelectedNote != nullptr ? SelectedNote->GetFormmatedString() : "No Note Selected";
+
+
+	//cursor tests
+	FSlateDrawElement::MakeText(OutDrawElements,
+		postCanvasLayerID++,
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50, 100)))),
+		FText::FromString(*noteString),
 		FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 8),
 		ESlateDrawEffect::None,
 		FLinearColor::White);
@@ -781,6 +882,8 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 #endif
 
+
+
 	//snapped mouse cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,
 		LayerId,
@@ -811,7 +914,7 @@ void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 	
 	//update cursor and the such 
 	int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartEvent.GetTick();
+	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartTick;
 	//int delta = tickAtNoteStart - tickAtMouse;
 	
 	CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
@@ -865,15 +968,15 @@ void SPianoRollGraph::StopDraggingNote()
 		//remove existing note using event index
 		//HarmonixMidiFile->GetTrack(trackID)->GetEvents().(data.MidiNoteData->EndIndex);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
-		HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
+		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
 		//HarmonixMidiFile->GetTrack(trackID)->Sort();
 	
 		//call all the sorting functions I could find
 		
-		HarmonixMidiFile->SortAllTracks();
+		//HarmonixMidiFile->SortAllTracks();
 		//HarmonixMidiFile->TracksChanged();
-		HarmonixMidiFile->MarkPackageDirty();
+		//HarmonixMidiFile->MarkPackageDirty();
 
 		//NeedsRinitDelegate.Broadcast();
 

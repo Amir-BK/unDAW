@@ -64,13 +64,12 @@ class SMIDITrackControls : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SMIDITrackControls)
 		{}
-		SLATE_ARGUMENT(TWeakObjectPtr<UMIDIEditorBase>, parentMidiEditor)
+
 		SLATE_ARGUMENT(int, slotInParentID)
 		SLATE_ARGUMENT(FText, trackName)
 
 	SLATE_END_ARGS()
 
-	TWeakObjectPtr<UMIDIEditorBase> parentMidiEditor;
 	int slotInParentID;
 	FText trackName;
 
@@ -80,22 +79,22 @@ public:
 
 	void toggleTrackVisibility(ECheckBoxState newState)
 	{
-		parentMidiEditor->ToggleTrackVisibility(slotInParentID, newState == ECheckBoxState::Checked ? true : false);
+		//parentMidiEditor->ToggleTrackVisibility(slotInParentID, newState == ECheckBoxState::Checked ? true : false);
 	}
 
 	void SetColor(FLinearColor newColor)
 	{
-		parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
+		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
 	}
 
 	void SelectionCancel(FLinearColor newColor)
 	{
-		parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
+		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
 	}
 
 	FReply SelectThisTrack()
 	{
-		parentMidiEditor->SelectTrack(slotInParentID);
+		//parentMidiEditor->SelectTrack(slotInParentID);
 
 		return FReply::Handled();
 	}
@@ -112,7 +111,7 @@ public:
 			PickerArgs.DisplayGamma = TAttribute<float>::Create(TAttribute<float>::FGetter::CreateUObject(GEngine, &UEngine::GetDisplayGamma));
 			PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateSP(this, &SMIDITrackControls::SetColor);
 			PickerArgs.OnColorPickerCancelled = FOnColorPickerCancelled::CreateSP(this, &SMIDITrackControls::SelectionCancel);
-			PickerArgs.InitialColor = parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+			//PickerArgs.InitialColor = parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
 			OpenColorPicker(PickerArgs);
 
 		}
@@ -136,15 +135,15 @@ public:
 			{
 				if (patch->GetName().Equals(*CurrentItem, ESearchCase::IgnoreCase)) 
 				{
-						parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch = TObjectPtr<UFusionPatch>(patch);
-						parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
+						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch = TObjectPtr<UFusionPatch>(patch);
+						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
 						for (int i = 0; i < 127; i++)
 						{
 							for (auto& keyzone : patch->GetKeyzones())
 							{
 								if (i >= keyzone.MinNote && i <= keyzone.MaxNote)
 								{
-									parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Add(TTuple<int, bool>(i, true));
+									//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Add(TTuple<int, bool>(i, true));
 									break;
 								}
 							}
@@ -169,17 +168,17 @@ public:
 
 	void Construct(const FArguments& InArgs)
 	{
-		parentMidiEditor = InArgs._parentMidiEditor;
+		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
 		
 
-		if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
-		{
-			CurrentItem = MakeShareable(new FString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch->GetName()));
-		}
-		else {
-			CurrentItem = MakeShareable(new FString(TEXT("Please select fusion patch")));
-		}
+		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
+		//{
+		//	CurrentItem = MakeShareable(new FString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch->GetName()));
+		//}
+		//else {
+		//	CurrentItem = MakeShareable(new FString(TEXT("Please select fusion patch")));
+		//}
 		
 
 		for (auto& patch : UFKSFZAsset::GetAllFusionPatchAssets())
@@ -195,8 +194,15 @@ public:
 					+ SVerticalBox::Slot()
 					[
 						SNew(SEditableTextBox)
-							.Text(InArgs._trackName)
+							//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
+						//	.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
+							//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
 					]
+				+ SVerticalBox::Slot()
+				[
+					SNew(STextBlock)
+						.Text(FText::Format(INVTEXT("{0}"),InArgs._slotInParentID))
+				]
 					//+ SVerticalBox::Slot()
 					//[
 					//	SNew(SComboBox<TSharedPtr<FString>>)
@@ -237,12 +243,9 @@ public:
 							[
 								SNew(SColorBlock)
 									.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
-									if (parentMidiEditor->GetActiveSessionData() && !parentMidiEditor->GetActiveSessionData()->TimeStampedMidis.IsEmpty()
-										&& parentMidiEditor->GetActiveSessionData()->TimeStampedMidis[0].TracksMappings.IsValidIndex(slotInParentID))
-									{
-									return parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
-									}
-									return FLinearColor::Gray;
+
+									return FLinearColor::Gray; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+		
 
 										})))
 									.Size(FVector2D(350.0f, 20.0f))

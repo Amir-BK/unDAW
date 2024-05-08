@@ -4,31 +4,25 @@
 #include "WTrackControlsWidget.h"
 #include "SMidiTrackControlsWidget.h"
 
-void UWTrackControlsWidget::SetMidiEditorParentWidget(UMIDIEditorBase* inEditor)
-{
-	MidiEditorSharedPtr = inEditor;
-	ParentMidiEditor = inEditor;
-}
+
 
 void UWTrackControlsWidget::InitFromData()
 {
-	tracksVerticalBox->ClearChildren();
-	int TrackIndex = 0;
-	for (auto& track : MidiEditorSharedPtr->GetTrackDisplayOptions())
-	{
-		tracksVerticalBox->AddSlot()
-			.AutoHeight()
-			[
-				SNew(SMIDITrackControls)
-					.trackName(FText::FromString(*track.trackName)) //midiTrack->TrackName))
-					.parentMidiEditor(MidiEditorSharedPtr)
-					.slotInParentID(TrackIndex)
-			];
-
-		TrackIndex++;
-	}
+    tracksVerticalBox->ClearChildren();
 
 
+    //for (const auto& [index, track] : MidiEditorSharedPtr->GetTrackDisplayOptions())
+    //{
+    //    tracksVerticalBox->AddSlot()
+    //        .AutoHeight()
+    //        [
+    //            SNew(SMIDITrackControls)
+    //                .trackName(FText::FromString(*track.trackName))
+    //                .parentMidiEditor(MidiEditorSharedPtr)
+    //                .slotInParentID(track.ChannelIndexInParentMidi)
+    //        ];
+
+    //}
 }
 
 TSharedRef<SWidget> UWTrackControlsWidget::RebuildWidget()

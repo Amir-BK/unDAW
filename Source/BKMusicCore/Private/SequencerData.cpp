@@ -2,6 +2,7 @@
 
 
 #include "SequencerData.h"
+#include "MetasoundBuilderHelperBase.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -12,46 +13,47 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+
+	
+
 void UDAWSequencerData::CalculateSequenceDuration()
 {
-	if (!TimeStampedMidis.IsEmpty())
+	if (HarmonixMidiFile)
 	{
-		SequenceDuration = TimeStampedMidis[0].MidiFile->GetSongMaps()->GetSongLengthMs();
+		SequenceDuration = HarmonixMidiFile->GetSongMaps()->GetSongLengthMs();
 	}
 }
 
-TArray<FBPMidiStruct> UDAWSequencerData::GetMidiDataForTrack(const int trackID)
-{
-	return TArray<FBPMidiStruct>();
-}
 
-bool UDAWSequencerData::IsFloatNearlyZero(UPARAM(ref) const float& value, UPARAM(ref) const float& tolerance)
-{
-	
-	return FMath::IsNearlyZero(value, tolerance);
-}
 
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
-	
+	TMap<int, int> FoundChannels;
+	LinkedNoteDataMap.Empty();
+	HarmonixMidiFile = inMidiFile;
+	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
+
 	int numTracks = 0;
 	int numTracksRaw = 0;
-	
-	for (auto& track : inMidiFile->GetTracks())
+
+	if (HarmonixMidiFile == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("No midi file! This is strange!"))
+			return;
+	}
+	for (auto& track : HarmonixMidiFile->GetTracks())
 	{
 		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
 		int numTracksInternal = numTracksRaw++;
 		if (track.GetEvents().IsEmpty()) continue;
 
-		TMap<int, TArray<FLinkedMidiEvents*>> channelsMap;
-
-
+		int TrackMainChannel = track.GetPrimaryMidiChannel();
 
 		TArray<FLinkedMidiEvents*> linkedNotes;
-
 		TMap<int32, FEventsWithIndex> unlinkedNotesIndexed;
 
 		//track.GetEvent(32)
+
 
 		// sort events, right now only notes 
 		for (int32 index = 0; const auto & MidiEvent : track.GetEvents())
@@ -74,17 +76,21 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
 						{
 
-							FLinkedMidiEvents* foundPair = new FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
+							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
-							linkedNotes.Add(foundPair);
+
+							foundPair.TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
+							FoundChannels.Add(numTracksRaw, foundPair.TrackID);
+							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
+							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
-							if (channelsMap.Contains(midiChannel))
+							if (LinkedNoteDataMap.Contains(midiChannel))
 							{
-								channelsMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
 							}
 							else {
-								channelsMap.Add(TTuple<int, TArray<FLinkedMidiEvents*>>(midiChannel, TArray<FLinkedMidiEvents*>()));
-								channelsMap[midiChannel].Add(foundPair);
+								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(midiChannel, TArray<FLinkedMidiEvents>()));
+								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
 							}
 
 						}
@@ -94,19 +100,19 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 
 				break;
 			case FMidiMsg::EType::Tempo:
-				UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
+				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
 					//MidiEvent.GetMsg().Data1
 					TempoEvents.Add(MidiEvent);
 				break;
 			case FMidiMsg::EType::TimeSig:
-				UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a time signature event!"))
+				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a time signature event!"))
 					TimeSignatureEvents.Add(MidiEvent);
 				break;
 			case FMidiMsg::EType::Text:
-				UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
+				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
 					break;
 			case FMidiMsg::EType::Runtime:
-				UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a runtime event???"))
+				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a runtime event???"))
 					break;
 			}
 
@@ -115,49 +121,34 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		}
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
 
-		if (channelsMap.IsEmpty()) continue;
+		if (LinkedNoteDataMap.IsEmpty()) continue;
 
-		//init data asset MIDI if not init
+		//FoundChannels.Sort();
+		CalculateSequenceDuration();
+		InitTracksFromFoundArray(FoundChannels);
+		//CreateBuilderHelper();
+	}
+}
 
-		UE_LOG(unDAWDataLogs, Log, TEXT("Num Channel Buckets: %d"), channelsMap.Num())
+void UDAWSequencerData::CreateBuilderHelper(UAudioComponent* AuditionComponent)
+{
+	MetasoundBuilderHelper = NewObject<UMetasoundBuilderHelperBase>(this);
+	MetasoundBuilderHelper->SessionData = this;
+	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
+	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;
+	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
+}
 
-			for (auto& [channel, notes] : channelsMap)
-			{
-				
-				//this is the init code for the display options, should be moved to it's own functions
-				bool hasDataForTrack = false;
+void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	bool bIsDirty = false;
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
-				if (TimeStampedMidis[0].TracksMappings.IsValidIndex(numTracks))
-				{
-					//newTrackDisplayOptions = TrackCache->TimeStampedMidis[0].TracksMappings[numTracks];
-					//tracksDisplayOptions.Add(TrackCache->TimeStampedMidis[0].TracksMappings[numTracks]);
-					hasDataForTrack = true;
+	if (PropertyName == TEXT("HarmonixMidiFile"))
+	{
+		PopulateFromMidiFile(HarmonixMidiFile);
+		OnMidiDataChanged.Broadcast();
+	}
 
-				}
-				if (!hasDataForTrack) {
-					FTrackDisplayOptions newTrackDisplayOptions = FTrackDisplayOptions();
-					newTrackDisplayOptions.fusionPatch = DefaultFusionPatch;
-					newTrackDisplayOptions.TrackIndexInParentMidi = numTracksInternal;
-					newTrackDisplayOptions.ChannelIndexInParentMidi = channelsMap.Num() == 1 ? 0 : channel;
-					newTrackDisplayOptions.trackColor = FLinearColor::MakeRandomSeededColor((numTracksInternal + 1) * (channel + 1));
-					newTrackDisplayOptions.trackName = *track.GetName();
-					TimeStampedMidis[0].TracksMappings.Add(newTrackDisplayOptions);
-				}
-
-
-
-				//if (!notes.IsEmpty())
-				//{
-				//	for (const auto& foundPair : notes)
-				//	{
-				//		PianoRollGraph->AddNote(*foundPair, numTracks, numTracksInternal);
-				//	}
-				//}
-
-				numTracks++;
-
-			}
-
-	};
-
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }

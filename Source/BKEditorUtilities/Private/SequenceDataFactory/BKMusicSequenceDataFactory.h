@@ -7,9 +7,52 @@
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "AssetTypeActions_Base.h"
+#include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "SequencerData.h"
 #include "BKMusicSequenceDataFactory.generated.h"
 
+namespace UE::AudioEditor
+{
+	void StopSound()
+	{
+		GEditor->ResetPreviewAudioComponent();
+	}
+
+	void PlaySound(USoundBase* Sound)
+	{
+		if (Sound)
+		{
+			GEditor->PlayPreviewSound(Sound);
+		}
+		else
+		{
+			StopSound();
+		}
+	}
+
+	bool IsSoundPlaying(USoundBase* Sound)
+	{
+		UAudioComponent* PreviewComp = GEditor->GetPreviewAudioComponent();
+		return PreviewComp && PreviewComp->Sound == Sound && PreviewComp->IsPlaying();
+	}
+
+	bool IsSoundPlaying(const FAssetData& AssetData)
+	{
+		const UAudioComponent* PreviewComp = GEditor->GetPreviewAudioComponent();
+		if (PreviewComp && PreviewComp->Sound && PreviewComp->IsPlaying())
+		{
+			if (PreviewComp->Sound->GetFName() == AssetData.AssetName)
+			{
+				if (PreviewComp->Sound->GetOutermost()->GetFName() == AssetData.PackageName)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+}
 
 class FDAWSequenceAssetActions : public FAssetTypeActions_Base
 {
@@ -30,21 +73,117 @@ public:
 	{
 		return EAssetTypeCategories::Media;
 	}
-};
 
+	void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor) override
+	{
+		MakeShared<FUnDAWSequenceEditorToolkit>()->InitEditor(InObjects);
+	}
+
+	TSharedPtr<SWidget> GetSoundBaseThumbnailOverlay(const FAssetData& InAssetData, TUniqueFunction<FReply()>&& OnClickedLambdaOverride) const
+	{
+		auto OnGetDisplayBrushLambda = [InAssetData]() -> const FSlateBrush*
+			{
+				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				{
+					return FAppStyle::GetBrush("MediaAsset.AssetActions.Stop.Large");
+				}
+
+				return FAppStyle::GetBrush("MediaAsset.AssetActions.Play.Large");
+			};
+
+		auto OnClickedLambda = [InAssetData]() -> FReply
+			{
+				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				{
+					UE::AudioEditor::StopSound();
+				}
+				else
+				{
+					// Load and play sound
+					UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
+				}
+				return FReply::Handled();
+			};
+
+		auto OnToolTipTextLambda = [InAssetData]() -> FText
+			{
+				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				{
+					return INVTEXT("Stop selected sound");
+				}
+
+				return INVTEXT("Play selected sound");
+			};
+
+		TSharedPtr<SBox> Box;
+		SAssignNew(Box, SBox)
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			.Padding(FMargin(2));
+
+		auto OnGetVisibilityLambda = [Box, InAssetData]() -> EVisibility
+			{
+				if (Box.IsValid() && (Box->IsHovered() || UE::AudioEditor::IsSoundPlaying(InAssetData)))
+				{
+					return EVisibility::Visible;
+				}
+
+				return EVisibility::Hidden;
+			};
+
+		TSharedPtr<SButton> Widget;
+		SAssignNew(Widget, SButton)
+			.ButtonStyle(FAppStyle::Get(), "HoverHintOnly")
+			.ToolTipText_Lambda(OnToolTipTextLambda)
+			.Cursor(EMouseCursor::Default) // The outer widget can specify a DragHand cursor, so we need to override that here
+			.ForegroundColor(FSlateColor::UseForeground())
+			.IsFocusable(false)
+			.OnClicked_Lambda(OnClickedLambda)
+			.Visibility_Lambda(OnGetVisibilityLambda)
+			[
+				SNew(SImage)
+					.Image_Lambda(OnGetDisplayBrushLambda)
+			];
+
+		Box->SetContent(Widget.ToSharedRef());
+		Box->SetVisibility(EVisibility::Visible);
+
+		return Box;
+	}
+
+	virtual TSharedPtr<SWidget> GetThumbnailOverlay(const FAssetData& InAssetData) const override
+	{
+		auto OnClickedLambda = [InAssetData]() -> FReply
+			{
+				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				{
+					UE::AudioEditor::StopSound();
+				}
+				else
+				{
+					// Load and play sound
+					UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
+				}
+				return FReply::Handled();
+			};
+		return GetSoundBaseThumbnailOverlay(InAssetData, MoveTemp(OnClickedLambda));
+	}
+};
 
 
 /**
  * 
  */
 UCLASS()
-class UBKMusicSequenceDataFactory : public UFactory
+class BK_EDITORUTILITIES_API UBKMusicSequenceDataFactory : public UFactory
 {
 	GENERATED_BODY()
 	
 public:
 	//~ UFactory Interface
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext) override;
+
+
 
 	virtual bool ShouldShowInNewMenu() const override;
 

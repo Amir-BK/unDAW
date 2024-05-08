@@ -19,3 +19,4 @@ UBKMusicSequenceDataFactory::UBKMusicSequenceDataFactory()
 	bEditAfterNew = true;
 	bCreateNew = true;
 }
+

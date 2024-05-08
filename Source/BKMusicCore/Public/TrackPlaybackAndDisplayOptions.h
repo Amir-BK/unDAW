@@ -18,7 +18,8 @@ enum ETrackRendererMode : uint8
 {
 	FusionPatch,
 	CustomPatch,
-	NoAudio
+	NoAudio,
+
 };
 
 // struct that describes some crucial settings used to set up a MIDI track in the render metasound built by the Meta Sound Graph Builder
@@ -33,7 +34,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	bool isSelected;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	FLinearColor trackColor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
@@ -42,7 +43,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	float TrackVolume = 1.0f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	FString trackName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
@@ -55,7 +56,8 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	TEnumAsByte<ETrackRendererMode> RenderMode = ETrackRendererMode::FusionPatch;
 
-
+	UPROPERTY()
+	bool CreateMidiOutput = true;
 
 	//the fusion patch to use in case 'Fusion Patch' mode is selected
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::FusionPatch", EditConditionHides))
