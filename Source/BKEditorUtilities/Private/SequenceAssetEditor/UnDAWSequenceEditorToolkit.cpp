@@ -5,7 +5,13 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Widgets/Layout/SGridPanel.h"
+#include "Modules/ModuleInterface.h"
+#include "MetasoundEditorModule.h"
+#include "UnDAWPreviewHelperSubsystem.h"
+//#include "MetasoundAssetSubsystem.h"
+
 #include "Widgets/Layout/SScaleBox.h"
+
 
 void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
@@ -79,12 +85,16 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
                         .cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
                 ];
 
-            if (SequenceData->HarmonixMidiFile) PianoRollGraph->Init();
+            if (SequenceData->HarmonixMidiFile) {
+                PianoRollGraph->Init();
+                if(!SequenceData->MetasoundBuilderHelper) PreviewAudio();
+                }
 
             SequenceData->OnMidiDataChanged.AddLambda([&]()
                 {
 				PianoRollGraph->Init();
-			});
+                PreviewAudio();
+			    });
 
             return DockTab;
         }))
@@ -131,23 +141,27 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                 ToolbarBuilder.AddWidget(SNew(SBox).VAlign(VAlign_Center)
                 [
                     SNew(SHorizontalBox)
-                        +SHorizontalBox::Slot()
+
+                        + SHorizontalBox::Slot()
                         [
                             SNew(SButton)
-                                .Text(INVTEXT("Init Preview"))
+                                .Text(INVTEXT("ReInit"))
                                 .OnClicked_Lambda([this]() { PreviewAudio(); return FReply::Handled(); })
+                                .IsEnabled_Lambda([this]() { return AudioComponent == nullptr || !AudioComponent->IsPlaying(); })
                         ]
-						 + SHorizontalBox::Slot()
+                        + SHorizontalBox::Slot()
                         [
                             SNew(SButton)
                                 .Text(INVTEXT("Play"))
                                 .OnClicked_Lambda([this]() { PlayAudioComponent(); return FReply::Handled(); })
+                                .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
                         ]
 						+ SHorizontalBox::Slot()
                         [
 							SNew(SButton)
 								.Text(INVTEXT("Stop"))
 								.OnClicked_Lambda([this]() { StopAudioComponent(); return FReply::Handled(); })
+                                .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
                         ]
                 ]);
 
@@ -164,27 +178,9 @@ inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
 
 void FUnDAWSequenceEditorToolkit::PreviewAudio()
 {
-    AudioComponent = GEditor->ResetPreviewAudioComponent();
-
-  
-    if (!AudioComponent) return;
-
-
-    AudioComponent->bAutoDestroy = false;
-    //AudioComponent->bIsUISound = true;
-    AudioComponent->bAllowSpatialization = false;
-    AudioComponent->bReverb = false;
-    AudioComponent->bCenterChannelOnly = false;
-    AudioComponent->bIsPreviewSound = true;
-    //AudioComponent->SetIsVirtualized(true);
-    //AudioComponent->Set
-
-    SequenceData->CreateBuilderHelper(AudioComponent);
-
-    SequenceData->MetasoundBuilderHelper->CreateAndAuditionPreviewAudioComponent();
-        
-
-
+    auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
+    PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
+    AudioComponent = SequenceData->MetasoundBuilderHelper->AuditionComponentRef;
 }
 
 void FUnDAWSequenceEditorToolkit::PlayAudioComponent()

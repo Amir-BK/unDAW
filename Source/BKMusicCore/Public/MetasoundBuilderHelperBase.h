@@ -16,6 +16,8 @@
 
 
 
+DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
+
 /**
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
  */
@@ -25,6 +27,9 @@ class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
 	GENERATED_BODY()
 	
 public:
+
+
+	FDAWPerformerReady OnDAWPerformerReady;
 
 	UPROPERTY()
 	UWorld* ParentWorld;
@@ -92,6 +97,9 @@ public:
 
 	UFUNCTION()
 	void CreateFusionPlayerForMidiTrack();
+	
+	UFUNCTION()
+	void GenerateMidiPlayerAndTransport();
 
 	UFUNCTION()
 	void CreateCustomPatchPlayerForMidiTrack();
@@ -133,6 +141,9 @@ public:
 	void CreateAndAuditionPreviewAudioComponent();
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Created Nodes")
+	FMetaSoundNodeHandle TriggerToTransportNode;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Created Nodes")
 	FMetaSoundNodeHandle MidiPlayerNode;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
@@ -145,6 +156,8 @@ public:
 	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
 
 	void SetupFusionNode(FTrackDisplayOptions& TrackRef);
+
+	void ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode);
 
 };
 

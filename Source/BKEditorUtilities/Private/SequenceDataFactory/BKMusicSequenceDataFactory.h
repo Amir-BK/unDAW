@@ -9,6 +9,7 @@
 #include "AssetTypeActions_Base.h"
 #include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "SequencerData.h"
+#include <UnDAWPreviewHelperSubsystem.h>
 #include "BKMusicSequenceDataFactory.generated.h"
 
 namespace UE::AudioEditor
@@ -79,10 +80,16 @@ public:
 		MakeShared<FUnDAWSequenceEditorToolkit>()->InitEditor(InObjects);
 	}
 
-	TSharedPtr<SWidget> GetSoundBaseThumbnailOverlay(const FAssetData& InAssetData, TUniqueFunction<FReply()>&& OnClickedLambdaOverride) const
+	static void TryTriggerAudioPlay(UDAWSequencerData* InAsset)
+	{
+		InAsset->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+	}
+
+	TSharedPtr<SWidget> GetDawSequenceThumbnailOverlay(const FAssetData& InAssetData, TUniqueFunction<FReply()>&& OnClickedLambdaOverride) const
 	{
 		auto OnGetDisplayBrushLambda = [InAssetData]() -> const FSlateBrush*
 			{
+				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
 				{
 					return FAppStyle::GetBrush("MediaAsset.AssetActions.Stop.Large");
@@ -100,7 +107,14 @@ public:
 				else
 				{
 					// Load and play sound
-					UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
+					auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
+					if (SequenceData->MetasoundBuilderHelper && SequenceData->MetasoundBuilderHelper->AuditionComponentRef)
+					{
+						SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+						return FReply::Handled();
+					}
+					auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
+					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
 				}
 				return FReply::Handled();
 			};
@@ -151,23 +165,7 @@ public:
 		return Box;
 	}
 
-	virtual TSharedPtr<SWidget> GetThumbnailOverlay(const FAssetData& InAssetData) const override
-	{
-		auto OnClickedLambda = [InAssetData]() -> FReply
-			{
-				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
-				{
-					UE::AudioEditor::StopSound();
-				}
-				else
-				{
-					// Load and play sound
-					UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
-				}
-				return FReply::Handled();
-			};
-		return GetSoundBaseThumbnailOverlay(InAssetData, MoveTemp(OnClickedLambda));
-	}
+	virtual TSharedPtr<SWidget> GetThumbnailOverlay(const FAssetData& InAssetData) const override;
 };
 
 

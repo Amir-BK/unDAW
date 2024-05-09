@@ -5,12 +5,16 @@
 #include "Engine/Engine.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "Kismet/GameplayStatics.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "MetasoundAssetSubsystem.h"
+#include "MetasoundAssetBase.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
 void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
+	
 
 	if (AuditionComponentRef)
 	{
@@ -18,21 +22,28 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioC
 		AuditionComponentRef->DestroyComponent();
 	}
 
-	AuditionComponentRef = InAuditionComponent;
 
+
+	AuditionComponentRef = InAuditionComponent;
+	auto PrimingSound = FSoftObjectPath(TEXT("/Game/DROELOE_MainSong.DROELOE_MainSong")).TryLoad();
+	//AuditionComponentRef->SetSound(Cast<USoundWave>(PrimingSound));
+	//AuditionComponentRef->Play();
 
 	//ParentWorld = World;
 	//FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
 	FMetaSoundBuilderNodeInputHandle OnFinished;
 
-	EMetaSoundBuilderResult BuildResult;
 
+	
+	EMetaSoundBuilderResult BuildResult;
 	//OutputFormat = SourceOutputFormat;
 	//SessionData->MasterOptions.OutputFormat
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
+	MSBuilderSystem->RegisterSourceBuilder(FName(BuilderName), CurrentBuilder);
 	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 	CreateMixerNodesSpaghettiBlock();
-	CreateMidiPlayerBlock();
+	//CreateMidiPlayerBlock();
+	GenerateMidiPlayerAndTransport();
 	CreateInputsFromMidiTracks();
 
 #ifdef WITH_METABUILDERHELPER_TESTS
@@ -171,6 +182,58 @@ void UMetasoundBuilderHelperBase::CreateAndRegisterMidiOutput(FTrackDisplayOptio
 
 void UMetasoundBuilderHelperBase::CreateFusionPlayerForMidiTrack()
 {
+}
+
+void UMetasoundBuilderHelperBase::ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode)
+{
+
+	EMetaSoundBuilderResult BuildResult;
+	TArray<FMetaSoundBuilderNodeInputHandle> TriggerToTransportInputs = CurrentBuilder->FindNodeInputs(TriggerToTransportNode, BuildResult);
+
+	for(const auto& Input : TriggerToTransportInputs)
+	{
+		FName NodeName;
+		FName DataType;
+		CurrentBuilder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+
+		if (NodeName == FName(TEXT("Prepare")))
+		{
+			CurrentBuilder->ConnectNodes(OnPlayOutputNode, Input, BuildResult);
+		}
+
+		if (NodeName == FName(TEXT("Play")))
+		{
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Play")), Input, BuildResult);
+		}
+
+		if (NodeName == FName(TEXT("Stop")))
+		{
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Stop")), Input, BuildResult);
+		}
+
+	}
+}
+
+void UMetasoundBuilderHelperBase::GenerateMidiPlayerAndTransport()
+{
+	EMetaSoundBuilderResult BuildResult;
+
+	TriggerToTransportNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("TriggerToTransport"))), BuildResult, 0);
+
+	ConnectTransportPinsToInterface(TriggerToTransportNode);
+
+	MidiPlayerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MIDIPlayer"))), BuildResult, 0);
+	FMetaSoundBuilderNodeInputHandle MidiFileInput = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
+	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
+	auto MidiInputPinOutputHandle = CurrentBuilder->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
+	CurrentBuilder->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
+
+	//connect midi player 'Transport' to 'Transport Node' transport pin
+	auto MidiPlayerTransportPin = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("Transport")), BuildResult);
+	auto TransportNodeTransportOutPin = CurrentBuilder->FindNodeOutputByName(TriggerToTransportNode, FName(TEXT("Transport")), BuildResult);
+	CurrentBuilder->ConnectNodes(TransportNodeTransportOutPin, MidiPlayerTransportPin, BuildResult);
+	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI Stream")), BuildResult);
+
 }
 
 void UMetasoundBuilderHelperBase::CreateCustomPatchPlayerForMidiTrack()
@@ -383,13 +446,15 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 	}
 
 
-
+	// we do not use this due to the issues with the frontend only registering the patch when the metasound graph is opened, which is annoying.
 	bool UMetasoundBuilderHelperBase::CreateMidiPlayerBlock()
 {
 		// Create the midi player block
 	EMetaSoundBuilderResult BuildResult;
 	FSoftObjectPath MidiPlayerAssetRef(TEXT("/unDAW/BKSystems/MetaSoundBuilderHelperBP_V1/InternalPatches/BK_MetaClockManager.BK_MetaClockManager"));
 	TScriptInterface<IMetaSoundDocumentInterface> MidiPlayerDocument = MidiPlayerAssetRef.TryLoad();
+	UMetaSoundPatch* MidiPatch = Cast<UMetaSoundPatch>(MidiPlayerDocument.GetObject());
+	MidiPatch->RegisterGraphWithFrontend();
 	MidiPlayerNode = CurrentBuilder->AddNode(MidiPlayerDocument, BuildResult);
 
 	if (SwitchOnBuildResult(BuildResult))
@@ -403,7 +468,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 	}
 
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
-	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
+	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
 	auto MidiInputPinOutputHandle = CurrentBuilder->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
 	CurrentBuilder->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
 
@@ -415,23 +480,26 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 
 void UMetasoundBuilderHelperBase::CreateAndAuditionPreviewAudioComponent()
 {
-	// Create the audio component
-	FSoftObjectPath soundPath(TEXT("/Script/Engine.SoundWave'/Game/onclassical_demo_demicheli_geminiani_pieces_allegro-in-f-major_small-version.onclassical_demo_demicheli_geminiani_pieces_allegro-in-f-major_small-version'"));
-	USoundWave* SoundWave = Cast<USoundWave>(soundPath.TryLoad());
 
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	CurrentBuilder->Audition(this, AuditionComponentRef, OnCreateAuditionGeneratorHandle, true);
-	//PreviewAudioComponent->Play();
 }
 
 void UMetasoundBuilderHelperBase::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
+	
+	UMetaSoundAssetSubsystem* AssetSubsystem = GEngine->GetEngineSubsystem<UMetaSoundAssetSubsystem>();
+	//FMetasoundAssetBase test = Cast<UMetaSoundSource>();
+	AssetSubsystem->Get()->AddOrUpdateAsset(*AuditionComponentRef->GetSound()->_getUObject());
 	UE_LOG(LogTemp, Log, TEXT("Handle Created!"))
 	GeneratorHandle = Handle;
 	AuditionComponentRef->GetSound()->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
 	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
 	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+	OnDAWPerformerReady.Broadcast();
 }
+
+
 
 

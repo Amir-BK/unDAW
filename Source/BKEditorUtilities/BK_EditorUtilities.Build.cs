@@ -36,7 +36,7 @@ public class BK_EditorUtilities : ModuleRules
                 "Harmonix", "Blutility", "BKMusicWidgets", "HarmonixDsp",
                 "XmlParser", "FileUtilities", "MetasoundFrontend", "MetasoundEngine",
 				"BKMusicCore", "ScriptableEditorWidgets", "EditorScriptingUtilities", "AssetTools", 
-				"DetailCustomizations", "EditorWidgets"
+				"DetailCustomizations", "EditorWidgets", "EditorSubsystem"
             
 
                 // ... add other public dependencies that you statically link with here ...
@@ -57,7 +57,8 @@ public class BK_EditorUtilities : ModuleRules
                 "Projects",
                 "Blutility",
                 "InputCore",
-                "HarmonixDspEditor"
+                "HarmonixDspEditor",
+                "MetasoundEditor"
 
 				// ... add private dependencies that you statically link with here ...	
 			}
