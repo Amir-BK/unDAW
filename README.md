@@ -1,3 +1,5 @@
+[![Updated Asset Editor](https://img.youtube.com/vi/Ay2FztrFgcU/0.jpg)](https://www.youtube.com/watch?v=Ay2FztrFgcU)
+
 Creating new fusion patches with unDAW from existing SFZ and DSPreset instruments found online - https://www.youtube.com/watch?v=yBUht2z7a2Y
 
 
