@@ -1,4 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//The SFZ performer is not currently being used, It was actually written before 5.4 release and it was my failed attempt at making a sampler within metasounds
+// I do not delete the performer and the asset as SFZ still has richer functionality than Fusion, extending fusion to support SFZ capabilities is still on the table
+// and the performer and the asset still implement a lot of SFZ functionality (and these classes are also a decent example of custom UObject Audio Proxies)
+
+// At the moment the default SFZ factory class is configured such as imported SFZ are converted to Fusion patches, this can be changed in the factory.
 
 #pragma once
 
@@ -11,7 +15,7 @@
 #include "Misc/Attribute.h"
 #include <HarmonixDsp/FusionSampler/FusionPatch.h>
 #include "Components/ActorComponent.h"
-#include "FKSFZAsset.generated.h"
+#include "UnDAWSFZAsset.generated.h"
 
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(FK_SFZ_Logs, Verbose, All);

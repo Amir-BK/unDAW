@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MetasoundBuilderHelperBase.h"
+#include "UnDAWSequencePerformer.h"
 #include "Engine/Engine.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,7 +11,12 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
-void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
+void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
+{
+
+}
+
+void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 	
@@ -54,7 +59,7 @@ void UMetasoundBuilderHelperBase::InitBuilderHelper(FString BuilderName, UAudioC
 
 }
 
-TArray<UMetaSoundSource*> UMetasoundBuilderHelperBase::GetAllMetasoundSourcesWithInstrumentInterface()
+TArray<UMetaSoundSource*> UDAWSequencerPerformer::GetAllMetasoundSourcesWithInstrumentInterface()
 {
 	auto AllObjectsArray = TArray<UMetaSoundSource*>();
 	auto OnlyImplementingArray = TArray<UMetaSoundSource*>();
@@ -69,7 +74,7 @@ TArray<UMetaSoundSource*> UMetasoundBuilderHelperBase::GetAllMetasoundSourcesWit
 	return OnlyImplementingArray;
 }
 
-TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWithInstrumentInterface()
+TArray<UMetaSoundPatch*> UDAWSequencerPerformer::GetAllMetasoundPatchesWithInstrumentInterface()
 {
 	auto AllObjectsArray = TArray<UMetaSoundPatch*>();
 	auto OnlyImplementingArray = TArray<UMetaSoundPatch*>();
@@ -85,7 +90,7 @@ TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWith
 	return OnlyImplementingArray;
 }
 
-TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWithInsertInterface()
+TArray<UMetaSoundPatch*> UDAWSequencerPerformer::GetAllMetasoundPatchesWithInsertInterface()
 {
 	auto AllObjectsArray = TArray<UMetaSoundPatch*>();
 	auto OnlyImplementingArray = TArray<UMetaSoundPatch*>();
@@ -101,12 +106,12 @@ TArray<UMetaSoundPatch*> UMetasoundBuilderHelperBase::GetAllMetasoundPatchesWith
 	return OnlyImplementingArray;
 }
 
-void UMetasoundBuilderHelperBase::AuditionAC(UAudioComponent* AudioComponent)
+void UDAWSequencerPerformer::AuditionAC(UAudioComponent* AudioComponent)
 {
 
 }
 
-void UMetasoundBuilderHelperBase::SetupFusionNode(FTrackDisplayOptions& TrackRef)
+void UDAWSequencerPerformer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
 {
 	EMetaSoundBuilderResult BuildResult;
 	auto FusionNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("FusionSamplerStereo"))), BuildResult, 0);
@@ -166,7 +171,7 @@ void UMetasoundBuilderHelperBase::SetupFusionNode(FTrackDisplayOptions& TrackRef
 
 }
 
-void UMetasoundBuilderHelperBase::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
+void UDAWSequencerPerformer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
 {
 	// if we render this track in a channel OR output midi, we need to create this track
 	bool NeedToCreate = (TrackRef.RenderMode != NoAudio) || TrackRef.CreateMidiOutput;
@@ -180,11 +185,11 @@ void UMetasoundBuilderHelperBase::CreateAndRegisterMidiOutput(FTrackDisplayOptio
 
 }
 
-void UMetasoundBuilderHelperBase::CreateFusionPlayerForMidiTrack()
+void UDAWSequencerPerformer::CreateFusionPlayerForMidiTrack()
 {
 }
 
-void UMetasoundBuilderHelperBase::ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode)
+void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode)
 {
 
 	EMetaSoundBuilderResult BuildResult;
@@ -214,7 +219,7 @@ void UMetasoundBuilderHelperBase::ConnectTransportPinsToInterface(FMetaSoundNode
 	}
 }
 
-void UMetasoundBuilderHelperBase::GenerateMidiPlayerAndTransport()
+void UDAWSequencerPerformer::GenerateMidiPlayerAndTransport()
 {
 	EMetaSoundBuilderResult BuildResult;
 
@@ -236,7 +241,7 @@ void UMetasoundBuilderHelperBase::GenerateMidiPlayerAndTransport()
 
 }
 
-void UMetasoundBuilderHelperBase::CreateCustomPatchPlayerForMidiTrack()
+void UDAWSequencerPerformer::CreateCustomPatchPlayerForMidiTrack()
 {
 }
 
@@ -334,7 +339,7 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 
 #endif //WITH_METABUILDERHELPER_TESTS
 
-void UMetasoundBuilderHelperBase::CreateInputsFromMidiTracks()
+void UDAWSequencerPerformer::CreateInputsFromMidiTracks()
 {
 	// Create the inputs from the midi tracks
 	for (auto& [trackID, trackOptions] : MidiTracks)
@@ -348,7 +353,7 @@ void UMetasoundBuilderHelperBase::CreateInputsFromMidiTracks()
 
 }
 
-void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
+void UDAWSequencerPerformer::CreateMixerPatchBlock()
 {
 
 	using namespace Metasound::Frontend;
@@ -386,7 +391,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 	}
 }
 
-	void UMetasoundBuilderHelperBase::CreateMixerNodesSpaghettiBlock()
+	void UDAWSequencerPerformer::CreateMixerNodesSpaghettiBlock()
 	{
 		// create master mixer
 		EMetaSoundBuilderResult BuildResult;
@@ -415,7 +420,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 
 
 
-	void UMetasoundBuilderHelperBase::AttachAnotherMasterMixerToOutput()
+	void UDAWSequencerPerformer::AttachAnotherMasterMixerToOutput()
 	{
 		EMetaSoundBuilderResult BuildResult;
 		const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
@@ -428,7 +433,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 				MasterOutputsArray.Append(CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
 	}
 
-	TArray<FMetaSoundBuilderNodeInputHandle> UMetasoundBuilderHelperBase::GetFreeAudioOutput()
+	TArray<FMetaSoundBuilderNodeInputHandle> UDAWSequencerPerformer::GetFreeAudioOutput()
 	{
 		TArray<FMetaSoundBuilderNodeInputHandle> FreeOutputs;
 		
@@ -447,7 +452,7 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 
 
 	// we do not use this due to the issues with the frontend only registering the patch when the metasound graph is opened, which is annoying.
-	bool UMetasoundBuilderHelperBase::CreateMidiPlayerBlock()
+	bool UDAWSequencerPerformer::CreateMidiPlayerBlock()
 {
 		// Create the midi player block
 	EMetaSoundBuilderResult BuildResult;
@@ -478,15 +483,15 @@ void UMetasoundBuilderHelperBase::CreateMixerPatchBlock()
 	//FMetaSoundBuilderNodeInputHandle MidiPlayerNode = CurrentBuilder->CreateMidiPlayerNode(FName(TEXT("Midi Player")), FLinearColor::Green, 0);
 }
 
-void UMetasoundBuilderHelperBase::CreateAndAuditionPreviewAudioComponent()
+void UDAWSequencerPerformer::CreateAndAuditionPreviewAudioComponent()
 {
-
+	PlayState = EBKPlayState::ReadyToPlay;
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	CurrentBuilder->Audition(this, AuditionComponentRef, OnCreateAuditionGeneratorHandle, true);
 }
 
-void UMetasoundBuilderHelperBase::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
+void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
 	
 	UMetaSoundAssetSubsystem* AssetSubsystem = GEngine->GetEngineSubsystem<UMetaSoundAssetSubsystem>();

@@ -26,14 +26,14 @@ void AMusicScenePlayerActor::BeginPlay()
 	
 	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	if (GetActiveSessionData() && GetActiveSessionData()->SavedMetaSound)
-	{
-		//GetActiveSessionData()->PerformanceMetaSound->OnGeneratorInstanceCreated.Add(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
-		PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->SavedMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
-		//PerformanceAudioComponent->AddToRoot();
-		//PerformanceAudioComponent->SetSound();
-		UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(PerformanceAudioComponent);
-	} 
+	//if (GetActiveSessionData() && GetActiveSessionData()->SavedMetaSound)
+	//{
+	//	//GetActiveSessionData()->PerformanceMetaSound->OnGeneratorInstanceCreated.Add(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
+	//	PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->SavedMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
+	//	//PerformanceAudioComponent->AddToRoot();
+	//	//PerformanceAudioComponent->SetSound();
+	//	UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(PerformanceAudioComponent);
+	//} 
 	
 }
 
@@ -74,68 +74,5 @@ void AMusicScenePlayerActor::UpdateWatchers()
 	GeneratorHandle->UpdateWatchers();
 }
 
-FOnTransportSeekCommand* AMusicScenePlayerActor::GetSeekCommandDelegate()
-{
-	return &TransportSeekDelegate;
-}
-
-FOnPlaybackStateChanged* AMusicScenePlayerActor::GetPlaybackStateDelegate()
-{
-	return &PlaystateDelegate;
-}
-
-
-
-void AMusicScenePlayerActor::Entry_Initializations()
-{
-	BP_Initializations();
-}
-
-UAudioComponent* AMusicScenePlayerActor::GetAudioComponent()
-{
-	
-	return PerformanceAudioComponent;
-}
-
-
-UDAWSequencerData* AMusicScenePlayerActor::GetActiveSessionData()
-{
-	return SessionData;
-}
-
-TSubclassOf<UMetasoundBuilderHelperBase> AMusicScenePlayerActor::GetBuilderBPClass()
-{
-	return BuilderBPInstance;
-}
-
-void AMusicScenePlayerActor::SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper)
-{
-	BuilderHelper = InBuilderHelper;
-}
-
-UMetasoundBuilderHelperBase* AMusicScenePlayerActor::GetBuilderHelper()
-{
-	return BuilderHelper;
-}
-
-void AMusicScenePlayerActor::SetGeneratorHandle(UMetasoundGeneratorHandle* InGeneratorHandle)
-{
-	GeneratorHandle = TSharedPtr<UMetasoundGeneratorHandle>(InGeneratorHandle);
-}
-
-UMetasoundGeneratorHandle* AMusicScenePlayerActor::GetGeneratorHandle()
-{
-	return GeneratorHandle.Get();
-}
-
-
-void AMusicScenePlayerActor::SendSeekCommand(float InSeek)
-{
-	PlaybackCursorPosition = InSeek;
-	TransportSeekDelegate.Broadcast(InSeek);
-	ReceivedSeekUpdate(InSeek);
-
-	IBK_MusicSceneManagerInterface::SendSeekCommand(InSeek);
-}
 
 

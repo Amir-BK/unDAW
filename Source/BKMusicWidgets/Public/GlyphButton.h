@@ -37,6 +37,9 @@ class BKMUSICWIDGETS_API UTransportGlyphButton : public UWidget
 
 
 public:
+
+	static TSharedRef<SButton> CreateTransportButton(EBKTransportCommands Command);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BK Music|Transport")
 	TEnumAsByte<EBKTransportCommands> TransportCommand;
 

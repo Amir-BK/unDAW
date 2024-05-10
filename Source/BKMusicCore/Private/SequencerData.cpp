@@ -2,7 +2,7 @@
 
 
 #include "SequencerData.h"
-#include "MetasoundBuilderHelperBase.h"
+#include "UnDAWSequencePerformer.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -132,7 +132,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 
 void UDAWSequencerData::CreateBuilderHelper(UAudioComponent* AuditionComponent)
 {
-	MetasoundBuilderHelper = NewObject<UMetasoundBuilderHelperBase>(this);
+	MetasoundBuilderHelper = NewObject<UDAWSequencerPerformer>(this);
 	MetasoundBuilderHelper->SessionData = this;
 	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
 	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;

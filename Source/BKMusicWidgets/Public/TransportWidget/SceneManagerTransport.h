@@ -114,18 +114,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
 	{
-		if (InSceneManager) {
-			SceneManager = InSceneManager;
-			const auto& SessionData = SceneManager->GetActiveSessionData();
-			if (SessionData)
-			{
-				SetTransportDuration(SessionData->SequenceDuration * .001f);
-				//SetTransportSeek(SessionData->TransportPosition);
-				//SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
-			}
+		//if (InSceneManager) {
+		//	SceneManager = InSceneManager;
+		//	const auto& SessionData = SceneManager->GetActiveSessionData();
+		//	if (SessionData)
+		//	{
+		//		SetTransportDuration(SessionData->SequenceDuration * .001f);
+		//		//SetTransportSeek(SessionData->TransportPosition);
+		//		//SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
+		//	}
 
-		}
-	}
+	};
+
 
 	virtual void NativeConstruct() override
 	{

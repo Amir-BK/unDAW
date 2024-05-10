@@ -2,7 +2,7 @@
 
 
 #include "UnDAWPreviewHelperSubsystem.h"
-#include "MetasoundBuilderHelperBase.h"
+#include "UnDAWSequencePerformer.h"
 
 
 void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview)

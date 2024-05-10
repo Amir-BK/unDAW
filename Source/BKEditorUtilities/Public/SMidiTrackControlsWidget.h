@@ -12,7 +12,7 @@
 #include "ISinglePropertyView.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Colors/SColorPicker.h"
-#include "FKSFZAsset.h"
+#include "UnDAWSFZAsset.h"
 
 
 // this are global settings affecting the entire editor 

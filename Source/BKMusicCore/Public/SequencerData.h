@@ -24,7 +24,7 @@
 
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
-class UMetasoundBuilderHelperBase;
+class UDAWSequencerPerformer;
 
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
@@ -349,7 +349,7 @@ public:
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
-	TObjectPtr<UMetasoundBuilderHelperBase> MetasoundBuilderHelper;
+	TObjectPtr<UDAWSequencerPerformer> MetasoundBuilderHelper;
 
 	//override UObject PostEditChangeProperty
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;

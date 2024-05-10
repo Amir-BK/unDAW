@@ -11,25 +11,58 @@
 #include "MetasoundSource.h"
 #include "MetasoundGeneratorHandle.h"
 #include "SequencerData.h"
-#include "MetasoundBuilderHelperBase.generated.h"
+#include "UnDAWSequencePerformer.generated.h"
 
 
 
 
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+enum EBKTransportCommands : uint8
+{
+	Init,
+	Play,
+	Pause,
+	Stop,
+	Kill,
+	TransportBackward,
+	TransportForward,
+	NextMarker,
+	PrevMarker
+
+};
+
+
+
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+enum EBKPlayState : uint8
+{
+	NotReady,
+	Preparing,
+	ReadyToPlay,
+	Playing,
+	Seeking,
+	Paused,
+	NoPerformer
+
+};
 
 /**
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
  */
 UCLASS(BlueprintType, Blueprintable)
-class BKMUSICCORE_API UMetasoundBuilderHelperBase : public UObject
+class BKMUSICCORE_API UDAWSequencerPerformer : public UObject
 {
 	GENERATED_BODY()
 	
 public:
 
+	TEnumAsByte<EBKPlayState> PlayState;
 
 	FDAWPerformerReady OnDAWPerformerReady;
+
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
+	void SendTransportCommand(EBKTransportCommands Command);
 
 	UPROPERTY()
 	UWorld* ParentWorld;
@@ -162,7 +195,7 @@ public:
 };
 
 template<typename T>
-inline void UMetasoundBuilderHelperBase::GetObjectsOfClass(TArray<T*>& OutArray)
+inline void UDAWSequencerPerformer::GetObjectsOfClass(TArray<T*>& OutArray)
 {
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;

@@ -17,7 +17,7 @@
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "MetasoundGeneratorHandle.h"
-#include "MetasoundBuilderHelperBase.h"
+#include "UnDAWSequencePerformer.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "BK_MusicSceneManagerInterface.generated.h"
@@ -28,32 +28,7 @@ BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
 
 
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
-enum EBKTransportCommands : uint8
-{
-	Init,
-	Play,
-	Pause,
-	Stop,
-	Kill,
-	TransportBackward,
-	TransportForward,
-	NextMarker,
-	PrevMarker
 
-};
-
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
-enum EBKPlayState : uint8
-{
-	NotReady,
-	Preparing,
-	ReadyToPlay,
-	Playing,
-	Seeking,
-	Paused
-
-};
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
@@ -75,29 +50,43 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
-	
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	/** Please add a variable description */
 
 	EBKPlayState PlayState = EBKPlayState::NotReady;
-	//TObjectPtr<UDAWSequencerData> SequenceData
+
+	TObjectPtr<UDAWSequencerData> SequenceData;
+
+	//as the music scene manager is a data container the core playback functionality is managed by the performer,
+	//this is true both for in scene usages as well as for the asset toolkit preview/editing in editor
+	UDAWSequencerPerformer* Performer;
+
+	void CreatePerformer(UAudioComponent* InAudioComponent);
 	
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual const EBKPlayState GetCurrentPlaybackState() {
-		return PlayState;
+
+		if(!Performer) return EBKPlayState::NoPerformer;
+
+		return Performer->PlayState;
 	}
 
-	
 	virtual void Entry_Initializations() {};
+
+	virtual const UDAWSequencerPerformer* GetPerformer() { return Performer; };
+
+	virtual const UDAWSequencerData* GetSequenceData() { return SequenceData; };
 
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	virtual void SetPlaybackState(EBKPlayState newPlayState) { PlayState = newPlayState; };
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
-	virtual void SendTransportCommand(EBKTransportCommands InCommand);
+	virtual void SendTransportCommand(EBKTransportCommands InCommand) {
+		if (Performer) Performer->SendTransportCommand(InCommand);
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SetPlayrate(float newPlayrate);
@@ -110,40 +99,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendSeekCommand(float InSeek);
 
-	virtual FOnPlaybackStateChanged* GetPlaybackStateDelegate() = 0;
 
-	virtual FOnTransportSeekCommand* GetSeekCommandDelegate() = 0;
-
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	virtual UDAWSequencerData* GetActiveSessionData() = 0;
-
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW|Transport")
-	virtual UAudioComponent* GetAudioComponent() = 0;
-
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
-	virtual TSubclassOf<UMetasoundBuilderHelperBase> GetBuilderBPClass() = 0;
-
-	UFUNCTION()
-	virtual void SetBuilderHelper(UMetasoundBuilderHelperBase* InBuilderHelper) = 0;
-
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
-	virtual UMetasoundBuilderHelperBase* GetBuilderHelper() = 0;
-
-
-	UFUNCTION()
-	virtual void SetGeneratorHandle(UMetasoundGeneratorHandle* GeneratorHandle) = 0;
-
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Scene Manager")
-	virtual UMetasoundGeneratorHandle* GetGeneratorHandle() = 0;
 
 	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;
-	
-	//for internal non BP calls to actually setup the metasound builder system
-	UMetasoundBuilderHelperBase* InitializeAudioBlock();
 
-	UFUNCTION(BlueprintCallable, CallInEditor)
-	virtual void OnMetasoundHandleGenerated(UMetasoundGeneratorHandle* GeneratorHandle);
-	
-
-	
 };

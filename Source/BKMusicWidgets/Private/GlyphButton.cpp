@@ -6,6 +6,50 @@
 #include <BKMusicWidgets.h>
 #include <TimeSyncedPanel.h>
 
+TSharedRef<SButton> UTransportGlyphButton::CreateTransportButton(EBKTransportCommands Command)
+{
+	FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
+	FString outString;
+
+	switch (Command)
+	{
+	case EBKTransportCommands::Play:
+		outString.AppendChar(TCHAR(0xF04B));
+		break;
+	case EBKTransportCommands::Pause:
+		outString.AppendChar(TCHAR(0xF04C));
+		break;
+
+	case EBKTransportCommands::Stop:
+		outString.AppendChar(TCHAR(0xF04D));
+		break;
+
+	case EBKTransportCommands::Kill:
+		outString.AppendChar(TCHAR(0xF057));
+		break;
+
+	case EBKTransportCommands::Init:
+		outString.AppendChar(TCHAR(0xF021));
+		break;
+
+	default:
+		outString = "";
+		break;
+	}
+
+	return SNew(SButton)
+		.VAlign(EVerticalAlignment::VAlign_Center)
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString(outString))
+					.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
+					.Justification(ETextJustify::Center)
+
+
+			];
+}
+
 bool UTransportGlyphButton::SetParentEditor(UObject* MidiEditor)
 {
 	ITimeSyncedPanel* interfaceCast = (ITimeSyncedPanel*) (MidiEditor);

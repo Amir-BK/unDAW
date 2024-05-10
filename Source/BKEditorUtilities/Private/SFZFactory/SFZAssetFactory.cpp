@@ -2,7 +2,7 @@
 
 
 #include "SFZAssetFactory.h"
-#include "BKMusicCore/Public/FKSFZAsset.h"
+#include "BKMusicCore/Public/UnDAWSFZAsset.h"
 #include "Misc/Char.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Widgets/Notifications/SNotificationList.h"

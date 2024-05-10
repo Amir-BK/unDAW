@@ -6,7 +6,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FKSFZAsset.h"
+#include "UnDAWSFZAsset.h"
 #include "Factories/Factory.h"
 #include "HarmonixDsp/FusionSampler/FusionPatch.h"
 #include "SlateFwd.h"

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "MetasoundSource.h"
 #include "UObject/Object.h"
-#include "FK_SFZ_Performer.generated.h"
+#include "UnDAWSFZPerformer.generated.h"
 
 
 class USFZRegion;

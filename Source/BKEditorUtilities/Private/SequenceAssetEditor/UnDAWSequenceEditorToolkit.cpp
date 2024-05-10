@@ -7,6 +7,7 @@
 #include "Widgets/Layout/SGridPanel.h"
 #include "Modules/ModuleInterface.h"
 #include "MetasoundEditorModule.h"
+#include "GlyphButton.h"
 #include "UnDAWPreviewHelperSubsystem.h"
 //#include "MetasoundAssetSubsystem.h"
 
@@ -69,7 +70,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
         ];
     }))
-    .SetDisplayName(INVTEXT("PDF"))
+    .SetDisplayName(INVTEXT("Mixer Controls"))
     .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
     InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
@@ -98,7 +99,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
             return DockTab;
         }))
-        .SetDisplayName(INVTEXT("PianoRoll"))
+        .SetDisplayName(INVTEXT("Piano Roll"))
             .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
         //if (SequenceData->HarmonixMidiFile) PianoRollGraph->Init();
@@ -127,45 +128,86 @@ void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class F
     InTabManager->UnregisterTabSpawner("PianoRollTab");
 }
 
+TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EBKTransportCommands InCommand)
+{
+
+    auto NewButton = UTransportGlyphButton::CreateTransportButton(InCommand);
+    NewButton->SetOnClicked(FOnClicked::CreateLambda([&, InCommand]() { SendTransportCommand(InCommand); return FReply::Handled(); }));
+
+    switch(InCommand)
+	{
+		case Play:
+            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return AudioComponent != nullptr && !AudioComponent->IsPlaying(); }));
+			break;
+		case Stop:
+            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return AudioComponent != nullptr && !AudioComponent->IsPlaying(); }));
+			break;
+		default:
+			break;
+	}
+
+    return NewButton;
+
+}
+
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
     TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
-    VariationScoreText = SNew(STextBlock).Text(FText::FromString("Variation Score: 0.0"));
+    CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); });
     ToolbarExtender->AddToolBarExtension("Asset",
         EExtensionHook::After,
         GetToolkitCommands(),
         FToolBarExtensionDelegate::CreateLambda([this](FToolBarBuilder& ToolbarBuilder)
             {
+                
+                auto StopButton = GetConfiguredTransportButton(Stop);
+                auto PlayButton = GetConfiguredTransportButton(Play);
+                //.Get().SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
+                //StopButton->SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
                 ToolbarBuilder.BeginSection("Transport");
   
                 ToolbarBuilder.AddWidget(SNew(SBox).VAlign(VAlign_Center)
-                [
-                    SNew(SHorizontalBox)
+                    [
+                        SNew(SHorizontalBox)
 
-                        + SHorizontalBox::Slot()
-                        [
-                            SNew(SButton)
-                                .Text(INVTEXT("ReInit"))
-                                .OnClicked_Lambda([this]() { PreviewAudio(); return FReply::Handled(); })
-                                .IsEnabled_Lambda([this]() { return AudioComponent == nullptr || !AudioComponent->IsPlaying(); })
-                        ]
-                        + SHorizontalBox::Slot()
-                        [
-                            SNew(SButton)
-                                .Text(INVTEXT("Play"))
-                                .OnClicked_Lambda([this]() { PlayAudioComponent(); return FReply::Handled(); })
-                                .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
-                        ]
-						+ SHorizontalBox::Slot()
-                        [
-							SNew(SButton)
-								.Text(INVTEXT("Stop"))
-								.OnClicked_Lambda([this]() { StopAudioComponent(); return FReply::Handled(); })
-                                .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
-                        ]
+                            + SHorizontalBox::Slot()
+                            [
+                                SNew(SButton)
+                                    .Text(INVTEXT("ReInit"))
+                                    .OnClicked_Lambda([this]() { PreviewAudio(); return FReply::Handled(); })
+                                    .IsEnabled_Lambda([this]() { return AudioComponent == nullptr || !AudioComponent->IsPlaying(); })
+                            ]
+                            + SHorizontalBox::Slot()
+                            [
+                                SNew(SButton)
+                                    .Text(INVTEXT("Play"))
+                                    .OnClicked_Lambda([this]() { PlayAudioComponent(); return FReply::Handled(); })
+                                    .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
+                            ]
+                            + SHorizontalBox::Slot()
+                            [
+                                SNew(SButton)
+                                    .Text(INVTEXT("Stop"))
+                                    .OnClicked_Lambda([this]() { StopAudioComponent(); return FReply::Handled(); })
+                                    .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
+                            ]
+                            + SHorizontalBox::Slot()
+                            [
+                                PlayButton
+                            ]                           
+                            + SHorizontalBox::Slot()
+                            [
+                                StopButton
+                            ]
+
+                           
                 ]);
 
                 ToolbarBuilder.EndSection();
+
+                 ToolbarBuilder.BeginSection("Performer Status");
+                 ToolbarBuilder.AddWidget(CurrentPlayStateTextBox.ToSharedRef());
+                 ToolbarBuilder.EndSection();
             }));
     AddToolbarExtender(ToolbarExtender);
 }
@@ -180,6 +222,7 @@ void FUnDAWSequenceEditorToolkit::PreviewAudio()
 {
     auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
     PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
+    Performer = SequenceData->MetasoundBuilderHelper;
     AudioComponent = SequenceData->MetasoundBuilderHelper->AuditionComponentRef;
 }
 

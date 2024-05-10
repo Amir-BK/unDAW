@@ -8,6 +8,8 @@
 #include "SequencerData.h"
 #include "SPianoRollGraph.h"
 
+#include "GlyphButton.h"
+
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
 #include "GraphEditor.h"
@@ -31,13 +33,15 @@ private:
 };
 
 
-class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit
+class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface
 {
 public:
     void InitEditor(const TArray<UObject*>& InObjects);
  
     void RegisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
     void UnregisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
+
+    TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
  
     FName GetToolkitFName() const override { return "unDAWSequenceEditor"; }
     FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
@@ -54,7 +58,7 @@ protected:
 
     TSharedPtr<SPianoRollGraph> PianoRollGraph;
 
-    TSharedPtr<STextBlock> VariationScoreText;
+    TSharedPtr<STextBlock> CurrentPlayStateTextBox;
     TSharedPtr<SHorizontalBox> TransportControls;
 
     void PreviewAudio();
