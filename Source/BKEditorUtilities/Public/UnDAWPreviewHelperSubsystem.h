@@ -7,6 +7,13 @@
 #include "SequencerData.h"
 #include "UnDAWPreviewHelperSubsystem.generated.h"
 
+
+struct FSoftClassPreviewHolder
+{
+	UDAWSequencerData* ActiveSession;
+	UDAWSequencerPerformer* PreviewPerformer;
+};
+
 /**
  * 
  */
@@ -17,6 +24,9 @@ class BK_EDITORUTILITIES_API UUnDAWPreviewHelperSubsystem : public UEditorSubsys
 	
 public:
 
+	FSoftClassPreviewHolder ActivePreviewPerformer;
+
+	TMap<FSoftObjectPath, UDAWSequencerPerformer*> PreviewBuilders;
 
 	UFUNCTION()
 	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);

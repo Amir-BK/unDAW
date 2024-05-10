@@ -205,8 +205,8 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			//}
 			//UE_LOG(LogTemp,Log, TEXT("Audio Time: %f, Previous Measurement: %f, Audio Delta Time: %f"), AudioTime, LastMeasuredAudioTime, AudioTime - LastMeasuredAudioTime)
 			break;
-		case Seeking:
-			break;
+		//case Seeking:
+		//	break;
 		case Paused:
 			break;
 		default:

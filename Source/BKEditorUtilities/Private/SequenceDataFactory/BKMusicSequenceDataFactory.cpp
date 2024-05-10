@@ -20,23 +20,30 @@ UBKMusicSequenceDataFactory::UBKMusicSequenceDataFactory()
 	bCreateNew = true;
 }
 
+
+// Next time I come edit this shit I gotta remember it gets overriden... 
+
 inline TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetData& InAssetData) const
 {
 	auto OnClickedLambda = [InAssetData]() -> FReply
 		{
-			if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+			auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
+			
+			if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing )
 			{
-				UE::AudioEditor::StopSound();
+				//UE::AudioEditor::StopSound();
+				SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
 			}
 			else
 			{
 				// Load and play sound
 				auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 				//PreviewHelper->OnDAWPerformerReady
-				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
-				if (SequenceData->MetasoundBuilderHelper && SequenceData->MetasoundBuilderHelper->AuditionComponentRef)
+				
+				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == ReadyToPlay)
 				{
-					SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+					//SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 					return FReply::Handled();
 				}
 				PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);

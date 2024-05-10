@@ -34,16 +34,16 @@ enum EBKTransportCommands : uint8
 
 
 
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager", meta = (Bitflags))
 enum EBKPlayState : uint8
 {
-	NotReady,
-	Preparing,
-	ReadyToPlay,
-	Playing,
-	Seeking,
-	Paused,
-	NoPerformer
+	NoPerformer = 0,
+	NotReady = 1,
+	Preparing = 2,
+	ReadyToPlay = 4,
+	Playing = 8,
+	Paused = 16
+	
 
 };
 
@@ -146,6 +146,9 @@ public:
 	void CreateTestWavPlayerBlock();
 
 #endif //WITH_TESTS
+
+
+
 
 
 	UFUNCTION()

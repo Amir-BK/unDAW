@@ -7,7 +7,10 @@
 
 void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview)
 {
-	if (!hasAlreadyPrimed)
+	
+
+    
+    if (!hasAlreadyPrimed)
 	{
 		auto PrimingSound = FSoftObjectPath(TEXT("/unDAW/BKSystems/Core/PrimingAudioDontMove/1kSineTonePing.1kSineTonePing")).TryLoad();
 		GEditor->PlayPreviewSound(Cast<USoundWave>(PrimingSound));
@@ -30,8 +33,11 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
     //AudioComponent->Set
 
     InSessionToPreview->CreateBuilderHelper(AudioComponent);
+    InSessionToPreview->EditorPreviewPerformer = InSessionToPreview->MetasoundBuilderHelper;
+    InSessionToPreview->EditorPreviewPerformer->CreateAndAuditionPreviewAudioComponent();
 
-    InSessionToPreview->MetasoundBuilderHelper->CreateAndAuditionPreviewAudioComponent();
+    ActivePreviewPerformer.ActiveSession = InSessionToPreview;
+    ActivePreviewPerformer.PreviewPerformer = InSessionToPreview->EditorPreviewPerformer;
     //InSessionToPreview->Audio
 
 }

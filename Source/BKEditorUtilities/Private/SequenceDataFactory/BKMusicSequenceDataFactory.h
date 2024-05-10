@@ -90,7 +90,9 @@ public:
 		auto OnGetDisplayBrushLambda = [InAssetData]() -> const FSlateBrush*
 			{
 				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
-				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				//auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
+
+				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing)
 				{
 					return FAppStyle::GetBrush("MediaAsset.AssetActions.Stop.Large");
 				}
@@ -100,21 +102,33 @@ public:
 
 		auto OnClickedLambda = [InAssetData]() -> FReply
 			{
-				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
+
+				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing)
 				{
-					UE::AudioEditor::StopSound();
+					//UE::AudioEditor::StopSound();
+					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
 				}
 				else
 				{
 					// Load and play sound
-					auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
-					if (SequenceData->MetasoundBuilderHelper && SequenceData->MetasoundBuilderHelper->AuditionComponentRef)
+					auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
+					//PreviewHelper->OnDAWPerformerReady
+
+					if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == ReadyToPlay)
 					{
-						SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+						SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+						//SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 						return FReply::Handled();
 					}
-					auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
+
+
+					//SequenceData->MetasoundBuilderHelper->OnDAWPerformerReady.AddLambda([](UDAWSequencerData* Data)
+					//{
+					//		FDAWSequenceAssetActions::TryTriggerAudioPlay(Data);
+					//});
+					//UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
 				}
 				return FReply::Handled();
 			};

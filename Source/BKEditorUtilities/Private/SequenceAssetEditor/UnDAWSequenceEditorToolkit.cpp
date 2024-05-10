@@ -137,10 +137,17 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
     switch(InCommand)
 	{
 		case Play:
-            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return AudioComponent != nullptr && !AudioComponent->IsPlaying(); }));
+            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return Performer != nullptr && Performer && ReadyToPlay  ; }));
+            NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && ((Performer->PlayState == ReadyToPlay)
+                || (SequenceData->EditorPreviewPerformer->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
 			break;
 		case Stop:
-            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return AudioComponent != nullptr && !AudioComponent->IsPlaying(); }));
+
+			break;
+
+        case Pause:
+            NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData->EditorPreviewPerformer != nullptr && (SequenceData->EditorPreviewPerformer->PlayState == Playing)
+                 ? EVisibility::Visible : EVisibility::Collapsed; }));
 			break;
 		default:
 			break;
@@ -162,6 +169,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                 
                 auto StopButton = GetConfiguredTransportButton(Stop);
                 auto PlayButton = GetConfiguredTransportButton(Play);
+                auto PauseButton = GetConfiguredTransportButton(Pause);
                 //.Get().SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
                 //StopButton->SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
                 ToolbarBuilder.BeginSection("Transport");
@@ -177,23 +185,14 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                                     .OnClicked_Lambda([this]() { PreviewAudio(); return FReply::Handled(); })
                                     .IsEnabled_Lambda([this]() { return AudioComponent == nullptr || !AudioComponent->IsPlaying(); })
                             ]
-                            + SHorizontalBox::Slot()
-                            [
-                                SNew(SButton)
-                                    .Text(INVTEXT("Play"))
-                                    .OnClicked_Lambda([this]() { PlayAudioComponent(); return FReply::Handled(); })
-                                    .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
-                            ]
-                            + SHorizontalBox::Slot()
-                            [
-                                SNew(SButton)
-                                    .Text(INVTEXT("Stop"))
-                                    .OnClicked_Lambda([this]() { StopAudioComponent(); return FReply::Handled(); })
-                                    .IsEnabled_Lambda([this]() { return AudioComponent != nullptr && AudioComponent->IsPlaying(); })
-                            ]
+
                             + SHorizontalBox::Slot()
                             [
                                 PlayButton
+                            ] 
+                            + SHorizontalBox::Slot()
+                            [
+                                PauseButton
                             ]                           
                             + SHorizontalBox::Slot()
                             [
@@ -222,8 +221,8 @@ void FUnDAWSequenceEditorToolkit::PreviewAudio()
 {
     auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
     PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-    Performer = SequenceData->MetasoundBuilderHelper;
-    AudioComponent = SequenceData->MetasoundBuilderHelper->AuditionComponentRef;
+    Performer = SequenceData->EditorPreviewPerformer;
+    AudioComponent = SequenceData->EditorPreviewPerformer->AuditionComponentRef;
 }
 
 void FUnDAWSequenceEditorToolkit::PlayAudioComponent()

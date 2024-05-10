@@ -301,7 +301,11 @@ public:
 		}
 	}
 
+#if WITH_EDITOR
 
+	UDAWSequencerPerformer* EditorPreviewPerformer;
+
+#endif //WITH_EDITOR
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
 	TObjectPtr<UMetaSoundSource> SavedMetaSound;

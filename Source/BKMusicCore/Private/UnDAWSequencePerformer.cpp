@@ -13,7 +13,32 @@
 
 void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 {
+	if (AuditionComponentRef)
+	{
+		switch (Command)
+		{
 
+		case EBKTransportCommands::Play:
+			AuditionComponentRef->SetTriggerParameter(FName(TEXT("unDAW.Transport.Play")));
+			PlayState = EBKPlayState::Playing;
+			break;
+
+		case EBKTransportCommands::Stop:
+			AuditionComponentRef->SetTriggerParameter(FName(TEXT("unDAW.Transport.Stop")));
+			PlayState = EBKPlayState::ReadyToPlay;
+
+			break;
+
+		case EBKTransportCommands::Pause:
+		AuditionComponentRef->SetTriggerParameter(FName(TEXT("unDAW.Transport.Pause")));
+			PlayState = EBKPlayState::Paused;
+			break;
+		default:
+			break;
+
+
+		}
+	}
 }
 
 void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
@@ -501,7 +526,7 @@ void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGenerat
 	GeneratorHandle = Handle;
 	AuditionComponentRef->GetSound()->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
 	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
-	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
+	//AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 	OnDAWPerformerReady.Broadcast();
 }
 
