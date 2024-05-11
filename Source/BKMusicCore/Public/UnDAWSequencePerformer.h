@@ -100,8 +100,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper");
 	TScriptInterface<IMetaSoundDocumentInterface> GeneratedMetaSound;
 
-	UFUNCTION()
-	void AuditionAC(UAudioComponent* AudioComponent);
 
 	UFUNCTION()
 	void CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef);
@@ -119,6 +117,9 @@ public:
 	{
 		OnDeleted.Broadcast();
 	}
+
+	UFUNCTION()
+	void ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch);
 
 
 

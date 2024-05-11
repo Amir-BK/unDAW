@@ -26,7 +26,7 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 class UDAWSequencerPerformer;
 
-
+DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
 
 UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
 enum EBKTransportCommands : uint8
@@ -266,6 +266,10 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+	FOnFusionPatchChanged OnFusionPatchChangedInTrack;
+
+	void ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch);
+
 	FMidiDataChanged OnMidiDataChanged;
 	
 	TSharedPtr<UDAWSequencerData, ESPMode::ThreadSafe> SelfSharedPtr;
@@ -289,50 +293,11 @@ public:
 	UPROPERTY()
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
-	void InitTracksFromFoundArray(TMap<int, int> InTracks) {
+	void InitTracksFromFoundArray(TMap<int, int> InTracks);;
 
-		auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID);;
 
-		UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
-		TrackDisplayOptionsMap.Empty();
-		for (const auto& [trackID, channelID] : InTracks)
-		{
-
-			FTrackDisplayOptions newTrack;
-			newTrack.ChannelIndexInParentMidi = channelID;
-
-			//FString::AppendInt(channelID, newTrack.trackName);
-			newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID - 1);
-			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
-			newTrack.fusionPatch = PianoPatch;
-			TrackDisplayOptionsMap.Add(channelID, newTrack);
-		}
-
-	};
-
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID)
-	{
-		if (TrackDisplayOptionsMap.Contains(ID))
-		{
-			return TrackDisplayOptionsMap[ID];
-		}
-		else
-		{
-			return InvalidTrackRef;
-		}
-	};
-
-	FTrackDisplayOptions& GetTrackOptionsRef(int TrackID)
-	{
-		if (TrackDisplayOptionsMap.Contains(TrackID))
-		{
-			return TrackDisplayOptionsMap[TrackID];
-		}
-		else
-		{
-			return InvalidTrackRef;
-		}
-	}
+	FTrackDisplayOptions& GetTrackOptionsRef(int TrackID);
 
 #if WITH_EDITORONLY_DATA
 

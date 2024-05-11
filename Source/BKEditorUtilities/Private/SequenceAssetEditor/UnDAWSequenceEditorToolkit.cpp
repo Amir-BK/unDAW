@@ -257,6 +257,12 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		});
 }
 
+void FSequenceAssetDetails::OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch)
+{
+
+    SequenceData->ChangeFusionPatchInTrack(TrackID, NewPatch);
+}
+
 void FSequenceAssetDetails::UpdateMidiInputTracks()
 {
     MidiInputTracks->ClearChildren();
@@ -268,6 +274,7 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 				SNew(SMIDITrackControls)
 					.TrackData(&Track)
                     .slotInParentID(Index)
+                    .OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
 
 			];
 	}

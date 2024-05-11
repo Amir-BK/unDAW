@@ -16,6 +16,60 @@ struct FEventsWithIndex
 
 	
 
+void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch)
+{
+	if (TrackDisplayOptionsMap.Contains(TrackID))
+	{
+		TrackDisplayOptionsMap[TrackID].fusionPatch = NewPatch;
+		OnFusionPatchChangedInTrack.ExecuteIfBound(TrackID, NewPatch);
+	}
+}
+
+inline void UDAWSequencerData::InitTracksFromFoundArray(TMap<int, int> InTracks) {
+
+	auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
+
+	UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
+	TrackDisplayOptionsMap.Empty();
+	for (const auto& [trackID, channelID] : InTracks)
+	{
+
+		FTrackDisplayOptions newTrack;
+		newTrack.ChannelIndexInParentMidi = channelID;
+
+		//FString::AppendInt(channelID, newTrack.trackName);
+		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID - 1);
+		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
+		newTrack.fusionPatch = PianoPatch;
+		TrackDisplayOptionsMap.Add(channelID, newTrack);
+	}
+
+}
+
+inline FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(int ID)
+{
+	if (TrackDisplayOptionsMap.Contains(ID))
+	{
+		return TrackDisplayOptionsMap[ID];
+	}
+	else
+	{
+		return InvalidTrackRef;
+	}
+}
+
+inline FTrackDisplayOptions& UDAWSequencerData::GetTrackOptionsRef(int TrackID)
+{
+	if (TrackDisplayOptionsMap.Contains(TrackID))
+	{
+		return TrackDisplayOptionsMap[TrackID];
+	}
+	else
+	{
+		return InvalidTrackRef;
+	}
+}
+
 void UDAWSequencerData::CalculateSequenceDuration()
 {
 	if (HarmonixMidiFile)
@@ -136,6 +190,7 @@ UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audi
 	SequencerPerformer->SessionData = this;
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
 	SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
+	OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
 	SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 
 	return SequencerPerformer;

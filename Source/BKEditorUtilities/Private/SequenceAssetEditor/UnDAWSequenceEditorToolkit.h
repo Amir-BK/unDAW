@@ -25,6 +25,8 @@ public:
 private:
     UDAWSequencerData* SequenceData = nullptr;
 
+    void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
+
     TSharedPtr<SVerticalBox> MidiInputTracks;
 
     void UpdateMidiInputTracks();

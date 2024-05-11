@@ -129,10 +129,6 @@ TArray<UMetaSoundPatch*> UDAWSequencerPerformer::GetAllMetasoundPatchesWithInser
 	return OnlyImplementingArray;
 }
 
-void UDAWSequencerPerformer::AuditionAC(UAudioComponent* AudioComponent)
-{
-
-}
 
 void UDAWSequencerPerformer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
 {
@@ -271,6 +267,16 @@ void UDAWSequencerPerformer::GenerateMidiPlayerAndTransport()
 
 void UDAWSequencerPerformer::CreateCustomPatchPlayerForMidiTrack()
 {
+}
+
+void UDAWSequencerPerformer::ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch)
+{
+	UE_LOG(LogTemp, Log, TEXT("Change Fusion Patch for Track %d"), TrackIndex)
+		if (AuditionComponentRef && MidiTracks->Contains(TrackIndex))
+		{
+		auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
+		AuditionComponentRef->SetObjectParameter(ParamName, NewPatch);
+		}
 }
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)

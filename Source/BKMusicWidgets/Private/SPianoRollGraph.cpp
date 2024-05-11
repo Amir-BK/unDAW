@@ -149,7 +149,7 @@ void SPianoRollGraph::Init()
 		MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
 		LinkedNoteDataMap = SessionData->LinkedNoteDataMap;
 		bIsInitialized = true;
-		InputMode = drawNotes;
+		InputMode = notesSelect;
 
 	}
 	else {
@@ -762,7 +762,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	}
 
 
-#define PIANO_ROLL_DEBUG
+//#define PIANO_ROLL_DEBUG
 #ifdef PIANO_ROLL_DEBUG
 
 

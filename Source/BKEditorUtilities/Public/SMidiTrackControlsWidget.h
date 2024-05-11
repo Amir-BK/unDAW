@@ -12,6 +12,7 @@
 #include "ISinglePropertyView.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Colors/SColorPicker.h"
+#include "SequencerData.h"
 #include "UnDAWSFZAsset.h"
 
 
@@ -55,6 +56,8 @@ public:
 
 };
 
+
+
 /**
  * slate widget that allows controlling tracks on a pianoroll, individual track controls (such as visibility, color, Z-order, selection) 
  */
@@ -68,6 +71,7 @@ public:
 		SLATE_ARGUMENT(int, slotInParentID)
 		SLATE_ARGUMENT(FText, trackName)
 		SLATE_ARGUMENT(FTrackDisplayOptions*, TrackData)
+		SLATE_EVENT(FOnFusionPatchChanged, OnFusionPatchChanged)
 
 	SLATE_END_ARGS()
 
@@ -77,6 +81,7 @@ public:
 	TSharedPtr<FString> CurrentItem;
 	TArray<TSharedPtr<FString>> optionsArray;
 	FTrackDisplayOptions* TrackData;
+	FOnFusionPatchChanged OnFusionPatchChanged;
 
 	void toggleTrackVisibility(ECheckBoxState newState)
 	{
@@ -139,7 +144,8 @@ public:
 			{
 				if (patch->GetName().Equals(*CurrentItem, ESearchCase::IgnoreCase)) 
 				{
-						TrackData->fusionPatch = TObjectPtr<UFusionPatch>(patch);
+						//TrackData->fusionPatch = TObjectPtr<UFusionPatch>(patch);
+						OnFusionPatchChanged.ExecuteIfBound(slotInParentID, patch);
 						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
 						for (int i = 0; i < 127; i++)
 						{
@@ -176,6 +182,7 @@ public:
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
 		CurrentItem = MakeShareable(new FString(TrackData->fusionPatch->GetName()));
+		OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
 
 		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
 		//{
@@ -231,7 +238,7 @@ public:
 								.OptionsSource(&optionsArray)
 								.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
 								.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
-								//.OnComboBoxOpening_Lambda([this]() {return CurrentItem; })
+	
 								.InitiallySelectedItem(CurrentItem)
 								[
 
