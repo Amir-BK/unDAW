@@ -15,7 +15,7 @@ struct FSoftClassPreviewHolder
 };
 
 /**
- * 
+ * This is an editor only subsystem that helps with previewing DAW Sequencer data in the editor by generating audio components and tracking the active preview performer.
  */
 UCLASS()
 class BK_EDITORUTILITIES_API UUnDAWPreviewHelperSubsystem : public UEditorSubsystem

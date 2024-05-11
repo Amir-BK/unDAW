@@ -55,9 +55,7 @@ void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioCompon
 
 
 	AuditionComponentRef = InAuditionComponent;
-	auto PrimingSound = FSoftObjectPath(TEXT("/Game/DROELOE_MainSong.DROELOE_MainSong")).TryLoad();
-	//AuditionComponentRef->SetSound(Cast<USoundWave>(PrimingSound));
-	//AuditionComponentRef->Play();
+
 
 	//ParentWorld = World;
 	//FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
@@ -241,6 +239,11 @@ void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandl
 			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Stop")), Input, BuildResult);
 		}
 
+		if (NodeName == FName(TEXT("Pause")))
+		{
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Pause")), Input, BuildResult);
+		}
+
 	}
 }
 
@@ -399,16 +402,11 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 	{
 		//PatchBuilder->
 		FMetaSoundBuilderOptions PatchOptions;
-		//PatchOptions. OutputFormat = SessionData->MasterOptions.OutputFormat;
+
 		PatchOptions.bAddToRegistry = false;
-		//PatchOptions.Name = FName(TEXT("Mixer Patch"));
-		//PatchOptions.bForceUniqueClassName = true;
+
 
 		FSoftObjectPath MixerPatchAssetRef(TEXT("/Script/MetasoundEngine.MetaSoundPatch'/Game/MixerPatch.MixerPatch'"));
-		//PatchBuilder->
-		//TScriptInterface<IMetaSoundDocumentInterface> MixerPatch = MixerPatchAssetRef.TryLoad();
-
-		//PatchOptions.ExistingMetaSound = MixerPatch;
 
 		auto MixerPatch = PatchBuilder->Build(Patch, PatchOptions);
 

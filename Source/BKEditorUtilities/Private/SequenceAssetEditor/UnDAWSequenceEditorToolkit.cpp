@@ -137,7 +137,7 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
     switch(InCommand)
 	{
 		case Play:
-            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return Performer != nullptr && Performer && ReadyToPlay  ; }));
+            NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return Performer != nullptr && (Performer->PlayState == ReadyToPlay || Performer->PlayState == Paused)  ; }));
             NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && ((Performer->PlayState == ReadyToPlay)
                 || (SequenceData->EditorPreviewPerformer->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
 			break;
@@ -160,7 +160,9 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
     TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
-    CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); });
+    CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); })
+        .Justification(ETextJustify::Center);
+
     ToolbarExtender->AddToolBarExtension("Asset",
         EExtensionHook::After,
         GetToolkitCommands(),

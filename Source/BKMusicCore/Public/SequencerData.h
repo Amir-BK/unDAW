@@ -301,8 +301,9 @@ public:
 		}
 	}
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
 	UDAWSequencerPerformer* EditorPreviewPerformer;
 
 #endif //WITH_EDITOR

@@ -8,7 +8,12 @@
 void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview)
 {
 	
+    if (ActivePreviewPerformer.ActiveSession && InSessionToPreview != ActivePreviewPerformer.ActiveSession)
+    {
 
+			ActivePreviewPerformer.PreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
+            ActivePreviewPerformer.ActiveSession->EditorPreviewPerformer = nullptr;
+	}
     
     if (!hasAlreadyPrimed)
 	{
