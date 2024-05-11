@@ -129,6 +129,8 @@ public:
 
 	void OnSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type)
 	{
+		if(CurrentItem == NewValue) return;
+		
 		CurrentItem = NewValue;
 
 		if (CurrentItem.IsValid())
@@ -186,7 +188,13 @@ public:
 
 		for (auto& patch : UFKSFZAsset::GetAllFusionPatchAssets())
 		{
+			if (TrackData->fusionPatch == patch) {
+				CurrentItem = MakeShareable(new FString(patch->GetName()));
+				optionsArray.Add(CurrentItem);
+			}
+			else {
 			if(IsValid(patch)) optionsArray.Add(MakeShareable(new FString(patch->GetName())));
+			}
 		}
 
 		ChildSlot
@@ -223,6 +231,7 @@ public:
 								.OptionsSource(&optionsArray)
 								.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
 								.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
+								//.OnComboBoxOpening_Lambda([this]() {return CurrentItem; })
 								.InitiallySelectedItem(CurrentItem)
 								[
 
