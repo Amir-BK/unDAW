@@ -190,11 +190,11 @@ public:
 		ChildSlot
 			[
 			SNew(SBorder)
-				.Padding(2.0f)
+				//.Padding(2.0f)
 				[
 					SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot()
-						.
+
 						.VAlign(EVerticalAlignment::VAlign_Center)
 						[
 
