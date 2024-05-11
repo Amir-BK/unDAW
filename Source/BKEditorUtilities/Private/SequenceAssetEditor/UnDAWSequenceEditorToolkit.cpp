@@ -9,6 +9,8 @@
 #include "MetasoundEditorModule.h"
 #include "GlyphButton.h"
 #include "UnDAWPreviewHelperSubsystem.h"
+#include "Widgets/Colors/SColorPicker.h"
+#include "SMidiTrackControlsWidget.h"
 //#include "MetasoundAssetSubsystem.h"
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -231,24 +233,10 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
    // PreviewHelper->CreateAndPrimePreviewBuilderForDawSceneManager(this);
     Performer = SequenceData->EditorPreviewPerformer;
     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-    //AudioComponent = SequenceData->EditorPreviewPerformer->AuditionComponentRef;
+ 
 }
 
-//void FUnDAWSequenceEditorToolkit::PlayAudioComponent()
-//{
-//    if (AudioComponent)
-//    {
-//        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Play"));
-//	}
-//}
-//
-//void FUnDAWSequenceEditorToolkit::StopAudioComponent()
-//{
-//    if (AudioComponent)
-//    {
-//        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Stop"));
-//	}
-//}
+
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
@@ -279,8 +267,32 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 		MidiInputTracks->AddSlot()
 			.AutoHeight()
             [
-				SNew(STextBlock)
-					.Text(FText::FromString(Track.trackName))
+				SNew(SMIDITrackControls)
+					.TrackData(Track)
+                    .slotInParentID(Index)
+                
+                //SNew(SHorizontalBox)
+    //                + SHorizontalBox::Slot()
+    //                .AutoWidth()
+    //                [
+    //                    SNew(STextBlock)
+				//        	.Text(FText::FromString(Track.trackName))
+
+    //                ]
+    //            + SHorizontalBox::Slot()
+    //                .AutoWidth()
+    //                [
+    //                    SNew(SComboBox)
+				//        	//.Text(FText::FromString(Track.fusionPatch.GetName()))
+
+    //                ]
+    //            + SHorizontalBox::Slot()
+    //                .AutoWidth()
+    //                [
+    //                    SNew(SColorBlock)
+				//        	.Color(Track.trackColor)
+
+    //                ]
 			];
 	}
 }

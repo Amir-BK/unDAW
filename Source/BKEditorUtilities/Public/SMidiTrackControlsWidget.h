@@ -67,6 +67,7 @@ public:
 
 		SLATE_ARGUMENT(int, slotInParentID)
 		SLATE_ARGUMENT(FText, trackName)
+		SLATE_ARGUMENT(FTrackDisplayOptions, TrackData)
 
 	SLATE_END_ARGS()
 
@@ -75,7 +76,7 @@ public:
 
 	TSharedPtr<FString> CurrentItem;
 	TArray<TSharedPtr<FString>> optionsArray;
-	
+	FTrackDisplayOptions TrackData;
 
 	void toggleTrackVisibility(ECheckBoxState newState)
 	{
@@ -170,7 +171,7 @@ public:
 	{
 		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
-		
+		TrackData = InArgs._TrackData;
 
 		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
 		//{
@@ -190,69 +191,79 @@ public:
 			[
 			SNew(SBorder)
 				.Padding(2.0f)
-				[ SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					[
-						SNew(SEditableTextBox)
-							//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
-						//	.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
-							//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
-					]
-				+ SVerticalBox::Slot()
 				[
-					SNew(STextBlock)
-						.Text(FText::Format(INVTEXT("{0}"),InArgs._slotInParentID))
+					SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(EVerticalAlignment::VAlign_Center)
+						[
+
+							SNew(STextBlock)
+								.Text(FText::Format(INVTEXT("{0}"), InArgs._slotInParentID))
+
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+				[
+					SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						[
+							SNew(SEditableTextBox)
+								.Text(FText::FromString(TrackData.trackName))
+								//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
+							//	.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
+								//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
+						]
+
+						+ SVerticalBox::Slot()
+						[
+							SNew(SComboBox<TSharedPtr<FString>>)
+								.OptionsSource(&optionsArray)
+								.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
+								.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
+								.InitiallySelectedItem(CurrentItem)
+								[
+
+									SNew(STextBlock)
+										.Text(FText::FromString(TrackData.fusionPatch->GetName()))
+
+								]
+						]
+
+
+						+ SVerticalBox::Slot()
+						[
+							SNew(SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								[
+									SNew(SCheckBox)
+										.IsChecked(ECheckBoxState::Checked)
+										.OnCheckStateChanged_Raw(this, &SMIDITrackControls::toggleTrackVisibility)
+								]
+								+ SHorizontalBox::Slot()
+								[
+									SNew(SButton)
+										.Text(FText::FromString(TEXT("Select")))
+										.OnClicked(this, &SMIDITrackControls::SelectThisTrack)
+
+								]
+								+ SHorizontalBox::Slot()
+								[
+									SNew(SColorBlock)
+										.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
+
+										return TrackData.trackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+
+
+											})))
+										.Size(FVector2D(350.0f, 20.0f))
+												.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
+								]
+
+						]
 				]
-					//+ SVerticalBox::Slot()
-					//[
-					//	SNew(SComboBox<TSharedPtr<FString>>)
-					//		.OptionsSource(&optionsArray)
-					//		.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
-					//		.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
-					//		.InitiallySelectedItem(CurrentItem)
-					//		[
-
-					//			SNew(STextBlock)
-					//				.Text(this, &SMIDITrackControls::GetCurrentItemLabel)
-
-					//		]
-					//]
-		/*			+ SVerticalBox::Slot()
-					[
-						SNew(SSingleProperty)
-					]*/
-
-
-					+ SVerticalBox::Slot()
-					[
-						SNew(SHorizontalBox)
-							+ SHorizontalBox::Slot()
-							[
-								SNew(SCheckBox)
-									.IsChecked(ECheckBoxState::Checked)
-									.OnCheckStateChanged_Raw(this, &SMIDITrackControls::toggleTrackVisibility)
-							]
-							+ SHorizontalBox::Slot()
-							[
-								SNew(SButton)
-									.Text(FText::FromString(TEXT("Select")))
-									.OnClicked(this, &SMIDITrackControls::SelectThisTrack)
-
-							]
-							+ SHorizontalBox::Slot()
-							[
-								SNew(SColorBlock)
-									.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
-
-									return FLinearColor::Gray; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
-		
-
-										})))
-									.Size(FVector2D(350.0f, 20.0f))
-											.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
-							]
-
-				]]
+				]
+			
 			];
 	};
 
