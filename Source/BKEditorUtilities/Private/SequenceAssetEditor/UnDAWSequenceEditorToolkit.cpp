@@ -243,7 +243,7 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 	if (Outers.Num() == 0) return;
 	SequenceData = Cast<UDAWSequencerData>(Outers[0].Get());
 
-	DetailBuilder.EditCategory("Un DAW")
+	DetailBuilder.EditCategory("Tracks")
 	    .AddCustomRow(FText::FromString("Tracks"))
 		.WholeRowContent()
         [

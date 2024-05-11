@@ -286,7 +286,7 @@ public:
 	}
 
 	
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Music Scene Manager")
+	UPROPERTY()
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
 	void InitTracksFromFoundArray(TMap<int, int> InTracks) {
@@ -351,10 +351,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "2", ExposeOnSpawn = "true", EditInLine = "true"))
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "2", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
 	UFUNCTION()
@@ -368,7 +368,7 @@ public:
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
 	UFUNCTION()
-	void CreateBuilderHelper(UAudioComponent* AuditionComponent);
+	UDAWSequencerPerformer* CreatePerformer(UAudioComponent* AuditionComponent);
 
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
@@ -386,8 +386,6 @@ public:
 	UPROPERTY()
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
-	TObjectPtr<UDAWSequencerPerformer> MetasoundBuilderHelper;
 
 	//override UObject PostEditChangeProperty
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;

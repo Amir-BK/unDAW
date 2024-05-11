@@ -91,7 +91,7 @@ public:
 
 	void SelectionCancel(FLinearColor newColor)
 	{
-		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
+		TrackData->trackColor = newColor;
 	}
 
 	FReply SelectThisTrack()
@@ -137,7 +137,7 @@ public:
 			{
 				if (patch->GetName().Equals(*CurrentItem, ESearchCase::IgnoreCase)) 
 				{
-						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch = TObjectPtr<UFusionPatch>(patch);
+						TrackData->fusionPatch = TObjectPtr<UFusionPatch>(patch);
 						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
 						for (int i = 0; i < 127; i++)
 						{
@@ -173,6 +173,7 @@ public:
 		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
+		CurrentItem = MakeShareable(new FString(TrackData->fusionPatch->GetName()));
 
 		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
 		//{
@@ -226,7 +227,7 @@ public:
 								[
 
 									SNew(STextBlock)
-										.Text(FText::FromString(TrackData->fusionPatch->GetName()))
+										.Text_Lambda([this]() {return GetCurrentItemLabel(); })
 
 								]
 						]
@@ -258,7 +259,7 @@ public:
 
 											})))
 										//.Size(FVector2D(350.0f, 20.0f))
-												.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
+										.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
 								]
 
 						]

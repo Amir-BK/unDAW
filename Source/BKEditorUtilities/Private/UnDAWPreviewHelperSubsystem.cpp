@@ -39,8 +39,8 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
     //AudioComponent->SetIsVirtualized(true);
     //AudioComponent->Set
 
-    InSessionToPreview->CreateBuilderHelper(AudioComponent);
-    InSessionToPreview->EditorPreviewPerformer = InSessionToPreview->MetasoundBuilderHelper;
+    ;
+    InSessionToPreview->EditorPreviewPerformer = InSessionToPreview->CreatePerformer(AudioComponent);
     InSessionToPreview->EditorPreviewPerformer->CreateAndAuditionPreviewAudioComponent();
 
     ActivePreviewPerformer.ActiveSession = InSessionToPreview;

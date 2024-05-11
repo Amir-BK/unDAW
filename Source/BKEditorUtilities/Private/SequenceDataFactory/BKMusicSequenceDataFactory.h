@@ -81,10 +81,6 @@ public:
 		MakeShared<FUnDAWSequenceEditorToolkit>()->InitEditor(InObjects);
 	}
 
-	static void TryTriggerAudioPlay(UDAWSequencerData* InAsset)
-	{
-		InAsset->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
-	}
 
 	TSharedPtr<SWidget> GetDawSequenceThumbnailOverlay(const FAssetData& InAssetData, TUniqueFunction<FReply()>&& OnClickedLambdaOverride) const
 	{
@@ -125,11 +121,7 @@ public:
 					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
 					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
 
-					//SequenceData->MetasoundBuilderHelper->OnDAWPerformerReady.AddLambda([](UDAWSequencerData* Data)
-					//{
-					//		FDAWSequenceAssetActions::TryTriggerAudioPlay(Data);
-					//});
-					//UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
+
 				}
 				return FReply::Handled();
 			};

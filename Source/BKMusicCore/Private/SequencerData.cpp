@@ -130,13 +130,15 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	}
 }
 
-void UDAWSequencerData::CreateBuilderHelper(UAudioComponent* AuditionComponent)
+UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* AuditionComponent)
 {
-	MetasoundBuilderHelper = NewObject<UDAWSequencerPerformer>(this);
-	MetasoundBuilderHelper->SessionData = this;
-	MetasoundBuilderHelper->OutputFormat = MasterOptions.OutputFormat;
-	MetasoundBuilderHelper->MidiTracks = TrackDisplayOptionsMap;
-	MetasoundBuilderHelper->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
+	auto SequencerPerformer = NewObject<UDAWSequencerPerformer>(this);
+	SequencerPerformer->SessionData = this;
+	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
+	SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
+	SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
+
+	return SequencerPerformer;
 }
 
 void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)

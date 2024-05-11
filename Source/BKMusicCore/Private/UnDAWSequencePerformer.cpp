@@ -370,7 +370,7 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 void UDAWSequencerPerformer::CreateInputsFromMidiTracks()
 {
 	// Create the inputs from the midi tracks
-	for (auto& [trackID, trackOptions] : MidiTracks)
+	for (auto& [trackID, trackOptions] : *MidiTracks)
 	{
 		CreateAndRegisterMidiOutput(trackOptions);
 		// Create the input node

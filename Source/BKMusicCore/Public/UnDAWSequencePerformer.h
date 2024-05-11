@@ -61,8 +61,8 @@ public:
 	UDAWSequencerData* SessionData;
 
 	//the array of tracks/channels found in the midi file
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
-	TMap<int, FTrackDisplayOptions> MidiTracks;
+	//UPROPERTY(VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
+	TMap<int, FTrackDisplayOptions>* MidiTracks;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
