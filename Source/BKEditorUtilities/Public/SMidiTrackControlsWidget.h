@@ -194,7 +194,7 @@ public:
 				[
 					SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot()
-						.AutoWidth()
+						.
 						.VAlign(EVerticalAlignment::VAlign_Center)
 						[
 
