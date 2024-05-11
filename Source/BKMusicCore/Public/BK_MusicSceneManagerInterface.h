@@ -17,6 +17,7 @@
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "MetasoundGeneratorHandle.h"
+#include "SequencerData.h"
 #include "UnDAWSequencePerformer.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
@@ -27,7 +28,7 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
 
-
+class UDAWSequencerPerformer;
 
 
 
@@ -36,6 +37,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCom
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportSeekCommand, float, NewSeekTarget);
 
 // This class does not need to be modified.
+
+
 
 UINTERFACE(MinimalAPI, NotBlueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
 class UBK_MusicSceneManagerInterface : public UInterface
@@ -66,12 +69,7 @@ public:
 	void CreatePerformer(UAudioComponent* InAudioComponent);
 	
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	virtual const EBKPlayState GetCurrentPlaybackState() {
-
-		if(!Performer) return EBKPlayState::NoPerformer;
-
-		return Performer->PlayState;
-	}
+	virtual const EBKPlayState GetCurrentPlaybackState();
 
 	virtual void Entry_Initializations() {};
 
@@ -84,9 +82,7 @@ public:
 	virtual void SetPlaybackState(EBKPlayState newPlayState) { PlayState = newPlayState; };
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
-	virtual void SendTransportCommand(EBKTransportCommands InCommand) {
-		if (Performer) Performer->SendTransportCommand(InCommand);
-	}
+	virtual void SendTransportCommand(EBKTransportCommands InCommand);
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SetPlayrate(float newPlayrate);

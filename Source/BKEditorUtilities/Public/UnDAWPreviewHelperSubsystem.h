@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EditorSubsystem.h"
 #include "SequencerData.h"
+#include "BK_MusicSceneManagerInterface.h"
 #include "UnDAWPreviewHelperSubsystem.generated.h"
 
 
@@ -29,7 +30,10 @@ public:
 	TMap<FSoftObjectPath, UDAWSequencerPerformer*> PreviewBuilders;
 
 	UFUNCTION()
-	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);
+	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);	
+	
+
+
 	
 private:
 	bool hasAlreadyPrimed = false;

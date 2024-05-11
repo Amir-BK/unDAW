@@ -13,6 +13,8 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
 
 			ActivePreviewPerformer.PreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
             ActivePreviewPerformer.ActiveSession->EditorPreviewPerformer = nullptr;
+            ActivePreviewPerformer.PreviewPerformer->RemoveFromParent();
+            ActivePreviewPerformer.PreviewPerformer->ConditionalBeginDestroy();
 	}
     
     if (!hasAlreadyPrimed)
@@ -29,7 +31,7 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
 
 
     AudioComponent->bAutoDestroy = false;
-    //AudioComponent->bIsUISound = true;
+    AudioComponent->bIsUISound = true;
     AudioComponent->bAllowSpatialization = false;
     AudioComponent->bReverb = false;
     AudioComponent->bCenterChannelOnly = false;
@@ -43,6 +45,8 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
 
     ActivePreviewPerformer.ActiveSession = InSessionToPreview;
     ActivePreviewPerformer.PreviewPerformer = InSessionToPreview->EditorPreviewPerformer;
-    //InSessionToPreview->Audio
+
 
 }
+
+

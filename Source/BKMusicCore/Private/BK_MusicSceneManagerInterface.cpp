@@ -13,6 +13,16 @@ void IBK_MusicSceneManagerInterface::CreatePerformer(UAudioComponent* InAudioCom
 
 }
 
+const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
+{
+	{
+
+		if (!Performer) return EBKPlayState::NoPerformer;
+
+		return Performer->PlayState;
+	}
+}
+
 //void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 //{
 //	//TODODOTOD	TODTO
@@ -21,6 +31,13 @@ void IBK_MusicSceneManagerInterface::CreatePerformer(UAudioComponent* InAudioCom
 //	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
 //	
 //}
+
+void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
+{
+	{
+		if (Performer) Performer->SendTransportCommand(InCommand);
+	}
+}
 
 void IBK_MusicSceneManagerInterface::SetPlayrate(float newPlayrate)
 {

@@ -61,9 +61,9 @@ protected:
     TSharedPtr<STextBlock> CurrentPlayStateTextBox;
     TSharedPtr<SHorizontalBox> TransportControls;
 
-    void PreviewAudio();
-    void PlayAudioComponent();
-    void StopAudioComponent();
+    void SetupPreviewPerformer();
+    //void PlayAudioComponent();
+    //void StopAudioComponent();
 
-    UAudioComponent* AudioComponent = nullptr;
+    //UAudioComponent* AudioComponent = nullptr;
 };

@@ -26,6 +26,39 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 class UDAWSequencerPerformer;
 
+
+
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+enum EBKTransportCommands : uint8
+{
+	Init,
+	Play,
+	Pause,
+	Stop,
+	Kill,
+	TransportBackward,
+	TransportForward,
+	NextMarker,
+	PrevMarker
+
+};
+
+
+
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager", meta = (Bitflags))
+enum EBKPlayState : uint8
+{
+	NoPerformer = 0,
+	NotReady = 1,
+	Preparing = 2,
+	ReadyToPlay = 4,
+	Playing = 8,
+	Paused = 16
+
+
+};
+
+
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {

@@ -88,13 +88,19 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
             if (SequenceData->HarmonixMidiFile) {
                 PianoRollGraph->Init();
-                if(!SequenceData->MetasoundBuilderHelper) PreviewAudio();
+                if (!SequenceData->EditorPreviewPerformer) {
+                    SetupPreviewPerformer();
+                }
+                else {
+                    Performer = SequenceData->EditorPreviewPerformer;
+                    Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
+                    }
                 }
 
             SequenceData->OnMidiDataChanged.AddLambda([&]()
                 {
 				PianoRollGraph->Init();
-                PreviewAudio();
+                SetupPreviewPerformer();
 			    });
 
             return DockTab;
@@ -139,14 +145,14 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 		case Play:
             NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return Performer != nullptr && (Performer->PlayState == ReadyToPlay || Performer->PlayState == Paused)  ; }));
             NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && ((Performer->PlayState == ReadyToPlay)
-                || (SequenceData->EditorPreviewPerformer->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
+                || (Performer->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
 			break;
 		case Stop:
 
 			break;
 
         case Pause:
-            NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData->EditorPreviewPerformer != nullptr && (SequenceData->EditorPreviewPerformer->PlayState == Playing)
+            NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && (Performer->PlayState == Playing)
                  ? EVisibility::Visible : EVisibility::Collapsed; }));
 			break;
 		default:
@@ -184,8 +190,8 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                             [
                                 SNew(SButton)
                                     .Text(INVTEXT("ReInit"))
-                                    .OnClicked_Lambda([this]() { PreviewAudio(); return FReply::Handled(); })
-                                    .IsEnabled_Lambda([this]() { return AudioComponent == nullptr || !AudioComponent->IsPlaying(); })
+                                    .OnClicked_Lambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); })
+                                    .IsEnabled_Lambda([this]() { return Performer == nullptr; })
                             ]
 
                             + SHorizontalBox::Slot()
@@ -200,8 +206,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                             [
                                 StopButton
                             ]
-
-                           
+     
                 ]);
 
                 ToolbarBuilder.EndSection();
@@ -219,29 +224,31 @@ inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
     PianoRollGraph.Reset();
 }
 
-void FUnDAWSequenceEditorToolkit::PreviewAudio()
+void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
     auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
     PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
+   // PreviewHelper->CreateAndPrimePreviewBuilderForDawSceneManager(this);
     Performer = SequenceData->EditorPreviewPerformer;
-    AudioComponent = SequenceData->EditorPreviewPerformer->AuditionComponentRef;
+    Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
+    //AudioComponent = SequenceData->EditorPreviewPerformer->AuditionComponentRef;
 }
 
-void FUnDAWSequenceEditorToolkit::PlayAudioComponent()
-{
-    if (AudioComponent)
-    {
-        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Play"));
-	}
-}
-
-void FUnDAWSequenceEditorToolkit::StopAudioComponent()
-{
-    if (AudioComponent)
-    {
-        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Stop"));
-	}
-}
+//void FUnDAWSequenceEditorToolkit::PlayAudioComponent()
+//{
+//    if (AudioComponent)
+//    {
+//        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Play"));
+//	}
+//}
+//
+//void FUnDAWSequenceEditorToolkit::StopAudioComponent()
+//{
+//    if (AudioComponent)
+//    {
+//        AudioComponent->SetTriggerParameter(FName("unDAW.Transport.Stop"));
+//	}
+//}
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {

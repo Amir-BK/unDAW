@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+//#include "BK_MusicSceneManagerInterface.h"
 #include "Components/AudioComponent.h"
 #include "Metasound.h"
 #include "MetasoundSource.h"
@@ -17,35 +18,8 @@
 
 
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
-enum EBKTransportCommands : uint8
-{
-	Init,
-	Play,
-	Pause,
-	Stop,
-	Kill,
-	TransportBackward,
-	TransportForward,
-	NextMarker,
-	PrevMarker
+DECLARE_MULTICAST_DELEGATE(FDAWPerformerDeleted);
 
-};
-
-
-
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager", meta = (Bitflags))
-enum EBKPlayState : uint8
-{
-	NoPerformer = 0,
-	NotReady = 1,
-	Preparing = 2,
-	ReadyToPlay = 4,
-	Playing = 8,
-	Paused = 16
-	
-
-};
 
 /**
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
@@ -56,6 +30,10 @@ class BKMUSICCORE_API UDAWSequencerPerformer : public UObject
 	GENERATED_BODY()
 	
 public:
+
+	FDAWPerformerDeleted OnDeleted;
+
+	//IBK_MusicSceneManagerInterface* ParentSceneManager;
 
 	TEnumAsByte<EBKPlayState> PlayState;
 
@@ -136,6 +114,11 @@ public:
 
 	UFUNCTION()
 	void CreateCustomPatchPlayerForMidiTrack();
+
+	void RemoveFromParent()
+	{
+		OnDeleted.Broadcast();
+	}
 
 
 

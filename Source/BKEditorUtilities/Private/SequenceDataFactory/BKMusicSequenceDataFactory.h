@@ -6,6 +6,7 @@
 #include "Factories/Factory.h"
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
+#include "UnDAWSequencePerformer.h"
 #include "AssetTypeActions_Base.h"
 #include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "SequencerData.h"

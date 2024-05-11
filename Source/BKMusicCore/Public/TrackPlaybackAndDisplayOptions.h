@@ -63,9 +63,6 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::FusionPatch", EditConditionHides))
 	TObjectPtr<UFusionPatch> fusionPatch;
 
-	/** Please add a function description */
-	//UFUNCTION(BlueprintCallable)
-	//void BK Meta Builder(UPARAM(ref) TArray<FTrackDisplayOptions>& Tracks, const TScriptInterface<IMetaSoundDocumentInterface>& MidiPatchClass, UObject* MidiToPlay, UObject* __WorldContext, bool& Success, UMetaSoundSourceBuilder*& Source Builder, FString& Result, UMetaSoundSourceBuilder* Builder, FMetaSoundBuilderNodeOutputHandle MidiOutputHandle, FMetaSoundBuilderNodeOutputHandle PlayInputHandle, FMetaSoundBuilderNodeOutputHandle OnPlayInput, TArray<FMetaSoundBuilderNodeInputHandle> AudioOutputs, FMetaSoundNodeHandle CurrentTrackNode, FMetaSoundBuilderNodeOutputHandle PrepareInput);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::CustomPatch", EditConditionHides))
 	TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass;
