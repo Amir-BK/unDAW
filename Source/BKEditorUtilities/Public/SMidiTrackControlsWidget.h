@@ -67,7 +67,7 @@ public:
 
 		SLATE_ARGUMENT(int, slotInParentID)
 		SLATE_ARGUMENT(FText, trackName)
-		SLATE_ARGUMENT(FTrackDisplayOptions, TrackData)
+		SLATE_ARGUMENT(FTrackDisplayOptions*, TrackData)
 
 	SLATE_END_ARGS()
 
@@ -76,7 +76,7 @@ public:
 
 	TSharedPtr<FString> CurrentItem;
 	TArray<TSharedPtr<FString>> optionsArray;
-	FTrackDisplayOptions TrackData;
+	FTrackDisplayOptions* TrackData;
 
 	void toggleTrackVisibility(ECheckBoxState newState)
 	{
@@ -86,6 +86,7 @@ public:
 	void SetColor(FLinearColor newColor)
 	{
 		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
+		TrackData->trackColor = newColor;
 	}
 
 	void SelectionCancel(FLinearColor newColor)
@@ -112,7 +113,7 @@ public:
 			PickerArgs.DisplayGamma = TAttribute<float>::Create(TAttribute<float>::FGetter::CreateUObject(GEngine, &UEngine::GetDisplayGamma));
 			PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateSP(this, &SMIDITrackControls::SetColor);
 			PickerArgs.OnColorPickerCancelled = FOnColorPickerCancelled::CreateSP(this, &SMIDITrackControls::SelectionCancel);
-			//PickerArgs.InitialColor = parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+			PickerArgs.InitialColor = TrackData->trackColor;
 			OpenColorPicker(PickerArgs);
 
 		}
@@ -167,7 +168,7 @@ public:
 	
 
 
-	void Construct(const FArguments& InArgs)
+	void Construct(const FArguments& InArgs) 
 	{
 		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
@@ -209,7 +210,7 @@ public:
 						+ SVerticalBox::Slot()
 						[
 							SNew(SEditableTextBox)
-								.Text(FText::FromString(TrackData.trackName))
+								.Text(FText::FromString(TrackData->trackName))
 								//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
 							//	.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
 								//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
@@ -225,7 +226,7 @@ public:
 								[
 
 									SNew(STextBlock)
-										.Text(FText::FromString(TrackData.fusionPatch->GetName()))
+										.Text(FText::FromString(TrackData->fusionPatch->GetName()))
 
 								]
 						]
@@ -252,11 +253,11 @@ public:
 									SNew(SColorBlock)
 										.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
 
-										return TrackData.trackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+										return TrackData->trackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
 
 
 											})))
-										.Size(FVector2D(350.0f, 20.0f))
+										//.Size(FVector2D(350.0f, 20.0f))
 												.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
 								]
 

@@ -11,7 +11,7 @@
 #include "UnDAWPreviewHelperSubsystem.h"
 #include "Widgets/Colors/SColorPicker.h"
 #include "SMidiTrackControlsWidget.h"
-//#include "MetasoundAssetSubsystem.h"
+
 
 #include "Widgets/Layout/SScaleBox.h"
 
@@ -82,7 +82,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
                     SAssignNew(PianoRollGraph, SPianoRollGraph)
                       .SessionData(SequenceData->GetSelfSharedPtr())
                         .Clipping(EWidgetClipping::ClipToBounds)
-                        //.gridBrush(GridBrush)
+
                         .gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
                         .accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
                         .cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
@@ -110,7 +110,6 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
         .SetDisplayName(INVTEXT("Piano Roll"))
             .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
-        //if (SequenceData->HarmonixMidiFile) PianoRollGraph->Init();
  
     FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
     FDetailsViewArgs DetailsViewArgs;
@@ -180,8 +179,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                 auto StopButton = GetConfiguredTransportButton(Stop);
                 auto PlayButton = GetConfiguredTransportButton(Play);
                 auto PauseButton = GetConfiguredTransportButton(Pause);
-                //.Get().SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
-                //StopButton->SetOnClicked(FOnClicked::CreateLambda([this]() { StopAudioComponent(); return FReply::Handled(); }));
+
                 ToolbarBuilder.BeginSection("Transport");
   
                 ToolbarBuilder.AddWidget(SNew(SBox).VAlign(VAlign_Center)
@@ -230,7 +228,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
     auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
     PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-   // PreviewHelper->CreateAndPrimePreviewBuilderForDawSceneManager(this);
+
     Performer = SequenceData->EditorPreviewPerformer;
     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
  
@@ -268,31 +266,9 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 			.AutoHeight()
             [
 				SNew(SMIDITrackControls)
-					.TrackData(Track)
+					.TrackData(&Track)
                     .slotInParentID(Index)
-                
-                //SNew(SHorizontalBox)
-    //                + SHorizontalBox::Slot()
-    //                .AutoWidth()
-    //                [
-    //                    SNew(STextBlock)
-				//        	.Text(FText::FromString(Track.trackName))
 
-    //                ]
-    //            + SHorizontalBox::Slot()
-    //                .AutoWidth()
-    //                [
-    //                    SNew(SComboBox)
-				//        	//.Text(FText::FromString(Track.fusionPatch.GetName()))
-
-    //                ]
-    //            + SHorizontalBox::Slot()
-    //                .AutoWidth()
-    //                [
-    //                    SNew(SColorBlock)
-				//        	.Color(Track.trackColor)
-
-    //                ]
 			];
 	}
 }
