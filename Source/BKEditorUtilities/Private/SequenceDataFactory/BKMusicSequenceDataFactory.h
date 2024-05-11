@@ -123,7 +123,7 @@ public:
 						return FReply::Handled();
 					}
 					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-
+					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
 
 					//SequenceData->MetasoundBuilderHelper->OnDAWPerformerReady.AddLambda([](UDAWSequencerData* Data)
 					//{
@@ -138,10 +138,10 @@ public:
 			{
 				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
 				{
-					return INVTEXT("Stop selected sound");
+					return INVTEXT("Stop selected unDAW Sequence");
 				}
 
-				return INVTEXT("Play selected sound");
+				return INVTEXT("Preview the selected unDAW Sequence");
 			};
 
 		TSharedPtr<SBox> Box;

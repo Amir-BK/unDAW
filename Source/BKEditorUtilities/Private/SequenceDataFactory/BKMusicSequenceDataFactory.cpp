@@ -47,7 +47,7 @@ inline TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const F
 					return FReply::Handled();
 				}
 				PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-
+				SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
 
 				//SequenceData->MetasoundBuilderHelper->OnDAWPerformerReady.AddLambda([](UDAWSequencerData* Data)
 				//{
