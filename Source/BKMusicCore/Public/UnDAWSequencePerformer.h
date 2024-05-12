@@ -20,6 +20,7 @@
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerDeleted);
 
+DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float);
 
 /**
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
@@ -30,6 +31,8 @@ class BKMUSICCORE_API UDAWSequencerPerformer : public UObject
 	GENERATED_BODY()
 	
 public:
+
+	FOnTransportSeekCommand OnSeekEvent;
 
 	FDAWPerformerDeleted OnDeleted;
 
@@ -120,6 +123,9 @@ public:
 
 	UFUNCTION()
 	void ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch);
+
+	UFUNCTION()
+	void SendSeekCommand(float InSeek);
 
 
 

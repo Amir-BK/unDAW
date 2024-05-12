@@ -62,12 +62,12 @@ public:
 
 //TODO: needs major refactoring 
 UENUM(BlueprintType)
-enum EPianoRollEditorMouseMode
+enum class EPianoRollEditorMouseMode : uint8
 {
 	drawNotes,
-	notesSelect,
-	pan,
-	zoom,
+	Panning,
+	//pan,
+	//zoom,
 	seek,
 	empty
 
@@ -135,7 +135,7 @@ public:
 	//virtual void SelectTrack(int trackID) {};
 	virtual void SetInputMode(EPianoRollEditorMouseMode newMode) {};
 	virtual void AddDeltaToTimeLine(float inDelta) {};
-	virtual TEnumAsByte<EPianoRollEditorMouseMode> getCurrentInputMode() { return EPianoRollEditorMouseMode::empty; };
+	virtual EPianoRollEditorMouseMode getCurrentInputMode() { return EPianoRollEditorMouseMode::empty; };
 	
 	virtual void InitTracksFromFoundArray(TArray<int> InTracks) {
 		TrackDisplayOptionsMap.Empty();

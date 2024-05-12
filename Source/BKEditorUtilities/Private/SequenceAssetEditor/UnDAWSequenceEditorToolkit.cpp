@@ -11,6 +11,7 @@
 #include "UnDAWPreviewHelperSubsystem.h"
 #include "Widgets/Colors/SColorPicker.h"
 #include "SMidiTrackControlsWidget.h"
+#include "SEnumCombo.h"
 
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -82,11 +83,13 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
                     SAssignNew(PianoRollGraph, SPianoRollGraph)
                       .SessionData(SequenceData->GetSelfSharedPtr())
                         .Clipping(EWidgetClipping::ClipToBounds)
-
                         .gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
                         .accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
                         .cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
+                        .OnSeekEvent(OnSeekEvent)
                 ];
+
+            //PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
             if (SequenceData->HarmonixMidiFile) {
                 PianoRollGraph->Init();
@@ -129,6 +132,8 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
  
 void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
 {
+    PianoRollGraph->OnSeekEvent.Unbind();
+    PianoRollGraph->SessionData.Reset();
     FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
     InTabManager->UnregisterTabSpawner("DAWSequenceMixerTab");
     InTabManager->UnregisterTabSpawner("DAWSequenceDetailsTab");
@@ -214,6 +219,18 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                  ToolbarBuilder.BeginSection("Performer Status");
                  ToolbarBuilder.AddWidget(CurrentPlayStateTextBox.ToSharedRef());
                  ToolbarBuilder.EndSection();
+
+                 ToolbarBuilder.BeginSection("Graph Input");
+                 ToolbarBuilder.AddWidget(SNew(SEnumComboBox, StaticEnum<EPianoRollEditorMouseMode>())
+                     .CurrentValue_Lambda([this]() -> int32
+                 {
+                     if (!PianoRollGraph) return (int32)EPianoRollEditorMouseMode::empty;
+                     return (int32)PianoRollGraph->InputMode;
+                 })
+                     .OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if(PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
+
+                 );
+                 ToolbarBuilder.EndSection();
             }));
     AddToolbarExtender(ToolbarExtender);
 }
@@ -221,16 +238,25 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
 {
     SequenceData->OnMidiDataChanged.RemoveAll(this);
+    PianoRollGraph->SessionData.Reset();
     PianoRollGraph.Reset();
+    SequenceData = nullptr;
 }
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
+    PianoRollGraph->OnSeekEvent.Unbind();
     auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
     PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
 
     Performer = SequenceData->EditorPreviewPerformer;
     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
+    PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
+    //OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
+    //OnSeekEvent.BindLambda([this](float Seek) { 
+    //    UE_LOG(LogTemp, Warning, TEXT("Seeking to %f"), Seek);
+    //    
+    //    Performer->SendSeekCommand(Seek); });
  
 }
 

@@ -239,6 +239,19 @@ void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandl
 		{
 			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Pause")), Input, BuildResult);
 		}
+		if (NodeName == FName(TEXT("Trigger Seek")))
+		{
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Seek")), Input, BuildResult);
+		}
+
+		if (NodeName == FName(TEXT("Seek Target")))
+		{
+			auto FloatToTimeCastNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("TimeMsToSeekTarget"))), BuildResult, 0);
+			auto FloatToTimeInput = CurrentBuilder->FindNodeInputByName(FloatToTimeCastNode, FName(TEXT("Time (ms)")), BuildResult);
+			auto FloatToTimeOutput = CurrentBuilder->FindNodeOutputByName(FloatToTimeCastNode, FName(TEXT("Seek Target")), BuildResult);
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.SeekTarget")), FloatToTimeInput, BuildResult);
+			CurrentBuilder->ConnectNodes(FloatToTimeOutput, Input, BuildResult);
+		}
 
 	}
 }
@@ -277,6 +290,16 @@ void UDAWSequencerPerformer::ChangeFusionPatchInTrack(int TrackIndex, UFusionPat
 		auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
 		AuditionComponentRef->SetObjectParameter(ParamName, NewPatch);
 		}
+}
+
+void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
+{
+	UE_LOG(LogTemp, Log, TEXT("Seek Command Received! %f"), InSeek)
+	if (AuditionComponentRef)
+	{
+		AuditionComponentRef->SetFloatParameter(FName(TEXT("unDAW.Transport.SeekTarget")), InSeek * 1000.f);
+		AuditionComponentRef->SetTriggerParameter(FName(TEXT("unDAW.Transport.Seek")));
+	}
 }
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)

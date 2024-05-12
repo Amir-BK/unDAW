@@ -35,6 +35,7 @@ const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
 void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 {
 	{
+		UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
 		if (Performer) Performer->SendTransportCommand(InCommand);
 	}
 }

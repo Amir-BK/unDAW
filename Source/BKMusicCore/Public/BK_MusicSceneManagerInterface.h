@@ -34,7 +34,8 @@ class UDAWSequencerPerformer;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCommands, NewCommand);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportSeekCommand, float, NewSeekTarget);
+
+
 
 // This class does not need to be modified.
 
@@ -57,6 +58,9 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	/** Please add a variable description */
+
+	
+	FOnTransportSeekCommand OnSeekEvent;
 
 	EBKPlayState PlayState = EBKPlayState::NotReady;
 

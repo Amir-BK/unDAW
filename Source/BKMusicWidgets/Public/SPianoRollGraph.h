@@ -20,6 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include <Widgets/Layout/SConstraintCanvas.h>
 #include "BKMusicWidgets.h"
+#include "UnDAWSequencePerformer.h"
 #include "EngravingSubsystem.h"
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"
@@ -175,6 +176,7 @@ public:
 		SLATE_ARGUMENT(FLinearColor, noteColor)
 		SLATE_ARGUMENT(float, pixelsPerBeat)
 		SLATE_ARGUMENT(TSharedPtr<UDAWSequencerData>, SessionData)
+		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
 		//SLATE_ARGUMENT(TSharedPtr<UMIDIEditorBase>, parentMidiEditor)
 	SLATE_END_ARGS()
 
@@ -185,6 +187,9 @@ public:
 	FString debugData;
 #endif
 	
+
+	FOnTransportSeekCommand OnSeekEvent;
+
 	bool bIsInitialized = false;
 
 	FOnInitComplete OnInitCompleteDelegate;
@@ -294,6 +299,8 @@ public:
 
 protected:
 
+	friend class FUnDAWSequenceEditorToolkit;
+
 	EPianoRollEditorMouseMode InputMode = EPianoRollEditorMouseMode::empty;
 
 	bool FollowedCursorLastFrame = false;
@@ -350,7 +357,7 @@ protected:
 
 	TOptional<EMouseCursor::Type> GetCursor() const override
 	{
-		if (InputMode == empty) return EMouseCursor::Default;
+		if (InputMode == EPianoRollEditorMouseMode::empty) return EMouseCursor::Default;
 		
 			
 		return EMouseCursor::None;

@@ -27,7 +27,7 @@ public:
 
 	// DELEGATES!!!
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
+	//UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
 	FOnTransportSeekCommand TransportSeekDelegate;
 
 	UPROPERTY(BlueprintAssignable, Category = "unDAW|Transport")

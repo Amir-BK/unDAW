@@ -35,25 +35,14 @@ public:
 		
 		ChildSlot[
 			SNew(SHorizontalBox)
-			
-				//.Orientation(EOrientation::Orient_Horizontal)
 				+ SHorizontalBox::Slot()
 				.VAlign(EVerticalAlignment::VAlign_Center)
 	
 				[
 					SNew(STextBlock).Text(FText::FromString(TEXT("Snapping Step Size")))
-
 				]
-	
-
 		];
-
 	}
-
-
-
-
-
 };
 
 

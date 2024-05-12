@@ -91,6 +91,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/EditorWidget/PianoRoll/Internals/InputActions/MidiEditorKeyBindings.MidiEditorKeyBindings");
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 
+	OnSeekEvent = InArgs._OnSeekEvent;
+
 	bCanSupportFocus = true;
 	//we don't want to tick unless there's a midi file
 	SetCanTick(false);
@@ -149,13 +151,13 @@ void SPianoRollGraph::Init()
 		MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
 		LinkedNoteDataMap = SessionData->LinkedNoteDataMap;
 		bIsInitialized = true;
-		InputMode = notesSelect;
+		InputMode = EPianoRollEditorMouseMode::Panning;
 
 	}
 	else {
 		bIsInitialized = false;
 		SetCanTick(false);
-		InputMode = empty;
+		InputMode = EPianoRollEditorMouseMode::empty;
 	}
 	
 	OnInitCompleteDelegate.ExecuteIfBound();
@@ -247,7 +249,7 @@ void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 {
 	InputMode = newMode;
 	switch (newMode) {
-	case drawNotes:
+	case EPianoRollEditorMouseMode::drawNotes:
 		if (isCtrlPressed)
 		{
 			CursorTest = FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(0xF014);
@@ -256,15 +258,15 @@ void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 		}
 		break;
 
-	case notesSelect:
+	case EPianoRollEditorMouseMode::Panning:
 		CursorTest = FMeasuredGlyph{ TCHAR(0xF05B), 0.0f, 0.0f};
 		break;
 
 
-	case pan:
-		CursorTest = FMeasuredGlyph{ TCHAR(0xF047), 0.0f, 0.0f };
-		break;
-	case seek:
+	//case EPianoRollEditorMouseMode::pan:
+	//	CursorTest = FMeasuredGlyph{ TCHAR(0xF047), 0.0f, 0.0f };
+	//	break;
+	case EPianoRollEditorMouseMode::seek:
 		CursorTest = FMeasuredGlyph{ TCHAR(0xF028), 0.0f, 0.0f };
 		break;
 	default:
@@ -517,12 +519,15 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 	
 			switch (InputMode)
 			{
-			case seek:
-
+			case EPianoRollEditorMouseMode::seek:
+				OnSeekEvent.ExecuteIfBound(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
+				UE_LOG(LogTemp, Log, TEXT("Is Delegate bound?? %s"), OnSeekEvent.IsBound() ? TEXT("Yes") : TEXT("No"));
+				
+				//UE_LOG(LogTemp, Log, TEXT("Seeking to: %f"), MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
 				//parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
 				break;
 
-			case notesSelect:
+			case EPianoRollEditorMouseMode::Panning:
 		
 				positionOffset.Y += MouseEvent.GetCursorDelta().Y;
 				AddHorizontalX(MouseEvent.GetCursorDelta().X);
@@ -554,15 +559,15 @@ FReply SPianoRollGraph::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
 			switch (newInput->GetValue())
 			{
 			case DrawModeSwitch:
-				InputMode = drawNotes;
+				InputMode = EPianoRollEditorMouseMode::drawNotes;
 				break;
 
 			case SeekMode:
-				InputMode = seek;
+				InputMode = EPianoRollEditorMouseMode::seek;
 				break;
 
 			case SelectMode:
-				InputMode = notesSelect;
+				InputMode = EPianoRollEditorMouseMode::Panning;
 				break;
 			default:
 				break;
