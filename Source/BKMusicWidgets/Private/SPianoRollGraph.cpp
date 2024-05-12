@@ -215,6 +215,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			break;
 		}
 		LastMeasuredAudioTime = AudioTime;
+
 	}
 
 	
@@ -244,6 +245,12 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	}
 
 
+}
+void SPianoRollGraph::UpdateTimestamp(FMusicTimestamp newTimestamp)
+{
+	const auto tick = MidiSongMap->CalculateMidiTick(newTimestamp, EMidiClockSubdivisionQuantization::None);
+	CurrentTimelinePosition = MidiSongMap->TickToMs(tick) * .001f;
+	//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 }
 void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 {
@@ -521,7 +528,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 			{
 			case EPianoRollEditorMouseMode::seek:
 				OnSeekEvent.ExecuteIfBound(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
-				UE_LOG(LogTemp, Log, TEXT("Is Delegate bound?? %s"), OnSeekEvent.IsBound() ? TEXT("Yes") : TEXT("No"));
+				//UE_LOG(LogTemp, Log, TEXT("Is Delegate bound?? %s"), OnSeekEvent.IsBound() ? TEXT("Yes") : TEXT("No"));
 				
 				//UE_LOG(LogTemp, Log, TEXT("Seeking to: %f"), MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
 				//parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
@@ -658,7 +665,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Blue.CopyWithNewOpacity(0.5f * horizontalZoom),
+			FLinearColor::Blue.CopyWithNewOpacity(1.0f * horizontalZoom),
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
 	}

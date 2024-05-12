@@ -284,6 +284,7 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 
+	void UpdateTimestamp(FMusicTimestamp newTimestamp);
 
 	void SetInputMode(EPianoRollEditorMouseMode newMode);
 

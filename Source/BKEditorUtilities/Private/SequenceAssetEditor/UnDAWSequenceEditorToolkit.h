@@ -7,6 +7,7 @@
 #include "EditorUndoClient.h"
 #include "SequencerData.h"
 #include "SPianoRollGraph.h"
+#include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
 #include "GlyphButton.h"
 

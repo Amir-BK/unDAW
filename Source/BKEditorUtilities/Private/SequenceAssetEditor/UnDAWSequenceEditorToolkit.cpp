@@ -196,7 +196,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                                 SNew(SButton)
                                     .Text(INVTEXT("ReInit"))
                                     .OnClicked_Lambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); })
-                                    .IsEnabled_Lambda([this]() { return Performer == nullptr; })
+                                   // .IsEnabled_Lambda([this]() { return Performer == nullptr; })
                             ]
 
                             + SHorizontalBox::Slot()
@@ -217,7 +217,23 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                 ToolbarBuilder.EndSection();
 
                  ToolbarBuilder.BeginSection("Performer Status");
-                 ToolbarBuilder.AddWidget(CurrentPlayStateTextBox.ToSharedRef());
+                 ToolbarBuilder.AddWidget(SNew(SVerticalBox)
+                     + SVerticalBox::Slot()
+                     [
+                         CurrentPlayStateTextBox.ToSharedRef()
+                     ]                    
+                     + SVerticalBox::Slot()
+                    [
+                    SNew(STextBlock)
+							.Text_Lambda([this]() -> FText
+                    {if (Performer)                  
+                          {
+                         return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), Performer->CurrentTimestamp.Bar, Performer->CurrentTimestamp.Beat));
+                         }
+                    return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), 0, 0.0f)); })
+                    ]);
+
+
                  ToolbarBuilder.EndSection();
 
                  ToolbarBuilder.BeginSection("Graph Input");
@@ -237,7 +253,8 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
 {
-    SequenceData->OnMidiDataChanged.RemoveAll(this);
+    SequenceData->OnMidiDataChanged.Clear();
+    Performer->OnTimestampUpdated.Clear();
     PianoRollGraph->SessionData.Reset();
     PianoRollGraph.Reset();
     SequenceData = nullptr;
@@ -251,6 +268,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 
     Performer = SequenceData->EditorPreviewPerformer;
     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
+    Performer->OnTimestampUpdated.AddLambda([this](const FMusicTimestamp& NewTimestamp) { PianoRollGraph->UpdateTimestamp(NewTimestamp); });
     PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
     //OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
     //OnSeekEvent.BindLambda([this](float Seek) { 

@@ -6,7 +6,9 @@
 #include "UObject/NoExportTypes.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+//#include "Harmoni"
 //#include "BK_MusicSceneManagerInterface.h"
+#include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 #include "Components/AudioComponent.h"
 #include "Metasound.h"
 #include "MetasoundSource.h"
@@ -19,6 +21,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerDeleted);
+DECLARE_MULTICAST_DELEGATE_OneParam(FMusicTimestampUpdated, FMusicTimestamp);
 
 DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float);
 
@@ -26,15 +29,20 @@ DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float);
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
  */
 UCLASS(BlueprintType, Blueprintable)
-class BKMUSICCORE_API UDAWSequencerPerformer : public UObject
+class BKMUSICCORE_API UDAWSequencerPerformer : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
 	
 public:
 
+	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
+	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;
+
 	FOnTransportSeekCommand OnSeekEvent;
 
 	FDAWPerformerDeleted OnDeleted;
+
+	FMusicTimestampUpdated OnTimestampUpdated;
 
 	//IBK_MusicSceneManagerInterface* ParentSceneManager;
 
@@ -103,6 +111,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper");
 	TScriptInterface<IMetaSoundDocumentInterface> GeneratedMetaSound;
 
+	FMusicTimestamp CurrentTimestamp;
+
 
 	UFUNCTION()
 	void CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef);
@@ -126,6 +136,12 @@ public:
 
 	UFUNCTION()
 	void SendSeekCommand(float InSeek);
+
+	UFUNCTION()
+	void ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value);
+
+	UFUNCTION()
+	void ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value);
 
 
 
@@ -178,6 +194,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
 	UMetasoundGeneratorHandle* GeneratorHandle;
 
+	bool bShouldTick = false;
+
 	UFUNCTION()
 	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
 
@@ -185,6 +203,26 @@ public:
 
 	void ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode);
 
+	void Tick(float DeltaTime) override;
+
+	virtual bool IsTickable() const { return bShouldTick; }
+
+	virtual ETickableTickType GetTickableTickType() const override
+	{
+		return ETickableTickType::Conditional;
+	}
+	virtual TStatId GetStatId() const override
+	{
+		RETURN_QUICK_DECLARE_CYCLE_STAT(FMyTickableThing, STATGROUP_Tickables);
+	}
+	virtual bool IsTickableWhenPaused() const
+	{
+		return true;
+	}
+	virtual bool IsTickableInEditor() const
+	{
+		return true;
+	}
 };
 
 template<typename T>

@@ -8,6 +8,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "MetasoundAssetSubsystem.h"
 #include "MetasoundAssetBase.h"
+#include "MetasoundOutputSubsystem.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
@@ -256,6 +257,14 @@ void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandl
 	}
 }
 
+void UDAWSequencerPerformer::Tick(float DeltaTime)
+{
+	//UE_LOG(LogTemp, Log, TEXT("Tick! Sequencer Asset Name: %s"), *SessionData->GetName())
+		GeneratorHandle->UpdateWatchers();
+
+
+}
+
 void UDAWSequencerPerformer::GenerateMidiPlayerAndTransport()
 {
 	EMetaSoundBuilderResult BuildResult;
@@ -275,6 +284,11 @@ void UDAWSequencerPerformer::GenerateMidiPlayerAndTransport()
 	auto TransportNodeTransportOutPin = CurrentBuilder->FindNodeOutputByName(TriggerToTransportNode, FName(TEXT("Transport")), BuildResult);
 	CurrentBuilder->ConnectNodes(TransportNodeTransportOutPin, MidiPlayerTransportPin, BuildResult);
 	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI Stream")), BuildResult);
+	auto MidiClockOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI Clock")), BuildResult);
+
+	// connect midi player outputs to graph outputs for wathcer
+	CurrentBuilder->ConnectNodeOutputToGraphOutput(FName(TEXT("unDAW.Midi Stream")), MainMidiStreamOutput, BuildResult);
+	CurrentBuilder->ConnectNodeOutputToGraphOutput(FName(TEXT("unDAW.Midi Clock")), MidiClockOutput, BuildResult);
 
 }
 
@@ -284,7 +298,7 @@ void UDAWSequencerPerformer::CreateCustomPatchPlayerForMidiTrack()
 
 void UDAWSequencerPerformer::ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch)
 {
-	UE_LOG(LogTemp, Log, TEXT("Change Fusion Patch for Track %d"), TrackIndex)
+
 		if (AuditionComponentRef && MidiTracks->Contains(TrackIndex))
 		{
 		auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
@@ -300,6 +314,20 @@ void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
 		AuditionComponentRef->SetFloatParameter(FName(TEXT("unDAW.Transport.SeekTarget")), InSeek * 1000.f);
 		AuditionComponentRef->SetTriggerParameter(FName(TEXT("unDAW.Transport.Seek")));
 	}
+}
+
+void UDAWSequencerPerformer::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
+{
+	//UE_LOG(LogTemp, Log, TEXT("Output Received! %s, Data type: %s"), *OutputName.ToString(), *Value.GetDataTypeName().ToString())
+		//auto MidiClockValue = Value.GetDataTypeName();
+}
+
+void UDAWSequencerPerformer::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
+{
+	//UE_LOG(LogTemp, Log, TEXT("Output Received! %s, Data type: %s"), *OutputName.ToString(), *Value.GetDataTypeName().ToString())
+	Value.Get(CurrentTimestamp);
+	OnTimestampUpdated.Broadcast(CurrentTimestamp);
+	
 }
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
@@ -546,13 +574,30 @@ void UDAWSequencerPerformer::CreateAndAuditionPreviewAudioComponent()
 void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
 	
+	//auto MetasoundOutputSubsystem = //GEngine->GetEngineSubsystem<UMetaSoundOutputSubsystem>();
+	//AuditionComponentRef->GetWorld()->GetSubsystem<UMetaSoundOutputSubsystem>(); //->RegisterOutput(AuditionComponentRef, FName("unDAW.Midi Stream"), MainMidiStreamOutput);
 	UMetaSoundAssetSubsystem* AssetSubsystem = GEngine->GetEngineSubsystem<UMetaSoundAssetSubsystem>();
 	//FMetasoundAssetBase test = Cast<UMetaSoundSource>();
 	AssetSubsystem->Get()->AddOrUpdateAsset(*AuditionComponentRef->GetSound()->_getUObject());
-	UE_LOG(LogTemp, Log, TEXT("Handle Created!"))
+	//UE_LOG(LogTemp, Log, TEXT("Handle Created!"))
 	GeneratorHandle = Handle;
 	AuditionComponentRef->GetSound()->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
 	AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
+	OnMidiClockOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiClockOutput(OutputName, Value); });
+	OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiStreamOutput(OutputName, Value); });
+
+
+	//bool CanWatchStream = MetasoundOutputSubsystem->WatchOutput(AuditionComponentRef, FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
+	//bool CanWatchClock = MetasoundOutputSubsystem->WatchOutput(AuditionComponentRef, FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
+
+	bool CanWatchStream = GeneratorHandle->WatchOutput(FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
+	bool CanWatchClock = GeneratorHandle->WatchOutput(FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
+	bShouldTick = true;
+
+	//UE_LOG(LogTemp, Log, TEXT("Can Watch Stream: %s, Can Watch Clock: %s"), CanWatchStream ? TEXT("Yes") : TEXT("No"), CanWatchClock ? TEXT("Yes") : TEXT("No"))
+		//AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
+
+	
 	//AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 	OnDAWPerformerReady.Broadcast();
 }
