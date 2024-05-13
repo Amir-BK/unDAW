@@ -665,7 +665,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Blue.CopyWithNewOpacity(1.0f * horizontalZoom),
+			FLinearColor::Blue.CopyWithNewOpacity(0.5f),
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
 	}
