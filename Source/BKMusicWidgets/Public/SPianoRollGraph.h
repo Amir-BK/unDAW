@@ -304,6 +304,8 @@ public:
 
 	FReply OnQuantizationButtonClicked(EMusicTimeSpanOffsetUnits newQuantizationUnit);
 
+	bool bFollowCursor = true;
+
 protected:
 
 	friend class FUnDAWSequenceEditorToolkit;
@@ -330,7 +332,7 @@ protected:
 	bool isShiftPressed = false;
 	
 	
-	//bool bFollowCursor = true;
+	
 	
 	double pixelsPerSecond = 1000 ;
 	double rowHeight = 200;

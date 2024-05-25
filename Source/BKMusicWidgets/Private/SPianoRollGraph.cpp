@@ -249,7 +249,16 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 void SPianoRollGraph::UpdateTimestamp(FMusicTimestamp newTimestamp)
 {
 	const auto tick = MidiSongMap->CalculateMidiTick(newTimestamp, EMidiClockSubdivisionQuantization::None);
-	CurrentTimelinePosition = MidiSongMap->TickToMs(tick) * .001f;
+	const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
+	
+	//timeline is in miliseconds
+	CurrentTimelinePosition = CurrentTimeMiliSeconds * .001f;
+
+	if(bFollowCursor)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
+		positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
+	}
 	//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 }
 void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)

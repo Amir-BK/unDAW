@@ -188,7 +188,11 @@ void FUnDAWSequenceEditorToolkit::TryAttachGraphsToPerformer()
         //FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
         //check(MetasoundAsset);
         	FGraphAppearanceInfo AppearanceInfo;
-	AppearanceInfo.CornerText = INVTEXT("M2Sound Graph");
+            FString CornerText = TEXT("M");
+            CornerText.AppendChar(0x00B2);
+            CornerText.Append(TEXT("Sound Graph"));
+	    AppearanceInfo.CornerText = FText::FromString(CornerText);
+        AppearanceInfo.PIENotifyText = FText::FromString(TEXT("PIE is active"));
 
         SGraphEditor::FGraphEditorEvents GraphEvents;
        // GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
@@ -288,8 +292,22 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
                      .OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if(PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
 
                  );
+
+                 //add follow cursor checkbox
+                 ToolbarBuilder.AddWidget(SNew(SCheckBox)
+					 .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (PianoRollGraph) PianoRollGraph->bFollowCursor = NewState == ECheckBoxState::Checked; })
+					 .IsChecked_Lambda([this]() -> ECheckBoxState { return PianoRollGraph && PianoRollGraph->bFollowCursor ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					 .Content()
+					 [
+						 SNew(STextBlock).Text(INVTEXT("Follow Cursor"))
+					 ]
+				 );
+	
                  ToolbarBuilder.EndSection();
+
+
             }));
+
     AddToolbarExtender(ToolbarExtender);
 }
 

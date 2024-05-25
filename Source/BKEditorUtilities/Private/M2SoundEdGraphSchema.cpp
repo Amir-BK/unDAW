@@ -4,5 +4,7 @@
 #include "M2SoundEdGraphSchema.h"
 
 
-
-
+void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
+{
+	UEdGraphSchema::GetGraphContextActions(ContextMenuBuilder);
+}

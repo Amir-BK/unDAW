@@ -191,6 +191,7 @@ UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audi
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
 	SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
 	OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
+	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
 	SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 
 	return SequencerPerformer;
@@ -205,6 +206,16 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	{
 		PopulateFromMidiFile(HarmonixMidiFile);
 		OnMidiDataChanged.Broadcast();
+	}
+
+	if (PropertyName == TEXT("MasterVolume"))
+	{
+#if WITH_EDITOR
+		if (EditorPreviewPerformer && EditorPreviewPerformer->AuditionComponentRef)
+		{
+			EditorPreviewPerformer->AuditionComponentRef->SetVolumeMultiplier(MasterOptions.MasterVolume);
+		}
+#endif
 	}
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
