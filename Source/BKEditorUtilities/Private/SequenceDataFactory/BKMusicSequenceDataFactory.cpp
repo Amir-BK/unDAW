@@ -2,10 +2,16 @@
 
 
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
+#include "M2SoundEdGraphSchema.h"
 
 UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
 {
-	return NewObject<UDAWSequencerData>(InParent, InClass, InName, Flags);
+	auto NewSequence =	NewObject<UDAWSequencerData>(InParent, InClass, InName, Flags);
+
+	NewSequence->M2SoundGraph = NewObject<UM2SoundGraph>(NewSequence, FName(), RF_Transactional);
+	NewSequence->M2SoundGraph->Schema = UM2SoundEdGraphSchema::StaticClass();
+
+	return NewSequence;
 }
 
 bool UBKMusicSequenceDataFactory::ShouldShowInNewMenu() const

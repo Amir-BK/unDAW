@@ -57,9 +57,6 @@ public:
 	UWorld* ParentWorld;
 
 	FMetaSoundBuilderNodeOutputHandle MainMidiStreamOutput;
-
-	UPROPERTY(BlueprintReadWrite, Category = "unDAW|MetaSound Builder Helper")
-	UAudioComponent* AuditionComponent;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
@@ -142,6 +139,15 @@ public:
 
 	UFUNCTION()
 	void ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value);
+
+
+	FMetaSoundNodeHandle MetronomeNode;
+
+	UFUNCTION(CallInEditor)
+	void AddMetronomeNode();
+
+	UFUNCTION(CallInEditor)
+	void RemoveMetronomeNode();
 
 
 

@@ -36,7 +36,7 @@ private:
 };
 
 
-class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface
+class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {
 public:
     void InitEditor(const TArray<UObject*>& InObjects);
@@ -45,11 +45,20 @@ public:
     void UnregisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
 
     TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
+
+    void OnSelectionChanged(const TSet<UObject*>& SelectedNodes);
+
+    void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
  
     FName GetToolkitFName() const override { return "unDAWSequenceEditor"; }
     FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
     FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
     FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
+
+    void TryAttachGraphsToPerformer();
+
+    TSharedPtr<SDockTab> MetasoundGraphEditorBox;
+    TSharedPtr<SGraphEditor> MetasoundGraphEditor;
 
 
     void ExtendToolbar();
@@ -58,7 +67,7 @@ public:
 
 protected:
     UDAWSequencerData* SequenceData;
-
+    TSharedPtr<FUICommandList> AdditionalGraphCommands;
     TSharedPtr<SPianoRollGraph> PianoRollGraph;
 
     TSharedPtr<STextBlock> CurrentPlayStateTextBox;

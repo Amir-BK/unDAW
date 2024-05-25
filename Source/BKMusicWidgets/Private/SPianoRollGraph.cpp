@@ -88,7 +88,7 @@ EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inT
 void SPianoRollGraph::Construct(const FArguments& InArgs)
 {	
 	PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
-	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/EditorWidget/PianoRoll/Internals/InputActions/MidiEditorKeyBindings.MidiEditorKeyBindings");
+	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/KeyboardMappings/MidiEditorKeyBindings.MidiEditorKeyBindings");
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 
 	OnSeekEvent = InArgs._OnSeekEvent;
@@ -404,6 +404,91 @@ void SPianoRollGraph::RecalcGrid()
 	//vertical line
 	vertLine.Add(FVector2f(0.0f, 0.0f));
 	vertLine.Add(FVector2f(0.0f, 127 * rowHeight));
+}
+
+TSharedPtr<SWrapBox> SPianoRollGraph::GetQuantizationButtons()
+{
+	if(QuantizationButtons.IsValid()) return QuantizationButtons;
+	
+	SAssignNew(QuantizationButtons, SWrapBox)
+		//.PreferredSize(FVector2D(500.0f, 100.0f))
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Ms"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Ms)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Bars"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Bars)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Beats"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Beats)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Quarter Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::QuarterNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Eighth Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::EighthNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Sixteenth Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::SixteenthNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Thirty Second Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::ThirtySecondNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Half Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::HalfNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Whole Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::WholeNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Dotted Quarter Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::DottedQuarterNotes)
+		]
+		+ SWrapBox::Slot()
+		[
+			SNew(SButton)
+				.Text(FText::FromString("Dotted Eighth Notes"))
+				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::DottedEighthNotes)
+		];
+	
+	return QuantizationButtons;
+}
+
+FReply SPianoRollGraph::OnQuantizationButtonClicked(EMusicTimeSpanOffsetUnits newQuantizationUnit)
+{
+	QuantizationGridUnit = newQuantizationUnit;
+	RecalcGrid();
+
+	return FReply::Handled();
+
 }
 
 

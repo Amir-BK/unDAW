@@ -13,6 +13,7 @@
 #include "Curves/RealCurve.h"
 #include "Engine/DataAsset.h"
 #include "Curves/CurveFloat.h"
+#include "EdGraph/EdGraph.h"
 
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
@@ -257,6 +258,14 @@ public:
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
 
+UCLASS()
+class BKMUSICCORE_API UM2SoundGraphBase : public UEdGraph
+{
+	GENERATED_BODY()
+public:
+	bool IsEditorOnly() const override { return true; }
+};
+
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
@@ -265,6 +274,7 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 {
 	GENERATED_BODY()
 public:
+
 
 	FOnFusionPatchChanged OnFusionPatchChangedInTrack;
 
@@ -303,6 +313,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
 	UDAWSequencerPerformer* EditorPreviewPerformer;
+
+	UPROPERTY()
+	UM2SoundGraphBase* M2SoundGraph;
 
 #endif //WITH_EDITOR
 

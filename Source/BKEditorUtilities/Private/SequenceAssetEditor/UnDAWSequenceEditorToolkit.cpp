@@ -20,7 +20,7 @@
 void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
     SequenceData = Cast<UDAWSequencerData>(InObjects[0]);
-
+    GEditor->RegisterForUndo(this);
     ExtendToolbar();
 
     const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("DAWSequenceEditorLayout")
@@ -53,7 +53,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
                 ->AddTab("OutputLog", ETabState::OpenedTab)
             )
         );
-    FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, {}, "DAWSequenceEditor", Layout, true, true, InObjects);
+    FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, TSharedPtr<IToolkitHost>(), "DAWSequenceEditor", Layout, true, true, InObjects, false);
     
 
 }
@@ -66,14 +66,10 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
  
     InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
     {
-        return SNew(SDockTab)
-        [
-            SNew(STextBlock)
-                .Text(INVTEXT("TEST!"))
-
-        ];
+            return SAssignNew(MetasoundGraphEditorBox, SDockTab);
+      
     }))
-    .SetDisplayName(INVTEXT("Mixer Controls"))
+    .SetDisplayName(INVTEXT("Builder Graph"))
     .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
     InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
@@ -169,6 +165,52 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 
 }
 
+void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
+{
+
+}
+
+void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
+{
+    //const FScopedTransaction Transaction(TEXT(""), INVTEXT("Rename Node"), NodeBeingChanged);
+    //NodeBeingChanged->Modify();
+    //ConcordModel->Modify();
+    //NodeBeingChanged->OnRenameNode(NewText.ToString());
+    //NodeDetailsView->ForceRefresh();
+    //AdditionalDetailsView->ForceRefresh();
+}
+
+void FUnDAWSequenceEditorToolkit::TryAttachGraphsToPerformer()
+{
+    if (Performer && Performer->AuditionComponentRef)
+    {
+       // auto Metasound = Performer->AuditionComponentRef->GetSound();
+        //FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
+        //check(MetasoundAsset);
+        	FGraphAppearanceInfo AppearanceInfo;
+	AppearanceInfo.CornerText = INVTEXT("M2Sound Graph");
+
+        SGraphEditor::FGraphEditorEvents GraphEvents;
+       // GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
+       // GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
+       GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
+       GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
+        AdditionalGraphCommands = MakeShared<FUICommandList>();
+        SAssignNew(MetasoundGraphEditor, SGraphEditor)
+        //   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
+           .AssetEditorToolkit(SharedThis(this))
+           .AdditionalCommands(AdditionalGraphCommands)
+
+              .Appearance(AppearanceInfo)
+
+           .GraphEvents(GraphEvents)
+           .GraphToEdit(SequenceData->M2SoundGraph);
+
+        MetasoundGraphEditorBox->SetContent(MetasoundGraphEditor.ToSharedRef());
+
+    }
+}
+
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
     TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
@@ -258,6 +300,7 @@ inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
     PianoRollGraph->SessionData.Reset();
     PianoRollGraph.Reset();
     SequenceData = nullptr;
+    GEditor->UnregisterForUndo(this);
 }
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
@@ -275,7 +318,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
     //    UE_LOG(LogTemp, Warning, TEXT("Seeking to %f"), Seek);
     //    
     //    Performer->SendSeekCommand(Seek); });
- 
+    TryAttachGraphsToPerformer();
 }
 
 

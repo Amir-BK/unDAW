@@ -9,6 +9,7 @@
 #include "MetasoundAssetSubsystem.h"
 #include "MetasoundAssetBase.h"
 #include "MetasoundOutputSubsystem.h"
+#include "MetasoundFrontendSearchEngine.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
@@ -329,6 +330,54 @@ void UDAWSequencerPerformer::ReceiveMetaSoundMidiClockOutput(FName OutputName, c
 	OnTimestampUpdated.Broadcast(CurrentTimestamp);
 	
 }
+
+
+void FindAllMetaSoundClasses()
+{
+	using namespace Metasound;
+	using namespace Metasound::Frontend;
+
+	FMetasoundFrontendClass RegisteredClass;
+
+	auto AllClasses = ISearchEngine::Get().FindAllClasses(true);
+	for (const auto MetaClass : AllClasses)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Class: %s"), *MetaClass.Metadata.GetClassName().GetFullName().ToString())
+
+	}
+
+}
+
+void UDAWSequencerPerformer::AddMetronomeNode()
+{
+	FindAllMetaSoundClasses();
+	FString IsMetronomeNodeSet = MetronomeNode.IsSet() ? TEXT("true") : TEXT("false");
+	UE_LOG(LogTemp, Log, TEXT("Add Metronome Node! %s"), *IsMetronomeNodeSet)
+	if (MetronomeNode.IsSet()) return;
+	EMetaSoundBuilderResult BuildResult;
+	MetronomeNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MidiPulseGenerator"))), BuildResult, 0);
+	auto MetronomeOutputs = CurrentBuilder->FindNodeOutputs(MetronomeNode, BuildResult);
+	auto MetAudioOuts = GetFreeAudioOutput();
+	bool usedLeft = false;
+	for (const auto& Output : MetronomeOutputs)
+	{
+		FName NodeName;
+		FName DataType;
+		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+		if (DataType == FName(TEXT("Audio")))
+		{
+			CurrentBuilder->ConnectNodes(Output, MetAudioOuts[usedLeft ? 0 : 1], BuildResult);
+			usedLeft = true;
+
+		}
+	}
+}
+void UDAWSequencerPerformer::RemoveMetronomeNode()
+{
+	EMetaSoundBuilderResult BuildResult;
+	if(MetronomeNode.IsSet())	CurrentBuilder->RemoveNode(MetronomeNode, BuildResult);
+}
+
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
 {

@@ -10,7 +10,7 @@
 #include "Input/Reply.h"
 #include "Components/PanelSlot.h"
 #include "Widgets/SWidget.h"
-
+#include "Widgets/Layout/SWrapBox.h"
 
 #include "Widgets/Colors/SColorBlock.h"
 #include <TimeSyncedPanel.h>
@@ -297,6 +297,12 @@ public:
 	void ResetCanvas();
 
 	void RecalcGrid();
+
+	TSharedPtr<SWrapBox> QuantizationButtons;
+
+	TSharedPtr<SWrapBox> GetQuantizationButtons();
+
+	FReply OnQuantizationButtonClicked(EMusicTimeSpanOffsetUnits newQuantizationUnit);
 
 protected:
 
