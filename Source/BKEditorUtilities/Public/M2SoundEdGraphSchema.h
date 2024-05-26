@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "EdGraph/EdGraphSchema.h"
 #include "SequencerData.h"
+#include <EdGraphUtilities.h>
+#include <EdGraph/EdGraphNode.h>
 #include "M2SoundEdGraphSchema.generated.h"
 
 
@@ -19,6 +21,7 @@ public:
 
 	UDAWSequencerData* GetSequencerData() const { return Cast<UDAWSequencerData>(GetOuter()); }
 
+	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
 };
 
 /**
@@ -46,4 +49,64 @@ public:
 
 	FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
+};
+
+UCLASS()
+class UM2SoundGraphOutputNode : public UM2SoundEdGraphNode
+{
+	GENERATED_BODY()
+
+public:
+	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
+
+};
+
+
+
+USTRUCT()
+struct FM2SoundGraphAddNodeAction : public FEdGraphSchemaAction
+{
+public:	
+	GENERATED_BODY()
+
+	FM2SoundGraphAddNodeAction() : FEdGraphSchemaAction(), LocationOffset(FVector2D::ZeroVector) {}
+	FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder);
+
+	//virtual UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
+	virtual UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) PURE_VIRTUAL(FM2SoundGraphAddNodeAction::MakeNode, return nullptr;)
+
+
+private:
+	UPROPERTY()
+	FText TransactionText;
+
+	UPROPERTY()
+	FVector2D LocationOffset;
+};
+
+USTRUCT()
+struct FM2SoundGraphToOutputAction : public FEdGraphSchemaAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphToOutputAction(const TArray<UEdGraphPin*>& InSourcePins);
+	FM2SoundGraphToOutputAction() : FM2SoundGraphToOutputAction(TArray<UEdGraphPin*>()) {}
+	//UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
+private:
+	TArray<UEdGraphPin*> SourcePins;
+};
+
+class FM2SoundGraphPanelNodeFactory : public FGraphPanelNodeFactory
+{
+	public:
+	virtual TSharedPtr<class SGraphNode> CreateNode(UEdGraphNode* InNode) const override;
+};
+
+USTRUCT()
+struct FM2SoundGraphAddNodeAction_NewOutput : public FM2SoundGraphAddNodeAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphAddNodeAction_NewOutput() : FM2SoundGraphAddNodeAction(INVTEXT("TEST"), INVTEXT("Output"), FText(), 0, 0, 0) {}
+	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
 };

@@ -6,7 +6,7 @@
 
 #include "Modules/ModuleManager.h"
 #include "FFKSFZASampleBankAssetActions.h"
-
+#include "M2SoundEdGraphSchema.h"
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 
 
@@ -31,4 +31,5 @@ private:
 	TSharedPtr< FFksfzaSampleBankAssetActions> SFZAssetTypeActions;
 	//TSharedPtr< FFKMidiEditorAssetActions> FKMidiAssetTypeActions;
 	TSharedPtr< FDAWSequenceAssetActions> DAWAssetTypeActions;
+	TSharedPtr< FM2SoundGraphPanelNodeFactory> M2SoundGraphPanelNodeFactory;
 };

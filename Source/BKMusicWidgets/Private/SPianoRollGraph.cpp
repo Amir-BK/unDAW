@@ -256,7 +256,7 @@ void SPianoRollGraph::UpdateTimestamp(FMusicTimestamp newTimestamp)
 
 	if(bFollowCursor)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
+		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 		positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
 	}
 	//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);

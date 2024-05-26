@@ -40,6 +40,11 @@ void BKEditorUtilitiesModule::StartupModule()
     const auto& componentSection = PropertyModule.FindOrCreateSection("ActorComponent", "unDAW", INVTEXT("unDAW"));
     componentSection->AddCategory("unDAW");
     componentSection->AddCategory("BK Music");
+
+    //graph thingies
+    M2SoundGraphPanelNodeFactory = MakeShareable(new FM2SoundGraphPanelNodeFactory());
+    FEdGraphUtilities::RegisterVisualNodeFactory(M2SoundGraphPanelNodeFactory);
+
 }
 
 void BKEditorUtilitiesModule::ShutdownModule()

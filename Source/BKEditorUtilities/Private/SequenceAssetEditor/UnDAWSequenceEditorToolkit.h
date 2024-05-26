@@ -55,7 +55,7 @@ public:
     FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
     FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
 
-    void TryAttachGraphsToPerformer();
+    void CreateGraphEditorWidget();
 
     TSharedPtr<SDockTab> MetasoundGraphEditorBox;
     TSharedPtr<SGraphEditor> MetasoundGraphEditor;

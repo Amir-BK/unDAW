@@ -64,20 +64,12 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
  
     WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
  
-    InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
-    {
-            return SAssignNew(MetasoundGraphEditorBox, SDockTab);
-      
-    }))
-    .SetDisplayName(INVTEXT("Builder Graph"))
-    .SetGroup(WorkspaceMenuCategory.ToSharedRef());
-
     InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
         {
             auto DockTab = SNew(SDockTab)
                 [
                     SAssignNew(PianoRollGraph, SPianoRollGraph)
-                      .SessionData(SequenceData->GetSelfSharedPtr())
+                        .SessionData(SequenceData->GetSelfSharedPtr())
                         .Clipping(EWidgetClipping::ClipToBounds)
                         .gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
                         .accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
@@ -95,19 +87,34 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
                 else {
                     Performer = SequenceData->EditorPreviewPerformer;
                     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-                    }
                 }
+            }
 
             SequenceData->OnMidiDataChanged.AddLambda([&]()
                 {
-				PianoRollGraph->Init();
-                SetupPreviewPerformer();
-			    });
+                    PianoRollGraph->Init();
+                    SetupPreviewPerformer();
+                });
 
             return DockTab;
         }))
         .SetDisplayName(INVTEXT("Piano Roll"))
-            .SetGroup(WorkspaceMenuCategory.ToSharedRef());
+        .SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+    CreateGraphEditorWidget();
+    InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
+    {
+            return SAssignNew(MetasoundGraphEditorBox, SDockTab)
+                .Content()
+				[
+					MetasoundGraphEditor.ToSharedRef()
+				];
+      
+    }))
+    .SetDisplayName(INVTEXT("Builder Graph"))
+    .SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+   // MetasoundGraphEditorBox->SetContent(MetasoundGraphEditor.ToSharedRef());
 
  
     FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -180,10 +187,10 @@ void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETe
     //AdditionalDetailsView->ForceRefresh();
 }
 
-void FUnDAWSequenceEditorToolkit::TryAttachGraphsToPerformer()
+void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 {
-    if (Performer && Performer->AuditionComponentRef)
-    {
+    //if (Performer && Performer->AuditionComponentRef)
+    //{
        // auto Metasound = Performer->AuditionComponentRef->GetSound();
         //FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
         //check(MetasoundAsset);
@@ -204,15 +211,10 @@ void FUnDAWSequenceEditorToolkit::TryAttachGraphsToPerformer()
         //   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
            .AssetEditorToolkit(SharedThis(this))
            .AdditionalCommands(AdditionalGraphCommands)
-
-              .Appearance(AppearanceInfo)
-
+           .Appearance(AppearanceInfo)
            .GraphEvents(GraphEvents)
            .GraphToEdit(SequenceData->M2SoundGraph);
-
-        MetasoundGraphEditorBox->SetContent(MetasoundGraphEditor.ToSharedRef());
-
-    }
+   // }
 }
 
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
@@ -336,7 +338,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
     //    UE_LOG(LogTemp, Warning, TEXT("Seeking to %f"), Seek);
     //    
     //    Performer->SendSeekCommand(Seek); });
-    TryAttachGraphsToPerformer();
+ 
 }
 
 
