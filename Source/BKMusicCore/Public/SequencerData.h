@@ -173,15 +173,6 @@ public:
 
 };
 
-/**
- * 
- */
-class BKMUSICCORE_API SequencerData
-{
-	
-public:
-	
-};
 
 
 USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
@@ -258,12 +249,16 @@ public:
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
 
+class UM2SoundGraph;
+
 UCLASS()
 class BKMUSICCORE_API UM2SoundGraphBase : public UEdGraph
 {
 	GENERATED_BODY()
 public:
 	bool IsEditorOnly() const override { return true; }
+
+	virtual void InitializeGraph() {};
 };
 
 
@@ -298,6 +293,16 @@ public:
 
 };
 
+UCLASS()
+class BKMUSICCORE_API UM2SoundPatch : public UM2SoundVertex
+{
+	GENERATED_BODY()
+public:
+	// yada
+
+};
+
+
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
@@ -307,6 +312,7 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+	void AddVertex(UM2SoundVertex* Vertex);
 
 	FOnFusionPatchChanged OnFusionPatchChangedInTrack;
 
@@ -348,13 +354,12 @@ public:
 
 	UPROPERTY()
 	UM2SoundGraphBase* M2SoundGraph;
-
-#endif //WITH_EDITOR
+#endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
 	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
 	float SequenceDuration = 100.0f;
 
 
@@ -403,6 +408,19 @@ public:
 
 	private:
 		FTrackDisplayOptions InvalidTrackRef;
+
+
+
+// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
+// in the future we will add a curvetable to the sequencer data, this will allow us to store the data for the curves in the sequencer, this will be used to create the curves in the performer
+	
+		public:
+		//the outputs map should be used by Listeners in the scene to easily get MIDI outputs and other outputs, MIDI is the priority, we might create multiple maps for other data types.
+		UPROPERTY(VisibleAnywhere)
+		TMap<FName, UM2SoundOutput*> Outputs;
+
+		UPROPERTY(VisibleAnywhere)
+		TMap<FName, UM2SoundOutput*> Patches;
 
 };
 

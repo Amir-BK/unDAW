@@ -25,6 +25,25 @@ FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FTe
 
 }
 
+UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode)
+{
+	const FScopedTransaction Transaction(TransactionText);
+	ParentGraph->Modify();
+	Cast<UM2SoundGraph>(ParentGraph)->GetSequencerData()->Modify();
+	UEdGraphNode* NewNode = MakeNode(ParentGraph, FromPin);
+	NewNode->NodePosX = Location.X + LocationOffset.X;
+	NewNode->NodePosY = Location.Y + LocationOffset.Y;
+	if (FromPin) for (UEdGraphPin* Pin : NewNode->Pins)
+	{
+		if (FromPin->Direction == Pin->Direction) continue;
+		ParentGraph->GetSchema()->TryCreateConnection(Pin, FromPin);
+		NewNode->NodeConnectionListChanged();
+		FromPin->GetOwningNode()->NodeConnectionListChanged();
+		break;
+	}
+	return NewNode;
+}
+
 
 void UM2SoundGraphOutputNode::GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
@@ -49,6 +68,37 @@ TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Directi
 	return MoveTemp(Pins);
 }
 
+void UM2SoundGraph::InitializeGraph()
+{
+	//if (GetSequencerData()) return;
+	//SetSequencerData(NewObject<UM2SoundData>(
+
+	//retrieve all output vertices from the sequencer data and create a node for each one
+	//for (UM2SoundOutput* Output : GetSequencerData()->G)
+
+	Nodes.Empty();
+
+	const int OffsetBetweenNodes = 50;
+	const int OutputsColumnPosition = 800;
+
+	int i = 0;
+
+	for(const auto& [name, Output] : GetSequencerData()->Outputs)
+	{
+		FGraphNodeCreator<UM2SoundGraphOutputNode> NodeCreator(*this);
+		UM2SoundGraphOutputNode* Node = NodeCreator.CreateNode();
+		UE_LOG(LogTemp, Log, TEXT("Creating node for output %s"), *name.ToString());
+		Node->Vertex = Output;
+		Node->Name = name;
+		//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
+		Node->NodePosX = OutputsColumnPosition;
+		Node->NodePosY = i * OffsetBetweenNodes;
+		NodeCreator.Finalize();
+		i++;
+	}
+
+}
+
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
 	FGraphNodeCreator<UM2SoundGraphOutputNode> NodeCreator(*ParentGraph);
@@ -56,7 +106,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 	Node->Name = FName("Output");
 
 	Node->Vertex = NewObject<UM2SoundOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
-
+	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	NodeCreator.Finalize();
 
 	

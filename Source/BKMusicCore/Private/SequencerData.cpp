@@ -16,6 +16,14 @@ struct FEventsWithIndex
 
 	
 
+void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
+{
+	if(auto NewOutput = Cast<UM2SoundOutput>(Vertex))
+	{
+		Outputs.Add(NewOutput->GetFName(), NewOutput);
+	}
+}
+
 void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch)
 {
 	if (TrackDisplayOptionsMap.Contains(TrackID))
@@ -42,6 +50,7 @@ inline void UDAWSequencerData::InitTracksFromFoundArray(TMap<int, int> InTracks)
 		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
 		newTrack.fusionPatch = PianoPatch;
 		TrackDisplayOptionsMap.Add(channelID, newTrack);
+		Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
 	}
 
 }
@@ -70,6 +79,8 @@ inline FTrackDisplayOptions& UDAWSequencerData::GetTrackOptionsRef(int TrackID)
 	}
 }
 
+
+
 void UDAWSequencerData::CalculateSequenceDuration()
 {
 	if (HarmonixMidiFile)
@@ -84,6 +95,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
 	TMap<int, int> FoundChannels;
 	LinkedNoteDataMap.Empty();
+	Outputs.Empty();
 	HarmonixMidiFile = inMidiFile;
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
@@ -180,6 +192,12 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		//FoundChannels.Sort();
 		CalculateSequenceDuration();
 		InitTracksFromFoundArray(FoundChannels);
+#if WITH_EDITOR
+		if(M2SoundGraph)
+		{
+			M2SoundGraph->InitializeGraph();
+		}
+#endif
 		//CreateBuilderHelper();
 	}
 }

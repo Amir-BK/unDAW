@@ -22,6 +22,9 @@ public:
 	UDAWSequencerData* GetSequencerData() const { return Cast<UDAWSequencerData>(GetOuter()); }
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
+
+	void InitializeGraph() override;
+
 };
 
 /**
@@ -56,6 +59,8 @@ public:
 
 	UPROPERTY()
 	UM2SoundVertex* Vertex;
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
 };
 
 UCLASS()
@@ -66,6 +71,7 @@ class UM2SoundGraphOutputNode : public UM2SoundEdGraphNode
 public:
 	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
 
+	
 };
 
 UCLASS()
@@ -92,7 +98,7 @@ public:
 	FM2SoundGraphAddNodeAction() : FEdGraphSchemaAction(), LocationOffset(FVector2D::ZeroVector) {}
 	FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder);
 
-	//virtual UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
+	virtual UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	virtual UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) PURE_VIRTUAL(FM2SoundGraphAddNodeAction::MakeNode, return nullptr;)
 
 

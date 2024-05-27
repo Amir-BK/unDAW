@@ -21,6 +21,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
     SequenceData = Cast<UDAWSequencerData>(InObjects[0]);
     GEditor->RegisterForUndo(this);
+    CurrentTimestamp = CurrentTimestamp.CreateLambda([this]() { return Performer ? Performer->CurrentTimestamp : FMusicTimestamp(); });
     ExtendToolbar();
 
     const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("DAWSequenceEditorLayout")
@@ -62,7 +63,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 {
     FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-    CurrentTimestamp = CurrentTimestamp.CreateLambda([this]() { return Performer ? Performer->CurrentTimestamp : FMusicTimestamp(); });
+ 
  
     WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
  
@@ -111,6 +112,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
         .SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
     CreateGraphEditorWidget();
+
     InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
     {
             return SAssignNew(MetasoundGraphEditorBox, SDockTab)

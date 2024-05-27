@@ -130,7 +130,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 
 	FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
 
-	SetCurrentTimestamp(InArgs._CurrentTimestamp);
+	//SetCurrentTimestamp(InArgs._CurrentTimestamp);
+	//CurrentTimestamp.
 
 	//Init();
 	//UE_LOGFMT(LogTemp, Log, "consexpr test: {0}", test);
