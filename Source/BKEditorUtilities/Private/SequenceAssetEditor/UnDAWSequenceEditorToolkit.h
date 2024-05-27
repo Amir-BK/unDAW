@@ -60,6 +60,7 @@ public:
     TSharedPtr<SDockTab> MetasoundGraphEditorBox;
     TSharedPtr<SGraphEditor> MetasoundGraphEditor;
 
+    void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
     void ExtendToolbar();
 

@@ -176,7 +176,9 @@ public:
 		SLATE_ARGUMENT(FLinearColor, noteColor)
 		SLATE_ARGUMENT(float, pixelsPerBeat)
 		SLATE_ARGUMENT(TSharedPtr<UDAWSequencerData>, SessionData)
+		SLATE_ATTRIBUTE(FMusicTimestamp, CurrentTimestamp)
 		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
+
 		//SLATE_ARGUMENT(TSharedPtr<UMIDIEditorBase>, parentMidiEditor)
 	SLATE_END_ARGS()
 
@@ -187,6 +189,18 @@ public:
 	FString debugData;
 #endif
 	
+private:
+	TAttribute<FMusicTimestamp> CurrentTimestamp;
+	
+	bool bIsAttributeBoundMusicTimestamp = false;
+
+public:
+
+	void SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimestamp);
+
+	//FMusicTimestamp CurrentTimestamp;
+
+
 
 	FOnTransportSeekCommand OnSeekEvent;
 

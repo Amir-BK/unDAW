@@ -6,12 +6,35 @@
 #include "IAudioParameterInterfaceRegistry.h"
 #include "Kismet/GameplayStatics.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "MetasoundGeneratorHandle.h"
+#include "MetasoundGenerator.h"
 #include "MetasoundAssetSubsystem.h"
 #include "MetasoundAssetBase.h"
 #include "MetasoundOutputSubsystem.h"
 #include "MetasoundFrontendSearchEngine.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
+
+UDAWSequencerPerformer::~UDAWSequencerPerformer()
+{
+
+	//if(GeneratorHandle) 
+	//	{
+	//	//GeneratorHandle->Get
+	//	GeneratorHandle->CreateGene
+	//	GeneratorHandle->GetGenerator()->UnwatchOutput(FName(TEXT("unDAW.Midi Clock")), OnMidiClockOutputReceived, FName(""), FName(""));
+	//	GeneratorHandle->GetGenerator()->UnwatchOutput(FName(TEXT("unDAW.Midi Stream")));
+	//	 }
+	
+	if (AuditionComponentRef)
+	{
+		AuditionComponentRef->Stop();
+		AuditionComponentRef->DestroyComponent();
+	}
+
+
+
+}
 
 void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 {
@@ -261,6 +284,9 @@ void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandl
 void UDAWSequencerPerformer::Tick(float DeltaTime)
 {
 	//UE_LOG(LogTemp, Log, TEXT("Tick! Sequencer Asset Name: %s"), *SessionData->GetName())
+
+	if (!AuditionComponentRef) return;
+
 		GeneratorHandle->UpdateWatchers();
 
 
@@ -328,6 +354,7 @@ void UDAWSequencerPerformer::ReceiveMetaSoundMidiClockOutput(FName OutputName, c
 	//UE_LOG(LogTemp, Log, TEXT("Output Received! %s, Data type: %s"), *OutputName.ToString(), *Value.GetDataTypeName().ToString())
 	Value.Get(CurrentTimestamp);
 	OnTimestampUpdated.Broadcast(CurrentTimestamp);
+	OnMusicTimestampFromPerformer.ExecuteIfBound(CurrentTimestamp);
 	
 }
 

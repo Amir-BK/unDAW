@@ -21,9 +21,10 @@
 
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
 DECLARE_MULTICAST_DELEGATE(FDAWPerformerDeleted);
-DECLARE_MULTICAST_DELEGATE_OneParam(FMusicTimestampUpdated, FMusicTimestamp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMusicTimestampUpdated, FMusicTimestamp, NewTimestamp);
 
-DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float);
+DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float)
+DECLARE_DELEGATE_OneParam(FOnMusictimestampFromPerformer, FMusicTimestamp)
 
 /**
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
@@ -35,6 +36,9 @@ class BKMUSICCORE_API UDAWSequencerPerformer : public UObject, public FTickableG
 	
 public:
 
+	~UDAWSequencerPerformer();
+
+
 	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
 	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;
 
@@ -43,6 +47,8 @@ public:
 	FDAWPerformerDeleted OnDeleted;
 
 	FMusicTimestampUpdated OnTimestampUpdated;
+
+	FOnMusictimestampFromPerformer OnMusicTimestampFromPerformer;
 
 	//IBK_MusicSceneManagerInterface* ParentSceneManager;
 

@@ -59,6 +59,8 @@ class BKMUSICCORE_API IBK_MusicSceneManagerInterface
 public:
 	/** Please add a variable description */
 
+	TAttribute<FMusicTimestamp> CurrentTimestamp;
+
 	
 	FOnTransportSeekCommand OnSeekEvent;
 

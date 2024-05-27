@@ -13,13 +13,14 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		//const TArray<UEdGraphPin*> TargetPins = Cast<UConcordModelGraph>(ContextMenuBuilder.CurrentGraph)->GetSelectedPins(EGPD_Input);
 		//if (!TargetPins.IsEmpty()) ContextMenuBuilder.AddAction(MakeShared<FConcordModelGraphFromParameterAction>(TargetPins));
 
-		const TArray<UEdGraphPin*> SourcePins = Cast<UM2SoundGraph>(ContextMenuBuilder.CurrentGraph)->GetSelectedPins(EGPD_Output);
-		if (!SourcePins.IsEmpty()) ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
+		//const TArray<UEdGraphPin*> SourcePins = Cast<UM2SoundGraph>(ContextMenuBuilder.CurrentGraph)->GetSelectedPins(EGPD_Output);
+		//if (!SourcePins.IsEmpty()) 
+			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
 	}
 }
 
 FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder)
-	: FEdGraphSchemaAction(FText(), INVTEXT("Output"), InToolTip, 0)
+	: FEdGraphSchemaAction(InNodeCategory, INVTEXT("Output"), InToolTip, 0)
 {
 
 }
@@ -50,5 +51,25 @@ TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Directi
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-	return nullptr;
+	FGraphNodeCreator<UM2SoundGraphOutputNode> NodeCreator(*ParentGraph);
+	UM2SoundGraphOutputNode* Node = NodeCreator.CreateUserInvokedNode();
+	Node->Name = FName("Output");
+
+	Node->Vertex = NewObject<UM2SoundOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+
+	NodeCreator.Finalize();
+
+	
+	return Node;
+}
+
+FText UM2SoundGraphConsumer::GetPinDisplayName(const UEdGraphPin* Pin) const
+{
+	if (Pin->Direction == EGPD_Output) return FText::FromName(Pin->PinName);
+	int32 Index = Pins.Find(const_cast<UEdGraphPin*>(Pin));
+	check(Index != INDEX_NONE && Vertex);
+	//if (Index >= Vertex->GetInputInfo().Num()) return INVTEXT("This pin should not exist! Remove and re-add the node.");
+	//return Vertex->GetInputInfo()[Index].DisplayName;
+
+	return INVTEXT("Le Poop");
 }

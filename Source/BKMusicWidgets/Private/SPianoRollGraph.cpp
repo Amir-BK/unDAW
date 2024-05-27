@@ -92,6 +92,10 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 
 	OnSeekEvent = InArgs._OnSeekEvent;
+	//OnMusicTimestamp = InArgs._OnMusicTimestamp;
+
+	//OnMusicTimestamp.BindLambda([&](FMusicTimestamp newTimestamp) { UpdateTimestamp(newTimestamp); });
+	//OnMusicTimestamp.Unbind();
 
 	bCanSupportFocus = true;
 	//we don't want to tick unless there's a midi file
@@ -126,6 +130,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 
 	FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
 
+	SetCurrentTimestamp(InArgs._CurrentTimestamp);
+
 	//Init();
 	//UE_LOGFMT(LogTemp, Log, "consexpr test: {0}", test);
 }
@@ -140,6 +146,13 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 }
 
 
+
+void SPianoRollGraph::SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimestamp)
+{
+	bIsAttributeBoundMusicTimestamp = newTimestamp.IsBound();
+
+	CurrentTimestamp = newTimestamp;
+}
 
 void SPianoRollGraph::Init()
 {
@@ -165,6 +178,19 @@ void SPianoRollGraph::Init()
 
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
+	
+	const auto tick = MidiSongMap->CalculateMidiTick(CurrentTimestamp.Get(), EMidiClockSubdivisionQuantization::None);
+	const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
+
+	//timeline is in miliseconds
+	CurrentTimelinePosition = CurrentTimeMiliSeconds * .001f;
+
+	if (bFollowCursor)
+	{
+		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
+		positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
+	}
+
 	//this is the zoom smoothing function, it is not stable.
 	if (horizontalZoom != hZoomTarget)
 	{

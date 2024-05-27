@@ -43,7 +43,7 @@ public class BKMusicCore : ModuleRules
 				"MetasoundGraphCore",
 				"MetasoundFrontend",
 				"AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
-				"unDAWMetaSounds",
+				"unDAWMetaSounds","MetasoundGenerator",
 
                 "EditorScriptingUtilities"
 				
