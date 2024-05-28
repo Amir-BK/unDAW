@@ -23,6 +23,8 @@ public:
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
 
+	void AutoConnectTrackPinsForNodes(const UM2SoundEdGraphNode& A, const UM2SoundEdGraphNode& B);
+
 	void InitializeGraph() override;
 
 };
@@ -39,6 +41,21 @@ public:
 	const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
 	
 	void GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
+
+	virtual bool TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const override
+	{
+		
+		UE_LOG(LogTemp, Warning, TEXT("TryCreateConnection"));
+		bool success = UEdGraphSchema::TryCreateConnection(A, B);
+		if(success)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Connection created"));
+			A->GetOwningNode()->NodeConnectionListChanged();
+			B->GetOwningNode()->NodeConnectionListChanged();
+		}
+
+		return success;
+	};
 	
 	
 };
@@ -53,7 +70,7 @@ public:
 	UM2SoundGraph* GetGraph() const { return Cast<UM2SoundGraph>(UEdGraphNode::GetGraph()); }
 	UDAWSequencerData* GetSequencerData() const { return GetGraph()->GetSequencerData(); }
 
-	FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
+	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
 
@@ -64,10 +81,75 @@ public:
 	UM2SoundVertex* Vertex;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
+
+	UPROPERTY()
+	int AssignedTrackId = INDEX_NONE;
+
+	FLinearColor GetNodeTitleColor() const override { return GetSequencerData()->GetTracksDisplayOptions(AssignedTrackId).trackColor; }
+
+	void UpdateDownstreamTrackAssignment(int NewTrackId) {
+		AssignedTrackId = NewTrackId;
+		for (UEdGraphPin* Pin : Pins)
+		{
+			if (Pin->Direction == EGPD_Output && Pin->PinType.PinCategory == "Track")
+			{
+				for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
+				{
+					if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
+					{
+						LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
+					}
+				}
+			}
+		}
+	}
+
+};
+
+
+//The consumer base node is the base class for all nodes that are downstream from the track,
+UCLASS()
+class BK_EDITORUTILITIES_API UM2SoundEdGraphNodeConsumer : public UM2SoundEdGraphNode
+{
+	GENERATED_BODY()
+public:
+	void NodeConnectionListChanged() override {
+		UM2SoundEdGraphNode::NodeConnectionListChanged();
+		//SyncModelConnections();
+		int CurrentTrackId = AssignedTrackId;
+			if (const auto UpstreamSource = GetUpstreamNode())
+			{
+				AssignedTrackId = UpstreamSource->AssignedTrackId;
+			}
+			else {
+				AssignedTrackId = INDEX_NONE;
+			}
+
+		if (CurrentTrackId != AssignedTrackId)
+		{
+			//SyncModelConnections();
+		}
+
+	}
+
+	const UM2SoundEdGraphNode* GetUpstreamNode() const {
+		for (UEdGraphPin* Pin : Pins)
+		{
+			if (Pin->Direction == EGPD_Input && Pin->LinkedTo.Num() > 0)
+			{
+				return Cast<UM2SoundEdGraphNode>(Pin->LinkedTo[0]->GetOwningNode());
+			}
+		}
+		return nullptr;
+
+
+		//FLinearColor GetNodeTitleColor() const override { return TitleColor; }
+
+	};
 };
 
 UCLASS()
-class UM2SoundGraphOutputNode : public UM2SoundEdGraphNode
+class UM2SoundGraphOutputNode : public UM2SoundEdGraphNodeConsumer
 {
 	GENERATED_BODY()
 
@@ -94,12 +176,12 @@ public:
 	void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Track In: %s"), *Name.ToString())); }
-	FLinearColor GetNodeTitleColor() const override { return GetSequencerData()->GetTracksDisplayOptions(TrackId).trackColor; }
+	//FLinearColor GetNodeTitleColor() const override { return GetSequencerData()->GetTracksDisplayOptions(TrackId).trackColor; }
 
 };
 
 UCLASS()
-class UM2SoundInstrumentNode : public UM2SoundEdGraphNode
+class UM2SoundInstrumentNode : public UM2SoundEdGraphNodeConsumer
 {
 	GENERATED_BODY()
 

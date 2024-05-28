@@ -29,6 +29,8 @@ class UDAWSequencerPerformer;
 
 DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
 
+class UDAWSequencerData;
+
 UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
 enum EBKTransportCommands : uint8
 {
@@ -59,6 +61,25 @@ enum EBKPlayState : uint8
 
 };
 
+UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+enum EM2SoundGraphConnectionStatus : uint8
+{
+	Connected,
+	Disconnected,
+	Pending
+};
+
+USTRUCT()
+struct FM2SoundGraphConnection
+{
+	GENERATED_BODY()
+	
+	FMetaSoundBuilderNodeInputHandle InputHandle;
+	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+
+	EM2SoundGraphConnectionStatus Status = EM2SoundGraphConnectionStatus::Pending;
+
+};
 
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
@@ -270,6 +291,26 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 	GENERATED_BODY()
 
 
+public:
+
+
+
+	UPROPERTY()
+	TArray<UM2SoundVertex*> Inputs;
+
+	UPROPERTY()
+	TArray<UM2SoundVertex*> Outputs;
+
+	UFUNCTION()
+	UDAWSequencerData* GetSequencerData() const;
+
+	UPROPERTY()
+	TObjectPtr<UDAWSequencerData> SequencerData;
+
+	bool bBuiltSuccessfully = false;
+	bool bIsInput = false;
+	bool bIsOutput = false;
+
 };
 
 UCLASS()
@@ -303,6 +344,11 @@ public:
 
 	UPROPERTY()
 	int TrackId = INDEX_NONE;
+
+	UPROPERTY()
+	FString TrackPrefix;
+
+	void CreateDefaultMapping(const int& index);
 	//FText GetTooltip() const override
 	//{
 	//	return INVTEXT("An output that can be queried from Blueprint.");
@@ -449,7 +495,7 @@ public:
 		TMap<FName, UM2SoundOutput*> Outputs;
 
 		UPROPERTY(VisibleAnywhere)
-		TMap<FName, UM2SoundOutput*> Patches;
+		TMap<FName, UM2SoundPatch*> Patches;
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<int, UM2SoundTrackInput*> TrackInputs;

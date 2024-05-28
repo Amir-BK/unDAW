@@ -3,6 +3,7 @@
 
 #include "SequencerData.h"
 #include "UnDAWSequencePerformer.h"
+#include "M2SoundGraphStatics.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -50,8 +51,10 @@ inline void UDAWSequencerData::InitTracksFromFoundArray(TMap<int, int> InTracks)
 		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
 		newTrack.fusionPatch = PianoPatch;
 		TrackDisplayOptionsMap.Add(channelID, newTrack);
-		Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
-		TrackInputs.Add(trackID, NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional));
+		//Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
+		UM2SoundTrackInput* NewInput = NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional);
+		TrackInputs.Add(trackID, NewInput);
+		UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(this, NewInput, trackID);
 	}
 
 }
@@ -239,4 +242,14 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	}
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
+}
+
+void UM2SoundTrackInput::CreateDefaultMapping(const int& index)
+{
+
+}
+
+UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
+{
+	return SequencerData;
 }
