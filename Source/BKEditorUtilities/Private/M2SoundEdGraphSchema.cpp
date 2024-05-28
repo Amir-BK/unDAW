@@ -16,11 +16,12 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		//const TArray<UEdGraphPin*> SourcePins = Cast<UM2SoundGraph>(ContextMenuBuilder.CurrentGraph)->GetSelectedPins(EGPD_Output);
 		//if (!SourcePins.IsEmpty()) 
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
+			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
 	}
 }
 
 FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder)
-	: FEdGraphSchemaAction(InNodeCategory, INVTEXT("Output"), InToolTip, 0)
+	: FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, 0)
 {
 
 }
@@ -45,11 +46,18 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 }
 
 
+void UM2SoundGraphOutputNode::AllocateDefaultPins()
+{
+	// Create any pin for testing
+	CreatePin(EGPD_Input, "Expression", FName("Output", 0));
+	Pins.Last()->DefaultValue = "Default";
+}
+
 void UM2SoundGraphOutputNode::GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
 	if (ContextMenuBuilder.FromPin &&
 		ContextMenuBuilder.FromPin->Direction != EGPD_Output) return;
-	ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction>());
+	//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction>());
 }
 
 TSharedPtr<class SGraphNode> FM2SoundGraphPanelNodeFactory::CreateNode(UEdGraphNode* InNode) const
@@ -78,8 +86,9 @@ void UM2SoundGraph::InitializeGraph()
 
 	Nodes.Empty();
 
-	const int OffsetBetweenNodes = 50;
-	const int OutputsColumnPosition = 800;
+	const int OffsetBetweenNodes = 75;
+	const int OutputsColumnPosition = 1400;
+	const int InputsColumnPosition = 700;
 
 	int i = 0;
 
@@ -87,13 +96,31 @@ void UM2SoundGraph::InitializeGraph()
 	{
 		FGraphNodeCreator<UM2SoundGraphOutputNode> NodeCreator(*this);
 		UM2SoundGraphOutputNode* Node = NodeCreator.CreateNode();
-		UE_LOG(LogTemp, Log, TEXT("Creating node for output %s"), *name.ToString());
 		Node->Vertex = Output;
 		Node->Name = name;
 		//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
 		Node->NodePosX = OutputsColumnPosition;
 		Node->NodePosY = i * OffsetBetweenNodes;
 		NodeCreator.Finalize();
+
+		i++;
+	}
+
+	i = 0;
+
+	for(const auto& [index, Output] : GetSequencerData()->TrackInputs)
+	{
+		FGraphNodeCreator<UM2SoundGraphInputNode> NodeCreator(*this);
+		UM2SoundGraphInputNode* Node = NodeCreator.CreateNode();
+
+		Node->Vertex = Output;
+		Node->TrackId = index - 1;
+		Node->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Node->TrackId).trackName);
+		//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
+		Node->NodePosX = InputsColumnPosition;
+		Node->NodePosY = i * OffsetBetweenNodes;
+		NodeCreator.Finalize();
+
 		i++;
 	}
 
@@ -122,4 +149,32 @@ FText UM2SoundGraphConsumer::GetPinDisplayName(const UEdGraphPin* Pin) const
 	//return Vertex->GetInputInfo()[Index].DisplayName;
 
 	return INVTEXT("Le Poop");
+}
+
+void UM2SoundGraphInputNode::AllocateDefaultPins()
+{
+		// Create any pin for testing
+	CreatePin(EGPD_Output, "Expression", FName("Input", 0));
+	Pins.Last()->DefaultValue = "Default";
+}
+
+void UM2SoundInstrumentNode::AllocateDefaultPins()
+{
+	// Create any pin for testing
+	CreatePin(EGPD_Input, "Expression", FName("Instrument", 0));
+	Pins.Last()->DefaultValue = "Default";
+
+	CreatePin(EGPD_Output, "Expression", FName("Input", 0));
+	Pins.Last()->DefaultValue = "Default";
+}
+
+UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
+{
+	FGraphNodeCreator<UM2SoundInstrumentNode> NodeCreator(*ParentGraph);
+	UM2SoundInstrumentNode* Node = NodeCreator.CreateUserInvokedNode();
+	Node->Name = FName("Instrument");
+	NodeCreator.Finalize();
+
+	Node->Vertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	return Node;
 }

@@ -69,9 +69,43 @@ class UM2SoundGraphOutputNode : public UM2SoundEdGraphNode
 	GENERATED_BODY()
 
 public:
+
+	void AllocateDefaultPins() override;
 	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
 
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("MidiOut: %s"), *Name.ToString())); }
 	
+};
+
+UCLASS()
+class UM2SoundGraphInputNode : public UM2SoundEdGraphNode
+{
+	GENERATED_BODY()
+
+public:
+
+	// this number represents the track number in the sequencer 
+	UPROPERTY()
+	int TrackId = INDEX_NONE;
+
+	void AllocateDefaultPins() override;
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Track In: %s"), *Name.ToString())); }
+	FLinearColor GetNodeTitleColor() const override { return GetSequencerData()->GetTracksDisplayOptions(TrackId).trackColor; }
+
+};
+
+UCLASS()
+class UM2SoundInstrumentNode : public UM2SoundEdGraphNode
+{
+	GENERATED_BODY()
+
+public:
+
+	void AllocateDefaultPins() override;
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Instrument: %s"), *Name.ToString())); }
+
 };
 
 UCLASS()
@@ -134,5 +168,15 @@ struct FM2SoundGraphAddNodeAction_NewOutput : public FM2SoundGraphAddNodeAction
 	GENERATED_BODY()
 
 	FM2SoundGraphAddNodeAction_NewOutput() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Output"), INVTEXT("Tooltip"), 0, 0, 0) {}
+	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
+};
+
+
+USTRUCT()
+struct FM2SoundGraphAddNodeAction_NewInstrument : public FM2SoundGraphAddNodeAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphAddNodeAction_NewInstrument() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Instrument"), INVTEXT("Tooltip"), 0, 0, 0) {}
 	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
 };

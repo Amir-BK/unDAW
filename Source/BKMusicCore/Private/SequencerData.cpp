@@ -51,6 +51,7 @@ inline void UDAWSequencerData::InitTracksFromFoundArray(TMap<int, int> InTracks)
 		newTrack.fusionPatch = PianoPatch;
 		TrackDisplayOptionsMap.Add(channelID, newTrack);
 		Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
+		TrackInputs.Add(trackID, NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional));
 	}
 
 }
@@ -96,6 +97,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	TMap<int, int> FoundChannels;
 	LinkedNoteDataMap.Empty();
 	Outputs.Empty();
+	TrackInputs.Empty();
 	HarmonixMidiFile = inMidiFile;
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 

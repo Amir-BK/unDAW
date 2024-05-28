@@ -293,11 +293,40 @@ public:
 
 };
 
+
+UCLASS()
+class BKMUSICCORE_API UM2SoundTrackInput : public UM2SoundVertex
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	int TrackId = INDEX_NONE;
+	//FText GetTooltip() const override
+	//{
+	//	return INVTEXT("An output that can be queried from Blueprint.");
+	//}
+
+	//TArray<FInputInfo> GetInputInfo() const override
+	//{
+	//	return
+	//	{
+	//		{ {}, {}, INVTEXT("Output"), "0" }
+	//	};
+	//}
+
+};
+
 UCLASS()
 class BKMUSICCORE_API UM2SoundPatch : public UM2SoundVertex
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY(EditAnywhere, Category = "unDAW|M2Sound Graph")
+	UMetaSoundPatch* Patch;
+
 	// yada
 
 };
@@ -421,6 +450,9 @@ public:
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<FName, UM2SoundOutput*> Patches;
+
+		UPROPERTY(VisibleAnywhere)
+		TMap<int, UM2SoundTrackInput*> TrackInputs;
 
 };
 
