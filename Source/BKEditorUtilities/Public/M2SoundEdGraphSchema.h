@@ -34,6 +34,9 @@ UCLASS()
 class BK_EDITORUTILITIES_API UM2SoundEdGraphSchema : public UEdGraphSchema
 {
 	GENERATED_BODY()
+public:
+
+	const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
 	
 	void GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
 	

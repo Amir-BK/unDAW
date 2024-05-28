@@ -4,6 +4,18 @@
 #include "M2SoundEdGraphSchema.h"
 
 
+const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
+{
+	if (A->Direction == B->Direction)
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
+	
+	if (A->PinType.PinCategory == "Track" && B->PinType.PinCategory == "Track")
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_MAKE, TEXT("Connect Track Bus"));
+	}
+	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
+}
+
 void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const
 {
 	UEdGraphSchema::GetGraphContextActions(ContextMenuBuilder);
@@ -49,7 +61,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 void UM2SoundGraphOutputNode::AllocateDefaultPins()
 {
 	// Create any pin for testing
-	CreatePin(EGPD_Input, "Expression", FName("Output", 0));
+	CreatePin(EGPD_Input, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
 }
 
@@ -154,17 +166,17 @@ FText UM2SoundGraphConsumer::GetPinDisplayName(const UEdGraphPin* Pin) const
 void UM2SoundGraphInputNode::AllocateDefaultPins()
 {
 		// Create any pin for testing
-	CreatePin(EGPD_Output, "Expression", FName("Input", 0));
+	CreatePin(EGPD_Output, "Track", FName("Input", 0));
 	Pins.Last()->DefaultValue = "Default";
 }
 
 void UM2SoundInstrumentNode::AllocateDefaultPins()
 {
 	// Create any pin for testing
-	CreatePin(EGPD_Input, "Expression", FName("Instrument", 0));
+	CreatePin(EGPD_Input, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
 
-	CreatePin(EGPD_Output, "Expression", FName("Input", 0));
+	CreatePin(EGPD_Output, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
 }
 
