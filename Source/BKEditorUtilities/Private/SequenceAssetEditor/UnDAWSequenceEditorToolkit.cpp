@@ -11,6 +11,7 @@
 #include "UnDAWPreviewHelperSubsystem.h"
 #include "Widgets/Colors/SColorPicker.h"
 #include "SMidiTrackControlsWidget.h"
+#include "M2SoundEdGraphSchema.h"
 #include "SEnumCombo.h"
 
 
@@ -133,11 +134,20 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
     DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
     TSharedRef<IDetailsView> DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
     DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
+
+
+   // FDetailsViewArgs NodeDetailsViewArgs;
+  //  NodeDetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
+
+    //NodeDetailsView = PropertyEditorModule.CreateDetailView(NodeDetailsViewArgs);
+
+
     InTabManager->RegisterTabSpawner("DAWSequenceDetailsTab", FOnSpawnTab::CreateLambda([=](const FSpawnTabArgs&)
     {
         return SNew(SDockTab)
         [
-            DetailsView
+                 DetailsView
+
         ];
     }))
     .SetDisplayName(INVTEXT("Details"))
@@ -185,6 +195,19 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 
 void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
 {
+    UE_LOG(LogTemp, Warning, TEXT("Selection Changed"));
+
+    UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
+
+    Graph->SelectedNodes.Empty();
+
+    for(auto& Node : SelectedNodes)
+	{
+		if (UM2SoundEdGraphNode* SoundNode = Cast<UM2SoundEdGraphNode>(Node))
+		{
+            Graph->SelectedNodes.Add(SoundNode);
+		}
+	}
 
 }
 
@@ -382,6 +405,30 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
         {
 			UpdateMidiInputTracks();
 		});
+
+
+    FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+    FDetailsViewArgs DetailsViewArgs;
+    DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+    NodeDetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
+    NodeDetailsView->SetObjects(TArray<UObject*>{ SequenceData->M2SoundGraph });
+    DetailBuilder.EditCategory("Selection")
+		.AddCustomRow(FText::FromString("Selection"))
+		.WholeRowContent()
+		[
+            NodeDetailsView.ToSharedRef()
+		];
+}
+
+FSequenceAssetDetails::~FSequenceAssetDetails()
+{
+    	SequenceData->OnMidiDataChanged.RemoveAll(this);
+
+        MidiInputTracks.Reset();
+        NodeDetailsView.Reset();
+
+
+
 }
 
 void FSequenceAssetDetails::OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch)

@@ -19,7 +19,7 @@ struct FEventsWithIndex
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
-	if(auto NewOutput = Cast<UM2SoundOutput>(Vertex))
+	if(auto NewOutput = Cast<UM2SoundMidiOutput>(Vertex))
 	{
 		Outputs.Add(NewOutput->GetFName(), NewOutput);
 	}
@@ -210,6 +210,9 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* AuditionComponent)
 {
 	auto SequencerPerformer = NewObject<UDAWSequencerPerformer>(this);
+
+
+	SequencerPerformer->InitPerformer(this);
 	SequencerPerformer->SessionData = this;
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
 	SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
@@ -244,10 +247,6 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
 
-void UM2SoundTrackInput::CreateDefaultMapping(const int& index)
-{
-
-}
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {

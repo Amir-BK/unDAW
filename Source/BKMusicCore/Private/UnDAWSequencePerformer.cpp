@@ -12,6 +12,7 @@
 #include "MetasoundAssetBase.h"
 #include "MetasoundOutputSubsystem.h"
 #include "MetasoundFrontendSearchEngine.h"
+#include "M2SoundGraphStatics.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
@@ -35,6 +36,8 @@ UDAWSequencerPerformer::~UDAWSequencerPerformer()
 
 
 }
+
+
 
 void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 {
@@ -64,6 +67,43 @@ void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 
 		}
 	}
+}
+
+void UDAWSequencerPerformer::InitPerformer(UDAWSequencerData* InSessionData)
+{
+	//create builder
+	if (GetOuter() == InSessionData)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Outer is the same!"))
+	}
+
+	//after builder is created, create the nodes and connections
+
+	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(InSessionData);
+
+	for(const auto& Vertex : AllVertices)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
+		//Vertex->GetDocumentChecked().GetDocumentName();
+		if(UM2SoundTrackInput* InputVertex = Cast<UM2SoundTrackInput>(Vertex))
+		{
+			//CreateDefaultVertexesFromInputVertex(InSessionData, InputVertex, InputVertex->TrackId);
+		}
+		else if (UM2SoundPatch* PatchVertex = Cast<UM2SoundPatch>(Vertex))
+		{
+			//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
+		}
+		else if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
+		{
+			//CreateDefaultVertexesFromInputVertex(InSessionData, MidiOutputVertex, MidiOutputVertex->TrackId);
+		}
+	}
+
+}
+
+void UDAWSequencerPerformer::AuditionAudioComponent(UAudioComponent* InComponent)
+{
+
 }
 
 void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)

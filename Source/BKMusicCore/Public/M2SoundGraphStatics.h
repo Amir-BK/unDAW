@@ -30,6 +30,14 @@ public:
 	 * @param the unique index of the track we're initializing
 	 */
 	static void CreateDefaultVertexesFromInputVertex(UDAWSequencerData* SequencerData, UM2SoundTrackInput* InputVertex, const int Index);
+
+	/**
+	* Get all the vertexes in the sequencer data
+	 * @param SequencerData The sequencer data to get the vertexes from
+	 * @return An array of all the vertexes in the sequencer data
+	 */
+
+	static TArray<UM2SoundVertex*> GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData);
 	
 	
 };

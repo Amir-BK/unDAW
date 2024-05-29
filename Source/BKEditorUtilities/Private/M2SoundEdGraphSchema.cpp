@@ -172,7 +172,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 	UM2SoundGraphOutputNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Output");
 
-	Node->Vertex = NewObject<UM2SoundOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+	Node->Vertex = NewObject<UM2SoundMidiOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	NodeCreator.Finalize();
 

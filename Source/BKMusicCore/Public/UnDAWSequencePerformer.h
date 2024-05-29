@@ -38,6 +38,11 @@ public:
 
 	~UDAWSequencerPerformer();
 
+	//Main entry point for the performer to start building the nodes and connections from the vertexes in the sequencer data
+	void InitPerformer(UDAWSequencerData* InSessionData);
+
+	void AuditionAudioComponent(UAudioComponent* InComponent);
+
 
 	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
 	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;

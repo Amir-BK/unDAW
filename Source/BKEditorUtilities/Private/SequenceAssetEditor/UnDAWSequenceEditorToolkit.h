@@ -22,6 +22,8 @@ public:
     // This function will be called when the properties are being customized
     void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
+    ~FSequenceAssetDetails();
+
     static TSharedRef<IDetailCustomization> MakeInstance() { return MakeShareable(new FSequenceAssetDetails()); }
 private:
     UDAWSequencerData* SequenceData = nullptr;
@@ -33,6 +35,8 @@ private:
     void UpdateMidiInputTracks();
 
     // This function will create a new instance of this class as a shared pointer
+
+    TSharedPtr<IDetailsView> NodeDetailsView;
 };
 
 
@@ -72,6 +76,8 @@ protected:
     TSharedPtr<SPianoRollGraph> PianoRollGraph;
 
     TSharedPtr<STextBlock> CurrentPlayStateTextBox;
+    TSharedPtr<IDetailsView> NodeDetailsView;
+    TSharedPtr<IDetailsView> AdditionalDetailsView;
     TSharedPtr<SHorizontalBox> TransportControls;
 
     void SetupPreviewPerformer();

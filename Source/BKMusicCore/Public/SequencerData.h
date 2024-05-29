@@ -269,6 +269,7 @@ public:
 };
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
+DECLARE_MULTICAST_DELEGATE(FOnSelectionChanged)
 
 class UM2SoundGraph;
 
@@ -293,13 +294,18 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
-
-
+	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
 	UPROPERTY()
 	TArray<UM2SoundVertex*> Inputs;
 
 	UPROPERTY()
 	TArray<UM2SoundVertex*> Outputs;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FAudioParameter> MetasoundInputs;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FAudioParameter> MetasoundOutputs;
 
 	UFUNCTION()
 	UDAWSequencerData* GetSequencerData() const;
@@ -313,8 +319,9 @@ public:
 
 };
 
+// this vertex represends a midi output that can be queried from blueprint using the Listeners
 UCLASS()
-class BKMUSICCORE_API UM2SoundOutput : public UM2SoundVertex
+class BKMUSICCORE_API UM2SoundMidiOutput : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
@@ -331,6 +338,19 @@ public:
 	//		{ {}, {}, INVTEXT("Output"), "0" }
 	//	};
 	//}
+
+};
+
+UCLASS()
+class BKMUSICCORE_API UM2SoundAudioOutput : public UM2SoundVertex
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	float Gain;
+
+	UPROPERTY(VisibleAnywhere)
+	FName GainParameterName = NAME_None;
 
 };
 
@@ -347,20 +367,6 @@ public:
 
 	UPROPERTY()
 	FString TrackPrefix;
-
-	void CreateDefaultMapping(const int& index);
-	//FText GetTooltip() const override
-	//{
-	//	return INVTEXT("An output that can be queried from Blueprint.");
-	//}
-
-	//TArray<FInputInfo> GetInputInfo() const override
-	//{
-	//	return
-	//	{
-	//		{ {}, {}, INVTEXT("Output"), "0" }
-	//	};
-	//}
 
 };
 
@@ -394,6 +400,8 @@ public:
 	void ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch);
 
 	FMidiDataChanged OnMidiDataChanged;
+
+	FOnSelectionChanged OnSelectionChanged;
 	
 	TSharedPtr<UDAWSequencerData, ESPMode::ThreadSafe> SelfSharedPtr;
 
@@ -429,6 +437,8 @@ public:
 
 	UPROPERTY()
 	UM2SoundGraphBase* M2SoundGraph;
+
+
 #endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
@@ -492,7 +502,7 @@ public:
 		public:
 		//the outputs map should be used by Listeners in the scene to easily get MIDI outputs and other outputs, MIDI is the priority, we might create multiple maps for other data types.
 		UPROPERTY(VisibleAnywhere)
-		TMap<FName, UM2SoundOutput*> Outputs;
+		TMap<FName, UM2SoundMidiOutput*> Outputs;
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<FName, UM2SoundPatch*> Patches;

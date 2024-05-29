@@ -8,7 +8,7 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
-	UM2SoundOutput* NewOutput = NewObject<UM2SoundOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+	UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
 	UM2SoundPatch* NewPatch = NewObject<UM2SoundPatch>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
@@ -18,4 +18,27 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	SequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewOutput);
 	SequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);
+}
+
+TArray<UM2SoundVertex*> UM2SoundGraphStatics::GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData)
+{
+	TArray<UM2SoundVertex*> Vertexes;
+
+	for (auto& Output : SequencerData->Outputs)
+	{
+		Vertexes.Add(Output.Value);
+	}
+
+	for (auto& Patch : SequencerData->Patches)
+	{
+		Vertexes.Add(Patch.Value);
+	}
+
+	for (auto& Input : SequencerData->TrackInputs)
+	{
+		Vertexes.Add(Input.Value);
+	}
+
+	return Vertexes;
+
 }

@@ -27,6 +27,9 @@ public:
 
 	void InitializeGraph() override;
 
+	UPROPERTY(Transient, EditFixedSize, EditAnywhere, Instanced, meta = (TitleProperty = "{Name}") , Category = "Selection")
+	TArray<UM2SoundEdGraphNode*> SelectedNodes;
+
 };
 
 /**
@@ -77,7 +80,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Node")
 	FName Name;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	UM2SoundVertex* Vertex;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
