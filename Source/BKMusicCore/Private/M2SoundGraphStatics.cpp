@@ -8,9 +8,12 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Instrument.unDAW_Fusion_Instrument'"));
+
 	UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
 	UM2SoundPatch* NewPatch = NewObject<UM2SoundPatch>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+	NewPatch->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 
 	InputVertex->TrackId = Index;
 	InputVertex->Outputs.Add(NewPatch);

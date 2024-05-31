@@ -29,6 +29,9 @@ class UDAWSequencerPerformer;
 
 DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
+
+
 class UDAWSequencerData;
 
 UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
@@ -294,6 +297,9 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	UPROPERTY(BlueprintAssignable, Category = "unDAW|M2Sound")
+	FOnVertexUpdated OnVertexUpdated;
+
 	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
 	UPROPERTY()
 	TArray<UM2SoundVertex*> Inputs;
@@ -316,6 +322,15 @@ public:
 	bool bBuiltSuccessfully = false;
 	bool bIsInput = false;
 	bool bIsOutput = false;
+
+	UPROPERTY()
+	FString VertexErrors;
+
+	UPROPERTY()
+	bool bHasErrors = false;
+
+	UPROPERTY()
+	int32 ErrorType = EMessageSeverity::Info;
 
 };
 
@@ -379,6 +394,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "unDAW|M2Sound Graph")
 	UMetaSoundPatch* Patch;
 
+	//post import property edit
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
 	// yada
 
 };
@@ -415,10 +433,10 @@ public:
 		return SelfSharedPtr;
 	}
 
-	~UDAWSequencerData()
-	{
-		SelfSharedPtr.Reset();
-	}
+	//~UDAWSequencerData()
+	//{
+	//	SelfSharedPtr.Reset();
+	//}
 
 	
 	UPROPERTY()

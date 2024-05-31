@@ -10,35 +10,20 @@
 #include "AssetTypeActions_Base.h"
 #include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "SequencerData.h"
+#include "Widgets/SWidget.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "AssetRegistry/AssetData.h"
 #include <UnDAWPreviewHelperSubsystem.h>
 #include "BKMusicSequenceDataFactory.generated.h"
 
-namespace UE::AudioEditor
+
+class FDAWSequenceAssetActions : public FAssetTypeActions_Base
 {
-	void StopSound()
-	{
-		GEditor->ResetPreviewAudioComponent();
-	}
+public:
 
-	void PlaySound(USoundBase* Sound)
-	{
-		if (Sound)
-		{
-			GEditor->PlayPreviewSound(Sound);
-		}
-		else
-		{
-			StopSound();
-		}
-	}
 
-	bool IsSoundPlaying(USoundBase* Sound)
-	{
-		UAudioComponent* PreviewComp = GEditor->GetPreviewAudioComponent();
-		return PreviewComp && PreviewComp->Sound == Sound && PreviewComp->IsPlaying();
-	}
-
-	bool IsSoundPlaying(const FAssetData& AssetData)
+	static bool IsSessionPreviewPlaying(const FAssetData& AssetData)
 	{
 		const UAudioComponent* PreviewComp = GEditor->GetPreviewAudioComponent();
 		if (PreviewComp && PreviewComp->Sound && PreviewComp->IsPlaying())
@@ -54,11 +39,7 @@ namespace UE::AudioEditor
 
 		return false;
 	}
-}
 
-class FDAWSequenceAssetActions : public FAssetTypeActions_Base
-{
-public:
 	UClass* GetSupportedClass() const override
 	{
 		return UDAWSequencerData::StaticClass();
@@ -103,7 +84,7 @@ public:
 
 				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing)
 				{
-					//UE::AudioEditor::StopSound();
+					//unDAW::PreviewPlayback::StopSound();
 					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
 				}
 				else
@@ -128,7 +109,7 @@ public:
 
 		auto OnToolTipTextLambda = [InAssetData]() -> FText
 			{
-				if (UE::AudioEditor::IsSoundPlaying(InAssetData))
+				if (FDAWSequenceAssetActions::IsSessionPreviewPlaying(InAssetData))
 				{
 					return INVTEXT("Stop selected unDAW Sequence");
 				}
@@ -144,7 +125,7 @@ public:
 
 		auto OnGetVisibilityLambda = [Box, InAssetData]() -> EVisibility
 			{
-				if (Box.IsValid() && (Box->IsHovered() || UE::AudioEditor::IsSoundPlaying(InAssetData)))
+				if (Box.IsValid() && (Box->IsHovered() || FDAWSequenceAssetActions::IsSessionPreviewPlaying(InAssetData)))
 				{
 					return EVisibility::Visible;
 				}

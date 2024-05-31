@@ -49,6 +49,10 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 		FromPin->GetOwningNode()->NodeConnectionListChanged();
 		break;
 	}
+
+	//NewNode->bHasCompilerMessage = true;
+	//NewNode->GetDeprecationResponse()->Message = FText::FromString("This node is deprecated and will be removed in a future version of the plugin.");
+
 	return NewNode;
 }
 
@@ -65,6 +69,38 @@ void UM2SoundGraphOutputNode::GetMenuEntries(FGraphContextMenuBuilder& ContextMe
 	if (ContextMenuBuilder.FromPin &&
 		ContextMenuBuilder.FromPin->Direction != EGPD_Output) return;
 	//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction>());
+}
+
+void UM2SoundGraphOutputNode::ValidateOutputNode()
+{
+	if (!Pins[0]->HasAnyConnections())
+	{
+
+		//bHasCompilerMessage = true;
+		ErrorType = EMessageSeverity::Info;
+		ErrorMsg = FString("MIDI output vertex has no inputs");
+	}
+	else {
+		//bHasCompilerMessage = false;
+		ErrorMsg = FString("");
+	}
+
+}
+
+void UM2SoundGraphOutputNode::NodeConnectionListChanged()
+{
+	if (!Pins[0]->HasAnyConnections())
+	{
+
+		bHasCompilerMessage = true;
+		ErrorType = EMessageSeverity::Info;
+		ErrorMsg = FString("MIDI output vertex has no inputs");
+	}
+	else {
+		bHasCompilerMessage = false;
+		ErrorMsg = FString("");
+	}
+
 }
 
 TSharedPtr<class SGraphNode> FM2SoundGraphPanelNodeFactory::CreateNode(UEdGraphNode* InNode) const
@@ -164,6 +200,23 @@ void UM2SoundGraph::InitializeGraph()
 		i++;
 	}
 
+	PerformVertexToNodeBinding();
+
+}
+
+void UM2SoundGraph::PerformVertexToNodeBinding()
+{
+	for (const auto NodeAsObject : Nodes)
+	{
+		auto Node = Cast<UM2SoundEdGraphNode>(NodeAsObject);
+		if(!Node) continue;
+
+		UM2SoundVertex* Vertex = Node->Vertex;
+		if (!Vertex) continue;
+
+		Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	}
+
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
@@ -215,6 +268,37 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 	Node->Name = FName("Instrument");
 	NodeCreator.Finalize();
 
+	//Node->Err
+
 	Node->Vertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
 	return Node;
+}
+
+void UM2SoundEdGraphNode::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const
+{
+	//does this ever get called?
+
+	UE_LOG(LogTemp, Warning, TEXT("ValidateNodeDuringCompilation"));
+
+
+}
+
+void UM2SoundEdGraphNode::VertexUpdated()
+{
+	if(Vertex->bHasErrors)
+	{
+		bHasCompilerMessage = Vertex->bHasErrors;
+		ErrorType = Vertex->ErrorType;
+		ErrorMsg = Vertex->VertexErrors;
+	}
+	else
+	{
+		bHasCompilerMessage = false;
+		UE_LOG(LogTemp, Warning, TEXT("VertexUpdated message should have been cleared!"));
+		ErrorMsg = FString("");
+		ClearCompilerMessage();
+	}
+
+	GetGraph()->NotifyGraphChanged();
+	
 }

@@ -29,7 +29,7 @@ UBKMusicSequenceDataFactory::UBKMusicSequenceDataFactory()
 
 // Next time I come edit this shit I gotta remember it gets overriden... 
 
-inline TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetData& InAssetData) const
+TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetData& InAssetData) const
 {
 	auto OnClickedLambda = [InAssetData]() -> FReply
 		{
@@ -37,7 +37,7 @@ inline TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const F
 			
 			if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing )
 			{
-				//UE::AudioEditor::StopSound();
+				//unDAW::PreviewPlayback::StopSound();
 				SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
 			}
 			else
@@ -59,7 +59,7 @@ inline TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const F
 				//{
 				//		FDAWSequenceAssetActions::TryTriggerAudioPlay(Data);
 				//});
-				//UE::AudioEditor::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
+				//unDAW::PreviewPlayback::PlaySound(Cast<USoundBase>(InAssetData.GetAsset()));
 			}
 			return FReply::Handled();
 		};

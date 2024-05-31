@@ -39,9 +39,15 @@ public:
 	~UDAWSequencerPerformer();
 
 	//Main entry point for the performer to start building the nodes and connections from the vertexes in the sequencer data
-	void InitPerformer(UDAWSequencerData* InSessionData);
+	void InitPerformer();
 
-	void AuditionAudioComponent(UAudioComponent* InComponent);
+	//After the performer has been created it can be supplied an audio component to audition the output, when called from editor we supply the preview editor component and run some extra to stop other performers
+	//@param InComponent The audio component to audition the output, if null the performer will not create an auditionable metasound
+	//@param bReceivesLiveUpdates If true the metasound NODEs will be updatable when the metasound is playing, otherwise it will be static
+	void CreateAuditionableMetasound(UAudioComponent* InComponent, bool bReceivesLiveUpdates);
+
+	//This function may be called when the performer is initialized and ready to play, it can save the CURRENT STATE of the builder graph into a new metasound asset
+	void SaveMetasoundToAsset();
 
 
 	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
@@ -81,7 +87,7 @@ public:
 
 	//the array of tracks/channels found in the midi file
 	//UPROPERTY(VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
-	TMap<int, FTrackDisplayOptions>* MidiTracks;
+	//TMap<int, FTrackDisplayOptions>* MidiTracks;
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void PerformBpInitialization();
@@ -96,6 +102,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
 	EMetaSoundOutputAudioFormat OutputFormat;
 
+	//don't need this as a variable 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
@@ -184,7 +191,8 @@ public:
 	UFUNCTION()
 	void CreateMixerNodesSpaghettiBlock(); //very ugly
 
-
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
+	TMap<UM2SoundVertex*, FMetaSoundNodeHandle> VertexToNodeMap;
 
 
 	void AttachAnotherMasterMixerToOutput();
@@ -208,11 +216,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
 	UAudioComponent* AuditionComponentRef;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Audition Component")
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
 	UMetasoundGeneratorHandle* GeneratorHandle;
 
 	bool bShouldTick = false;
 
+
+	//This call back gets invoked when the metasound is ready to be played
 	UFUNCTION()
 	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
 
@@ -220,6 +230,7 @@ public:
 
 	void ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode);
 
+	//the performer will tick to update the transport and receive metasound outputs when the game is NOT running, when the game is running we will use the MetasoundWatchOutput subsystem to receive the outputs.
 	void Tick(float DeltaTime) override;
 
 	virtual bool IsTickable() const { return bShouldTick; }

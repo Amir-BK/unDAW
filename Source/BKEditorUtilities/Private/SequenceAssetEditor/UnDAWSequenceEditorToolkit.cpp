@@ -200,12 +200,14 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
     UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
 
     Graph->SelectedNodes.Empty();
+    Graph->SelectedVertices.Empty();
 
     for(auto& Node : SelectedNodes)
 	{
 		if (UM2SoundEdGraphNode* SoundNode = Cast<UM2SoundEdGraphNode>(Node))
 		{
             Graph->SelectedNodes.Add(SoundNode);
+            Graph->SelectedVertices.Add(SoundNode->Vertex);
 		}
 	}
 
@@ -248,6 +250,8 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
            .Appearance(AppearanceInfo)
            .GraphEvents(GraphEvents)
            .GraphToEdit(SequenceData->M2SoundGraph);
+
+       
    // }
 }
 
@@ -353,15 +357,15 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
     AddToolbarExtender(ToolbarExtender);
 }
 
-inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
-{
-    SequenceData->OnMidiDataChanged.RemoveAll(this);
-    //if (Performer)    Performer->OnTimestampUpdated.Clear();
-    //PianoRollGraph->SessionData.Reset();
-    PianoRollGraph.Reset();
-    SequenceData = nullptr;
-    GEditor->UnregisterForUndo(this);
-}
+//inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
+//{
+//    SequenceData->OnMidiDataChanged.RemoveAll(this);
+//    //if (Performer)    Performer->OnTimestampUpdated.Clear();
+//    //PianoRollGraph->SessionData.Reset();
+//    PianoRollGraph.Reset();
+//    SequenceData = nullptr;
+//    GEditor->UnregisterForUndo(this);
+//}
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
@@ -410,6 +414,8 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
     FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
     FDetailsViewArgs DetailsViewArgs;
     DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+    DetailsViewArgs.bAllowSearch = false;
+   // DetailsViewArgs.
     NodeDetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
     NodeDetailsView->SetObjects(TArray<UObject*>{ SequenceData->M2SoundGraph });
     DetailBuilder.EditCategory("Selection")
@@ -417,6 +423,7 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		.WholeRowContent()
 		[
             NodeDetailsView.ToSharedRef()
+            
 		];
 }
 

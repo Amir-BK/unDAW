@@ -69,17 +69,22 @@ void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 	}
 }
 
-void UDAWSequencerPerformer::InitPerformer(UDAWSequencerData* InSessionData)
+void UDAWSequencerPerformer::InitPerformer()
 {
-	//create builder
-	if (GetOuter() == InSessionData)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Outer is the same!"))
-	}
+
+	//outer must be dawsequencerdata
+	SessionData = CastChecked<UDAWSequencerData>(GetOuter());
+
+	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
+	EMetaSoundBuilderResult BuildResult;
+
+	FMetaSoundBuilderNodeInputHandle OnFinished;
+
+	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName("BuilderName-unDAW Session Rednerer"), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 
 	//after builder is created, create the nodes and connections
 
-	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(InSessionData);
+	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(SessionData);
 
 	for(const auto& Vertex : AllVertices)
 	{
@@ -91,6 +96,8 @@ void UDAWSequencerPerformer::InitPerformer(UDAWSequencerData* InSessionData)
 		}
 		else if (UM2SoundPatch* PatchVertex = Cast<UM2SoundPatch>(Vertex))
 		{
+			TScriptInterface<IMetaSoundDocumentInterface> asDocInterface = PatchVertex->Patch;
+			CurrentBuilder->AddNode(asDocInterface, BuildResult);
 			//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
 		}
 		else if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
@@ -101,7 +108,33 @@ void UDAWSequencerPerformer::InitPerformer(UDAWSequencerData* InSessionData)
 
 }
 
-void UDAWSequencerPerformer::AuditionAudioComponent(UAudioComponent* InComponent)
+void UDAWSequencerPerformer::CreateAuditionableMetasound(UAudioComponent* InComponent, bool bReceivesLiveUpdates)
+{
+
+	if(!CurrentBuilder)
+	{
+		//This should never be called, a builder must be set up via InitPerformer prior to attempting to create a live audition component
+		checkNoReentry();
+	}
+	
+	if (AuditionComponentRef)
+	{
+		AuditionComponentRef->Stop();
+		AuditionComponentRef->DestroyComponent();
+	}
+
+
+	AuditionComponentRef = InComponent;
+
+
+	PlayState = EBKPlayState::ReadyToPlay;
+	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
+	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
+	CurrentBuilder->Audition(this, AuditionComponentRef, OnCreateAuditionGeneratorHandle, bReceivesLiveUpdates);
+
+}
+
+void UDAWSequencerPerformer::SaveMetasoundToAsset()
 {
 
 }
@@ -131,7 +164,7 @@ void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioCompon
 	EMetaSoundBuilderResult BuildResult;
 	//OutputFormat = SourceOutputFormat;
 	//SessionData->MasterOptions.OutputFormat
-	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
+	//CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 	MSBuilderSystem->RegisterSourceBuilder(FName(BuilderName), CurrentBuilder);
 	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 	CreateMixerNodesSpaghettiBlock();
@@ -366,11 +399,12 @@ void UDAWSequencerPerformer::CreateCustomPatchPlayerForMidiTrack()
 void UDAWSequencerPerformer::ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch)
 {
 
-		if (AuditionComponentRef && MidiTracks->Contains(TrackIndex))
-		{
-		auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
-		AuditionComponentRef->SetObjectParameter(ParamName, NewPatch);
-		}
+	//TODO: FIX 
+		//if (AuditionComponentRef && MidiTracks->Contains(TrackIndex))
+		//{
+		//auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
+		//AuditionComponentRef->SetObjectParameter(ParamName, NewPatch);
+		//}
 }
 
 void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
@@ -543,12 +577,12 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 void UDAWSequencerPerformer::CreateInputsFromMidiTracks()
 {
 	// Create the inputs from the midi tracks
-	for (auto& [trackID, trackOptions] : *MidiTracks)
-	{
-		CreateAndRegisterMidiOutput(trackOptions);
-		// Create the input node
-		//FMetaSoundBuilderNodeInputHandle InputNode = CurrentBuilder->CreateInputNode(FName(*trackOptions.trackName), trackOptions.trackColor, trackOptions.ChannelIndexInParentMidi)
-	}
+	//for (auto& [trackID, trackOptions] : *MidiTracks)
+	//{
+	//	CreateAndRegisterMidiOutput(trackOptions);
+	//	// Create the input node
+	//	//FMetaSoundBuilderNodeInputHandle InputNode = CurrentBuilder->CreateInputNode(FName(*trackOptions.trackName), trackOptions.trackColor, trackOptions.ChannelIndexInParentMidi)
+	//}
 
 
 

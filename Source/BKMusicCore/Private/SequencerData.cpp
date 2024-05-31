@@ -4,6 +4,7 @@
 #include "SequencerData.h"
 #include "UnDAWSequencePerformer.h"
 #include "M2SoundGraphStatics.h"
+#include "Interfaces/unDAWMetasoundInterfaces.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -101,17 +102,14 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	LinkedNoteDataMap.Empty();
 	Outputs.Empty();
 	TrackInputs.Empty();
+	Patches.Empty();
 	HarmonixMidiFile = inMidiFile;
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
 	int numTracks = 0;
 	int numTracksRaw = 0;
 
-	if (HarmonixMidiFile == nullptr)
-	{
-		UE_LOG(LogTemp, Log, TEXT("No midi file! This is strange!"))
-			return;
-	}
+
 	for (auto& track : HarmonixMidiFile->GetTracks())
 	{
 		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
@@ -212,13 +210,14 @@ UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audi
 	auto SequencerPerformer = NewObject<UDAWSequencerPerformer>(this);
 
 
-	SequencerPerformer->InitPerformer(this);
-	SequencerPerformer->SessionData = this;
+	SequencerPerformer->InitPerformer();
+	//SequencerPerformer->SessionData = this;
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
-	SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
+	//SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
 	OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
 	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
-	SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
+	SequencerPerformer->CreateAuditionableMetasound(AuditionComponent, true);
+	//SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 
 	return SequencerPerformer;
 }
@@ -251,4 +250,42 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {
 	return SequencerData;
+}
+
+void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	bool bIsDirty = false;
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (PropertyName == TEXT("Patch"))
+	{
+		bool bPatchImplementsInstrumentInterface = false;
+		bool bPatchImplementsInsertInterface = false;
+
+		auto interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
+
+		const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
+
+		if (Patch)
+		{
+			bPatchImplementsInstrumentInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
+		}
+
+		if (bPatchImplementsInstrumentInterface)
+		{
+			UE_LOG(unDAWDataLogs, Log, TEXT("Patch implements the Instrument Renderer Interface!"))
+			bHasErrors = false;
+			VertexErrors = "None!";
+		}
+		else {
+			bHasErrors = true;
+			//ErrorType = EER
+			VertexErrors = "Patch does not implement the Instrument Renderer Interface!";
+		}
+		//PatchName = PatchName;
+
+		OnVertexUpdated.Broadcast();
+	}
+
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }

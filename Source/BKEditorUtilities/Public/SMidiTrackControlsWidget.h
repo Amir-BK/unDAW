@@ -12,6 +12,7 @@
 #include "ISinglePropertyView.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Colors/SColorPicker.h"
+#include "Widgets/Colors/SColorBlock.h"
 #include "SequencerData.h"
 #include "UnDAWSFZAsset.h"
 

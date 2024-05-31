@@ -68,7 +68,7 @@ public:
 
     void ExtendToolbar();
 
-    ~FUnDAWSequenceEditorToolkit();
+   // ~FUnDAWSequenceEditorToolkit();
 
 protected:
     UDAWSequencerData* SequenceData;

@@ -27,8 +27,13 @@ public:
 
 	void InitializeGraph() override;
 
-	UPROPERTY(Transient, EditFixedSize, EditAnywhere, Instanced, meta = (TitleProperty = "{Name}") , Category = "Selection")
+	void PerformVertexToNodeBinding();
+
+	//UPROPERTY(Transient, EditFixedSize, EditAnywhere, Instanced, meta = (TitleProperty = "{Name}") , Category = "Selection")
 	TArray<UM2SoundEdGraphNode*> SelectedNodes;
+
+	UPROPERTY(Transient, EditFixedSize, Instanced, EditAnywhere, Category = "Selection")
+	TArray<UM2SoundVertex*> SelectedVertices;
 
 };
 
@@ -55,6 +60,8 @@ public:
 			//UE_LOG(LogTemp, Warning, TEXT("Connection created"));
 			A->GetOwningNode()->NodeConnectionListChanged();
 			B->GetOwningNode()->NodeConnectionListChanged();
+
+			//node B check if is output node and call validate
 		}
 
 		return success;
@@ -76,6 +83,10 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
+	void ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const override;
+
+	UFUNCTION()
+	virtual void VertexUpdated();
 
 	UPROPERTY(EditAnywhere, Category = "Node")
 	FName Name;
@@ -160,6 +171,9 @@ public:
 
 	void AllocateDefaultPins() override;
 	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
+
+	void ValidateOutputNode();
+	void NodeConnectionListChanged() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("MidiOut: %s"), *Name.ToString())); }
 	
