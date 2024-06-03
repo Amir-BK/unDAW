@@ -41,6 +41,10 @@ public:
 	//Main entry point for the performer to start building the nodes and connections from the vertexes in the sequencer data
 	void InitPerformer();
 
+	//this function should be called on a every Vertex as it ibeing changed or created, will establish pointers from the vertex to the actual metasound node i/os. 
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
+	void UpdateVertex(UM2SoundVertex* Vertex);
+
 	//After the performer has been created it can be supplied an audio component to audition the output, when called from editor we supply the preview editor component and run some extra to stop other performers
 	//@param InComponent The audio component to audition the output, if null the performer will not create an auditionable metasound
 	//@param bReceivesLiveUpdates If true the metasound NODEs will be updatable when the metasound is playing, otherwise it will be static
@@ -95,9 +99,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|MetaSound Builder Helper")
 	TSet<FName> MidiOutputNames;
 
-	//this is the main entry point for the performer to start building the nodes and connections
-	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper", CallInEditor)
-	void InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "unDAW|MetaSound Builder Helper")
 	EMetaSoundOutputAudioFormat OutputFormat;
@@ -109,20 +110,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	UMetaSoundSourceBuilder* CurrentBuilder;
 
-	//can be used to get all assets of certain class
-	template<typename T>
-	static void GetObjectsOfClass(TArray<T*>& OutArray);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
-	static TArray<UMetaSoundSource*> GetAllMetasoundSourcesWithInstrumentInterface();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
-	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInstrumentInterface();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
-	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
-
-
+	//The generated metasound can be shown here but it's recommended to never open the graph in the asset editor as further changes via the builder will crash the editor
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper");
 	TScriptInterface<IMetaSoundDocumentInterface> GeneratedMetaSound;
 
@@ -132,40 +121,22 @@ public:
 	UFUNCTION()
 	void CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef);
 
-	UFUNCTION()
-	void CreateFusionPlayerForMidiTrack();
-	
-	UFUNCTION()
-	void GenerateMidiPlayerAndTransport();
-
-	UFUNCTION()
-	void CreateCustomPatchPlayerForMidiTrack();
-
 	void RemoveFromParent()
 	{
 		OnDeleted.Broadcast();
 	}
 
 	UFUNCTION()
-	void ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch);
-
-	UFUNCTION()
 	void SendSeekCommand(float InSeek);
 
+
+	// binding to generator outputs, used to monitor transport and midi outputs
 	UFUNCTION()
 	void ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value);
 
 	UFUNCTION()
 	void ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value);
 
-
-	FMetaSoundNodeHandle MetronomeNode;
-
-	UFUNCTION(CallInEditor)
-	void AddMetronomeNode();
-
-	UFUNCTION(CallInEditor)
-	void RemoveMetronomeNode();
 
 
 
@@ -253,14 +224,3 @@ public:
 	}
 };
 
-template<typename T>
-inline void UDAWSequencerPerformer::GetObjectsOfClass(TArray<T*>& OutArray)
-{
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	TArray<FAssetData> AssetData;
-	AssetRegistryModule.Get().GetAssetsByClass(T::StaticClass()->GetClassPathName(), AssetData);
-	for (int i = 0; i < AssetData.Num(); i++) {
-		T* Object = Cast<T>(AssetData[i].GetAsset());
-		OutArray.Add(Object);
-	}
-}

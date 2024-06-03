@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Metasound.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 
 #include "M2SoundGraphStatics.generated.h"
 
@@ -39,5 +41,38 @@ public:
 
 	static TArray<UM2SoundVertex*> GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData);
 	
+	//can be used to get all assets of certain class
+	template<typename T>
+	static void GetObjectsOfClass(TArray<T*>& OutArray);
+
+
+
+	/**
+	* Get All Metasound Patches that implement the unDAW instrument parameter interface
+	* @return An array of all the patches that implement the instrument interface
+	* */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
+	static TArray<UMetaSoundPatch*> GetAllPatchesImplementingInstrumetInterface();
+
+	/**
+	* Get All Metasound Patches that implement the unDAW insert parameter interface
+	* @return An array of all the patches that implement the insert interface
+	* */
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
+	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
+
 	
 };
+
+template<typename T>
+inline void UM2SoundGraphStatics::GetObjectsOfClass(TArray<T*>& OutArray)
+{
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	TArray<FAssetData> AssetData;
+	AssetRegistryModule.Get().GetAssetsByClass(T::StaticClass()->GetClassPathName(), AssetData);
+	for (int i = 0; i < AssetData.Num(); i++) {
+		T* Object = Cast<T>(AssetData[i].GetAsset());
+		OutArray.Add(Object);
+	}
+}

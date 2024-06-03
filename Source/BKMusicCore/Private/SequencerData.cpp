@@ -20,10 +20,19 @@ struct FEventsWithIndex
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
+	
+	//add patch or insert
 	if(auto NewOutput = Cast<UM2SoundMidiOutput>(Vertex))
 	{
 		Outputs.Add(NewOutput->GetFName(), NewOutput);
 	}
+
+	if (auto NewPatch = Cast<UM2SoundPatch>(Vertex))
+	{
+		Patches.Add(NewPatch->GetFName(), NewPatch);
+	}
+
+	OnVertexAdded.Broadcast(Vertex);
 }
 
 void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch)
@@ -195,6 +204,10 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		//FoundChannels.Sort();
 		CalculateSequenceDuration();
 		InitTracksFromFoundArray(FoundChannels);
+
+		//we must create a builder to traverse the graphs and create the nodes
+		CreatePerformer(nullptr);
+
 #if WITH_EDITOR
 		if(M2SoundGraph)
 		{
@@ -209,14 +222,14 @@ UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audi
 {
 	auto SequencerPerformer = NewObject<UDAWSequencerPerformer>(this);
 
-
+	OnVertexAdded.AddDynamic(SequencerPerformer, &UDAWSequencerPerformer::UpdateVertex);
 	SequencerPerformer->InitPerformer();
 	//SequencerPerformer->SessionData = this;
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
 	//SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
-	OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
-	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
-	SequencerPerformer->CreateAuditionableMetasound(AuditionComponent, true);
+	//OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
+	//AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
+	//SequencerPerformer->CreateAuditionableMetasound(AuditionComponent, true);
 	//SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 
 	return SequencerPerformer;
@@ -252,6 +265,12 @@ UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 	return SequencerData;
 }
 
+void UM2SoundVertex::VertexNeedsBuilderUpdates()
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Vertex needs builder updates!"))
+	OnVertexNeedsBuilderUpdates.Broadcast(this);
+}
+
 void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	bool bIsDirty = false;
@@ -283,9 +302,46 @@ void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 			VertexErrors = "Patch does not implement the Instrument Renderer Interface!";
 		}
 		//PatchName = PatchName;
-
+		VertexNeedsBuilderUpdates();
 		OnVertexUpdated.Broadcast();
 	}
 
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
+	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
+}
+
+void UM2SoundAudioInsert::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	bool bIsDirty = false;
+	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (PropertyName == TEXT("Insert"))
+	{
+		bool bInsertImplementsInsertInterface = false;
+
+		auto interface = unDAW::Metasounds::FunDAWCustomInsertInterface::GetInterface();
+
+		const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
+
+		if (Patch)
+		{
+			bInsertImplementsInsertInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
+		}
+
+		if (bInsertImplementsInsertInterface)
+		{
+			UE_LOG(unDAWDataLogs, Log, TEXT("Insert implements the Audio Insert Interface!"))
+			bHasErrors = false;
+			VertexErrors = "None!";
+		}
+		else {
+			bHasErrors = true;
+			//ErrorType = EER
+			VertexErrors = "Insert does not implement the Audio Insert Interface!";
+		}
+		//PatchName = PatchName;
+		VertexNeedsBuilderUpdates();
+		OnVertexUpdated.Broadcast();
+	}
+
+	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }

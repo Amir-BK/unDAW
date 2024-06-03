@@ -30,11 +30,18 @@ class UDAWSequencerPerformer;
 DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexNeedsBuilderUpdates, UM2SoundVertex*, UpdatedVertex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, AddedVertex);
 
 class UDAWSequencerData;
 
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+struct FM2VertexBuilderMessages
+{
+	FString Message;
+	int32 Severity;
+};
+
+UENUM(BlueprintType, Category = "unDAW Sequence")
 enum EBKTransportCommands : uint8
 {
 	Init,
@@ -51,7 +58,7 @@ enum EBKTransportCommands : uint8
 
 
 
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager", meta = (Bitflags))
+UENUM(BlueprintType, Category = "unDAW Sequence", meta = (Bitflags))
 enum EBKPlayState : uint8
 {
 	NoPerformer = 0,
@@ -64,12 +71,26 @@ enum EBKPlayState : uint8
 
 };
 
-UENUM(BlueprintType, Category = "unDAW|Music Scene Manager")
+UENUM(BlueprintType, Category = "unDAW Sequence")
 enum EM2SoundGraphConnectionStatus : uint8
 {
 	Connected,
 	Disconnected,
 	Pending
+};
+
+USTRUCT()
+struct FM2SoundMetasoundBuilderPinData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere)
+	FName PinName;
+
+	UPROPERTY(VisibleAnywhere)
+	FName DataType;
+
+
 };
 
 USTRUCT()
@@ -199,24 +220,24 @@ public:
 
 
 
-USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMasterChannelOutputSettings {
 	GENERATED_BODY()
 
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
+	UPROPERTY(EditAnywhere, Category = "unDAW Sequence", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
 	float MasterVolume = 1.0f;
 
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
+	UPROPERTY(EditAnywhere, Category = "unDAW Sequence", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
 	float ClickVolume = 1.0f;
 
 
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	bool bClickActive = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence")
 	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
 
 
@@ -224,49 +245,49 @@ struct FMasterChannelOutputSettings {
 };
 
 
-USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FTimeStamppedWavContainer {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	FMusicTimestamp TimeStamp;
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	TObjectPtr <USoundWave> SoundWave;
 
 };
 
-USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FTimeStamppedCurveContainer {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	FMusicTimestamp TimeStamp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	TObjectPtr <UCurveFloat> Curve;
 
 };
 
-USTRUCT(BlueprintType, Category = "unDAW|Music Scene Manager")
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FTimeStamppedMidiContainer {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	FMusicTimestamp TimeStamp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	TObjectPtr<UMidiFile> MidiFile;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	bool bIsClockSource;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager", meta = (TitleProperty = "trackName"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence", meta = (TitleProperty = "trackName"))
 	TArray<FTrackDisplayOptions> TracksMappings;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	TMap<int, UParsedMidiTrack*> TrackMidiDataMap;
 
 };
@@ -289,16 +310,22 @@ public:
 
 //nodes
 
-UCLASS(Abstract)
+UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
 class BKMUSICCORE_API UM2SoundVertex : public UObject
 {
 	GENERATED_BODY()
 
-
 public:
 
-	UPROPERTY(BlueprintAssignable, Category = "unDAW|M2Sound")
+
+
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderUpdates;
+
+
 
 	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
 	UPROPERTY()
@@ -306,12 +333,6 @@ public:
 
 	UPROPERTY()
 	TArray<UM2SoundVertex*> Outputs;
-
-	UPROPERTY(VisibleAnywhere)
-	TArray<FAudioParameter> MetasoundInputs;
-
-	UPROPERTY(VisibleAnywhere)
-	TArray<FAudioParameter> MetasoundOutputs;
 
 	UFUNCTION()
 	UDAWSequencerData* GetSequencerData() const;
@@ -332,15 +353,37 @@ public:
 	UPROPERTY()
 	int32 ErrorType = EMessageSeverity::Info;
 
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TArray<FM2SoundMetasoundBuilderPinData> MetasoundInputs;
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TArray<FM2SoundMetasoundBuilderPinData> MetasoundOutputs;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void VertexNeedsBuilderUpdates();
+
+};
+
+UCLASS()
+//this is a literal node that can be used to pass a value to the metasound graph
+class BKMUSICCORE_API UM2SoundLiteralNodeVertex : public UM2SoundVertex
+{
+	GENERATED_BODY()
+
+public:
+
 };
 
 // this vertex represends a midi output that can be queried from blueprint using the Listeners
-UCLASS()
+UCLASS(AutoExpandCategories = ("M2Sound"))
 class BKMUSICCORE_API UM2SoundMidiOutput : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "M2Sound")
+	FName OutputName;
 	//FText GetTooltip() const override
 	//{
 	//	return INVTEXT("An output that can be queried from Blueprint.");
@@ -361,8 +404,8 @@ class BKMUSICCORE_API UM2SoundAudioOutput : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
-	float Gain;
+	UPROPERTY(EditAnywhere, Category = "M2Sound")
+	float Gain = 1.0f;
 
 	UPROPERTY(VisibleAnywhere)
 	FName GainParameterName = NAME_None;
@@ -391,7 +434,37 @@ class BKMUSICCORE_API UM2SoundPatch : public UM2SoundVertex
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, Category = "unDAW|M2Sound Graph")
+	UPROPERTY(EditAnywhere, Category = "M2Sound", meta=(GetOptions = "GetOptions"))
+	UMetaSoundPatch* Patch;
+
+
+
+	UFUNCTION()
+	TArray<FString> GetOptions() const
+	{
+		TArray<FString> Options;
+		Options.Add("Option 1");
+		Options.Add("Option 2");
+		Options.Add("Option 3");
+
+		return Options;
+
+	}
+
+	//post import property edit
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+
+	// yada
+
+};
+
+UCLASS()
+class BKMUSICCORE_API UM2SoundAudioInsert : public UM2SoundVertex
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	UMetaSoundPatch* Patch;
 
 	//post import property edit
@@ -405,11 +478,14 @@ public:
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
-UCLASS(BlueprintType, EditInlineNew, Category = "unDAW|Music Scene Manager")
+UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
 class BKMUSICCORE_API UDAWSequencerData : public UObject
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnVertexAdded OnVertexAdded;
 
 	void AddVertex(UM2SoundVertex* Vertex);
 
@@ -459,20 +535,20 @@ public:
 
 #endif
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW|Music Scene Manager|Meta Sound")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence|Meta Sound")
 	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	float SequenceDuration = 100.0f;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "2", ExposeOnSpawn = "true", EditInLine = "true"))
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "2", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW|Music Scene Manager", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
 	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
 
 	UFUNCTION()

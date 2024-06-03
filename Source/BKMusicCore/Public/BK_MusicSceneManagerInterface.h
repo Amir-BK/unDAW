@@ -41,7 +41,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTransportCommand, EBKTransportCom
 
 
 
-UINTERFACE(MinimalAPI, NotBlueprintable, BlueprintType, Category = "unDAW|Music Scene Manager")
+UINTERFACE(MinimalAPI, NotBlueprintable, BlueprintType, Category = "unDAW Sequence")
 class UBK_MusicSceneManagerInterface : public UInterface
 {
 	GENERATED_BODY()

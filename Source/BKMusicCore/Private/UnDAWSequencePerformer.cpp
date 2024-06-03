@@ -5,7 +5,7 @@
 #include "Engine/Engine.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "Kismet/GameplayStatics.h"
-#include "AssetRegistry/AssetRegistryModule.h"
+
 #include "MetasoundGeneratorHandle.h"
 #include "MetasoundGenerator.h"
 #include "MetasoundAssetSubsystem.h"
@@ -82,29 +82,125 @@ void UDAWSequencerPerformer::InitPerformer()
 
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName("BuilderName-unDAW Session Rednerer"), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 
+	SessionData->OnVertexAdded.AddDynamic(this, &UDAWSequencerPerformer::UpdateVertex);
+
 	//after builder is created, create the nodes and connections
+
+	//create renderer interface default IOs
+	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
+
+	//add main clock patch by reference - '/Script/MetasoundEngine.MetaSoundPatch'/unDAW/Patches/System/unDAW_MainClock.unDAW_MainClock'
+	CreateMidiPlayerBlock();
+
+
+
 
 	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(SessionData);
 
-	for(const auto& Vertex : AllVertices)
+	for (auto& [index, vertex] : SessionData->TrackInputs)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
-		//Vertex->GetDocumentChecked().GetDocumentName();
-		if(UM2SoundTrackInput* InputVertex = Cast<UM2SoundTrackInput>(Vertex))
-		{
-			//CreateDefaultVertexesFromInputVertex(InSessionData, InputVertex, InputVertex->TrackId);
-		}
-		else if (UM2SoundPatch* PatchVertex = Cast<UM2SoundPatch>(Vertex))
-		{
-			TScriptInterface<IMetaSoundDocumentInterface> asDocInterface = PatchVertex->Patch;
-			CurrentBuilder->AddNode(asDocInterface, BuildResult);
-			//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
-		}
-		else if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
-		{
-			//CreateDefaultVertexesFromInputVertex(InSessionData, MidiOutputVertex, MidiOutputVertex->TrackId);
-		}
+		UpdateVertex(vertex);
+
 	}
+
+	//update patches
+	
+	for (auto& [index, vertex] : SessionData->Patches)
+	{
+		UpdateVertex(vertex);
+	
+	}
+
+	// update outputs
+	for (auto& [index, vertex] : SessionData->Outputs)
+	{
+		UpdateVertex(vertex);
+		
+	}
+	
+	// this won't work, we need to traverse the vertices from the inputs to the outputs
+	//for(const auto& Vertex : AllVertices)
+	//{
+	//	UpdateVertex(Vertex);
+	//	Vertex->OnVertexNeedsBuilderUpdates.AddDynamic(this, &UDAWSequencerPerformer::UpdateVertex);
+	//}
+
+}
+
+FM2SoundMetasoundBuilderPinData CreatePinDataFromBuilderData(UMetaSoundSourceBuilder* Builder, FMetaSoundBuilderNodeInputHandle Input, EMetaSoundBuilderResult& BuildResult)
+{
+	FName NodeName;
+	FName DataType;
+	Builder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+	FM2SoundMetasoundBuilderPinData PinData;
+	PinData.PinName = NodeName;
+	PinData.DataType = DataType;
+	return PinData;
+}
+
+void UDAWSequencerPerformer::UpdateVertex(UM2SoundVertex* Vertex)
+{
+	EMetaSoundBuilderResult BuildResult;
+	UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
+	//Vertex->GetDocumentChecked().GetDocumentName();
+	if (UM2SoundTrackInput* InputVertex = Cast<UM2SoundTrackInput>(Vertex))
+	{
+		//create track filter node
+
+		
+		//CreateDefaultVertexesFromInputVertex(InSessionData, InputVertex, InputVertex->TrackId);
+	}
+
+	if (UM2SoundPatch* PatchVertex = Cast<UM2SoundPatch>(Vertex))
+	{
+		//check if we already have a node and if so, delete it
+		if (VertexToNodeMap.Contains(PatchVertex))
+		{
+			auto NodeHandle = VertexToNodeMap[PatchVertex];
+			CurrentBuilder->RemoveNode(NodeHandle, BuildResult);
+			VertexToNodeMap.Remove(PatchVertex);
+		}
+
+		TScriptInterface<IMetaSoundDocumentInterface> asDocInterface = PatchVertex->Patch;
+		auto NewNodeHandle = CurrentBuilder->AddNode(asDocInterface, BuildResult);
+		auto NodeInputs = CurrentBuilder->FindNodeInputs(NewNodeHandle, BuildResult);
+		auto NodeOutputs = CurrentBuilder->FindNodeOutputs(NewNodeHandle, BuildResult);
+
+		// clear vertex discovered I/Os
+
+		//in theory, if we empty these and then recreate I/Os the I/Os that maintain their names can be reconnected
+		PatchVertex->MetasoundInputs.Empty();
+		PatchVertex->MetasoundOutputs.Empty();
+		
+		for( const auto& Input : NodeInputs)
+		{
+			FName NodeName;
+			FName DataType;
+			CurrentBuilder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+			PatchVertex->MetasoundInputs.Add(FM2SoundMetasoundBuilderPinData{ NodeName, DataType });
+
+		}
+
+		for (const auto& Output : NodeOutputs)
+		{
+			FName NodeName;
+			FName DataType;
+			CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+			PatchVertex->MetasoundOutputs.Add(FM2SoundMetasoundBuilderPinData{ NodeName, DataType });
+		}
+		
+		VertexToNodeMap.Add(PatchVertex, NewNodeHandle);
+
+		//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
+		Vertex->OnVertexUpdated.Broadcast();
+	}
+	
+	if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
+	{
+		//CreateDefaultVertexesFromInputVertex(InSessionData, MidiOutputVertex, MidiOutputVertex->TrackId);
+	}
+
+	Vertex->OnVertexNeedsBuilderUpdates.AddDynamic(this, &UDAWSequencerPerformer::UpdateVertex);
 
 }
 
@@ -137,94 +233,6 @@ void UDAWSequencerPerformer::CreateAuditionableMetasound(UAudioComponent* InComp
 void UDAWSequencerPerformer::SaveMetasoundToAsset()
 {
 
-}
-
-void UDAWSequencerPerformer::InitBuilderHelper(FString BuilderName, UAudioComponent* InAuditionComponent)
-{
-	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
-	
-
-	if (AuditionComponentRef)
-	{
-		AuditionComponentRef->Stop();
-		AuditionComponentRef->DestroyComponent();
-	}
-
-
-
-	AuditionComponentRef = InAuditionComponent;
-
-
-	//ParentWorld = World;
-	//FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
-	FMetaSoundBuilderNodeInputHandle OnFinished;
-
-
-	
-	EMetaSoundBuilderResult BuildResult;
-	//OutputFormat = SourceOutputFormat;
-	//SessionData->MasterOptions.OutputFormat
-	//CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName(BuilderName), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
-	MSBuilderSystem->RegisterSourceBuilder(FName(BuilderName), CurrentBuilder);
-	CurrentBuilder->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
-	CreateMixerNodesSpaghettiBlock();
-	//CreateMidiPlayerBlock();
-	GenerateMidiPlayerAndTransport();
-	CreateInputsFromMidiTracks();
-
-#ifdef WITH_METABUILDERHELPER_TESTS
-	CreateTestWavPlayerBlock();
-#endif //WITH_TESTS
-
-	PerformBpInitialization();
-
-}
-
-TArray<UMetaSoundSource*> UDAWSequencerPerformer::GetAllMetasoundSourcesWithInstrumentInterface()
-{
-	auto AllObjectsArray = TArray<UMetaSoundSource*>();
-	auto OnlyImplementingArray = TArray<UMetaSoundSource*>();
-	
-
-	GetObjectsOfClass<UMetaSoundSource>(AllObjectsArray);
-	for (const auto& source : AllObjectsArray)
-	{
-		if (source->ImplementsParameterInterface(unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface())) OnlyImplementingArray.Add(source);
-	}
-	
-	return OnlyImplementingArray;
-}
-
-TArray<UMetaSoundPatch*> UDAWSequencerPerformer::GetAllMetasoundPatchesWithInstrumentInterface()
-{
-	auto AllObjectsArray = TArray<UMetaSoundPatch*>();
-	auto OnlyImplementingArray = TArray<UMetaSoundPatch*>();
-	GetObjectsOfClass<UMetaSoundPatch>(AllObjectsArray);
-	auto interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
-
-	const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
-
-	for (const auto& patch : AllObjectsArray)
-	{
-		if (patch->GetDocumentChecked().Interfaces.Contains(Version)) OnlyImplementingArray.Add(patch);
-	}
-	return OnlyImplementingArray;
-}
-
-TArray<UMetaSoundPatch*> UDAWSequencerPerformer::GetAllMetasoundPatchesWithInsertInterface()
-{
-	auto AllObjectsArray = TArray<UMetaSoundPatch*>();
-	auto OnlyImplementingArray = TArray<UMetaSoundPatch*>();
-	GetObjectsOfClass<UMetaSoundPatch>(AllObjectsArray);
-	auto interface = unDAW::Metasounds::FunDAWCustomInsertInterface::GetInterface();
-
-	const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
-
-	for (const auto& patch : AllObjectsArray)
-	{
-		if (patch->GetDocumentChecked().Interfaces.Contains(Version)) OnlyImplementingArray.Add(patch);
-	}
-	return OnlyImplementingArray;
 }
 
 
@@ -302,109 +310,17 @@ void UDAWSequencerPerformer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& T
 
 }
 
-void UDAWSequencerPerformer::CreateFusionPlayerForMidiTrack()
-{
-}
 
-void UDAWSequencerPerformer::ConnectTransportPinsToInterface(FMetaSoundNodeHandle& TransportNode)
-{
-
-	EMetaSoundBuilderResult BuildResult;
-	TArray<FMetaSoundBuilderNodeInputHandle> TriggerToTransportInputs = CurrentBuilder->FindNodeInputs(TriggerToTransportNode, BuildResult);
-
-	for(const auto& Input : TriggerToTransportInputs)
-	{
-		FName NodeName;
-		FName DataType;
-		CurrentBuilder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
-
-		if (NodeName == FName(TEXT("Prepare")))
-		{
-			CurrentBuilder->ConnectNodes(OnPlayOutputNode, Input, BuildResult);
-		}
-
-		if (NodeName == FName(TEXT("Play")))
-		{
-			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Play")), Input, BuildResult);
-		}
-
-		if (NodeName == FName(TEXT("Stop")))
-		{
-			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Stop")), Input, BuildResult);
-		}
-
-		if (NodeName == FName(TEXT("Pause")))
-		{
-			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Pause")), Input, BuildResult);
-		}
-		if (NodeName == FName(TEXT("Trigger Seek")))
-		{
-			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.Seek")), Input, BuildResult);
-		}
-
-		if (NodeName == FName(TEXT("Seek Target")))
-		{
-			auto FloatToTimeCastNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("TimeMsToSeekTarget"))), BuildResult, 0);
-			auto FloatToTimeInput = CurrentBuilder->FindNodeInputByName(FloatToTimeCastNode, FName(TEXT("Time (ms)")), BuildResult);
-			auto FloatToTimeOutput = CurrentBuilder->FindNodeOutputByName(FloatToTimeCastNode, FName(TEXT("Seek Target")), BuildResult);
-			CurrentBuilder->ConnectNodeInputToGraphInput(FName(TEXT("unDAW.Transport.SeekTarget")), FloatToTimeInput, BuildResult);
-			CurrentBuilder->ConnectNodes(FloatToTimeOutput, Input, BuildResult);
-		}
-
-	}
-}
 
 void UDAWSequencerPerformer::Tick(float DeltaTime)
 {
 	//UE_LOG(LogTemp, Log, TEXT("Tick! Sequencer Asset Name: %s"), *SessionData->GetName())
-
+	//This should actually only be called in editor, as otherwise the metasound watch output subsystem should handle ticking the watchers
 	if (!AuditionComponentRef) return;
 
 		GeneratorHandle->UpdateWatchers();
 
 
-}
-
-void UDAWSequencerPerformer::GenerateMidiPlayerAndTransport()
-{
-	EMetaSoundBuilderResult BuildResult;
-
-	TriggerToTransportNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("TriggerToTransport"))), BuildResult, 0);
-
-	ConnectTransportPinsToInterface(TriggerToTransportNode);
-
-	MidiPlayerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MIDIPlayer"))), BuildResult, 0);
-	FMetaSoundBuilderNodeInputHandle MidiFileInput = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
-	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
-	auto MidiInputPinOutputHandle = CurrentBuilder->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
-	CurrentBuilder->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
-
-	//connect midi player 'Transport' to 'Transport Node' transport pin
-	auto MidiPlayerTransportPin = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("Transport")), BuildResult);
-	auto TransportNodeTransportOutPin = CurrentBuilder->FindNodeOutputByName(TriggerToTransportNode, FName(TEXT("Transport")), BuildResult);
-	CurrentBuilder->ConnectNodes(TransportNodeTransportOutPin, MidiPlayerTransportPin, BuildResult);
-	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI Stream")), BuildResult);
-	auto MidiClockOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI Clock")), BuildResult);
-
-	// connect midi player outputs to graph outputs for wathcer
-	CurrentBuilder->ConnectNodeOutputToGraphOutput(FName(TEXT("unDAW.Midi Stream")), MainMidiStreamOutput, BuildResult);
-	CurrentBuilder->ConnectNodeOutputToGraphOutput(FName(TEXT("unDAW.Midi Clock")), MidiClockOutput, BuildResult);
-
-}
-
-void UDAWSequencerPerformer::CreateCustomPatchPlayerForMidiTrack()
-{
-}
-
-void UDAWSequencerPerformer::ChangeFusionPatchInTrack(int TrackIndex, UFusionPatch* NewPatch)
-{
-
-	//TODO: FIX 
-		//if (AuditionComponentRef && MidiTracks->Contains(TrackIndex))
-		//{
-		//auto ParamName = FName(FString::Printf(TEXT("Track_[%d].Patch"), MidiTracks->Find(TrackIndex)->ChannelIndexInParentMidi));
-		//AuditionComponentRef->SetObjectParameter(ParamName, NewPatch);
-		//}
 }
 
 void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
@@ -449,35 +365,7 @@ void FindAllMetaSoundClasses()
 
 }
 
-void UDAWSequencerPerformer::AddMetronomeNode()
-{
-	FindAllMetaSoundClasses();
-	FString IsMetronomeNodeSet = MetronomeNode.IsSet() ? TEXT("true") : TEXT("false");
-	UE_LOG(LogTemp, Log, TEXT("Add Metronome Node! %s"), *IsMetronomeNodeSet)
-	if (MetronomeNode.IsSet()) return;
-	EMetaSoundBuilderResult BuildResult;
-	MetronomeNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("MidiPulseGenerator"))), BuildResult, 0);
-	auto MetronomeOutputs = CurrentBuilder->FindNodeOutputs(MetronomeNode, BuildResult);
-	auto MetAudioOuts = GetFreeAudioOutput();
-	bool usedLeft = false;
-	for (const auto& Output : MetronomeOutputs)
-	{
-		FName NodeName;
-		FName DataType;
-		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
-		if (DataType == FName(TEXT("Audio")))
-		{
-			CurrentBuilder->ConnectNodes(Output, MetAudioOuts[usedLeft ? 0 : 1], BuildResult);
-			usedLeft = true;
 
-		}
-	}
-}
-void UDAWSequencerPerformer::RemoveMetronomeNode()
-{
-	EMetaSoundBuilderResult BuildResult;
-	if(MetronomeNode.IsSet())	CurrentBuilder->RemoveNode(MetronomeNode, BuildResult);
-}
 
 
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
@@ -686,10 +574,10 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 {
 		// Create the midi player block
 	EMetaSoundBuilderResult BuildResult;
-	FSoftObjectPath MidiPlayerAssetRef(TEXT("/unDAW/BKSystems/MetaSoundBuilderHelperBP_V1/InternalPatches/BK_MetaClockManager.BK_MetaClockManager"));
+	FSoftObjectPath MidiPlayerAssetRef(TEXT("/unDAW/Patches/System/unDAW_MainClock.unDAW_MainClock"));
 	TScriptInterface<IMetaSoundDocumentInterface> MidiPlayerDocument = MidiPlayerAssetRef.TryLoad();
 	UMetaSoundPatch* MidiPatch = Cast<UMetaSoundPatch>(MidiPlayerDocument.GetObject());
-	MidiPatch->RegisterGraphWithFrontend();
+	//MidiPatch->RegisterGraphWithFrontend();
 	MidiPlayerNode = CurrentBuilder->AddNode(MidiPlayerDocument, BuildResult);
 
 	if (SwitchOnBuildResult(BuildResult))
@@ -723,9 +611,7 @@ void UDAWSequencerPerformer::CreateAndAuditionPreviewAudioComponent()
 
 void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
-	
-	//auto MetasoundOutputSubsystem = //GEngine->GetEngineSubsystem<UMetaSoundOutputSubsystem>();
-	//AuditionComponentRef->GetWorld()->GetSubsystem<UMetaSoundOutputSubsystem>(); //->RegisterOutput(AuditionComponentRef, FName("unDAW.Midi Stream"), MainMidiStreamOutput);
+
 	UMetaSoundAssetSubsystem* AssetSubsystem = GEngine->GetEngineSubsystem<UMetaSoundAssetSubsystem>();
 	//FMetasoundAssetBase test = Cast<UMetaSoundSource>();
 	AssetSubsystem->Get()->AddOrUpdateAsset(*AuditionComponentRef->GetSound()->_getUObject());
@@ -737,18 +623,10 @@ void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGenerat
 	OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiStreamOutput(OutputName, Value); });
 
 
-	//bool CanWatchStream = MetasoundOutputSubsystem->WatchOutput(AuditionComponentRef, FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
-	//bool CanWatchClock = MetasoundOutputSubsystem->WatchOutput(AuditionComponentRef, FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
-
 	bool CanWatchStream = GeneratorHandle->WatchOutput(FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
 	bool CanWatchClock = GeneratorHandle->WatchOutput(FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
 	bShouldTick = true;
 
-	//UE_LOG(LogTemp, Log, TEXT("Can Watch Stream: %s, Can Watch Clock: %s"), CanWatchStream ? TEXT("Yes") : TEXT("No"), CanWatchClock ? TEXT("Yes") : TEXT("No"))
-		//AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Prepare"));
-
-	
-	//AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 	OnDAWPerformerReady.Broadcast();
 }
 
