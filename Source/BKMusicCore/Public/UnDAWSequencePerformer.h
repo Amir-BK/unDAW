@@ -30,13 +30,13 @@ DECLARE_DELEGATE_OneParam(FOnMusictimestampFromPerformer, FMusicTimestamp)
  * This class is effectively the 'performer' for DAW Sequencer data. It is responsible for creating the necessary nodes and connections to play back the midi data in the sequencer data.
  */
 UCLASS(BlueprintType, Blueprintable)
-class BKMUSICCORE_API UDAWSequencerPerformer : public UObject, public FTickableGameObject
+class BKMUSICCORE_API UM2SoundGraphRenderer : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
 	
 public:
 
-	~UDAWSequencerPerformer();
+	~UM2SoundGraphRenderer();
 
 	//Main entry point for the performer to start building the nodes and connections from the vertexes in the sequencer data
 	void InitPerformer();

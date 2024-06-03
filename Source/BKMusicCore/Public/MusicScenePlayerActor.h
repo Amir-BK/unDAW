@@ -39,7 +39,7 @@ public:
 
 
 	UPROPERTY()
-	UDAWSequencerPerformer* BuilderHelper;
+	UM2SoundGraphRenderer* BuilderHelper;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UAudioComponent* PerformanceAudioComponent;

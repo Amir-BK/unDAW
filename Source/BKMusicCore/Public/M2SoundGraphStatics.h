@@ -62,6 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
 	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
 
+	static bool DoesPatchImplementInterface(UMetaSoundPatch* Patch, UClass* InterfaceClass);
 	
 };
 

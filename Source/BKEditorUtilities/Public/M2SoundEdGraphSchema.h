@@ -72,6 +72,30 @@ public:
 		return success;
 	};
 	
+	//set pin type colors
+	FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override
+	{
+		//Tracks are blue
+		if (PinType.PinCategory == "Track")
+		{
+			return FLinearColor(0.0f, 0.0f, 1.0f);
+		}
+
+		//Audio is purple
+		if (PinType.PinCategory == "Audio")
+		{
+			return FLinearColor(0.5f, 0.0f, 0.5f);
+		}
+
+		//metasound literals get the value from the metasound literal schema according to their data type
+		if (PinType.PinCategory == "MetasoundLiteral")
+		{
+			return FLinearColor(0.0f, 0.5f, 0.5f);
+		}
+
+		return UEdGraphSchema::GetPinTypeColor(PinType);
+
+	};
 	
 };
 

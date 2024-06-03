@@ -28,7 +28,7 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
 
-class UDAWSequencerPerformer;
+class UM2SoundGraphRenderer;
 
 
 
@@ -70,7 +70,7 @@ public:
 
 	//as the music scene manager is a data container the core playback functionality is managed by the performer,
 	//this is true both for in scene usages as well as for the asset toolkit preview/editing in editor
-	UDAWSequencerPerformer* Performer;
+	UM2SoundGraphRenderer* Performer;
 
 	void CreatePerformer(UAudioComponent* InAudioComponent);
 	
@@ -79,7 +79,7 @@ public:
 
 	virtual void Entry_Initializations() {};
 
-	virtual const UDAWSequencerPerformer* GetPerformer() { return Performer; };
+	virtual const UM2SoundGraphRenderer* GetPerformer() { return Performer; };
 
 	virtual const UDAWSequencerData* GetSequenceData() { return SequenceData; };
 

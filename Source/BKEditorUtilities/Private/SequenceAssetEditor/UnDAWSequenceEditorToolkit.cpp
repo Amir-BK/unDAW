@@ -94,7 +94,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
                 else {
                     Performer = SequenceData->EditorPreviewPerformer;
                     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-                    PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
+                    PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UM2SoundGraphRenderer::SendSeekCommand);
                     PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
                     //PianoRollGraph->OnMusicTimestamp.operator=(Performer->OnMusicTimestampFromPerformer);
                 }
@@ -377,7 +377,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
     Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
     //Performer->OnTimestampUpdated.Add (this, &FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated);
     //Performer->OnTimestampUpdated.AddLambda([this](const FMusicTimestamp& NewTimestamp) { PianoRollGraph->UpdateTimestamp(NewTimestamp); });
-    PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
+    PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UM2SoundGraphRenderer::SendSeekCommand);
     //PianoRollGraph->OnMusicTimestamp.operator=(Performer->OnMusicTimestampFromPerformer);
    // Performer->OnMusicTimestampFromPerformer.BindLambda(this, &FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated);
     //OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);

@@ -16,7 +16,7 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
-UDAWSequencerPerformer::~UDAWSequencerPerformer()
+UM2SoundGraphRenderer::~UM2SoundGraphRenderer()
 {
 
 	//if(GeneratorHandle) 
@@ -39,7 +39,7 @@ UDAWSequencerPerformer::~UDAWSequencerPerformer()
 
 
 
-void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
+void UM2SoundGraphRenderer::SendTransportCommand(EBKTransportCommands Command)
 {
 	if (AuditionComponentRef)
 	{
@@ -69,7 +69,7 @@ void UDAWSequencerPerformer::SendTransportCommand(EBKTransportCommands Command)
 	}
 }
 
-void UDAWSequencerPerformer::InitPerformer()
+void UM2SoundGraphRenderer::InitPerformer()
 {
 
 	//outer must be dawsequencerdata
@@ -82,7 +82,7 @@ void UDAWSequencerPerformer::InitPerformer()
 
 	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName("BuilderName-unDAW Session Rednerer"), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 
-	SessionData->OnVertexAdded.AddDynamic(this, &UDAWSequencerPerformer::UpdateVertex);
+	SessionData->OnVertexAdded.AddDynamic(this, &UM2SoundGraphRenderer::UpdateVertex);
 
 	//after builder is created, create the nodes and connections
 
@@ -138,7 +138,7 @@ FM2SoundMetasoundBuilderPinData CreatePinDataFromBuilderData(UMetaSoundSourceBui
 	return PinData;
 }
 
-void UDAWSequencerPerformer::UpdateVertex(UM2SoundVertex* Vertex)
+void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 {
 	EMetaSoundBuilderResult BuildResult;
 	UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
@@ -200,11 +200,11 @@ void UDAWSequencerPerformer::UpdateVertex(UM2SoundVertex* Vertex)
 		//CreateDefaultVertexesFromInputVertex(InSessionData, MidiOutputVertex, MidiOutputVertex->TrackId);
 	}
 
-	Vertex->OnVertexNeedsBuilderUpdates.AddDynamic(this, &UDAWSequencerPerformer::UpdateVertex);
+	Vertex->OnVertexNeedsBuilderUpdates.AddDynamic(this, &UM2SoundGraphRenderer::UpdateVertex);
 
 }
 
-void UDAWSequencerPerformer::CreateAuditionableMetasound(UAudioComponent* InComponent, bool bReceivesLiveUpdates)
+void UM2SoundGraphRenderer::CreateAuditionableMetasound(UAudioComponent* InComponent, bool bReceivesLiveUpdates)
 {
 
 	if(!CurrentBuilder)
@@ -230,13 +230,13 @@ void UDAWSequencerPerformer::CreateAuditionableMetasound(UAudioComponent* InComp
 
 }
 
-void UDAWSequencerPerformer::SaveMetasoundToAsset()
+void UM2SoundGraphRenderer::SaveMetasoundToAsset()
 {
 
 }
 
 
-void UDAWSequencerPerformer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
+void UM2SoundGraphRenderer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
 {
 	EMetaSoundBuilderResult BuildResult;
 	auto FusionNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("FusionSamplerStereo"))), BuildResult, 0);
@@ -296,7 +296,7 @@ void UDAWSequencerPerformer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
 
 }
 
-void UDAWSequencerPerformer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
+void UM2SoundGraphRenderer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
 {
 	// if we render this track in a channel OR output midi, we need to create this track
 	bool NeedToCreate = (TrackRef.RenderMode != NoAudio) || TrackRef.CreateMidiOutput;
@@ -312,7 +312,7 @@ void UDAWSequencerPerformer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& T
 
 
 
-void UDAWSequencerPerformer::Tick(float DeltaTime)
+void UM2SoundGraphRenderer::Tick(float DeltaTime)
 {
 	//UE_LOG(LogTemp, Log, TEXT("Tick! Sequencer Asset Name: %s"), *SessionData->GetName())
 	//This should actually only be called in editor, as otherwise the metasound watch output subsystem should handle ticking the watchers
@@ -323,7 +323,7 @@ void UDAWSequencerPerformer::Tick(float DeltaTime)
 
 }
 
-void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
+void UM2SoundGraphRenderer::SendSeekCommand(float InSeek)
 {
 	UE_LOG(LogTemp, Log, TEXT("Seek Command Received! %f"), InSeek)
 	if (AuditionComponentRef)
@@ -333,13 +333,13 @@ void UDAWSequencerPerformer::SendSeekCommand(float InSeek)
 	}
 }
 
-void UDAWSequencerPerformer::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
+void UM2SoundGraphRenderer::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	//UE_LOG(LogTemp, Log, TEXT("Output Received! %s, Data type: %s"), *OutputName.ToString(), *Value.GetDataTypeName().ToString())
 		//auto MidiClockValue = Value.GetDataTypeName();
 }
 
-void UDAWSequencerPerformer::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
+void UM2SoundGraphRenderer::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	//UE_LOG(LogTemp, Log, TEXT("Output Received! %s, Data type: %s"), *OutputName.ToString(), *Value.GetDataTypeName().ToString())
 	Value.Get(CurrentTimestamp);
@@ -462,7 +462,7 @@ void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
 
 #endif //WITH_METABUILDERHELPER_TESTS
 
-void UDAWSequencerPerformer::CreateInputsFromMidiTracks()
+void UM2SoundGraphRenderer::CreateInputsFromMidiTracks()
 {
 	// Create the inputs from the midi tracks
 	//for (auto& [trackID, trackOptions] : *MidiTracks)
@@ -476,7 +476,7 @@ void UDAWSequencerPerformer::CreateInputsFromMidiTracks()
 
 }
 
-void UDAWSequencerPerformer::CreateMixerPatchBlock()
+void UM2SoundGraphRenderer::CreateMixerPatchBlock()
 {
 
 	using namespace Metasound::Frontend;
@@ -509,7 +509,7 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 	}
 }
 
-	void UDAWSequencerPerformer::CreateMixerNodesSpaghettiBlock()
+	void UM2SoundGraphRenderer::CreateMixerNodesSpaghettiBlock()
 	{
 		// create master mixer
 		EMetaSoundBuilderResult BuildResult;
@@ -538,7 +538,7 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 
 
 
-	void UDAWSequencerPerformer::AttachAnotherMasterMixerToOutput()
+	void UM2SoundGraphRenderer::AttachAnotherMasterMixerToOutput()
 	{
 		EMetaSoundBuilderResult BuildResult;
 		const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
@@ -551,7 +551,7 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 				MasterOutputsArray.Append(CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
 	}
 
-	TArray<FMetaSoundBuilderNodeInputHandle> UDAWSequencerPerformer::GetFreeAudioOutput()
+	TArray<FMetaSoundBuilderNodeInputHandle> UM2SoundGraphRenderer::GetFreeAudioOutput()
 	{
 		TArray<FMetaSoundBuilderNodeInputHandle> FreeOutputs;
 		
@@ -570,7 +570,7 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 
 
 	// we do not use this due to the issues with the frontend only registering the patch when the metasound graph is opened, which is annoying.
-	bool UDAWSequencerPerformer::CreateMidiPlayerBlock()
+	bool UM2SoundGraphRenderer::CreateMidiPlayerBlock()
 {
 		// Create the midi player block
 	EMetaSoundBuilderResult BuildResult;
@@ -601,7 +601,7 @@ void UDAWSequencerPerformer::CreateMixerPatchBlock()
 	//FMetaSoundBuilderNodeInputHandle MidiPlayerNode = CurrentBuilder->CreateMidiPlayerNode(FName(TEXT("Midi Player")), FLinearColor::Green, 0);
 }
 
-void UDAWSequencerPerformer::CreateAndAuditionPreviewAudioComponent()
+void UM2SoundGraphRenderer::CreateAndAuditionPreviewAudioComponent()
 {
 	PlayState = EBKPlayState::ReadyToPlay;
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
@@ -609,7 +609,7 @@ void UDAWSequencerPerformer::CreateAndAuditionPreviewAudioComponent()
 	CurrentBuilder->Audition(this, AuditionComponentRef, OnCreateAuditionGeneratorHandle, true);
 }
 
-void UDAWSequencerPerformer::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
+void UM2SoundGraphRenderer::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
 
 	UMetaSoundAssetSubsystem* AssetSubsystem = GEngine->GetEngineSubsystem<UMetaSoundAssetSubsystem>();

@@ -280,6 +280,9 @@ void UM2SoundInstrumentNode::AllocateDefaultPins()
 
 	CreatePin(EGPD_Output, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
+
+	CreatePin(EGPD_Output, "Audio", FName("Audio"));
+	Pins.Last()->DefaultValue = "Default";
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)

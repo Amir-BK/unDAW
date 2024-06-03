@@ -4,6 +4,7 @@
 #include "SequencerData.h"
 #include "UnDAWSequencePerformer.h"
 #include "M2SoundGraphStatics.h"
+#include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
@@ -44,7 +45,7 @@ void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewP
 	}
 }
 
-inline void UDAWSequencerData::InitTracksFromFoundArray(TMap<int, int> InTracks) {
+inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TMap<int, int> InTracks) {
 
 	auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
 
@@ -104,7 +105,7 @@ void UDAWSequencerData::CalculateSequenceDuration()
 }
 
 
-
+//TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
 	TMap<int, int> FoundChannels;
@@ -203,7 +204,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 
 		//FoundChannels.Sort();
 		CalculateSequenceDuration();
-		InitTracksFromFoundArray(FoundChannels);
+		InitVertexesFromFoundMidiTracks(FoundChannels);
 
 		//we must create a builder to traverse the graphs and create the nodes
 		CreatePerformer(nullptr);
@@ -218,11 +219,11 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	}
 }
 
-UDAWSequencerPerformer* UDAWSequencerData::CreatePerformer(UAudioComponent* AuditionComponent)
+UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* AuditionComponent)
 {
-	auto SequencerPerformer = NewObject<UDAWSequencerPerformer>(this);
+	auto SequencerPerformer = NewObject<UM2SoundGraphRenderer>(this);
 
-	OnVertexAdded.AddDynamic(SequencerPerformer, &UDAWSequencerPerformer::UpdateVertex);
+	OnVertexAdded.AddDynamic(SequencerPerformer, &UM2SoundGraphRenderer::UpdateVertex);
 	SequencerPerformer->InitPerformer();
 	//SequencerPerformer->SessionData = this;
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
@@ -325,6 +326,7 @@ void UM2SoundAudioInsert::PostEditChangeProperty(FPropertyChangedEvent& Property
 		if (Patch)
 		{
 			bInsertImplementsInsertInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
+
 		}
 
 		if (bInsertImplementsInsertInterface)

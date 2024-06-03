@@ -25,7 +25,7 @@
 
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
-class UDAWSequencerPerformer;
+class UM2SoundGraphRenderer;
 
 DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
 
@@ -518,7 +518,7 @@ public:
 	UPROPERTY()
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
-	void InitTracksFromFoundArray(TMap<int, int> InTracks);;
+	void InitVertexesFromFoundMidiTracks(TMap<int, int> InTracks);;
 
 	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID);;
 
@@ -527,7 +527,7 @@ public:
 #if WITH_EDITORONLY_DATA
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
-	UDAWSequencerPerformer* EditorPreviewPerformer;
+	UM2SoundGraphRenderer* EditorPreviewPerformer;
 
 	UPROPERTY()
 	UM2SoundGraphBase* M2SoundGraph;
@@ -562,7 +562,7 @@ public:
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
 	UFUNCTION()
-	UDAWSequencerPerformer* CreatePerformer(UAudioComponent* AuditionComponent);
+	UM2SoundGraphRenderer* CreatePerformer(UAudioComponent* AuditionComponent);
 
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;

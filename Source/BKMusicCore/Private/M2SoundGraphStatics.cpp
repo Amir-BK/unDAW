@@ -90,3 +90,12 @@ TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllMetasoundPatchesWithInsertI
 	}
 	return OnlyImplementingArray;
 }
+
+bool UM2SoundGraphStatics::DoesPatchImplementInterface(UMetaSoundPatch* Patch, UClass* InterfaceClass)
+{
+	//auto interface = unDAW::Metasounds::FunDAWCustomInsertInterface::GetInterface();
+	//const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
+	//return Patch->GetDocumentChecked().Interfaces.Contains(Version);
+
+	return false;
+}
