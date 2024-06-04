@@ -159,6 +159,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 
 		void Reset(const FResetParams&)
 		{
+			ScaleDegrees = { 0, 2, 4, 5, 7, 9, 11 };
 			PulseGenerator.SetClock(Inputs.Clock->AsShared());
 			ApplyParameters();
 		}
@@ -193,9 +194,12 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 	private:
 		void ApplyParameters()
 		{
+			int RandomIndex = FMath::RandRange(0, ScaleDegrees.Num() - 1);
+			int32 ArpVal = this->ScaleDegrees[RandomIndex];
+			
 			PulseGenerator.Track = *Inputs.Track;
 			PulseGenerator.Channel = *Inputs.Channel;
-			PulseGenerator.NoteNumber = *Inputs.NoteNumber;
+			PulseGenerator.NoteNumber = *Inputs.NoteNumber + ArpVal;
 			PulseGenerator.Velocity = *Inputs.Velocity;
 			PulseGenerator.SetInterval(
 				{
@@ -206,6 +210,8 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 				});
 		}
 		
+		TArray<int32> ScaleDegrees;
+		int32 OctaveRange;
 		FInputs Inputs;
 		FOutputs Outputs;
 		Harmonix::Midi::Ops::FPulseGenerator PulseGenerator;
