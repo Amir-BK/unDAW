@@ -92,7 +92,12 @@ void UM2SoundGraphRenderer::InitPerformer()
 	//add main clock patch by reference - '/Script/MetasoundEngine.MetaSoundPatch'/unDAW/Patches/System/unDAW_MainClock.unDAW_MainClock'
 	CreateMidiPlayerBlock();
 
+	FSoftObjectPath MidiFilterPatchSoftPath(TEXT("/unDAW/Patches/System/unDAW_MidiFilter.unDAW_MidiFilter"));
+	MidiFilterDocument = MidiFilterPatchSoftPath.TryLoad();
+	//CurrentBuilder->AddNode(MidiFilterDocument, BuildResult);
+	//UMetaSoundPatch* MidiPatch = Cast<UMetaSoundPatch>(MidiPlayerDocument.GetObject());
 
+	CreateMixerNodesSpaghettiBlock();
 
 
 	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(SessionData);
@@ -146,7 +151,33 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 	if (UM2SoundTrackInput* InputVertex = Cast<UM2SoundTrackInput>(Vertex))
 	{
 		//create track filter node
+		InputVertex->MetasoundOutputs.Empty();
+		//add node by patch reference - '/unDAW/Patches/System/unDAW_MidiFilter.unDAW_MidiFilter'
+		auto ChannelFilterNode = CurrentBuilder->AddNode(MidiFilterDocument, BuildResult);
+		InputVertex->BuilderResults.Add(FName("Main Node"), BuildResult);
 
+
+		//connect input of filter node to midi player node stream output
+
+		//add filter output to vertex outputs
+		auto FilterOutputs = CurrentBuilder->FindNodeOutputs(ChannelFilterNode, BuildResult);
+		for (const auto& Output : FilterOutputs)
+		{
+			FName OutputName;
+			FName DataType;
+			CurrentBuilder->GetNodeOutputData(Output, OutputName, DataType, BuildResult);
+			InputVertex->MetasoundOutputs.Add(FM2SoundMetasoundBuilderPinData{ OutputName, DataType });
+			InputVertex->MidiStreamOutput = Output;
+			//Connect the midi stream output to the midi player node
+			InputVertex->BuilderResults.Add(OutputName, BuildResult);
+
+			//hacky but we assume only one output here
+		}
+
+		//find midi input and connect it to main midi player
+		auto MidiInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
+		CurrentBuilder->ConnectNodes(MainMidiStreamOutput, MidiInput, BuildResult);
+		InputVertex->BuilderResults.Add(FName(TEXT("Connect to main player")), BuildResult);
 		
 		//CreateDefaultVertexesFromInputVertex(InSessionData, InputVertex, InputVertex->TrackId);
 	}
@@ -181,18 +212,47 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 
 		}
 
+		//find the two audio outputs and connect them to the available audio outputs
+
+		auto FreeOutputs = GetFreeAudioOutput();
+
 		for (const auto& Output : NodeOutputs)
 		{
-			FName NodeName;
+
+			FName OutputName;
 			FName DataType;
-			CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
-			PatchVertex->MetasoundOutputs.Add(FM2SoundMetasoundBuilderPinData{ NodeName, DataType });
+			CurrentBuilder->GetNodeOutputData(Output, OutputName, DataType, BuildResult);
+
+			if(DataType == FName(TEXT("Audio")))
+			{
+				CurrentBuilder->ConnectNodes(Output, FreeOutputs.Pop(), BuildResult);
+				PatchVertex->BuilderResults.Add(OutputName, BuildResult);
+			}
+
+			CurrentBuilder->GetNodeOutputData(Output, OutputName, DataType, BuildResult);
+			PatchVertex->MetasoundOutputs.Add(FM2SoundMetasoundBuilderPinData{ OutputName, DataType });
 		}
 		
 		VertexToNodeMap.Add(PatchVertex, NewNodeHandle);
 
+		if(PatchVertex->Inputs.Num() > 0)
+		{
+			//fusion patch reference for patch node
+			auto PatchForLiteral = SessionData->GetTracksDisplayOptions(1).fusionPatch.Get();
+			
+			auto PatchInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("Patch")), BuildResult);
+			auto PatchInputNodeOutput = CurrentBuilder->AddGraphInputNode(TEXT("Patch"), TEXT("FusionPatchAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(PatchForLiteral), BuildResult);
+			CurrentBuilder->ConnectNodes(PatchInputNodeOutput, PatchInput, BuildResult);
+
+			//connect this instrument renderer to the midi stream output by vertex connection
+			auto MidiStreamInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("unDAW Instrument.MidiStream")), BuildResult);
+			auto AsInputVertex = Cast<UM2SoundTrackInput>(PatchVertex->Inputs[0]);
+			CurrentBuilder->ConnectNodes(AsInputVertex->MidiStreamOutput, MidiStreamInput, BuildResult);
+
+		}
+
 		//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
-		Vertex->OnVertexUpdated.Broadcast();
+		
 	}
 	
 	if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
@@ -200,6 +260,7 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 		//CreateDefaultVertexesFromInputVertex(InSessionData, MidiOutputVertex, MidiOutputVertex->TrackId);
 	}
 
+	Vertex->OnVertexUpdated.Broadcast();
 	Vertex->OnVertexNeedsBuilderUpdates.AddDynamic(this, &UM2SoundGraphRenderer::UpdateVertex);
 
 }
@@ -591,7 +652,7 @@ void UM2SoundGraphRenderer::CreateMixerPatchBlock()
 	}
 
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = CurrentBuilder->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
-	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
+	MainMidiStreamOutput = CurrentBuilder->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
 	auto MidiInputPinOutputHandle = CurrentBuilder->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
 	CurrentBuilder->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
 

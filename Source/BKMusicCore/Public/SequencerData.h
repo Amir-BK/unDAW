@@ -79,6 +79,7 @@ enum EM2SoundGraphConnectionStatus : uint8
 	Pending
 };
 
+// this struct allows us to ensure a M2Sound vertex has intelligible data to be used by the metasound builder and once initialized, assuming metasound frontend data didn't change, we can use this data to recreate the sequencer
 USTRUCT()
 struct FM2SoundMetasoundBuilderPinData
 {
@@ -90,6 +91,11 @@ struct FM2SoundMetasoundBuilderPinData
 	UPROPERTY(VisibleAnywhere)
 	FName DataType;
 
+	UPROPERTY()
+	TObjectPtr<UM2SoundVertex> InputVertex;
+
+	UPROPERTY()
+	TObjectPtr<UM2SoundVertex> OutputVertex;
 
 };
 
@@ -362,6 +368,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void VertexNeedsBuilderUpdates();
 
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
+
 };
 
 UCLASS()
@@ -420,11 +429,19 @@ class BKMUSICCORE_API UM2SoundTrackInput : public UM2SoundVertex
 
 public:
 
-	UPROPERTY()
+	//see comment for midi channel TODO
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	int TrackId = INDEX_NONE;
 
-	UPROPERTY()
+	//this needs to be sorted out, midi data has both tracks and channels and we wish to give a unique ID to a cohereng 'part', Fusion samplers will play all channels on a specific track, which means we need to filter by channel data
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	int MidiChannel = INDEX_NONE;
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	FString TrackPrefix;
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	FMetaSoundBuilderNodeOutputHandle MidiStreamOutput;
 
 };
 
@@ -434,27 +451,14 @@ class BKMUSICCORE_API UM2SoundPatch : public UM2SoundVertex
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, Category = "M2Sound", meta=(GetOptions = "GetOptions"))
+	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	UMetaSoundPatch* Patch;
 
-
-
-	UFUNCTION()
-	TArray<FString> GetOptions() const
-	{
-		TArray<FString> Options;
-		Options.Add("Option 1");
-		Options.Add("Option 2");
-		Options.Add("Option 3");
-
-		return Options;
-
-	}
 
 	//post import property edit
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 
-	// yada
+
 
 };
 

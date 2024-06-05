@@ -86,6 +86,7 @@ public:
 
 	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 
+	//Name of this class TBD but this is the core data structure that is used to build the builder graph
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
 	UDAWSequencerData* SessionData;
 
@@ -191,6 +192,10 @@ public:
 	UMetasoundGeneratorHandle* GeneratorHandle;
 
 	bool bShouldTick = false;
+
+	//to avoid loading this asset whenever we create an input we will cache it here
+	UPROPERTY()
+	TScriptInterface<IMetaSoundDocumentInterface> MidiFilterDocument;
 
 
 	//This call back gets invoked when the metasound is ready to be played
