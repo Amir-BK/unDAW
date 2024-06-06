@@ -27,7 +27,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 //#include "SMidiNoteContainer.h"
 
-//#define PIANO_ROLL_DEBUG
+#define PIANO_ROLL_DEBUG
 
 
 BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPIANOROLLLOG, Verbose, All);

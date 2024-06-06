@@ -156,7 +156,6 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 		auto ChannelFilterNode = CurrentBuilder->AddNode(MidiFilterDocument, BuildResult);
 		InputVertex->BuilderResults.Add(FName("Main Node"), BuildResult);
 
-
 		//connect input of filter node to midi player node stream output
 
 		//add filter output to vertex outputs
@@ -174,8 +173,26 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 			//hacky but we assume only one output here
 		}
 
+		InputVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), InputVertex->TrackId, InputVertex->MidiChannel);
+
 		//find midi input and connect it to main midi player
 		auto MidiInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
+
+		//find int input named "track" and assign its default value to the vertex's track id
+		auto TrackInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
+		FName intDataType = TEXT("int32");
+
+		auto TrackInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("TrackNum")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(InputVertex->TrackId, intDataType), BuildResult);
+		CurrentBuilder->ConnectNodes(TrackInputNodeOutput, TrackInput, BuildResult);
+
+		//same for "channel"
+		auto ChannelInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Channel")), BuildResult);
+		auto ChannelInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("Channel")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(InputVertex->MidiChannel, intDataType), BuildResult);
+		CurrentBuilder->ConnectNodes(ChannelInputNodeOutput, ChannelInput, BuildResult);
+		//add to build results
+		InputVertex->BuilderResults.Add(FName(TEXT("Track Connection")), BuildResult);
+
+
 		CurrentBuilder->ConnectNodes(MainMidiStreamOutput, MidiInput, BuildResult);
 		InputVertex->BuilderResults.Add(FName(TEXT("Connect to main player")), BuildResult);
 		
@@ -247,7 +264,20 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 			//connect this instrument renderer to the midi stream output by vertex connection
 			auto MidiStreamInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("unDAW Instrument.MidiStream")), BuildResult);
 			auto AsInputVertex = Cast<UM2SoundTrackInput>(PatchVertex->Inputs[0]);
+
+			//find interface track num input
+			auto TrackInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("unDAW Instrument.MidiTrack")), BuildResult);
+			//find the track number input via input vertex, it should already exist, use the track prefix from the input note
+			//auto TrackNumGraphInput = CurrentBuilder->FindGraphInputNode(, BuildResult);
+			CurrentBuilder->ConnectNodeInputToGraphInput(FName(AsInputVertex->TrackPrefix + TEXT("TrackNum")), TrackInput, BuildResult);
+			//add to build results
+			PatchVertex->BuilderResults.Add(FName(TEXT("Track Connection")), BuildResult);
+
+
+
 			CurrentBuilder->ConnectNodes(AsInputVertex->MidiStreamOutput, MidiStreamInput, BuildResult);
+			//add to build results
+			PatchVertex->BuilderResults.Add(FName(TEXT("Connect to main player")), BuildResult);
 
 		}
 

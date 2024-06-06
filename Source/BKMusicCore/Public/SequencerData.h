@@ -35,6 +35,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, Add
 
 class UDAWSequencerData;
 
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
+struct FMidiExplicitMidiInstrumentTrack
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	int32 TrackId = INDEX_NONE;
+
+	UPROPERTY()
+	int32 ChannelId = INDEX_NONE;
+};
+
 struct FM2VertexBuilderMessages
 {
 	FString Message;
@@ -154,7 +166,11 @@ struct FLinkedMidiEvents
 	int32 EndTick = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
-	int32 TrackID = INDEX_NONE;
+	int32 TrackId = INDEX_NONE;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 ChannelId = INDEX_NONE;
+
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	double Duration = 0.0;
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -172,7 +188,7 @@ struct FLinkedMidiEvents
 
 	FString GetFormmatedString()
 	{
-		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackID);
+		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackId);
 	}
 
 };
@@ -584,6 +600,10 @@ public:
 	UPROPERTY()
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
+	//UPROPERTY()
+	//TMap <FMidiExplicitMidiInstrumentTrack, FLinkedMidiEvents> SievedLinkedMidiEventsMap;
+
+	
 
 	//override UObject PostEditChangeProperty
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;

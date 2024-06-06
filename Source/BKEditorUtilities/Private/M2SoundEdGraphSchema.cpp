@@ -158,6 +158,7 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(const UM2SoundEdGraphNode& A, c
 	
 }
 
+//The initialize graph is not really safe to be called other than through the initialization sequence of the m2sound asset
 void UM2SoundGraph::InitializeGraph()
 {
 	Nodes.Empty();
@@ -176,8 +177,8 @@ void UM2SoundGraph::InitializeGraph()
 		UM2SoundGraphInputNode* Node = NodeCreator.CreateNode();
 
 		Node->Vertex = Track;
-		Node->TrackId = index - 1;
-		Node->AssignedTrackId = index - 1;
+		Node->TrackId = index;
+		Node->AssignedTrackId = index;
 		Node->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Node->TrackId).trackName);
 		//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
 		Node->NodePosX = InputsColumnPosition;

@@ -56,14 +56,22 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TMap<int, int> In
 
 		FTrackDisplayOptions newTrack;
 		newTrack.ChannelIndexInParentMidi = channelID;
+		bool bIsPrimaryChannel = HarmonixMidiFile->GetTrack(trackID)->GetPrimaryMidiChannel() == channelID;
 
+		//if we're primary channel set vertex midichannel to 0
+
+	
 		//FString::AppendInt(channelID, newTrack.trackName);
-		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID - 1)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID - 1);
+		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
 		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
 		newTrack.fusionPatch = PianoPatch;
-		TrackDisplayOptionsMap.Add(channelID, newTrack);
+		TrackDisplayOptionsMap.Add(trackID,newTrack);
 		//Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
 		UM2SoundTrackInput* NewInput = NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional);
+		NewInput->MidiChannel = bIsPrimaryChannel ? 0 : channelID;
+		//New
+		NewInput->TrackId = trackID;
+
 		TrackInputs.Add(trackID, NewInput);
 		UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(this, NewInput, trackID);
 	}
@@ -158,8 +166,10 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
 
-							foundPair.TrackID = midiChannel == TrackMainChannel ? numTracksInternal : midiChannel;
-							FoundChannels.Add(numTracksRaw, foundPair.TrackID);
+							UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note pair, track %d, channel %d, midi main channel %d"), numTracksInternal, midiChannel, TrackMainChannel)
+							foundPair.TrackId = numTracksInternal;
+							foundPair.ChannelId = midiChannel;
+							FoundChannels.Add(numTracksInternal, foundPair.ChannelId);
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
@@ -225,13 +235,8 @@ UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audit
 
 	OnVertexAdded.AddDynamic(SequencerPerformer, &UM2SoundGraphRenderer::UpdateVertex);
 	SequencerPerformer->InitPerformer();
-	//SequencerPerformer->SessionData = this;
+
 	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
-	//SequencerPerformer->MidiTracks = &TrackDisplayOptionsMap;
-	//OnFusionPatchChangedInTrack.BindUObject(SequencerPerformer, &UDAWSequencerPerformer::ChangeFusionPatchInTrack);
-	//AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
-	//SequencerPerformer->CreateAuditionableMetasound(AuditionComponent, true);
-	//SequencerPerformer->InitBuilderHelper("unDAW Session Renderer", AuditionComponent);
 
 	return SequencerPerformer;
 }
