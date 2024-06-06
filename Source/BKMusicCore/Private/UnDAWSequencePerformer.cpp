@@ -146,7 +146,11 @@ FM2SoundMetasoundBuilderPinData CreatePinDataFromBuilderData(UMetaSoundSourceBui
 void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 {
 	EMetaSoundBuilderResult BuildResult;
-	UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
+	
+	//clear vertex build results
+	Vertex->BuilderResults.Empty();
+
+	//UE_LOG(LogTemp, Log, TEXT("Vertex Name: %s"), *Vertex->GetName())
 	//Vertex->GetDocumentChecked().GetDocumentName();
 	if (UM2SoundTrackInput* InputVertex = Cast<UM2SoundTrackInput>(Vertex))
 	{
