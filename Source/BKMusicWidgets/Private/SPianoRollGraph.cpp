@@ -804,7 +804,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 	// draw the child canvas, (that is all the actual notes) 
-	int postCanvasLayerID = RootConstraintCanvas.Get()->Paint(Args, OffsetGeometryChild, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	//int postCanvasLayerID = RootConstraintCanvas.Get()->Paint(Args, OffsetGeometryChild, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//if in note draw mode, draw note overlay 
 	
@@ -822,7 +822,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			float opacity = (float)0.7f * (127.0f - FMath::Abs(i - hoveredPitch) * 12) / 127.0f;
 
 			FSlateDrawElement::MakeBox(OutDrawElements,
-				postCanvasLayerID++,
+				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(50, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
 				&gridBrush,
 				ESlateDrawEffect::None,
@@ -831,7 +831,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			);
 
 			FSlateDrawElement::MakeText(OutDrawElements,
-				postCanvasLayerID++,
+				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(150, rowHeight), FSlateLayoutTransform(1.0f, FVector2D((double)-PaintPosVector.X, rowHeight * (127 - i)))),
 				FText::FromString(FString::Printf(TEXT("%d"), i)),
 				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 9),
@@ -865,7 +865,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	{
 		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackId).trackColor) };
 		FSlateDrawElement::MakeGradient(OutDrawElements,
-			postCanvasLayerID++,
+			LayerId + note->TrackId, 
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 			GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
 			FVector4f::One() * note->cornerRadius
@@ -880,13 +880,16 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		//);
 	}
 
+	// anything we want over the notes should have higher layer ID... 
+	int PostNotesLayerID = LayerId + SessionData->M2TrackMetadata.Num() + 1;
+
 	if (SelectedNote != nullptr)
 	{
 		//	FSlateDrawElement::bord
 
 		auto& note = SelectedNote;
 		FSlateDrawElement::MakeBox(OutDrawElements,
-			postCanvasLayerID++,
+			PostNotesLayerID,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
@@ -903,7 +906,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	{
 		//draw a line for every tempo event
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			postCanvasLayerID++,
+			LayerId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TempoEvent.GetTick()) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
@@ -917,7 +920,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	for (const auto& TimeSigEvent : TimeSignatureEvents)
 	{
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			postCanvasLayerID++,
+			LayerId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSigEvent.GetTick()) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
@@ -928,7 +931,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 	FSlateDrawElement::MakeText(OutDrawElements,
-	postCanvasLayerID++,
+		LayerId,
 	AllottedGeometry.ToPaintGeometry(),
 	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num notes %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
 
@@ -947,7 +950,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	//cursor tests
 	FSlateDrawElement::MakeText(OutDrawElements,
-		postCanvasLayerID++,
+		LayerId,
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50,0)))),
 		FText::FromString(FString::Printf(TEXT("mouse %s \n time at mouse %f \n cursor position %f \n Tick at mouse %f"),	* localMousePosition.ToString()
 			, localMousePosition.X / horizontalZoom, CurrentTimelinePosition, MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom))),
@@ -960,7 +963,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	//cursor tests
 	FSlateDrawElement::MakeText(OutDrawElements,
-		postCanvasLayerID++,
+		LayerId,
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, localMousePosition.operator+(FVector2D(50, 100)))),
 		FText::FromString(*noteString),
 		FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 8),
@@ -1019,7 +1022,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	//snapped mouse cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,
-		LayerId,
+		PostNotesLayerID,
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping)* horizontalZoom, 0))),
 		vertLine,
 		ESlateDrawEffect::None,
@@ -1028,7 +1031,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		FMath::Max(2.0f * horizontalZoom, 1.0f));
 
 	FSlateDrawElement::MakeText(OutDrawElements,
-		postCanvasLayerID++,
+		PostNotesLayerID,
 		OffsetGeometryChild.ToPaintGeometry(FVector2D(1.0f, 1.0f), FSlateLayoutTransform(1.0f, localMousePosition-FVector2D(0.0f, CursorTest.measuredY))),
 		&CursorTest.glyph,
 		FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24),
@@ -1036,7 +1039,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		trackColor.CopyWithNewOpacity(1.0f));
 	
 
-	return postCanvasLayerID;
+	return PostNotesLayerID;
 }
 void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
 {
