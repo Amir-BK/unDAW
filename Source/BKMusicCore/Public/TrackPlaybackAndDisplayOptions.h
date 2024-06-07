@@ -83,7 +83,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 		fusionPatch = nullptr;
 		TrackIndexInParentMidi = -1;
 		ChannelIndexInParentMidi = 0;
-		trackName = FString(TEXT("No Track Name Given"));
+		trackName = FString(TEXT("INVALID TRACK"));
 	}
 
 };

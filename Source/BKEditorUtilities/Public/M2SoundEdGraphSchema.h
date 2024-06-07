@@ -24,7 +24,7 @@ public:
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
 
-	void AutoConnectTrackPinsForNodes(const UM2SoundEdGraphNode& A, const UM2SoundEdGraphNode& B);
+	void AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2SoundEdGraphNode& B);
 
 	void InitializeGraph() override;
 
@@ -39,6 +39,11 @@ public:
 
 	UFUNCTION()
 	void OnVertexAdded(UM2SoundVertex* Vertex) {NotifyGraphChanged();}
+
+	template<class T> UM2SoundEdGraphNode* CreateNodeForVertexClass(int ColumnPosition, int RowIndex, UM2SoundEdGraphNode* InputNode);
+
+
+
 
 };
 
@@ -247,6 +252,8 @@ public:
 
 	void AllocateDefaultPins() override;
 
+	//TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
 
 };
@@ -387,3 +394,4 @@ struct FM2SoundGraphAddNodeAction_NewAudioInsert : public FM2SoundGraphAddNodeAc
 	FM2SoundGraphAddNodeAction_NewAudioInsert() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Audio Insert"), INVTEXT("Tooltip"), 0, 0, 0) {}
 	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
 };
+

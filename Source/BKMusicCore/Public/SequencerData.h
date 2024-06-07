@@ -47,6 +47,28 @@ struct FMidiExplicitMidiInstrumentTrack
 	int32 ChannelId = INDEX_NONE;
 };
 
+//the output creation logic will generate an array of these structs, each struct will contain the data needed to create an output in the metasound patch
+// once not needed these can be returned to the pool
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
+struct FAssignableAudioOutput
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FName OutputName;
+
+	//this is the name of the parameter in the metasound patch that will be used to control the gain of this output
+	UPROPERTY()
+	FName GainParameterName;
+
+	UPROPERTY()
+	FMetaSoundBuilderNodeInputHandle AudioLeftOutputInputHandle;
+
+	UPROPERTY()
+	FMetaSoundBuilderNodeInputHandle AudioRightOutputInputHandle;
+
+};
+
 struct FM2VertexBuilderMessages
 {
 	FString Message;
@@ -435,6 +457,9 @@ class BKMUSICCORE_API UM2SoundAudioOutput : public UM2SoundVertex
 	UPROPERTY(VisibleAnywhere)
 	FName GainParameterName = NAME_None;
 
+	UPROPERTY(VisibleAnywhere)
+	FAssignableAudioOutput AssignedOutput;
+
 };
 
 
@@ -469,6 +494,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	UMetaSoundPatch* Patch;
+
+	//Audio::FParameterInterfacePtr interface = nullptr;
 
 
 	//post import property edit
@@ -552,6 +579,12 @@ public:
 	UPROPERTY()
 	UM2SoundGraphBase* M2SoundGraph;
 
+	UPROPERTY()
+	FVector2D GraphPosition;
+
+	UPROPERTY()
+	FVector2D GraphZoom;
+
 
 #endif
 
@@ -610,6 +643,7 @@ public:
 
 
 	private:
+
 		FTrackDisplayOptions InvalidTrackRef;
 
 
@@ -624,6 +658,9 @@ public:
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<FName, UM2SoundPatch*> Patches;
+
+		UPROPERTY(VisibleAnywhere)
+		TArray<FAssignableAudioOutput> AudioOutputs;
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<int, UM2SoundTrackInput*> TrackInputs;

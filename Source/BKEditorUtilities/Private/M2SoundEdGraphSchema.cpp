@@ -5,6 +5,7 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "AudioParameter.h"
 #include "IAudioParameterInterfaceRegistry.h"
+#include "SGraphNode.h"
 #include "Sound/SoundBase.h"
 
 
@@ -126,7 +127,7 @@ TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Directi
 	return MoveTemp(Pins);
 }
 
-void UM2SoundGraph::AutoConnectTrackPinsForNodes(const UM2SoundEdGraphNode& A, const UM2SoundEdGraphNode& B)
+void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2SoundEdGraphNode& B)
 {
 
 	UEdGraphPin* AOutputPin = nullptr;
@@ -158,6 +159,27 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(const UM2SoundEdGraphNode& A, c
 	
 }
 
+template<class T>
+inline UM2SoundEdGraphNode* UM2SoundGraph::CreateNodeForVertexClass(int ColumnPosition, int VerticalPosition, UM2SoundEdGraphNode* InputNode)
+{
+
+	
+	FGraphNodeCreator<T> NodeCreator(*this);
+	T* Node = NodeCreator.CreateNode();
+	//Node->Vertex = NewObject<T>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	Node->NodePosX = ColumnPosition;
+	Node->NodePosY = VerticalPosition;
+	NodeCreator.Finalize();
+
+	//log position and index for debugging
+	//UE_LOG(LogTemp, Warning, TEXT("Index: %d, RowIndex: %d, ColumnPosition: %d"), Index, VerticalPosition, ColumnPosition);
+
+	AutoConnectTrackPinsForNodes(*InputNode, *Node);
+
+	return Node;
+}
+
+
 //The initialize graph is not really safe to be called other than through the initialization sequence of the m2sound asset
 void UM2SoundGraph::InitializeGraph()
 {
@@ -167,6 +189,17 @@ void UM2SoundGraph::InitializeGraph()
 	const int OutputsColumnPosition = 1400;
 	const int InputsColumnPosition = 600;
 	const int InstrumentColumns = 950;
+
+	auto AudioOutputPlacement = [&] (int RowIndex)
+	{
+		return RowIndex * OffsetBetweenNodes + OffsetBetweenNodes / 4;
+	};
+
+	auto MidiOutputPlacement = [&](int RowIndex)
+		{
+			return RowIndex * OffsetBetweenNodes - OffsetBetweenNodes / 4;
+		};
+
 
 	int i = 0;
 
@@ -196,24 +229,77 @@ void UM2SoundGraph::InitializeGraph()
 		
 		InstrumentNodeCreator.Finalize();
 
-		FGraphNodeCreator<UM2SoundGraphMidiOutputNode> OutputNodeCreator(*this);
-		UM2SoundGraphMidiOutputNode* OutputNode = OutputNodeCreator.CreateNode();
+		TArray<UM2SoundEdGraphNode*> Outputs;
 
-		auto& OutputVertex = InstrumentVertex->Outputs[0];
+		for(auto& Output : InstrumentVertex->Outputs)
+		{
+			//CreateNodeForVertexClass<Output>(i, OutputsColumnPosition, AudioOutputPlacement(i));
+			if(Output->IsA<UM2SoundAudioOutput>())
+			{
+				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphAudioOutputNode>(OutputsColumnPosition, AudioOutputPlacement(i), InstrumentNode));
+				
+			}
 
-		OutputNode->Vertex = OutputVertex;
-		OutputNode->NodePosX = OutputsColumnPosition;
-		OutputNode->NodePosY = i * OffsetBetweenNodes;
+			if(Output->IsA<UM2SoundMidiOutput>())
+			{
+				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphMidiOutputNode>(OutputsColumnPosition, MidiOutputPlacement(i), InstrumentNode));
+			}
+			Outputs.Last()->Vertex = Output;
+			//AutoConnectTrackPinsForNodes(*Node, Cast<UM2SoundEdGraphNode*>( Nodes.Last()));
+			////if Midioutput
+			//if(UM2SoundMidiOutput* MidiOutput = Cast<UM2SoundMidiOutput>(Output))
+			//{
+			//	FGraphNodeCreator<UM2SoundGraphMidiOutputNode> OutputNodeCreator(*this);
+			//	UM2SoundGraphMidiOutputNode* OutputNode = OutputNodeCreator.CreateNode();
+			//	
+			//	OutputNode->Vertex = MidiOutput;
+			//	OutputNode->NodePosX = OutputsColumnPosition;
+			//	OutputNode->NodePosY = MidiOutputPlacement(i);
+			//	OutputNodeCreator.Finalize();
 
-		OutputNodeCreator.Finalize();
+			//	AutoConnectTrackPinsForNodes(*Node, *OutputNode);
+			//}
+
+			////if AudioOutput
+			//if(UM2SoundAudioOutput* AudioOutput = Cast<UM2SoundAudioOutput>(Output))
+			//{
+			//	FGraphNodeCreator<UM2SoundGraphAudioOutputNode> OutputNodeCreator(*this);
+			//	UM2SoundGraphAudioOutputNode* OutputNode = OutputNodeCreator.CreateNode();
+
+			//	OutputNode->Vertex = AudioOutput;
+			//	OutputNode->NodePosX = OutputsColumnPosition;
+			//	OutputNode->NodePosY = AudioOutputPlacement(i);
+			//	OutputNodeCreator.Finalize();
+
+			//	AutoConnectTrackPinsForNodes(*Node, *OutputNode);
+			//}
+
+
+			
+		}
+
+		//auto& OutputVertex = InstrumentVertex->Outputs[0];
+
+		//OutputNode->Vertex = OutputVertex;
+		//OutputNode->NodePosX = OutputsColumnPosition;
+		//OutputNode->NodePosY = i * OffsetBetweenNodes;
+
+		//OutputNodeCreator.Finalize();
+
+		//create audio output node
+		//FGraphNodeCreator<UM2SoundGraphAudioOutputNode> AudioOutputNodeCreator(*this);
+		//UM2SoundGraphAudioOutputNode* AudioOutputNode = AudioOutputNodeCreator.CreateNode();
+
 
 		AutoConnectTrackPinsForNodes(*Node, *InstrumentNode);
-		AutoConnectTrackPinsForNodes(*InstrumentNode, *OutputNode);
+		//AutoConnectTrackPinsForNodes(*InstrumentNode, *OutputNode);
 
 		Node->VertexUpdated();
 		InstrumentNode->VertexUpdated();
-		OutputNode->VertexUpdated();
-
+		for (auto Output : Outputs)
+		{
+			Output->VertexUpdated();
+		}
 
 		i++;
 	}
@@ -372,6 +458,7 @@ void UM2SoundEdGraphNode::VertexUpdated()
 
 	//assuming each vertex only implements one interface, we can keep most of the logic here
 	Audio::FParameterInterfacePtr interface = nullptr;
+
 	if(IsA<UM2SoundInstrumentNode>())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("IsInstrumentNode"));
@@ -392,20 +479,6 @@ void UM2SoundEdGraphNode::VertexUpdated()
 			Name = "No Patch Selected";
 		}
 	}
-
-	//if(Vertex->bHasErrors)
-	//{
-	//	bHasCompilerMessage = Vertex->bHasErrors;
-	//	ErrorType = Vertex->ErrorType;
-	//	ErrorMsg = Vertex->VertexErrors;
-	//}
-	//else
-	//{
-	//	bHasCompilerMessage = false;
-
-	//	ErrorMsg = FString("");
-	//	ClearCompilerMessage();
-	//}
 
 	bHasCompilerMessage = CheckForErrorMessagesAndReturnIfAny(this, ErrorMsg);
 
@@ -482,6 +555,15 @@ void UM2SoundGraphAudioOutputNode::AllocateDefaultPins()
 	CreatePin(EGPD_Input, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
 }
+
+//TSharedPtr<SGraphNode> UM2SoundGraphAudioOutputNode::CreateVisualWidget()
+//{
+//	return SNew(SGraphNode)
+//		.WithPinLabels(false)
+//		.WithPinDefaultValues(false);
+//
+//		
+//}
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {

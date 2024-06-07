@@ -14,12 +14,15 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
+	UM2SoundAudioOutput* NewAudioOutput = NewObject<UM2SoundAudioOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+
 	UM2SoundPatch* NewPatch = NewObject<UM2SoundPatch>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 	NewPatch->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 
 	InputVertex->TrackId = Index;
 	InputVertex->Outputs.Add(NewPatch);
 	NewPatch->Outputs.Add(NewOutput);
+	NewPatch->Outputs.Add(NewAudioOutput);
 
 	NewOutput->OutputName = FName(SequencerData->GetTracksDisplayOptions(Index).trackName);
 

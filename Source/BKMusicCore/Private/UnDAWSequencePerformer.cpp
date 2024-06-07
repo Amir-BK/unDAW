@@ -19,14 +19,6 @@
 UM2SoundGraphRenderer::~UM2SoundGraphRenderer()
 {
 
-	//if(GeneratorHandle) 
-	//	{
-	//	//GeneratorHandle->Get
-	//	GeneratorHandle->CreateGene
-	//	GeneratorHandle->GetGenerator()->UnwatchOutput(FName(TEXT("unDAW.Midi Clock")), OnMidiClockOutputReceived, FName(""), FName(""));
-	//	GeneratorHandle->GetGenerator()->UnwatchOutput(FName(TEXT("unDAW.Midi Stream")));
-	//	 }
-	
 	if (AuditionComponentRef)
 	{
 		AuditionComponentRef->Stop();
