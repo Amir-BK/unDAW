@@ -470,13 +470,10 @@ class BKMUSICCORE_API UM2SoundTrackInput : public UM2SoundVertex
 
 public:
 
-	//see comment for midi channel TODO
+	//Represents the index of the track in the sequencer data, to get the actual midi metadata use this index to get the track from the sequencer data
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	int TrackId = INDEX_NONE;
 
-	//this needs to be sorted out, midi data has both tracks and channels and we wish to give a unique ID to a cohereng 'part', Fusion samplers will play all channels on a specific track, which means we need to filter by channel data
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	int MidiChannel = INDEX_NONE;
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	FString TrackPrefix;
@@ -561,15 +558,17 @@ public:
 	//	SelfSharedPtr.Reset();
 	//}
 
-	
+
 	UPROPERTY()
-	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
+	TArray<FTrackDisplayOptions> M2TrackMetadata;
+	
+	//UPROPERTY()
+	//TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
-	void InitVertexesFromFoundMidiTracks(TMap<int, int> InTracks);;
+	void InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
 
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID);;
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);;
 
-	FTrackDisplayOptions& GetTrackOptionsRef(int TrackID);
 
 #if WITH_EDITORONLY_DATA
 

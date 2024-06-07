@@ -187,17 +187,18 @@ void UM2SoundGraph::InitializeGraph()
 
 	const int OffsetBetweenNodes = 200;
 	const int OutputsColumnPosition = 1400;
-	const int InputsColumnPosition = 600;
+	const int InputsColumnPosition = 300;
+	const int MidiOutsColumnPosition = 800;
 	const int InstrumentColumns = 950;
 
 	auto AudioOutputPlacement = [&] (int RowIndex)
 	{
-		return RowIndex * OffsetBetweenNodes + OffsetBetweenNodes / 4;
+		return RowIndex * OffsetBetweenNodes;
 	};
 
 	auto MidiOutputPlacement = [&](int RowIndex)
 		{
-			return RowIndex * OffsetBetweenNodes - OffsetBetweenNodes / 4;
+			return RowIndex * OffsetBetweenNodes + OffsetBetweenNodes / 2;
 		};
 
 
@@ -242,7 +243,7 @@ void UM2SoundGraph::InitializeGraph()
 
 			if(Output->IsA<UM2SoundMidiOutput>())
 			{
-				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphMidiOutputNode>(OutputsColumnPosition, MidiOutputPlacement(i), InstrumentNode));
+				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphMidiOutputNode>(MidiOutsColumnPosition, MidiOutputPlacement(i), Node));
 			}
 			Outputs.Last()->Vertex = Output;
 			//AutoConnectTrackPinsForNodes(*Node, Cast<UM2SoundEdGraphNode*>( Nodes.Last()));
@@ -416,14 +417,7 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 	}
 }
 
-void UM2SoundEdGraphNode::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const
-{
-	//does this ever get called?
 
-	UE_LOG(LogTemp, Warning, TEXT("ValidateNodeDuringCompilation"));
-
-
-}
 
 bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FString& OutErrorMsg)
 {

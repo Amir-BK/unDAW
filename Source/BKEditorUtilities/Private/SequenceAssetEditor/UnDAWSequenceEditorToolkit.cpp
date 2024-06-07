@@ -447,16 +447,17 @@ void FSequenceAssetDetails::OnFusionPatchChangedInTrack(int TrackID, UFusionPatc
 void FSequenceAssetDetails::UpdateMidiInputTracks()
 {
     MidiInputTracks->ClearChildren();
-    for (auto& [Index, Track] : SequenceData->TrackDisplayOptionsMap)
-    {
+
+    for(SIZE_T i = 0; i < SequenceData->M2TrackMetadata.Num(); i++)
+	{
 		MidiInputTracks->AddSlot()
 			.AutoHeight()
-            [
+			[
 				SNew(SMIDITrackControls)
-					.TrackData(&Track)
-                    .slotInParentID(Index)
-                    .OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
-
+					.TrackData(&SequenceData->M2TrackMetadata[i])
+					.slotInParentID(i)
+					.OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
 			];
 	}
+
 }

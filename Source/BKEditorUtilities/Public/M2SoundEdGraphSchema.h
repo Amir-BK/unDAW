@@ -121,8 +121,7 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
-	void ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const override;
-
+	
 	UFUNCTION()
 	virtual void VertexUpdated();
 

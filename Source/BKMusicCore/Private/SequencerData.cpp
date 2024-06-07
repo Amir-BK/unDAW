@@ -38,51 +38,53 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 
 void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch)
 {
-	if (TrackDisplayOptionsMap.Contains(TrackID))
+	if (M2TrackMetadata.IsValidIndex(TrackID))
 	{
-		TrackDisplayOptionsMap[TrackID].fusionPatch = NewPatch;
+		M2TrackMetadata[TrackID].fusionPatch = NewPatch;
 		OnFusionPatchChangedInTrack.ExecuteIfBound(TrackID, NewPatch);
 	}
+
 }
 
-inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TMap<int, int> InTracks) {
+inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
 
 	auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
 
 	UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
-	TrackDisplayOptionsMap.Empty();
+
+	M2TrackMetadata.Empty();
 	for (const auto& [trackID, channelID] : InTracks)
 	{
 
 		FTrackDisplayOptions newTrack;
-		newTrack.ChannelIndexInParentMidi = channelID;
 		bool bIsPrimaryChannel = HarmonixMidiFile->GetTrack(trackID)->GetPrimaryMidiChannel() == channelID;
+		newTrack.ChannelIndexInParentMidi = bIsPrimaryChannel ? 0 : channelID;
+		newTrack.TrackIndexInParentMidi = trackID;
 
 		//if we're primary channel set vertex midichannel to 0
 
 	
 		//FString::AppendInt(channelID, newTrack.trackName);
 		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
-		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID);
+		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
 		newTrack.fusionPatch = PianoPatch;
-		TrackDisplayOptionsMap.Add(trackID,newTrack);
-		//Outputs.Add(FName(newTrack.trackName), NewObject<UM2SoundOutput>(this, NAME_None, RF_Transactional));
+		int IndexOfNewTrack = M2TrackMetadata.Add(newTrack);
+
 		UM2SoundTrackInput* NewInput = NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional);
-		NewInput->MidiChannel = bIsPrimaryChannel ? 0 : channelID;
-		//New
-		NewInput->TrackId = trackID;
 
-		TrackInputs.Add(trackID, NewInput);
-		UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(this, NewInput, trackID);
+		NewInput->TrackId = IndexOfNewTrack;
+
+		TrackInputs.Add(IndexOfNewTrack, NewInput);
+		UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(this, NewInput, IndexOfNewTrack);
 	}
 
 }
 
-inline FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(int ID)
+inline FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(const int& ID)
 {
-	if (TrackDisplayOptionsMap.Contains(ID))
+	if(M2TrackMetadata.IsValidIndex(ID))
 	{
-		return TrackDisplayOptionsMap[ID];
+		return M2TrackMetadata[ID];
 	}
 	else
 	{
@@ -90,17 +92,6 @@ inline FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(int ID)
 	}
 }
 
-inline FTrackDisplayOptions& UDAWSequencerData::GetTrackOptionsRef(int TrackID)
-{
-	if (TrackDisplayOptionsMap.Contains(TrackID))
-	{
-		return TrackDisplayOptionsMap[TrackID];
-	}
-	else
-	{
-		return InvalidTrackRef;
-	}
-}
 
 
 
@@ -116,7 +107,7 @@ void UDAWSequencerData::CalculateSequenceDuration()
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
-	TMap<int, int> FoundChannels;
+	TArray<TTuple<int, int>> FoundChannels;
 	LinkedNoteDataMap.Empty();
 	Outputs.Empty();
 	TrackInputs.Empty();
@@ -167,9 +158,8 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
 
 							UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note pair, track %d, channel %d, midi main channel %d"), numTracksInternal, midiChannel, TrackMainChannel)
-							foundPair.TrackId = numTracksInternal;
+							foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
 							foundPair.ChannelId = midiChannel;
-							FoundChannels.Add(numTracksInternal, foundPair.ChannelId);
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels

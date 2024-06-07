@@ -169,7 +169,9 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 			//hacky but we assume only one output here
 		}
 
-		InputVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), InputVertex->TrackId, InputVertex->MidiChannel);
+		auto& TrackMetadata = SessionData->GetTracksDisplayOptions(InputVertex->TrackId);
+
+		InputVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata.TrackIndexInParentMidi, TrackMetadata.ChannelIndexInParentMidi);
 
 		//find midi input and connect it to main midi player
 		auto MidiInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
@@ -178,12 +180,12 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 		auto TrackInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
 		FName intDataType = TEXT("int32");
 
-		auto TrackInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("TrackNum")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(InputVertex->TrackId, intDataType), BuildResult);
+		auto TrackInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("TrackNum")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(TrackMetadata.TrackIndexInParentMidi, intDataType), BuildResult);
 		CurrentBuilder->ConnectNodes(TrackInputNodeOutput, TrackInput, BuildResult);
 
 		//same for "channel"
 		auto ChannelInput = CurrentBuilder->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Channel")), BuildResult);
-		auto ChannelInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("Channel")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(InputVertex->MidiChannel, intDataType), BuildResult);
+		auto ChannelInputNodeOutput = CurrentBuilder->AddGraphInputNode(FName(InputVertex->TrackPrefix + TEXT("Channel")), TEXT("int32"), MSBuilderSystem->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexInParentMidi, intDataType), BuildResult);
 		CurrentBuilder->ConnectNodes(ChannelInputNodeOutput, ChannelInput, BuildResult);
 		//add to build results
 		InputVertex->BuilderResults.Add(FName(TEXT("Track Connection")), BuildResult);
