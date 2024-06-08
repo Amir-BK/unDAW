@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 #include "M2SoundEdGraphSchema.h"
+#include "SAudioRadialSlider.h"
 
 /**
  * 
@@ -13,7 +14,8 @@ class BK_EDITORUTILITIES_API SM2AudioOutputNode : public SGraphNode
 {
 public:
 	SLATE_BEGIN_ARGS(SM2AudioOutputNode)
-	{}
+	{	}
+		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -21,10 +23,18 @@ public:
 
 	TSharedRef<SWidget> CreateNodeContentArea() override;
 
+	TAttribute<FLinearColor> TrackColor;
+
+	void SetTrackColorAttribute(TAttribute<FLinearColor> InTrackColor)
+	{
+		TrackColor = InTrackColor;
+	}
 
 	UM2SoundGraphAudioOutputNode* OutputNode;
 
 	TSharedPtr<SVerticalBox> MainVerticalBox;
+
+	TSharedPtr<SAudioRadialSlider> RadialSlider;
 
 	FLinearColor GetSliderProgressColor() const
 	{

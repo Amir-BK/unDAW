@@ -409,6 +409,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
 
+#if WITH_EDITORONLY_DATA
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override {};
+#endif
 };
 
 UCLASS()
@@ -481,6 +484,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	FMetaSoundBuilderNodeOutputHandle MidiStreamOutput;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "M2Sound")
+	bool bOutputToBlueprints = true;
+
 };
 
 UCLASS()
@@ -496,8 +502,9 @@ public:
 
 
 	//post import property edit
+#if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
+#endif
 
 
 };
@@ -512,8 +519,9 @@ public:
 	UMetaSoundPatch* Patch;
 
 	//post import property edit
+#if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
+#endif
 	// yada
 
 };
@@ -553,21 +561,13 @@ public:
 		return SelfSharedPtr;
 	}
 
-	//~UDAWSequencerData()
-	//{
-	//	SelfSharedPtr.Reset();
-	//}
-
 
 	UPROPERTY()
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
-	
-	//UPROPERTY()
-	//TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
 
 	void InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
 
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);;
+	FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);
 
 
 #if WITH_EDITORONLY_DATA
@@ -637,9 +637,9 @@ public:
 
 	
 
-	//override UObject PostEditChangeProperty
+#if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
+#endif
 
 	private:
 

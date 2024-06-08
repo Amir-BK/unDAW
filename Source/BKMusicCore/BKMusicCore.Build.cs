@@ -35,17 +35,16 @@ public class BKMusicCore : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Json",
-				"JsonUtilities",
+				//"Json",
+				//"JsonUtilities",
 				"AudioMixer",
-				"AppFramework",
+				//"AppFramework",
 				"MetasoundEngine",
 				"MetasoundGraphCore",
 				"MetasoundFrontend",
 				"AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
 				"unDAWMetaSounds","MetasoundGenerator",
 
-                "EditorScriptingUtilities"
 				
 				
 			 
@@ -64,7 +63,7 @@ public class BKMusicCore : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UMG",
-				"Projects",
+				//"Projects",
 				"InputCore",
 				"SignalProcessing"
  

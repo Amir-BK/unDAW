@@ -80,7 +80,7 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 
 }
 
-inline FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(const int& ID)
+FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(const int& ID)
 {
 	if(M2TrackMetadata.IsValidIndex(ID))
 	{
@@ -231,6 +231,7 @@ UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* Audit
 	return SequencerPerformer;
 }
 
+#if WITH_EDITOR
 void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	bool bIsDirty = false;
@@ -244,17 +245,16 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 
 	if (PropertyName == TEXT("MasterVolume"))
 	{
-#if WITH_EDITOR
 		if (EditorPreviewPerformer && EditorPreviewPerformer->AuditionComponentRef)
 		{
 			EditorPreviewPerformer->AuditionComponentRef->SetVolumeMultiplier(MasterOptions.MasterVolume);
 		}
-#endif
+
 	}
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
-
+#endif
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {
@@ -267,6 +267,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	OnVertexNeedsBuilderUpdates.Broadcast(this);
 }
 
+#if WITH_EDITOR
 void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	bool bIsDirty = false;
@@ -305,6 +306,7 @@ void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
 
+
 void UM2SoundAudioInsert::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	bool bIsDirty = false;
@@ -342,3 +344,4 @@ void UM2SoundAudioInsert::PostEditChangeProperty(FPropertyChangedEvent& Property
 
 	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
+#endif

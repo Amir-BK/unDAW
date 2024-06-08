@@ -257,6 +257,11 @@ public:
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
 
+	void SetOutputGain(float NewGain) {
+		UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
+		Gain = NewGain;
+	}
+
 };
 
 UCLASS()

@@ -11,6 +11,8 @@ void SM2AudioOutputNode::Construct(const FArguments& InArgs, UEdGraphNode* InGra
 {
 	GraphNode = InGraphNode;
 	OutputNode = Cast<UM2SoundGraphAudioOutputNode>(GraphNode);
+	SetTrackColorAttribute(InArgs._TrackColor);
+	//bEnabledAttributesUpdate = true;
 
 	UpdateGraphNode();
 
@@ -48,9 +50,10 @@ TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
 							//make FAudioRadialSliderStyle
 
 							SNew(SAudioRadialSlider)
-								.SliderProgressColor_Lambda([this] {return GetSliderProgressColor(); })
-								//_Lamba(this, &SM2AudioOutputNode::GetSliderProgressColor)
-								//.Style(FAudioRadialSliderStyle())
+								.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor();})
+								.SliderValue(OutputNode->Gain)
+								.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
+
 						]
 				]
 

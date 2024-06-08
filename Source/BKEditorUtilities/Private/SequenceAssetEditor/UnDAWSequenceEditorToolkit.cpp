@@ -459,6 +459,9 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 					.TrackData(&SequenceData->M2TrackMetadata[i])
 					.slotInParentID(i)
 					.OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
+					.ConnectedGraph(SequenceData->M2SoundGraph)
+					.SequencerData(SequenceData)
+
 			];
 	}
 

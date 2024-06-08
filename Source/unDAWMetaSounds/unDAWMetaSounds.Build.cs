@@ -45,7 +45,13 @@ public class unDAWMetaSounds : ModuleRules
 				"HarmonixDsp",
 				"HarmonixMidi",
 				"Harmonix",
-				"AudioExtensions"
+				"HarmonixMetasound",
+				"AudioExtensions",
+                "SignalProcessing",
+                "MetasoundEngine",
+                "MetasoundGraphCore",
+                "MetasoundFrontend",
+                "MetasoundGenerator",
 				
 				
 				
@@ -60,13 +66,8 @@ public class unDAWMetaSounds : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"SignalProcessing",
-				"MetasoundEngine",
-				"MetasoundGraphCore",
-				"MetasoundFrontend",
-				"MetasoundGenerator",
-				"AudioExtensions",
-				"HarmonixMetasound"
+
+
 				
 
 

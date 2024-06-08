@@ -445,12 +445,12 @@ void FindAllMetaSoundClasses()
 
 	FMetasoundFrontendClass RegisteredClass;
 
-	auto AllClasses = ISearchEngine::Get().FindAllClasses(true);
-	for (const auto MetaClass : AllClasses)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Class: %s"), *MetaClass.Metadata.GetClassName().GetFullName().ToString())
+	//auto AllClasses = ISearchEngine::Get().FindAllClasses(true);
+	//for (const auto MetaClass : AllClasses)
+	//{
+	//	UE_LOG(LogTemp, Log, TEXT("Class: %s"), *MetaClass.Metadata.GetClassName().GetFullName().ToString())
 
-	}
+	//}
 
 }
 

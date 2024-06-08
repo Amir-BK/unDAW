@@ -14,6 +14,7 @@
 #include "Widgets/Colors/SColorPicker.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "SequencerData.h"
+#include "M2SoundEdGraphSchema.h"
 #include "UnDAWSFZAsset.h"
 
 
@@ -61,6 +62,8 @@ public:
 		SLATE_ARGUMENT(int, slotInParentID)
 		SLATE_ARGUMENT(FText, trackName)
 		SLATE_ARGUMENT(FTrackDisplayOptions*, TrackData)
+		SLATE_ARGUMENT(UM2SoundGraphBase*, ConnectedGraph )
+		SLATE_ARGUMENT(UDAWSequencerData*, SequencerData )
 		SLATE_EVENT(FOnFusionPatchChanged, OnFusionPatchChanged)
 
 	SLATE_END_ARGS()
@@ -72,6 +75,8 @@ public:
 	TArray<TSharedPtr<FString>> optionsArray;
 	FTrackDisplayOptions* TrackData;
 	FOnFusionPatchChanged OnFusionPatchChanged;
+	UM2SoundGraphBase* ConnectedGraph;
+	UDAWSequencerData* SequencerData;
 
 	void toggleTrackVisibility(ECheckBoxState newState)
 	{
@@ -82,11 +87,13 @@ public:
 	{
 		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
 		TrackData->trackColor = newColor;
+		if(ConnectedGraph) ConnectedGraph->NotifyGraphChanged();
 	}
 
 	void SelectionCancel(FLinearColor newColor)
 	{
 		TrackData->trackColor = newColor;
+		if(ConnectedGraph) ConnectedGraph->NotifyGraphChanged();
 	}
 
 	FReply SelectThisTrack()
@@ -104,9 +111,10 @@ public:
 			PickerArgs.bOnlyRefreshOnMouseUp = false;
 			PickerArgs.ParentWidget = AsShared();
 			PickerArgs.bUseAlpha = false;
-			PickerArgs.bOnlyRefreshOnOk = false;
+			PickerArgs.bOnlyRefreshOnOk = true;
 			PickerArgs.DisplayGamma = TAttribute<float>::Create(TAttribute<float>::FGetter::CreateUObject(GEngine, &UEngine::GetDisplayGamma));
 			PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateSP(this, &SMIDITrackControls::SetColor);
+
 			PickerArgs.OnColorPickerCancelled = FOnColorPickerCancelled::CreateSP(this, &SMIDITrackControls::SelectionCancel);
 			PickerArgs.InitialColor = TrackData->trackColor;
 			OpenColorPicker(PickerArgs);
@@ -173,6 +181,8 @@ public:
 		TrackData = InArgs._TrackData;
 		CurrentItem = MakeShareable(new FString(TrackData->fusionPatch->GetName()));
 		OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
+		ConnectedGraph = InArgs._ConnectedGraph;
+		SequencerData	= InArgs._SequencerData;
 
 		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
 		//{
