@@ -7,6 +7,7 @@
 #include "SequencerData.h"
 #include <EdGraphUtilities.h>
 #include <EdGraph/EdGraphNode.h>
+#include "SGraphNode.h"
 #include "EdGraph/EdGraphPin.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "M2SoundEdGraphSchema.generated.h"
@@ -122,7 +123,6 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
-	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override { return TSharedPtr<SGraphNode>(); }
 	
 	UFUNCTION()
 	virtual void VertexUpdated();
@@ -253,7 +253,7 @@ public:
 
 	void AllocateDefaultPins() override;
 
-	//TSharedPtr<SGraphNode> CreateVisualWidget() override;
+	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
 
@@ -280,7 +280,7 @@ public:
 
 
 UCLASS()
-class UM2SoundInstrumentNode : public UM2SoundEdGraphNodeConsumer
+class BK_EDITORUTILITIES_API UM2SoundPatchContainerNode : public UM2SoundEdGraphNodeConsumer
 {
 	GENERATED_BODY()
 
@@ -289,9 +289,8 @@ public:
 	// Returns true if it is possible to jump to the definition of this node (e.g., if it's a variable get or a function call)
 	virtual bool CanJumpToDefinition() const override { return true; }
 
-	// Jump to the definition of this node (should only be called if CanJumpToDefinition() return true)
+	// Jump to the definition of the MetaSound patch driving this node 
 	virtual void JumpToDefinition() const override {
-		UE_LOG(LogTemp, Warning, TEXT("JumpToDefinition"));
 		//cast vertex to patch vertex and get metasound patch reference
 		UM2SoundPatch* Patch = Cast<UM2SoundPatch>(Vertex);
 		UMetaSoundPatch* Object = Patch->Patch;
@@ -300,6 +299,9 @@ public:
 		GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(Object);
 	}
 
+
+	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
 	void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Instrument: %s"), *Name.ToString())); }
@@ -307,13 +309,15 @@ public:
 };
 
 UCLASS()
-class UM2SoundAudioInsertNode : public UM2SoundEdGraphNodeConsumer
+class BK_EDITORUTILITIES_API UM2SoundAudioInsertNode : public UM2SoundPatchContainerNode
 {
 	GENERATED_BODY()
 
 public:
 
-	void AllocateDefaultPins() override;
+
+	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Insert: %s"), *Name.ToString())); }
 

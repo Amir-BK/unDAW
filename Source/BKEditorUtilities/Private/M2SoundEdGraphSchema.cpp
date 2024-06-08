@@ -7,6 +7,8 @@
 #include "IAudioParameterInterfaceRegistry.h"
 #include "SGraphNode.h"
 #include "Sound/SoundBase.h"
+#include "EditorSlateWidgets/SSM2SoundEdGraphNode.h"
+#include "EditorSlateWidgets/SSM2AudioOutputNode.h"
 
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
@@ -219,8 +221,9 @@ void UM2SoundGraph::InitializeGraph()
 		Node->NodePosY = i * OffsetBetweenNodes;
 		NodeCreator.Finalize();
 
-		FGraphNodeCreator<UM2SoundInstrumentNode> InstrumentNodeCreator(*this);
-		UM2SoundInstrumentNode* InstrumentNode = InstrumentNodeCreator.CreateNode();
+		FGraphNodeCreator<UM2SoundPatchContainerNode> InstrumentNodeCreator(*this);
+		UM2SoundPatchContainerNode* InstrumentNode = InstrumentNodeCreator.CreateNode();
+		//InstrumentNode->InterfaceClass = unDAW::Metasounds::FunDAWInstrumentRendererInterface;
 
 		auto& InstrumentVertex = Track->Outputs[0];
 
@@ -360,7 +363,12 @@ void UM2SoundGraphInputNode::AllocateDefaultPins()
 	Pins.Last()->DefaultValue = "Default";
 }
 
-void UM2SoundInstrumentNode::AllocateDefaultPins()
+inline TSharedPtr<SGraphNode> UM2SoundPatchContainerNode::CreateVisualWidget()
+{
+	return SNew(SM2SoundPatchContainerGraphNode<unDAW::Metasounds::FunDAWInstrumentRendererInterface>, this);
+}
+
+void UM2SoundPatchContainerNode::AllocateDefaultPins()
 {
 	// Create any pin for testing
 	CreatePin(EGPD_Input, "Track", FName("Track", 0));
@@ -369,14 +377,13 @@ void UM2SoundInstrumentNode::AllocateDefaultPins()
 	CreatePin(EGPD_Output, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
 
-	CreatePin(EGPD_Output, "Audio", FName("Audio"));
-	Pins.Last()->DefaultValue = "Default";
+
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-	FGraphNodeCreator<UM2SoundInstrumentNode> NodeCreator(*ParentGraph);
-	UM2SoundInstrumentNode* Node = NodeCreator.CreateUserInvokedNode();
+	FGraphNodeCreator<UM2SoundPatchContainerNode> NodeCreator(*ParentGraph);
+	UM2SoundPatchContainerNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Instrument");
 	NodeCreator.Finalize();
 
@@ -445,6 +452,7 @@ bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FStrin
 	return bHasErrors;
 }
 
+
 void UM2SoundEdGraphNode::VertexUpdated()
 {
 	UE_LOG(LogTemp, Warning, TEXT("VertexUpdated"));
@@ -453,14 +461,14 @@ void UM2SoundEdGraphNode::VertexUpdated()
 	//assuming each vertex only implements one interface, we can keep most of the logic here
 	Audio::FParameterInterfacePtr interface = nullptr;
 
-	if(IsA<UM2SoundInstrumentNode>())
+	if(IsA<UM2SoundPatchContainerNode>())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("IsInstrumentNode"));
 		interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
 
 	}
 
-	if (IsA<UM2SoundAudioInsert>() || IsA<UM2SoundInstrumentNode>())
+	if (IsA<UM2SoundAudioInsert>() || IsA<UM2SoundPatchContainerNode>())
 	{
 		auto AsPatch = Cast<UM2SoundPatch>(Vertex);
 		//if patch is valid, get its name and give it to this node
@@ -550,6 +558,11 @@ void UM2SoundGraphAudioOutputNode::AllocateDefaultPins()
 	Pins.Last()->DefaultValue = "Default";
 }
 
+TSharedPtr<SGraphNode> UM2SoundGraphAudioOutputNode::CreateVisualWidget()
+{
+	return SNew(SM2AudioOutputNode, this);
+}
+
 //TSharedPtr<SGraphNode> UM2SoundGraphAudioOutputNode::CreateVisualWidget()
 //{
 //	return SNew(SGraphNode)
@@ -572,14 +585,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* Pare
 	return Node;
 }
 
-void UM2SoundAudioInsertNode::AllocateDefaultPins()
+TSharedPtr<SGraphNode> UM2SoundAudioInsertNode::CreateVisualWidget()
 {
-	CreatePin(EGPD_Input, "Track", FName("Track", 0));
-	Pins.Last()->DefaultValue = "Default";
-
-	CreatePin(EGPD_Output, "Track", FName("Track", 0));
-	Pins.Last()->DefaultValue = "Default";
+	return SNew(SM2SoundPatchContainerGraphNode<unDAW::Metasounds::FunDAWCustomInsertInterface>, this);
 }
+
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
