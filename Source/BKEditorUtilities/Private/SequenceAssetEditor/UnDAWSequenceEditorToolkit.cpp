@@ -242,6 +242,8 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
        // GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
        GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
        GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
+       GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeDoubleClicked);
+
         AdditionalGraphCommands = MakeShared<FUICommandList>();
         SAssignNew(MetasoundGraphEditor, SGraphEditor)
         //   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })

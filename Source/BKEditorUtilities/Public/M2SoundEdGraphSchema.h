@@ -8,6 +8,7 @@
 #include <EdGraphUtilities.h>
 #include <EdGraph/EdGraphNode.h>
 #include "EdGraph/EdGraphPin.h"
+#include "Subsystems/AssetEditorSubsystem.h"
 #include "M2SoundEdGraphSchema.generated.h"
 
 
@@ -121,6 +122,7 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
+	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override { return TSharedPtr<SGraphNode>(); }
 	
 	UFUNCTION()
 	virtual void VertexUpdated();
@@ -283,6 +285,20 @@ class UM2SoundInstrumentNode : public UM2SoundEdGraphNodeConsumer
 	GENERATED_BODY()
 
 public:
+
+	// Returns true if it is possible to jump to the definition of this node (e.g., if it's a variable get or a function call)
+	virtual bool CanJumpToDefinition() const override { return true; }
+
+	// Jump to the definition of this node (should only be called if CanJumpToDefinition() return true)
+	virtual void JumpToDefinition() const override {
+		UE_LOG(LogTemp, Warning, TEXT("JumpToDefinition"));
+		//cast vertex to patch vertex and get metasound patch reference
+		UM2SoundPatch* Patch = Cast<UM2SoundPatch>(Vertex);
+		UMetaSoundPatch* Object = Patch->Patch;
+		//open asset editor for the metasound patch
+		
+		GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(Object);
+	}
 
 	void AllocateDefaultPins() override;
 
