@@ -7,8 +7,9 @@
 #include "IAudioParameterInterfaceRegistry.h"
 #include "SGraphNode.h"
 #include "Sound/SoundBase.h"
-#include "EditorSlateWidgets/SSM2SoundEdGraphNode.h"
-#include "EditorSlateWidgets/SSM2AudioOutputNode.h"
+#include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
+#include "EditorSlateWidgets/SM2AudioOutputNode.h"
+#include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
@@ -361,6 +362,11 @@ void UM2SoundGraphInputNode::AllocateDefaultPins()
 	// Create any pin for testing
 	CreatePin(EGPD_Output, "Track", FName("Track", 0));
 	Pins.Last()->DefaultValue = "Default";
+}
+
+TSharedPtr<SGraphNode> UM2SoundGraphInputNode::CreateVisualWidget()
+{
+	return SNew(SM2MidiTrackGraphNode, this);
 }
 
 inline TSharedPtr<SGraphNode> UM2SoundPatchContainerNode::CreateVisualWidget()

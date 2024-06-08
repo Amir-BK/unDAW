@@ -3,10 +3,8 @@
 #include "BKMusicCore.h"
 #include "UObject/UObjectArray.h"
 #include "Serialization/JsonSerializer.h"
-#include "MetasoundUObjectRegistry.h"
-#include "Misc/AssetRegistryInterface.h"
-#include "MetasoundSource.h"
-#include "MetasoundNodeRegistrationMacro.h"
+//#include "MetasoundUObjectRegistry.h"
+
 #include "MetasoundDataTypeRegistrationMacro.h"
 #include "Metasounds/FKSFZAudioParameterInterfaces.h"
 
@@ -25,7 +23,7 @@ void BKMusicCoreModule::StartupModule()
 	//Metasound::RegisterDataTypeWithFrontend<Metasound::FFKSFKInstrument, Metasound::ELiteralType::UObjectProxy, UFKSFZSample>();
 	//Metasound::RegisterNodeWithFrontend<Metasound::FKSFZSamplePlayerNode>();
 	
-	FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
+	//FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
 
 	FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces::RegisterInterface();
 	
@@ -40,4 +38,4 @@ void BKMusicCoreModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(BKMusicCoreModule, BKMusicCoreCore)
+IMPLEMENT_MODULE(BKMusicCoreModule, BKMusicCore)

@@ -64,7 +64,7 @@ public class BKMusicCore : ModuleRules
 				"SlateCore",
 				"UMG",
 				//"Projects",
-				"InputCore",
+				//"InputCore",
 				"SignalProcessing"
  
 				

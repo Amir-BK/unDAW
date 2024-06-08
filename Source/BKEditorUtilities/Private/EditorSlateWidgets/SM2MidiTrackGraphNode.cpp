@@ -1,24 +1,26 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "EditorSlateWidgets/SSM2AudioOutputNode.h"
+#include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
 #include "SAudioRadialSlider.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
-void SM2AudioOutputNode::Construct(const FArguments& InArgs, UEdGraphNode* InGraphNode)
+void SM2MidiTrackGraphNode::Construct(const FArguments& InArgs, UEdGraphNode* InGraphNode)
 {
 	GraphNode = InGraphNode;
-	OutputNode = Cast<UM2SoundGraphAudioOutputNode>(GraphNode);
+	InputNode = Cast<UM2SoundGraphInputNode>(InGraphNode);
 	SetTrackColorAttribute(InArgs._TrackColor);
 	//bEnabledAttributesUpdate = true;
 
 	UpdateGraphNode();
 
 }
-TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
+TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 {
+	UM2SoundTrackInput* AsInputVertex = Cast< UM2SoundTrackInput>(InputNode->Vertex);
+	
 	return SNew(SBorder)
 		.BorderImage(FAppStyle::GetBrush("NoBorder"))
 		.HAlign(HAlign_Fill)
@@ -49,10 +51,13 @@ TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
 						[
 							//make FAudioRadialSliderStyle
 
-							SNew(SAudioRadialSlider)
-								.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor();})
-								.SliderValue(OutputNode->Gain)
-								.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
+							SNew(SCheckBox)
+								.IsChecked_Lambda([AsInputVertex] {return AsInputVertex->bOutputToBlueprints ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+								.OnCheckStateChanged_Lambda([AsInputVertex](ECheckBoxState NewState) {AsInputVertex->bOutputToBlueprints = NewState == ECheckBoxState::Checked; })
+								[
+									SNew(STextBlock)
+										.Text(FText::FromString("Output to Blueprints"))
+								]
 
 						]
 				]

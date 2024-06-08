@@ -277,6 +277,8 @@ public:
 
 	void AllocateDefaultPins() override;
 
+	TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Track In: %s"), *Name.ToString())); }
 
 
