@@ -45,6 +45,8 @@ public:
 	template<typename T>
 	static void GetObjectsOfClass(TArray<T*>& OutArray);
 
+	static UMetaSoundPatch* GetPatchByName(FString Name);
+
 
 
 	/**

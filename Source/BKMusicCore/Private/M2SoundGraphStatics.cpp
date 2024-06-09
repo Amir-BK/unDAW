@@ -10,9 +10,9 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
-	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Instrument.unDAW_Fusion_Instrument'"));
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
 
-	UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+	//UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
 	UM2SoundAudioOutput* NewAudioOutput = NewObject<UM2SoundAudioOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
@@ -21,14 +21,16 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	InputVertex->TrackId = Index;
 	InputVertex->Outputs.Add(NewPatch);
-	NewPatch->Outputs.Add(NewOutput);
+	//NewPatch->Outputs.Add(NewOutput);
+
+	//NewOutput->OutputName = FName(SequencerData->GetTracksDisplayOptions(Index).trackName);
+
 	NewPatch->Outputs.Add(NewAudioOutput);
-
-	NewOutput->OutputName = FName(SequencerData->GetTracksDisplayOptions(Index).trackName);
-
 	NewPatch->Inputs.Add(InputVertex);
 
-	SequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewOutput);
+	NewAudioOutput->Inputs.Add(NewPatch);
+
+	SequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewAudioOutput);
 	SequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);
 }
 
@@ -53,6 +55,23 @@ TArray<UM2SoundVertex*> UM2SoundGraphStatics::GetAllVertexesInSequencerData(UDAW
 
 	return Vertexes;
 
+}
+
+UMetaSoundPatch* UM2SoundGraphStatics::GetPatchByName(FString Name)
+{
+	//get objects of class, compare string, return object
+	TArray<UMetaSoundPatch*> Patches;
+	GetObjectsOfClass<UMetaSoundPatch>(Patches);
+
+	for (auto Patch : Patches)
+	{
+		if (Patch->GetName() == Name)
+		{
+			return Patch;
+		}
+	}
+
+	return nullptr;
 }
 
 TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumetInterface()

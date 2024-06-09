@@ -20,6 +20,29 @@ public:
 	{}
 	SLATE_END_ARGS()
 
+
+	//probably a little expensive but we only use this with editor now, so, we'll see.
+	void RegenPatchOptions()
+	{
+		PatchOptions.Empty();
+		TArray<UMetaSoundPatch*> PatchAssets;
+		UM2SoundGraphStatics::GetObjectsOfClass<UMetaSoundPatch>(PatchAssets);
+
+		for (auto Patch : PatchAssets)
+		{
+			bool bImplementsInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
+			if (!bImplementsInterface)
+			{
+				continue;
+			}
+			auto PatchName = Patch->GetName();
+			auto DisplayName = Patch->GetDisplayName();
+			auto FormattedName = FString::Printf(TEXT("%s - %s"), *PatchName, *DisplayName.ToString());
+			PatchOptions.Add(MakeShareable(new FString(PatchName)));//  GetDocumentChecked(). Version.Name.ToString())));
+
+		}
+	}
+
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, UEdGraphNode* InGraphNode)
 	{
@@ -34,14 +57,13 @@ public:
 			PatchVertex = Cast<UM2SoundPatch>(AsM2SoundPatchContainerNode->Vertex);
 			if (PatchVertex->Patch)
 			{
-				auto PatchName = PatchVertex->Patch->GetDocumentChecked().Metadata.Version.Name;
-				SelectedPatch = MakeShareable(new FString(PatchName.ToString()));
+				auto PatchName = PatchVertex->Patch->GetName();
+				SelectedPatch = MakeShareable(new FString(PatchName));
 
 			}
 		}
 
 
-		
 		Audio::FParameterInterface Interface = T();
 
 		auto InterfaceAsFrontEndVersion = Interface.GetName();
@@ -49,38 +71,12 @@ public:
 		//print version for debugging
 		UE_LOG(LogTemp, Warning, TEXT("Interface Version: %s"), *InterfaceAsFrontEndVersion.ToString());
 
-		const FMetasoundFrontendVersion Version{ Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
+		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
-		//populate patch options with all metasound patches, get all assets of type cast to patch
-		//we will create this by demand when less lazy, for now lets test
-		TArray<UMetaSoundPatch*> PatchAssets;
-		UM2SoundGraphStatics::GetObjectsOfClass<UMetaSoundPatch>(PatchAssets);
+		RegenPatchOptions();
 
-		for (auto Patch : PatchAssets)
-		{
-			bool bImplementsInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
-			if (!bImplementsInterface)
-			{
-				continue;
-			}
-			auto PatchName = Patch->GetName();
-			auto DisplayName = Patch->GetDisplayName();
-			auto FormattedName = FString::Printf(TEXT("%s - %s"), *PatchName, *DisplayName.ToString());
-			PatchOptions.Add(MakeShareable(new FString(FormattedName)));//  GetDocumentChecked(). Version.Name.ToString())));
-		}
-
-
-
-
-
-		/*
-		ChildSlot
-		[
-			// Populate the widget
-		];
-		*/
 		UpdateGraphNode();
-		//SGraphNode(InArgs, InGraphNode));
+
 	}
 
 private:
@@ -130,6 +126,7 @@ private:
 							[
 								SNew(SComboBox<TSharedPtr<FString>>)
 									.OptionsSource(&PatchOptions)
+									.OnComboBoxOpening(this, &SM2SoundPatchContainerGraphNode::RegenPatchOptions)
 									.OnGenerateWidget(this, &SM2SoundPatchContainerGraphNode::MakePatchComboWidget)
 									.OnSelectionChanged(this, &SM2SoundPatchContainerGraphNode::OnPatchSelected)
 									[
@@ -155,7 +152,7 @@ private:
 
 		TArray<TSharedPtr<FString>> PatchOptions;
 		TSharedPtr<FString> SelectedPatch;
-
+		FMetasoundFrontendVersion Version;
 
 		TSharedRef<SWidget> MakePatchComboWidget(TSharedPtr<FString> InItem)
 		{
@@ -167,6 +164,14 @@ private:
 		void OnPatchSelected(TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
 		{
 			SelectedPatch = InItem;
+			//find the patch asset, assign it to the vertex and call update
+			UMetaSoundPatch* Patch = UM2SoundGraphStatics::GetPatchByName(*SelectedPatch);
+			if (Patch)
+			{
+				PatchVertex->Patch = Patch;
+				PatchVertex->VertexNeedsBuilderUpdates();
+			}
+
 
 		}
 

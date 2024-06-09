@@ -23,7 +23,7 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
 	
 	//add patch or insert
-	if(auto NewOutput = Cast<UM2SoundMidiOutput>(Vertex))
+	if(auto NewOutput = Cast<UM2SoundAudioOutput>(Vertex))
 	{
 		Outputs.Add(NewOutput->GetFName(), NewOutput);
 	}
@@ -61,10 +61,6 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 		newTrack.ChannelIndexInParentMidi = bIsPrimaryChannel ? 0 : channelID;
 		newTrack.TrackIndexInParentMidi = trackID;
 
-		//if we're primary channel set vertex midichannel to 0
-
-	
-		//FString::AppendInt(channelID, newTrack.trackName);
 		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
 		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
 		newTrack.fusionPatch = PianoPatch;
@@ -149,8 +145,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 					if (unlinkedNotesIndexed.Contains(MidiEvent.GetMsg().GetStdData1()))
 					{
 						const int midiChannel = MidiEvent.GetMsg().GetStdChannel();
-						//MidiEvent.GetMsg().
-						//unlinkedNotesIndexed
+
 						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
 						{
 
@@ -270,38 +265,41 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 #if WITH_EDITOR
 void UM2SoundPatch::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	bool bIsDirty = false;
-	FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	
+	// We don't want to rely on the PostEditChangeProperty at all unless for testing and debugging, it is not available in Shipping builds
+	
+	//bool bIsDirty = false;
+	//FName PropertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
-	if (PropertyName == TEXT("Patch"))
-	{
-		bool bPatchImplementsInstrumentInterface = false;
-		bool bPatchImplementsInsertInterface = false;
+	//if (PropertyName == TEXT("Patch"))
+	//{
+	//	bool bPatchImplementsInstrumentInterface = false;
+	//	bool bPatchImplementsInsertInterface = false;
 
-		auto interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
+	//	auto interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
 
-		const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
+	//	const FMetasoundFrontendVersion Version{ interface->GetName(), { interface->GetVersion().Major, interface->GetVersion().Minor } };
 
-		if (Patch)
-		{
-			bPatchImplementsInstrumentInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
-		}
+	//	if (Patch)
+	//	{
+	//		bPatchImplementsInstrumentInterface = Patch->GetDocumentChecked().Interfaces.Contains(Version);
+	//	}
 
-		if (bPatchImplementsInstrumentInterface)
-		{
-			UE_LOG(unDAWDataLogs, Log, TEXT("Patch implements the Instrument Renderer Interface!"))
-			bHasErrors = false;
-			VertexErrors = "None!";
-		}
-		else {
-			bHasErrors = true;
-			//ErrorType = EER
-			VertexErrors = "Patch does not implement the Instrument Renderer Interface!";
-		}
-		//PatchName = PatchName;
-		VertexNeedsBuilderUpdates();
-		OnVertexUpdated.Broadcast();
-	}
+	//	if (bPatchImplementsInstrumentInterface)
+	//	{
+	//		UE_LOG(unDAWDataLogs, Log, TEXT("Patch implements the Instrument Renderer Interface!"))
+	//		bHasErrors = false;
+	//		VertexErrors = "None!";
+	//	}
+	//	else {
+	//		bHasErrors = true;
+	//		//ErrorType = EER
+	//		VertexErrors = "Patch does not implement the Instrument Renderer Interface!";
+	//	}
+	//	//PatchName = PatchName;
+	//	VertexNeedsBuilderUpdates();
+	//	OnVertexUpdated.Broadcast();
+	//}
 
 	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }

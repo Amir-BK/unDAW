@@ -56,7 +56,8 @@ TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 								.OnCheckStateChanged_Lambda([AsInputVertex](ECheckBoxState NewState) {AsInputVertex->bOutputToBlueprints = NewState == ECheckBoxState::Checked; })
 								[
 									SNew(STextBlock)
-										.Text(FText::FromString("Output to Blueprints"))
+										.Text(FText::FromString("Graph Output"))
+										.ToolTipText(FText::FromString("When checked the MIDI output, after having been filtered by track/ch\nwill be assigned to a metasound graph output\nwhere it can be used to be connected to metasound watch outputs"))
 								]
 
 						]

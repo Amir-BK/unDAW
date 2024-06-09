@@ -59,13 +59,13 @@ struct FAssignableAudioOutput
 	FName OutputName;
 
 	//this is the name of the parameter in the metasound patch that will be used to control the gain of this output
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FName GainParameterName;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle AudioLeftOutputInputHandle;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle AudioRightOutputInputHandle;
 
 };
@@ -373,10 +373,10 @@ public:
 
 
 	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TArray<UM2SoundVertex*> Inputs;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TArray<UM2SoundVertex*> Outputs;
 
 	UFUNCTION()
@@ -455,6 +455,8 @@ class BKMUSICCORE_API UM2SoundAudioOutput : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
+public:
+
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	float Gain = 1.0f;
 
@@ -498,6 +500,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	UMetaSoundPatch* Patch;
+
+	//for now can be used to rebuild the node manually if the user changes the metasound patch
+	bool bForceRebuild = false;
 
 	//Audio::FParameterInterfacePtr interface = nullptr;
 
@@ -652,9 +657,8 @@ public:
 // in the future we will add a curvetable to the sequencer data, this will allow us to store the data for the curves in the sequencer, this will be used to create the curves in the performer
 	
 		public:
-		//the outputs map should be used by Listeners in the scene to easily get MIDI outputs and other outputs, MIDI is the priority, we might create multiple maps for other data types.
 		UPROPERTY(VisibleAnywhere)
-		TMap<FName, UM2SoundMidiOutput*> Outputs;
+		TMap<FName, UM2SoundAudioOutput*> Outputs;
 
 		UPROPERTY(VisibleAnywhere)
 		TMap<FName, UM2SoundPatch*> Patches;
