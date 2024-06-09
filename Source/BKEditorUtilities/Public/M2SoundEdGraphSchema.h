@@ -252,15 +252,35 @@ public:
 	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
 	float Gain = 1.0f;
 
+	UM2SoundAudioOutput* AsOutputVertex = nullptr;
+
 	void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
 
+	UFUNCTION()
 	void SetOutputGain(float NewGain) {
-		UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
+		//UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
 		Gain = NewGain;
+
+		if(!AsOutputVertex)
+		{
+			//try cast vertex
+			AsOutputVertex = Cast<UM2SoundAudioOutput>(Vertex);
+		}
+		
+		if(AsOutputVertex)
+		{
+			AsOutputVertex->Gain = Gain;
+			auto GainParamName = AsOutputVertex->GainParameterName;
+			AsOutputVertex->TransmitAudioParameter(FAudioParameter(GainParamName, Gain));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("No output vertex found"));
+		}
+		
 	}
 
 };

@@ -138,6 +138,9 @@ public:
 	UFUNCTION()
 	void ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value);
 
+	UFUNCTION()
+	void ReceiveAudioParameter(FAudioParameter Parameter);
+
 
 
 
@@ -160,6 +163,8 @@ public:
 	UFUNCTION()
 	void CreateMixerPatchBlock(); //doesn't work
 
+	void PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs);
+
 	UFUNCTION()
 	void CreateMixerNodesSpaghettiBlock(); //very ugly
 
@@ -170,6 +175,10 @@ public:
 	void AttachAnotherMasterMixerToOutput();
 	//returns an array of two free audio outputs, should create ones if we're missing
 	TArray<FMetaSoundBuilderNodeInputHandle> GetFreeAudioOutput();
+
+	FAssignableAudioOutput GetFreeAudioOutputAssignable();
+
+	TArray<FAssignableAudioOutput> MasterOutputs;
 
 	TArray<FMetaSoundBuilderNodeInputHandle> MasterOutputsArray;
 

@@ -6,7 +6,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
-void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerData* SequencerData, UM2SoundTrackInput* InputVertex, const int Index)
+void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerData* InSequencerData, UM2SoundTrackInput* InputVertex, const int Index)
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
@@ -14,10 +14,12 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	//UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
-	UM2SoundAudioOutput* NewAudioOutput = NewObject<UM2SoundAudioOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+	UM2SoundAudioOutput* NewAudioOutput = NewObject<UM2SoundAudioOutput>(InSequencerData, NAME_None, RF_Transactional);
+	NewAudioOutput->SequencerData = InSequencerData;
 
-	UM2SoundPatch* NewPatch = NewObject<UM2SoundPatch>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
+	UM2SoundPatch* NewPatch = NewObject<UM2SoundPatch>(InSequencerData, NAME_None, RF_Transactional);
 	NewPatch->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
+	NewPatch->SequencerData = InSequencerData;
 
 	InputVertex->TrackId = Index;
 	InputVertex->Outputs.Add(NewPatch);
@@ -30,8 +32,8 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	NewAudioOutput->Inputs.Add(NewPatch);
 
-	SequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewAudioOutput);
-	SequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);
+	InSequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewAudioOutput);
+	InSequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);
 }
 
 TArray<UM2SoundVertex*> UM2SoundGraphStatics::GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData)

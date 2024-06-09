@@ -31,7 +31,7 @@ public:
 	 * @param Vertex The vertex to start from
 	 * @param the unique index of the track we're initializing
 	 */
-	static void CreateDefaultVertexesFromInputVertex(UDAWSequencerData* SequencerData, UM2SoundTrackInput* InputVertex, const int Index);
+	static void CreateDefaultVertexesFromInputVertex(UDAWSequencerData* InSequencerData, UM2SoundTrackInput* InputVertex, const int Index);
 
 	/**
 	* Get all the vertexes in the sequencer data

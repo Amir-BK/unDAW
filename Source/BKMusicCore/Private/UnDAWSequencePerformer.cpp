@@ -72,10 +72,10 @@ void UM2SoundGraphRenderer::InitPerformer()
 
 	FMetaSoundBuilderNodeInputHandle OnFinished;
 
-	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName("BuilderName-unDAW Session Rednerer"), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
+	CurrentBuilder = MSBuilderSystem->CreateSourceBuilder(FName("BuilderName-unDAW Session Renderer"), OnPlayOutputNode, OnFinished, AudioOuts, BuildResult, SessionData->MasterOptions.OutputFormat, false);
 
 	SessionData->OnVertexAdded.AddDynamic(this, &UM2SoundGraphRenderer::UpdateVertex);
-
+	SessionData->OnAudioParameterFromVertex.AddDynamic(this, &UM2SoundGraphRenderer::ReceiveAudioParameter);
 	//after builder is created, create the nodes and connections
 
 	//create renderer interface default IOs
@@ -207,14 +207,21 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 	{
 		OutputVertex->MetasoundInputs.Empty();
 		//get free output and give it to this vertex
-		auto FreeOutputs = GetFreeAudioOutput();
-		OutputVertex->AssignedOutput.AudioLeftOutputInputHandle = FreeOutputs.Pop();
+		OutputVertex->AssignedOutput = GetFreeAudioOutputAssignable();
+		//auto FreeOutputs = GetFreeAudioOutput();
+		//OutputVertex->AssignedOutput.AudioLeftOutputInputHandle = FreeOutputs.Pop();
 		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, OutputVertex->AssignedOutput.AudioLeftOutputInputHandle, BuildResult));
 
-		OutputVertex->AssignedOutput.AudioRightOutputInputHandle = FreeOutputs.Pop();
+		//OutputVertex->AssignedOutput.AudioRightOutputInputHandle = FreeOutputs.Pop();
 		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, OutputVertex->AssignedOutput.AudioRightOutputInputHandle, BuildResult));
-		OutputVertex->AssignedOutput.GainParameterName = FName(GetName());
+		//OutputVertex->AssignedOutput.GainParameterName = FName(GetName());
+		OutputVertex->GainParameterName = FName(FGuid::NewGuid().ToString());
 
+		//create float graph input with the GainParameterName and connect it to the gain input of the mixer in the builder
+		FName OutDataType;
+		auto NewGainInput = CurrentBuilder->AddGraphInputNode(OutputVertex->GainParameterName, TEXT("float"), MSBuilderSystem->CreateFloatMetaSoundLiteral(1.f, OutDataType), BuildResult);
+		CurrentBuilder->ConnectNodes(NewGainInput, OutputVertex->AssignedOutput.GainParameterInputHandle, BuildResult);
+		OutputVertex->BuilderResults.Add(FName(TEXT("Connect to Gain")), BuildResult);
 	}
 
 
@@ -486,6 +493,11 @@ void UM2SoundGraphRenderer::ReceiveMetaSoundMidiClockOutput(FName OutputName, co
 	
 }
 
+void UM2SoundGraphRenderer::ReceiveAudioParameter(FAudioParameter Parameter)
+{
+	if(AuditionComponentRef) AuditionComponentRef->SetParameter(MoveTemp(Parameter));
+}
+
 
 void FindAllMetaSoundClasses()
 {
@@ -647,32 +659,56 @@ void UM2SoundGraphRenderer::CreateMixerPatchBlock()
 	}
 }
 
-	void UM2SoundGraphRenderer::CreateMixerNodesSpaghettiBlock()
+void UM2SoundGraphRenderer::PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs)
+{
+	// we need to keep the audio outputs and the float parameters organized within the assignable outputs array
+	// so we can easily assign them to the audio outputs of the mixer node
+
+	//EMetaSoundBuilderResult BuildResult;
+
+
+	for (SIZE_T i = 0; i < InMixerNodeInputs.Num(); i += 3)
 	{
-		// create master mixer
-		EMetaSoundBuilderResult BuildResult;
-		const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-			, BuildResult);
+		//the outputs are always sorted "In 0 L", "In 0 R", "Gain 0"
+		FAssignableAudioOutput AssignableOutput;
+		AssignableOutput.AudioLeftOutputInputHandle = InMixerNodeInputs[i];
+		AssignableOutput.AudioRightOutputInputHandle = InMixerNodeInputs[i + 1];
+		AssignableOutput.GainParameterInputHandle = InMixerNodeInputs[i + 2];
 
-		auto MixerOutputs = CurrentBuilder->FindNodeOutputs(MasterMixerNode, BuildResult);
-		//auto AudioOuts = GetAvailableOutput();
-		bool usedLeft = false;
-		for (const auto& Output : MixerOutputs)
-		{
-			FName NodeName;
-			FName DataType;
-			CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
-			if (DataType == FName(TEXT("Audio")))
-			{
-				CurrentBuilder->ConnectNodes(Output, AudioOuts[usedLeft ? 1 : 0], BuildResult);
-				usedLeft = true;
+		MasterOutputs.Add(AssignableOutput);
 
-			}
-		}
-
-		MasterOutputsArray.Append(CurrentBuilder->FindNodeInputsByDataType(MasterMixerNode, BuildResult, FName(TEXT("Audio"))));
-		
 	}
+
+}
+
+void UM2SoundGraphRenderer::CreateMixerNodesSpaghettiBlock()
+{
+	// create master mixer
+	EMetaSoundBuilderResult BuildResult;
+	const auto MasterMixerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
+		, BuildResult);
+
+	auto MixerOutputs = CurrentBuilder->FindNodeOutputs(MasterMixerNode, BuildResult);
+	//auto AudioOuts = GetAvailableOutput();
+	bool usedLeft = false;
+	for (const auto& Output : MixerOutputs)
+	{
+		FName NodeName;
+		FName DataType;
+		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+		if (DataType == FName(TEXT("Audio")))
+		{
+			CurrentBuilder->ConnectNodes(Output, AudioOuts[usedLeft ? 1 : 0], BuildResult);
+			usedLeft = true;
+
+		}
+	}
+
+	PopulateAssignableOutputsArray(MasterOutputs, CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
+
+	//MasterOutputsArray.Append(CurrentBuilder->FindNodeInputsByDataType(MasterMixerNode, BuildResult, FName(TEXT("Audio"))));
+		
+}
 
 
 
@@ -686,7 +722,9 @@ void UM2SoundGraphRenderer::CreateMixerPatchBlock()
 				//auto AudioOuts = GetAvailableOutput();
 				CurrentBuilder->ConnectNodes(MixerOutputs[1], MasterOutputsArray.Pop(), BuildResult);
 				CurrentBuilder->ConnectNodes(MixerOutputs[0], MasterOutputsArray.Pop(), BuildResult);
-				MasterOutputsArray.Append(CurrentBuilder->FindNodeInputsByDataType(MasterMixerNode, BuildResult, FName(TEXT("Audio"))));
+
+				PopulateAssignableOutputsArray(MasterOutputs, CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
+				//MasterOutputsArray.Append(CurrentBuilder->FindNodeInputsByDataType(MasterMixerNode, BuildResult, FName(TEXT("Audio"))));
 	}
 
 	TArray<FMetaSoundBuilderNodeInputHandle> UM2SoundGraphRenderer::GetFreeAudioOutput()
@@ -703,6 +741,19 @@ void UM2SoundGraphRenderer::CreateMixerPatchBlock()
 		{
 			AttachAnotherMasterMixerToOutput();
 			return GetFreeAudioOutput();
+		}
+	}
+
+	FAssignableAudioOutput UM2SoundGraphRenderer::GetFreeAudioOutputAssignable()
+	{
+		if(MasterOutputs.Num() > 0)
+		{
+			return MasterOutputs.Pop();
+		}
+		else
+		{
+			AttachAnotherMasterMixerToOutput();
+			return GetFreeAudioOutputAssignable();
 		}
 	}
 

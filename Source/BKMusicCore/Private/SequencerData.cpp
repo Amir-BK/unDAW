@@ -67,6 +67,7 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 		int IndexOfNewTrack = M2TrackMetadata.Add(newTrack);
 
 		UM2SoundTrackInput* NewInput = NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional);
+		NewInput->SequencerData = this;
 
 		NewInput->TrackId = IndexOfNewTrack;
 
@@ -260,6 +261,20 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Vertex needs builder updates!"))
 	OnVertexNeedsBuilderUpdates.Broadcast(this);
+}
+
+void UM2SoundVertex::TransmitAudioParameter(FAudioParameter Parameter)
+{
+	
+	if (GetSequencerData())
+	{
+	GetSequencerData()->OnAudioParameterFromVertex.Broadcast(Parameter);
+
+	}
+	else {
+		UE_LOG(unDAWDataLogs, Error, TEXT("Outer is not sequencer data FFS!"))
+	
+	}
 }
 
 #if WITH_EDITOR

@@ -34,6 +34,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexNeedsBuilderUpdates, UM2SoundVertex*, UpdatedVertex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, AddedVertex);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAudioParameterFromVertex, FAudioParameter, Parameter);
+
 class UDAWSequencerData;
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
@@ -59,14 +61,15 @@ struct FAssignableAudioOutput
 	FName OutputName;
 
 	//this is the name of the parameter in the metasound patch that will be used to control the gain of this output
-	UPROPERTY(VisibleAnywhere)
-	FName GainParameterName;
 
 	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle AudioLeftOutputInputHandle;
 
 	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle AudioRightOutputInputHandle;
+
+	UPROPERTY(VisibleAnywhere)
+	FMetaSoundBuilderNodeInputHandle GainParameterInputHandle;
 
 };
 
@@ -413,6 +416,9 @@ public:
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override {};
 #endif
+
+	void TransmitAudioParameter(FAudioParameter Parameter);
+
 };
 
 UCLASS()
@@ -669,5 +675,8 @@ public:
 		UPROPERTY(VisibleAnywhere)
 		TMap<int, UM2SoundTrackInput*> TrackInputs;
 
+		//This delegate is listened to by the performer and is fired by the vertexes
+		UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+		FOnAudioParameterFromVertex OnAudioParameterFromVertex;
 };
 
