@@ -365,6 +365,10 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	//for book keeping and tracking the color of the track in the sequencer, can also be used to assosciate groups of vertexes for the MIXER (that is to come)
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	int TrackId = INDEX_NONE;
+
 	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
 	void BreakTrackInputConnection();
 
@@ -493,8 +497,7 @@ class BKMUSICCORE_API UM2SoundTrackInput : public UM2SoundVertex
 public:
 
 	//Represents the index of the track in the sequencer data, to get the actual midi metadata use this index to get the track from the sequencer data
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	int TrackId = INDEX_NONE;
+
 
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")

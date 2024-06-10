@@ -430,10 +430,10 @@ void UM2SoundGraphRenderer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
 		FName NodeName;
 		FName DataType;
 		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
-		auto FreeOutputs = GetFreeAudioOutput();
+		//auto FreeOutputs = GetFreeAudioOutput();
 		if (DataType == FName(TEXT("Audio")))
 		{
-			CurrentBuilder->ConnectNodes(Output, FreeOutputs[usedLeft ? 0 : 1], BuildResult);
+//			CurrentBuilder->ConnectNodes(Output, FreeOutputs[usedLeft ? 0 : 1], BuildResult);
 			usedLeft = true;
 
 		}
@@ -720,33 +720,21 @@ void UM2SoundGraphRenderer::CreateMixerNodesSpaghettiBlock()
 		
 				auto MixerOutputs = CurrentBuilder->FindNodeOutputs(MasterMixerNode, BuildResult);
 				//auto AudioOuts = GetAvailableOutput();
-				CurrentBuilder->ConnectNodes(MixerOutputs[1], MasterOutputsArray.Pop(), BuildResult);
-				CurrentBuilder->ConnectNodes(MixerOutputs[0], MasterOutputsArray.Pop(), BuildResult);
+				//print the num of the MasterOutputs it should be exactly 1!
+				UE_LOG(LogTemp, Log, TEXT("Master Outputs Num: %d"), MasterOutputs.Num())
+				auto LastRemainingOutput = MasterOutputs.Pop();
+				CurrentBuilder->ConnectNodes(MixerOutputs[1], LastRemainingOutput.AudioLeftOutputInputHandle, BuildResult);
+				CurrentBuilder->ConnectNodes(MixerOutputs[0], LastRemainingOutput.AudioRightOutputInputHandle, BuildResult);
 
 				PopulateAssignableOutputsArray(MasterOutputs, CurrentBuilder->FindNodeInputs(MasterMixerNode, BuildResult));
 				//MasterOutputsArray.Append(CurrentBuilder->FindNodeInputsByDataType(MasterMixerNode, BuildResult, FName(TEXT("Audio"))));
 	}
 
-	TArray<FMetaSoundBuilderNodeInputHandle> UM2SoundGraphRenderer::GetFreeAudioOutput()
-	{
-		TArray<FMetaSoundBuilderNodeInputHandle> FreeOutputs;
-		
-		if (MasterOutputsArray.Num() > 2)
-		{
-			FreeOutputs.Add(MasterOutputsArray.Pop());
-			FreeOutputs.Add(MasterOutputsArray.Pop());
-			return FreeOutputs;
-		}
-		else
-		{
-			AttachAnotherMasterMixerToOutput();
-			return GetFreeAudioOutput();
-		}
-	}
+
 
 	FAssignableAudioOutput UM2SoundGraphRenderer::GetFreeAudioOutputAssignable()
 	{
-		if(MasterOutputs.Num() > 0)
+		if(MasterOutputs.Num() > 1)
 		{
 			return MasterOutputs.Pop();
 		}

@@ -388,6 +388,8 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 
 void UM2SoundEdGraphNode::NodeConnectionListChanged()
 {
+	return;
+	
 	UEdGraphNode::NodeConnectionListChanged();
 
 	//if no vertex probably recreating graph idk. 
@@ -483,8 +485,12 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 	//if we're either of the track input pins, we need to check if we have a connection
 	if(Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
 	{
-		if(PinLinkedTo == 0) Vertex->BreakTrackInputConnection();
+		if (PinLinkedTo == 0)
+		{
+			Vertex->BreakTrackInputConnection();
+			AssignedTrackId = INDEX_NONE;
 
+		}
 		if(PinLinkedTo > 0)
 		{
 			//if we have a connection, we need to find the node that we're connected to
@@ -495,9 +501,13 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 			// still not sure how this would work when we have an external (in game) editor... but we'll get there.
 			auto LinkedToPin = Pin->LinkedTo[0];
 			auto LinkedToNode = LinkedToPin->GetOwningNode();
-			auto LinkedToVertex = Cast<UM2SoundEdGraphNode>(LinkedToNode)->Vertex;
+			auto AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
+			auto LinkedToVertex = AsM2Node->Vertex;
 			Vertex->MakeTrackInputConnection(LinkedToVertex);
+			AssignedTrackId = AsM2Node->AssignedTrackId;
 		}
+		UpdateDownstreamTrackAssignment(AssignedTrackId);
+		GetGraph()->NotifyGraphChanged();
 	}
 
 	// it's probably better if we just break inputs, and let the vertex handle the rest

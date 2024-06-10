@@ -280,6 +280,13 @@ void UM2SoundVertex::BreakTrackInputConnection()
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("BreakTrackInputConnection %s"), *GetName())
 	MainInput->BreakTrackOutputConnection(this);
 	MainInput = nullptr;
+	TrackId = INDEX_NONE;
+
+	//traverse outputs and update TrackId
+	for (auto Output : Outputs)
+	{
+		Output->TrackId = INDEX_NONE;
+	}
 
 	VertexNeedsBuilderUpdates();
 }
@@ -295,8 +302,16 @@ void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
 			BreakTrackInputConnection();
 		}
 
+	//traverse outputs and update TrackId
+	for (auto Output : Outputs)
+	{
+		Output->TrackId = InputVertex->TrackId;
+	}
+
+		//set the new input
 
 	MainInput = InputVertex;
+	TrackId = InputVertex->TrackId;
 	VertexNeedsBuilderUpdates();
 }
 

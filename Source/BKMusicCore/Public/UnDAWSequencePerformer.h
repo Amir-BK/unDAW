@@ -173,14 +173,13 @@ public:
 
 
 	void AttachAnotherMasterMixerToOutput();
-	//returns an array of two free audio outputs, should create ones if we're missing
-	TArray<FMetaSoundBuilderNodeInputHandle> GetFreeAudioOutput();
 
 	FAssignableAudioOutput GetFreeAudioOutputAssignable();
 
+	UPROPERTY()
 	TArray<FAssignableAudioOutput> MasterOutputs;
 
-	TArray<FMetaSoundBuilderNodeInputHandle> MasterOutputsArray;
+	//TArray<FMetaSoundBuilderNodeInputHandle> MasterOutputsArray;
 
 	UFUNCTION()
 	bool CreateMidiPlayerBlock();
