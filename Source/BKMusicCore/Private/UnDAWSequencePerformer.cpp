@@ -306,7 +306,7 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 		
 		VertexToNodeMap.Add(PatchVertex, NewNodeHandle);
 
-		if(PatchVertex->Inputs.Num() > 0)
+		if(PatchVertex->MainInput)
 		{
 			//fusion patch reference for patch node
 			auto PatchForLiteral = SessionData->GetTracksDisplayOptions(1).fusionPatch.Get();
@@ -317,7 +317,7 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 
 			//connect this instrument renderer to the midi stream output by vertex connection
 			auto MidiStreamInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("unDAW Instrument.MidiStream")), BuildResult);
-			auto AsInputVertex = Cast<UM2SoundTrackInput>(PatchVertex->Inputs[0]);
+			auto AsInputVertex = Cast<UM2SoundTrackInput>(PatchVertex->MainInput);
 
 			//find interface track num input
 			auto TrackInput = CurrentBuilder->FindNodeInputByName(NewNodeHandle, FName(TEXT("unDAW Instrument.MidiTrack")), BuildResult);

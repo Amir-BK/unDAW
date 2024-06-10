@@ -62,9 +62,31 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 		newTrack.TrackIndexInParentMidi = trackID;
 
 		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
-		newTrack.trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
 		newTrack.fusionPatch = PianoPatch;
 		int IndexOfNewTrack = M2TrackMetadata.Add(newTrack);
+		
+		FLinearColor trackColor;
+
+		switch (IndexOfNewTrack)
+		{
+
+			case 0:
+				trackColor = FLinearColor::Red;
+				break;
+			case 1:
+				trackColor = FLinearColor::Black;
+				break;
+			case 2:
+				trackColor = FLinearColor::White;
+				break;
+			case 3:
+				trackColor = FLinearColor::Green;
+				break;
+		default:
+			trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
+			break;
+		}
+		M2TrackMetadata[IndexOfNewTrack].trackColor = trackColor;
 
 		UM2SoundTrackInput* NewInput = NewObject<UM2SoundTrackInput>(this, NAME_None, RF_Transactional);
 		NewInput->SequencerData = this;
@@ -251,6 +273,38 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
 #endif
+
+void UM2SoundVertex::BreakTrackInputConnection()
+{
+	//for debugging, print vertex name and track id
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("BreakTrackInputConnection %s"), *GetName())
+	MainInput->BreakTrackOutputConnection(this);
+	MainInput = nullptr;
+
+	VertexNeedsBuilderUpdates();
+}
+
+void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
+{
+	//for debugging, print vertex name and track id
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("MakeTrackInputConnection %s"), *GetName())
+	
+		//if we already have a main input and it's different from the new one break it
+		if (MainInput && MainInput != InputVertex)
+		{
+			BreakTrackInputConnection();
+		}
+
+
+	MainInput = InputVertex;
+	VertexNeedsBuilderUpdates();
+}
+
+void UM2SoundVertex::BreakTrackOutputConnection(UM2SoundVertex* OutputVertex)
+{
+		//for debugging, print vertex name and track id
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("BreakTrackOutputConnection"))
+}
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {

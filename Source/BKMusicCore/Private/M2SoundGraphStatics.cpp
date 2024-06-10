@@ -28,9 +28,11 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 	//NewOutput->OutputName = FName(SequencerData->GetTracksDisplayOptions(Index).trackName);
 
 	NewPatch->Outputs.Add(NewAudioOutput);
-	NewPatch->Inputs.Add(InputVertex);
+	//NewPatch->Inputs.Add(InputVertex);
+	NewPatch->MainInput = InputVertex;
 
-	NewAudioOutput->Inputs.Add(NewPatch);
+	//NewAudioOutput->Inputs.Add(NewPatch);
+	NewAudioOutput->MainInput = NewPatch;
 
 	InSequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewAudioOutput);
 	InSequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);

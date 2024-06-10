@@ -115,6 +115,8 @@ public:
 
 	void NodeConnectionListChanged() override;
 
+	void PinConnectionListChanged(UEdGraphPin* Pin) override;
+
 	bool CanCreateUnderSpecifiedSchema(const UEdGraphSchema* Schema) const override { return Schema->IsA(UM2SoundEdGraphSchema::StaticClass()); }
 	bool IncludeParentNodeContextMenu() const override { return true; }
 	UM2SoundGraph* GetGraph() const { return Cast<UM2SoundGraph>(UEdGraphNode::GetGraph()); }
@@ -145,6 +147,8 @@ public:
 	// used to automatically resolve the track assignment of the node when adding inserts
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound Node")
 	TArray<UM2SoundEdGraphNode*> CurrentTrackOutputs;
+
+	UM2SoundEdGraphNode* CurrentTrackInput;
 
 	void UpdateDownstreamTrackAssignment(int NewTrackId) {
 		AssignedTrackId = NewTrackId;

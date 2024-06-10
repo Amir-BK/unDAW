@@ -365,6 +365,12 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
+	void BreakTrackInputConnection();
+
+	void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
+
+	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
 
 
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
@@ -373,11 +379,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderUpdates;
 
-
+	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
+	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
+	// metasound i/os that are exposed via our metasound parameter interfaces
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	UM2SoundVertex* MainInput;
 
 	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TArray<UM2SoundVertex*> Inputs;
+	//UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	//TArray<UM2SoundVertex*> Inputs;
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TArray<UM2SoundVertex*> Outputs;

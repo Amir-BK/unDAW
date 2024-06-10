@@ -195,8 +195,6 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 
 void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Selection Changed"));
-
 	UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
 
 	Graph->SelectedNodes.Empty();
@@ -384,7 +382,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
    // Performer->OnMusicTimestampFromPerformer.BindLambda(this, &FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated);
 	//OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
 	//OnSeekEvent.BindLambda([this](float Seek) { 
-	//    UE_LOG(LogTemp, Warning, TEXT("Seeking to %f"), Seek);
+
 	//    
 	//    Performer->SendSeekCommand(Seek); });
  

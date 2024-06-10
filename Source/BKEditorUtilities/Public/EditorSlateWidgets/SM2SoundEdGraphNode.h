@@ -68,8 +68,7 @@ public:
 
 		auto InterfaceAsFrontEndVersion = Interface.GetName();
 
-		//print version for debugging
-		UE_LOG(LogTemp, Warning, TEXT("Interface Version: %s"), *InterfaceAsFrontEndVersion.ToString());
+		
 
 		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
@@ -93,7 +92,7 @@ private:
 	TSharedRef<SWidget> CreateNodeContentArea() override
 	{
 
-		UE_LOG(LogTemp, Warning, TEXT("SSM2SoundEdGraphNode::CreateNodeContentArea"));
+		
 
 		// NODE CONTENT AREA
 		return SNew(SBorder)

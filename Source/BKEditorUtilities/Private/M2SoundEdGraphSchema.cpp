@@ -43,9 +43,15 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	if(auto& FromPin = ContextMenuBuilder.FromPin)
 	{
-		if (FromPin->PinType.PinCategory == "Track")
+		if (FromPin->PinType.PinCategory == "Track-Midi")
 		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
+			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
+			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+		}
+
+		if (FromPin->PinType.PinCategory == "Track-Audio")
+		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 		}
@@ -384,8 +390,18 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 {
 	UEdGraphNode::NodeConnectionListChanged();
 
+	//if no vertex probably recreating graph idk. 
+	if(!Vertex) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *Vertex->GetName());
+
 	//update CurrentTrackOuputs
 	CurrentTrackOutputs.Empty();
+	TArray<UM2SoundEdGraphNode*> Outputs;
+	UM2SoundEdGraphNode* FoundTrackInput = nullptr;
+
+	//GetInputs
+
 	for (auto Pin : Pins)
 	{
 		if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
@@ -397,16 +413,97 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 				{
 					if (LinkedPin->GetOwningNode()->IsA<UM2SoundEdGraphNode>())
 					{
-						CurrentTrackOutputs.Add(Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()));
+						Outputs.Add(Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()));
 					}
 				}
 
 			}
 		}
 
-		GetGraph()->NotifyGraphChanged();
+		
+
+		//find if track input is connected
+		if (Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
+		{
+			if (Pin->LinkedTo.Num() > 0)
+			{
+				for (auto LinkedPin : Pin->LinkedTo)
+				{
+					if (LinkedPin->GetOwningNode()->IsA<UM2SoundEdGraphNode>())
+					{
+						FoundTrackInput = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode());
+					}
+				}
+
+			}
+		}
+
+		
+
 
 	}
+
+	//if meaningful connections (only track input is relevant here?) changed, inform the vertex so that the builder can be triggered
+
+
+
+	for (auto Output : Outputs)
+	{
+		CurrentTrackOutputs.AddUnique(Output);
+	}
+
+
+
+	//check if we have a track input
+	//if(FoundTrackInput)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Found Track Input, my vertex is %s"), *Vertex->GetName());
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("No Track Input Found, my vertex is %s"), *Vertex->GetName());
+	//	Vertex->BreakTrackInputConnection();
+	//}
+
+
+	GetGraph()->NotifyGraphChanged();
+}
+
+void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
+{
+	//just print the pin data for now please
+	if(!Pin) return;
+	if(!Vertex) return;
+
+	auto PinName = Pin->GetName();
+	auto PinLinkedTo = Pin->LinkedTo.Num();
+	auto PinDirection = Pin->Direction == EGPD_Input ? FString(TEXT("Input")) : FString(TEXT("Output"));
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *PinName, *PinDirection, PinLinkedTo);
+
+	//if we're either of the track input pins, we need to check if we have a connection
+	if(Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
+	{
+		if(PinLinkedTo == 0) Vertex->BreakTrackInputConnection();
+
+		if(PinLinkedTo > 0)
+		{
+			//if we have a connection, we need to find the node that we're connected to
+			//and then we need to find the vertex that the node is connected to
+			//and then we need to connect our vertex to that vertex
+			//this is a bit of a mess, but it's the only way to do it right now
+			//we could probably do this in the graph, but it's probably better if we just break inputs, and let the vertex handle the rest
+			// still not sure how this would work when we have an external (in game) editor... but we'll get there.
+			auto LinkedToPin = Pin->LinkedTo[0];
+			auto LinkedToNode = LinkedToPin->GetOwningNode();
+			auto LinkedToVertex = Cast<UM2SoundEdGraphNode>(LinkedToNode)->Vertex;
+			Vertex->MakeTrackInputConnection(LinkedToVertex);
+		}
+	}
+
+	// it's probably better if we just break inputs, and let the vertex handle the rest
+	// still not sure how this would work when we have an external (in game) editor... but we'll get there.
+
+
 }
 
 
@@ -440,7 +537,7 @@ bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FStrin
 
 void UM2SoundEdGraphNode::VertexUpdated()
 {
-	UE_LOG(LogTemp, Warning, TEXT("VertexUpdated"));
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schemca: VertexUpdated, %s has %d outputs"), *Vertex->GetName(), Vertex->Outputs.Num());
 
 
 	//assuming each vertex only implements one interface, we can keep most of the logic here
@@ -448,7 +545,6 @@ void UM2SoundEdGraphNode::VertexUpdated()
 
 	if(IsA<UM2SoundPatchContainerNode>())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("IsInstrumentNode"));
 		interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
 
 	}
@@ -625,18 +721,15 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_PassThroughInsert.unDAW_PassThroughInsert'"));
 	NewPatchVertex->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 
+	UM2SoundEdGraphNode* FoundTrackInput = nullptr;
+	UEdGraphPin* FoundTrackInputPin = nullptr;
 
 	if (FromPinConnection)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FromPinConnection: %s"), *FromPinConnection->GetOwningNode()->GetName());
-		// if this is true we should recreate the connection between the new insert's output and the next node's input
-		for(auto Pin : Node->Pins)
-		{
-			if(Pin->Direction == EGPD_Output && Pin->PinType.PinCategory == "Track")
-			{
-				//ParentGraph->GetSchema()->TryCreateConnection(Pin, FromPinConnection);
-			}
-		}
+		//get the vertex that the input-vertex is CURRENTLY connected to, we need to connect the new patch to this vertex
+
+		FoundTrackInput = Cast<UM2SoundEdGraphNode>(FromPinConnection->GetOwningNode());
+		auto M2SoundVertex = FoundTrackInput->Vertex;
 	}
 	//auto ParentGraph = Cast<UM2SoundGraph>(ParentGraph);
 	
