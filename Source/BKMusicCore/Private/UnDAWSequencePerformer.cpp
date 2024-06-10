@@ -94,18 +94,14 @@ void UM2SoundGraphRenderer::InitPerformer()
 
 	TArray<UM2SoundVertex*> AllVertices = UM2SoundGraphStatics::GetAllVertexesInSequencerData(SessionData);
 
+	//so, until I implement a solution for pending connections, we need to update the vertices in a specific order
+
 	for (auto& [index, vertex] : SessionData->TrackInputs)
 	{
 		UpdateVertex(vertex);
 
 	}
 
-	//we must update the outputs and connect them to their mixer channels first in order for the patches to connect
-	for (auto& [index, vertex] : SessionData->Outputs)
-	{
-		UpdateVertex(vertex);
-
-	}
 
 	//update patches
 	
@@ -116,6 +112,12 @@ void UM2SoundGraphRenderer::InitPerformer()
 	}
 
 	// update outputs
+	//we must update the outputs and connect them to their mixer channels last
+	for (auto& [index, vertex] : SessionData->Outputs)
+	{
+		UpdateVertex(vertex);
+
+	}
 
 	
 	// this won't work, we need to traverse the vertices from the inputs to the outputs
@@ -202,26 +204,74 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 	}
 
 
-	//outputs
+	//until I implement a solution for pending connections the output needs to be created after the patch...
 	if (UM2SoundAudioOutput* OutputVertex = Cast< UM2SoundAudioOutput>(Vertex))
 	{
+		//really if this was encapsulated on the vertex itself it would be better, but here we go
+		//check if map already contains this vertex, if not, assign an output
+		
+		if (!AudioOutsMap.Contains(Vertex))
+		{
+			AudioOutsMap.Add(Vertex, GetFreeAudioOutputAssignable());
+		}
+
+		auto& AssignedOutput = AudioOutsMap[Vertex];
 		OutputVertex->MetasoundInputs.Empty();
 		//get free output and give it to this vertex
-		OutputVertex->AssignedOutput = GetFreeAudioOutputAssignable();
+		
 		//auto FreeOutputs = GetFreeAudioOutput();
 		//OutputVertex->AssignedOutput.AudioLeftOutputInputHandle = FreeOutputs.Pop();
-		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, OutputVertex->AssignedOutput.AudioLeftOutputInputHandle, BuildResult));
+		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, AssignedOutput.AudioLeftOutputInputHandle, BuildResult));
 
 		//OutputVertex->AssignedOutput.AudioRightOutputInputHandle = FreeOutputs.Pop();
-		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, OutputVertex->AssignedOutput.AudioRightOutputInputHandle, BuildResult));
+		OutputVertex->MetasoundInputs.Add(CreatePinDataFromBuilderData(CurrentBuilder, AssignedOutput.AudioRightOutputInputHandle, BuildResult));
 		//OutputVertex->AssignedOutput.GainParameterName = FName(GetName());
 		OutputVertex->GainParameterName = FName(FGuid::NewGuid().ToString());
 
 		//create float graph input with the GainParameterName and connect it to the gain input of the mixer in the builder
 		FName OutDataType;
 		auto NewGainInput = CurrentBuilder->AddGraphInputNode(OutputVertex->GainParameterName, TEXT("float"), MSBuilderSystem->CreateFloatMetaSoundLiteral(1.f, OutDataType), BuildResult);
-		CurrentBuilder->ConnectNodes(NewGainInput, OutputVertex->AssignedOutput.GainParameterInputHandle, BuildResult);
+		CurrentBuilder->ConnectNodes(NewGainInput, AssignedOutput.GainParameterInputHandle, BuildResult);
 		OutputVertex->BuilderResults.Add(FName(TEXT("Connect to Gain")), BuildResult);
+
+		//if has track input, get its audio outputs and connect them to this output
+		// it's hacky but we assume only Track-Audio Output connections here, which must have two audio outputs
+		if (OutputVertex->MainInput)
+		{
+			//find handle of the main input vertex in our map
+			//check if map contains the node, otherwise it hasn't been built yet
+
+			bool bInputHasBeenBuilt = VertexToNodeMap.Contains(OutputVertex->MainInput);
+			if(bInputHasBeenBuilt)
+			{
+				//UpdateVertex(OutputVertex->MainInput);
+				auto InputBuilderNodeHandle = VertexToNodeMap[OutputVertex->MainInput];
+				//use the builder to find the audio outputs of the input node
+				auto InputNodeOutputs = CurrentBuilder->FindNodeOutputsByDataType(InputBuilderNodeHandle, BuildResult, FName(TEXT("Audio")));
+				//connect the audio outputs to this vertex's assigned audio output
+				CurrentBuilder->ConnectNodes(InputNodeOutputs[0], AssignedOutput.AudioLeftOutputInputHandle, BuildResult);
+				Vertex->BuilderResults.Add(FName(TEXT("Connect to instrument audio L")), BuildResult);
+				CurrentBuilder->ConnectNodes(InputNodeOutputs[1], AssignedOutput.AudioRightOutputInputHandle, BuildResult);
+				Vertex->BuilderResults.Add(FName(TEXT("Connect to instrument audio R")), BuildResult);
+			}
+			else {
+				Vertex->BuilderResults.Add(FName(TEXT("Input not built yet!")), EMetaSoundBuilderResult::Failed);
+			}
+
+		}
+		else {
+			Vertex->BuilderResults.Add(FName(TEXT("No Input")), EMetaSoundBuilderResult::Succeeded);
+			if(CurrentBuilder->NodeInputIsConnected(AssignedOutput.AudioLeftOutputInputHandle))
+			{
+				CurrentBuilder->DisconnectNodeInput(AssignedOutput.AudioLeftOutputInputHandle, BuildResult);
+				Vertex->BuilderResults.Add(FName(TEXT("Disconnect L")), BuildResult);
+			}
+			if(CurrentBuilder->NodeInputIsConnected(AssignedOutput.AudioRightOutputInputHandle))
+			{
+				CurrentBuilder->DisconnectNodeInput(AssignedOutput.AudioRightOutputInputHandle, BuildResult);
+				Vertex->BuilderResults.Add(FName(TEXT("Disconnect R")), BuildResult);
+			}
+		}
 	}
 
 
@@ -229,11 +279,13 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 	{
 		//check if we already have a node and if so, delete it 
 		//@@TODO : This is too much! Sometimes only connections need to be updated!
+		bool bHadPreviousConnection = false;
 		if (VertexToNodeMap.Contains(PatchVertex))
 		{
 			auto NodeHandle = VertexToNodeMap[PatchVertex];
 			CurrentBuilder->RemoveNode(NodeHandle, BuildResult);
 			VertexToNodeMap.Remove(PatchVertex);
+			bHadPreviousConnection = true;
 		}
 
 		TScriptInterface<IMetaSoundDocumentInterface> asDocInterface = PatchVertex->Patch;
@@ -277,31 +329,7 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 				PatchVertex->MetasoundOutputs.Add(FM2SoundMetasoundBuilderPinData{ OutputName, DataType });
 			}
 
-			//so so lazy...
-			bool isLeft = true;
-
-			for(const auto& PatchAudioOutput : PatchAudioOutputs)
-			{
-				for (const auto& ConnectedOutputVertex : PatchVertex->Outputs)
-				{
-					if (UM2SoundAudioOutput* ConnectedOutput = Cast<UM2SoundAudioOutput>(ConnectedOutputVertex))
-					{
-						//connect the audio outputs to the patch node
-						auto ToConnectTo = isLeft ? ConnectedOutput->AssignedOutput.AudioLeftOutputInputHandle : ConnectedOutput->AssignedOutput.AudioRightOutputInputHandle;
-						CurrentBuilder->ConnectNodes(PatchAudioOutput, ToConnectTo, BuildResult);
-						//CurrentBuilder->ConnectNodes(ConnectedOutput->AssignedOutput.AudioRightOutputInputHandle, FreeOutputs.Pop(), BuildResult);
-						PatchVertex->BuilderResults.Add(FName(TEXT("Connect to Audio Outputs")), BuildResult);
-						isLeft = !isLeft;
-					}
-
-				}
-			}
-
-
 		}
-
-
-
 
 		
 		VertexToNodeMap.Add(PatchVertex, NewNodeHandle);
@@ -336,8 +364,17 @@ void UM2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 		}
 
 		//CreateDefaultVertexesFromInputVertex(InSessionData, PatchVertex, PatchVertex->TrackId);
-		
+		if(bHadPreviousConnection)
+		{
+			//iterate over the outputs and tell them to rebuild
+			for (auto& Output : PatchVertex->Outputs)
+			{
+				UpdateVertex(Output);
+			}
+		}
 	}
+
+	//output vertex, but really this is the last hack
 	
 	if (UM2SoundMidiOutput* MidiOutputVertex = Cast<UM2SoundMidiOutput>(Vertex))
 	{
@@ -379,82 +416,6 @@ void UM2SoundGraphRenderer::SaveMetasoundToAsset()
 {
 
 }
-
-
-void UM2SoundGraphRenderer::SetupFusionNode(FTrackDisplayOptions& TrackRef)
-{
-	EMetaSoundBuilderResult BuildResult;
-	auto FusionNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("HarmonixNodes")), FName(TEXT("FusionSamplerStereo"))), BuildResult, 0);
-	auto FusionInputs = CurrentBuilder->FindNodeInputs(FusionNode, BuildResult);
-	FMetaSoundBuilderNodeInputHandle PatchInput;
-	for (const auto& Input : FusionInputs)
-	{
-		//MSBuilderSystem->Get GetNodeInput(FusionNode, Input, PatchInput, BuildResult);
-		FName NodeName;
-		FName DataType;
-		CurrentBuilder->GetNodeInputData(Input, NodeName, DataType, BuildResult);
-		if (NodeName == FName(TEXT("Patch")))
-		{
-			auto Patch = TrackRef.fusionPatch.Get();
-			if (Patch)
-			{
-				FName PatchInputName = FName(FString::Printf(TEXT("Track_[%d].Patch"), TrackRef.ChannelIndexInParentMidi));
-				auto PatchLiteral = MSBuilderSystem->CreateObjectMetaSoundLiteral(Patch);
-				auto PatchInputNodeOutput = CurrentBuilder->AddGraphInputNode(PatchInputName, TEXT("FusionPatchAsset"), PatchLiteral, BuildResult);
-				//CurrentBuilder->SetNodeInputDefault(Input, PatchLiteral, BuildResult);
-				CurrentBuilder->ConnectNodes(PatchInputNodeOutput, Input, BuildResult);
-			}
-		}
-		else if (NodeName == FName(TEXT("MIDI Stream")))
-		{
-			CurrentBuilder->ConnectNodes(MainMidiStreamOutput, Input, BuildResult);
-		}
-		else if (NodeName == FName(TEXT("Track Number")))
-		{
-			FName OutDataType;
-			FName TrackInputName = FName(FString::Printf(TEXT("Track_[%d].TrackNum"), TrackRef.ChannelIndexInParentMidi));
-			auto ChannelLiteral = MSBuilderSystem->CreateIntMetaSoundLiteral(TrackRef.ChannelIndexInParentMidi, OutDataType);
-			auto PatchTrackNodeOutput = CurrentBuilder->AddGraphInputNode(TrackInputName, TEXT("int32"), ChannelLiteral, BuildResult);
-			//auto PatchInputNodeOutput = CurrentBuilder->AddGraphInputNode(TEXT("Patch"), TEXT("FusionPatchAsset"), ChannelLiteral, BuildResult);
-			//CurrentBuilder->SetNodeInputDefault(Input, ChannelLiteral, BuildResult);
-			CurrentBuilder->ConnectNodes(PatchTrackNodeOutput, Input, BuildResult);
-		}
-
-	}
-
-	auto FusionOutputs = CurrentBuilder->FindNodeOutputs(FusionNode, BuildResult);
-	//auto AudioOuts = GetAvailableOutput();
-	bool usedLeft = false;
-	for (const auto& Output : FusionOutputs)
-	{
-		FName NodeName;
-		FName DataType;
-		CurrentBuilder->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
-		//auto FreeOutputs = GetFreeAudioOutput();
-		if (DataType == FName(TEXT("Audio")))
-		{
-//			CurrentBuilder->ConnectNodes(Output, FreeOutputs[usedLeft ? 0 : 1], BuildResult);
-			usedLeft = true;
-
-		}
-	}
-
-}
-
-void UM2SoundGraphRenderer::CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef)
-{
-	// if we render this track in a channel OR output midi, we need to create this track
-	bool NeedToCreate = (TrackRef.RenderMode != NoAudio) || TrackRef.CreateMidiOutput;
-	//EMetaSoundBuilderResult BuildResult;
-	if (NeedToCreate)
-	{
-		SetupFusionNode(TrackRef);
-		MidiOutputNames.Add(FName(TrackRef.trackName));
-	}
-
-
-}
-
 
 
 void UM2SoundGraphRenderer::Tick(float DeltaTime)
@@ -516,8 +477,6 @@ void FindAllMetaSoundClasses()
 }
 
 
-
-
 bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
 {
 	switch (BuildResult)
@@ -531,131 +490,6 @@ bool SwitchOnBuildResult(EMetaSoundBuilderResult BuildResult)
 
 		default:
 			return false;
-	}
-}
-
-#ifdef WITH_METABUILDERHELPER_TESTS
-void UMetasoundBuilderHelperBase::CreateTestWavPlayerBlock()
-{
-	EMetaSoundBuilderResult BuildResult;
-	FSoftObjectPath WavPlayerAssetRef(TEXT("/Script/MetasoundEngine.MetaSoundPatch'/unDAW/BKSystems/MetaSoundBuilderHelperBP_V1/InternalPatches/BK_WavPlayer.BK_WavPlayer'"));
-	TScriptInterface<IMetaSoundDocumentInterface> WavPlayerDocument = WavPlayerAssetRef.TryLoad();
-	auto WavPlayerNode = CurrentBuilder->AddNodeByClassName(FMetasoundFrontendClassName(TEXT("UE"), TEXT("Wave Player"), TEXT("Stereo")), BuildResult);
-
-
-	FMetaSoundBuilderNodeInputHandle WavFileInput = CurrentBuilder->FindNodeInputByName(WavPlayerNode, FName(TEXT("Wave Asset")), BuildResult);
-	if (SwitchOnBuildResult(BuildResult))
-	{
-		FSoftObjectPath WavFileAssetRef(TEXT("/Game/onclassical_demo_demicheli_geminiani_pieces_allegro-in-f-major_small-version.onclassical_demo_demicheli_geminiani_pieces_allegro-in-f-major_small-version"));
-		auto WavInput = CurrentBuilder->AddGraphInputNode(TEXT("Wave Asset"), TEXT("WaveAsset"), MSBuilderSystem->CreateObjectMetaSoundLiteral(WavFileAssetRef.TryLoad()), BuildResult);
-		//CurrentBuilder->SetNodeInputDefault(WavFileInput, MSBuilderSystem->CreateObjectMetaSoundLiteral(WavFileAssetRef.TryLoad()), BuildResult);
-		UE_LOG(LogTemp, Log, TEXT("Wav File Input Set! %s"), SwitchOnBuildResult(BuildResult) ? TEXT("yay") : TEXT("nay"))
-		FString ResultOut = TEXT("Result: ");
-		static const auto AppendToResult = [&ResultOut](const FString& Label, const EMetaSoundBuilderResult& BuildResult) { 
-			ResultOut += Label + ":";
-			switch (BuildResult)
-			{
-				case EMetaSoundBuilderResult::Succeeded:
-				ResultOut += TEXT("Succeeded\n");
-				break;
-				case EMetaSoundBuilderResult::Failed:
-					ResultOut += TEXT("Failed\n");
-					break;
-
-
-			default:
-				ResultOut += TEXT("Unknown");
-				break;
-			}
-				};
-		if (SwitchOnBuildResult(BuildResult))
-		{
-			CurrentBuilder->ConnectNodes(WavInput, WavFileInput, BuildResult);
-			AppendToResult(TEXT("Wave Input"), BuildResult);
-			auto PlayPin = CurrentBuilder->FindNodeInputByName(WavPlayerNode, FName(TEXT("Play")), BuildResult);
-			AppendToResult(TEXT("Find Play Pin"), BuildResult);
-			auto AudioLeft = CurrentBuilder->FindNodeOutputByName(WavPlayerNode, FName(TEXT("Out Left")), BuildResult);
-			AppendToResult(TEXT("Find Out Left"), BuildResult);
-			auto AudioRight = CurrentBuilder->FindNodeOutputByName(WavPlayerNode, FName(TEXT("Out Right")), BuildResult);
-			AppendToResult(TEXT("Find Out Right"), BuildResult);
-			CurrentBuilder->ConnectNodes(OnPlayOutputNode, PlayPin, BuildResult);
-			AppendToResult(TEXT("On Play"), BuildResult);
-
-			auto WavePlayerAudioOuts = CurrentBuilder->FindNodeOutputsByDataType(WavPlayerNode, BuildResult, FName(TEXT("Audio")));
-
-
-			for (int i = 0; i < AudioOuts.Num(); i++)
-			{
-				if (WavePlayerAudioOuts.IsValidIndex(i))
-				{
-					CurrentBuilder->ConnectNodes( WavePlayerAudioOuts[i], AudioOuts[i], BuildResult);
-					AppendToResult(FString::Printf(TEXT("Connect Node Output %d"), i), BuildResult);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Log, TEXT("Wave Player Audio Out Index %d Not Valid!"), i)
-						break;
-				}
-			}
-
-		}
-
-		UE_LOG(LogTemp, Log, TEXT("Build Results: \n %s"), *ResultOut)
-
-		//CurrentBuilder->SetNodeInputDefault(WavFileInput, MSBuilderSystem->CreateObjectMetaSoundLiteral(WavFileAssetRef.TryLoad()), BuildResult);
-
-	}
-	else {
-		UE_LOG(LogTemp, Log, TEXT("Wav File Input Not Set! %s"), SwitchOnBuildResult(BuildResult) ? TEXT("yay") : TEXT("nay"))
-	}	
-}
-
-#endif //WITH_METABUILDERHELPER_TESTS
-
-void UM2SoundGraphRenderer::CreateInputsFromMidiTracks()
-{
-	// Create the inputs from the midi tracks
-	//for (auto& [trackID, trackOptions] : *MidiTracks)
-	//{
-	//	CreateAndRegisterMidiOutput(trackOptions);
-	//	// Create the input node
-	//	//FMetaSoundBuilderNodeInputHandle InputNode = CurrentBuilder->CreateInputNode(FName(*trackOptions.trackName), trackOptions.trackColor, trackOptions.ChannelIndexInParentMidi)
-	//}
-
-
-
-}
-
-void UM2SoundGraphRenderer::CreateMixerPatchBlock()
-{
-
-	using namespace Metasound::Frontend;
-	UMetaSoundPatch* Patch = NewObject<UMetaSoundPatch>(this);
-	check(Patch);
-
-	auto Builder = FMetaSoundFrontendDocumentBuilder(Patch);
-	Builder.InitDocument();
-
-	// create the mixer patch
-	EMetaSoundBuilderResult BuildResult;
-	const auto PatchBuilder = MSBuilderSystem->CreatePatchBuilder(FName(TEXT("Mixer Patch")), BuildResult);
-	//const auto PB2 = MSBuilderSystem->Trabsuebt
-	PatchBuilder->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-		, BuildResult);
-
-	if (SwitchOnBuildResult(BuildResult))
-	{
-		//PatchBuilder->
-		FMetaSoundBuilderOptions PatchOptions;
-
-		PatchOptions.bAddToRegistry = false;
-
-
-		FSoftObjectPath MixerPatchAssetRef(TEXT("/Script/MetasoundEngine.MetaSoundPatch'/Game/MixerPatch.MixerPatch'"));
-
-		auto MixerPatch = PatchBuilder->Build(Patch, PatchOptions);
-
-		CurrentBuilder->AddNode(MixerPatch, BuildResult);
 	}
 }
 

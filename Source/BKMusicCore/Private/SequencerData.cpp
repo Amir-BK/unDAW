@@ -74,14 +74,12 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 				trackColor = FLinearColor::Red;
 				break;
 			case 1:
-				trackColor = FLinearColor::Black;
-				break;
-			case 2:
 				trackColor = FLinearColor::White;
 				break;
-			case 3:
+			case 2:
 				trackColor = FLinearColor::Green;
 				break;
+
 		default:
 			trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
 			break;

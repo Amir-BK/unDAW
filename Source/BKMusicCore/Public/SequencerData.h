@@ -483,8 +483,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FName GainParameterName = NAME_None;
 
-	UPROPERTY(VisibleAnywhere)
-	FAssignableAudioOutput AssignedOutput;
 
 };
 

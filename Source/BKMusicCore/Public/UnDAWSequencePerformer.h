@@ -82,9 +82,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
 
+	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
+
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper")
 
-	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
+	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
 
 	//Name of this class TBD but this is the core data structure that is used to build the builder graph
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|MetaSound Builder Helper", meta = (ExposeOnSpawn = true))
@@ -118,10 +120,6 @@ public:
 
 	FMusicTimestamp CurrentTimestamp;
 
-
-	UFUNCTION()
-	void CreateAndRegisterMidiOutput(FTrackDisplayOptions& TrackRef);
-
 	void RemoveFromParent()
 	{
 		OnDeleted.Broadcast();
@@ -142,27 +140,6 @@ public:
 	void ReceiveAudioParameter(FAudioParameter Parameter);
 
 
-
-
-//#define WITH_METABUILDERHELPER_TESTS
-#ifdef WITH_METABUILDERHELPER_TESTS
-
-
-	void CreateTestWavPlayerBlock();
-
-#endif //WITH_TESTS
-
-
-
-
-
-	UFUNCTION()
-	void CreateInputsFromMidiTracks();
-
-
-	UFUNCTION()
-	void CreateMixerPatchBlock(); //doesn't work
-
 	void PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs);
 
 	UFUNCTION()
@@ -171,6 +148,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
 	TMap<UM2SoundVertex*, FMetaSoundNodeHandle> VertexToNodeMap;
 
+	TArray<FMetaSoundNodeHandle> BuilderNodesToRelease;
 
 	void AttachAnotherMasterMixerToOutput();
 
