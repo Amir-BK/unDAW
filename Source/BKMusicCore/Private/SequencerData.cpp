@@ -36,15 +36,6 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 	OnVertexAdded.Broadcast(Vertex);
 }
 
-void UDAWSequencerData::ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch)
-{
-	if (M2TrackMetadata.IsValidIndex(TrackID))
-	{
-		M2TrackMetadata[TrackID].fusionPatch = NewPatch;
-		OnFusionPatchChangedInTrack.ExecuteIfBound(TrackID, NewPatch);
-	}
-
-}
 
 inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
 

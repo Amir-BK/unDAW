@@ -175,7 +175,7 @@ public:
 		SLATE_ARGUMENT(FLinearColor, cNoteColor)
 		SLATE_ARGUMENT(FLinearColor, noteColor)
 		SLATE_ARGUMENT(float, pixelsPerBeat)
-		SLATE_ARGUMENT(TSharedPtr<UDAWSequencerData>, SessionData)
+		SLATE_ARGUMENT(UDAWSequencerData*, SessionData)
 		SLATE_ATTRIBUTE(FMusicTimestamp, CurrentTimestamp)
 		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
 
@@ -220,7 +220,7 @@ public:
 	double LastMeasuredAudioTime = 0.0;
 	double CurrentTimelinePosition = 0.0;
 
-	TSharedPtr<UDAWSequencerData> SessionData;
+	UDAWSequencerData* SessionData;
 
 	FLinearColor noteColor;
 	FVector2f positionOffset;

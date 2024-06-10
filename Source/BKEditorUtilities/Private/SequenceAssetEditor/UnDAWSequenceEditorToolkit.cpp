@@ -73,7 +73,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			auto DockTab = SNew(SDockTab)
 				[
 					SAssignNew(PianoRollGraph, SPianoRollGraph)
-						.SessionData(SequenceData->GetSelfSharedPtr())
+						.SessionData(SequenceData)
 						.Clipping(EWidgetClipping::ClipToBounds)
 						.gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
 						.accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
@@ -157,7 +157,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
 {
 	PianoRollGraph->OnSeekEvent.Unbind();
-	PianoRollGraph->SessionData.Reset();
+
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 	InTabManager->UnregisterTabSpawner("DAWSequenceMixerTab");
 	InTabManager->UnregisterTabSpawner("DAWSequenceDetailsTab");
@@ -438,11 +438,6 @@ FSequenceAssetDetails::~FSequenceAssetDetails()
 
 }
 
-void FSequenceAssetDetails::OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch)
-{
-
-	SequenceData->ChangeFusionPatchInTrack(TrackID, NewPatch);
-}
 
 void FSequenceAssetDetails::UpdateMidiInputTracks()
 {
@@ -456,7 +451,7 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 				SNew(SMIDITrackControls)
 					.TrackData(&SequenceData->M2TrackMetadata[i])
 					.slotInParentID(i)
-					.OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
+					//.OnFusionPatchChanged(this, &FSequenceAssetDetails::OnFusionPatchChangedInTrack)
 					.ConnectedGraph(SequenceData->M2SoundGraph)
 					.SequencerData(SequenceData)
 

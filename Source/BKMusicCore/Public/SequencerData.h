@@ -28,8 +28,6 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 class UM2SoundGraphRenderer;
 
-DECLARE_DELEGATE_TwoParams(FOnFusionPatchChanged, int, UFusionPatch*);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexNeedsBuilderUpdates, UM2SoundVertex*, UpdatedVertex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, AddedVertex);
@@ -564,26 +562,13 @@ public:
 
 	void AddVertex(UM2SoundVertex* Vertex);
 
-	FOnFusionPatchChanged OnFusionPatchChangedInTrack;
 
-	void ChangeFusionPatchInTrack(int TrackID, UFusionPatch* NewPatch);
+
 
 	FMidiDataChanged OnMidiDataChanged;
 
 	FOnSelectionChanged OnSelectionChanged;
 	
-	TSharedPtr<UDAWSequencerData, ESPMode::ThreadSafe> SelfSharedPtr;
-
-	TSharedPtr<UDAWSequencerData> GetSelfSharedPtr()
-	{
-		if (SelfSharedPtr.IsValid() == false)
-		{
-			SelfSharedPtr = TSharedPtr<UDAWSequencerData>(this);
-		}
-		
-		return SelfSharedPtr;
-	}
-
 
 	UPROPERTY()
 	TArray<FTrackDisplayOptions> M2TrackMetadata;

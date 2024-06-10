@@ -64,7 +64,7 @@ public:
 		SLATE_ARGUMENT(FTrackDisplayOptions*, TrackData)
 		SLATE_ARGUMENT(UM2SoundGraphBase*, ConnectedGraph )
 		SLATE_ARGUMENT(UDAWSequencerData*, SequencerData )
-		SLATE_EVENT(FOnFusionPatchChanged, OnFusionPatchChanged)
+	//	SLATE_EVENT(FOnFusionPatchChanged, OnFusionPatchChanged)
 
 	SLATE_END_ARGS()
 
@@ -74,7 +74,7 @@ public:
 	TSharedPtr<FString> CurrentItem;
 	TArray<TSharedPtr<FString>> optionsArray;
 	FTrackDisplayOptions* TrackData;
-	FOnFusionPatchChanged OnFusionPatchChanged;
+	//FOnFusionPatchChanged OnFusionPatchChanged;
 	UM2SoundGraphBase* ConnectedGraph;
 	UDAWSequencerData* SequencerData;
 
@@ -143,7 +143,7 @@ public:
 				if (patch->GetName().Equals(*CurrentItem, ESearchCase::IgnoreCase)) 
 				{
 						//TrackData->fusionPatch = TObjectPtr<UFusionPatch>(patch);
-						OnFusionPatchChanged.ExecuteIfBound(slotInParentID, patch);
+						//OnFusionPatchChanged.ExecuteIfBound(slotInParentID, patch);
 						//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
 						for (int i = 0; i < 127; i++)
 						{
@@ -180,7 +180,7 @@ public:
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
 		CurrentItem = MakeShareable(new FString(TrackData->fusionPatch->GetName()));
-		OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
+		//OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
 		ConnectedGraph = InArgs._ConnectedGraph;
 		SequencerData	= InArgs._SequencerData;
 
