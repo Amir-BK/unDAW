@@ -49,18 +49,15 @@ public:
 		NodeCreator.Finalize();
 
 		//connect node pins based on vertex bindings, note that the target vertex may not have been created yet
-		if(Vertex->MainInput && Vertex->MainInput->Outputs.Contains(Vertex))
-		{
-			AutoConnectTrackPinsForNodes(*Node, *VertexToNodeMap[Vertex->MainInput]);
-		}
 
-		for (auto& Output : Vertex->Outputs)
-		{
-			if (VertexToNodeMap.Contains(Output))
-			{
-				AutoConnectTrackPinsForNodes(*Node, *VertexToNodeMap[Output]);
-			}
-		};
+
+		//for (auto& Output : Vertex->Outputs)
+		//{
+		//	if (VertexToNodeMap.Contains(Output))
+		//	{
+		//		AutoConnectTrackPinsForNodes(*Node, *VertexToNodeMap[Output]);
+		//	}
+		//};
 
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
@@ -77,10 +74,11 @@ public:
 	UFUNCTION()
 	void OnVertexAdded(UM2SoundVertex* Vertex) { NotifyGraphChanged(); }
 
-	template<class T> UM2SoundEdGraphNode* CreateNodeForVertexClass(int ColumnPosition, int RowIndex, UM2SoundEdGraphNode* InputNode);
+
 
 private:
 
+	UPROPERTY()
 	TMap<UM2SoundVertex*, UM2SoundEdGraphNode*> VertexToNodeMap;
 };
 

@@ -146,6 +146,8 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2Soun
 {
 	UEdGraphPin* AOutputPin = nullptr;
 
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: AutoConnectTrackPinsForNodes, %s, %s"), *A.GetName(), *B.GetName());
+
 	auto IsPinValidCategory = [](UEdGraphPin* Pin)
 		{
 			return Pin->PinType.PinCategory == "Track" || Pin->PinType.PinCategory == "Track-Audio" || Pin->PinType.PinCategory == "Track-Midi";
@@ -161,6 +163,8 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2Soun
 
 	if (!AOutputPin) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: Found A output Pin, %s, %s"), *AOutputPin->GetName(), *B.GetName());
+
 	for (UEdGraphPin* Pin : B.Pins)
 	{
 		if (Pin->Direction == EGPD_Input && IsPinValidCategory(Pin))
@@ -168,30 +172,18 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2Soun
 			bool bSuccess = GetSchema()->TryCreateConnection(AOutputPin, Pin);
 			if (bSuccess)
 			{
-				//A.NodeConnectionListChanged();
-				//B.NodeConnectionListChanged();
+				A.NodeConnectionListChanged();
+				B.NodeConnectionListChanged();
 			}
+
+			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: Found B input Pin, %s, %s"), *Pin->GetName(), *B.GetName());
 		}
 	}
+
+
 }
 
-template<class T>
-inline UM2SoundEdGraphNode* UM2SoundGraph::CreateNodeForVertexClass(int ColumnPosition, int VerticalPosition, UM2SoundEdGraphNode* InputNode)
-{
-	FGraphNodeCreator<T> NodeCreator(*this);
-	T* Node = NodeCreator.CreateNode();
-	//Node->Vertex = NewObject<T>(Node->GetSequencerData(), NAME_None, RF_Transactional);
-	Node->NodePosX = ColumnPosition;
-	Node->NodePosY = VerticalPosition;
-	NodeCreator.Finalize();
 
-	//log position and index for debugging
-	//UE_LOG(LogTemp, Warning, TEXT("Index: %d, RowIndex: %d, ColumnPosition: %d"), Index, VerticalPosition, ColumnPosition);
-
-	AutoConnectTrackPinsForNodes(*InputNode, *Node);
-
-	return Node;
-}
 
 
 
@@ -224,6 +216,15 @@ void UM2SoundGraph::InitializeGraph()
 		}
 
 
+	}
+
+	for (const auto& [Vertex, Node] : VertexToNodeMap)
+	{
+		if(auto& InputVertex = Vertex->MainInput)
+		{
+			AutoConnectTrackPinsForNodes(*VertexToNodeMap[InputVertex], *Node);
+		}
+		//AutoConnectTrackPinsForNodes(*Node, *VertexToNodeMap[Vertex]);
 	}
 
 	//for (const auto& [index, Track] : GetSequencerData()->TrackInputs)
@@ -374,14 +375,16 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 
 void UM2SoundEdGraphNode::NodeConnectionListChanged()
 {
-	return;
-
+	//return;
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *GetName());
 	UEdGraphNode::NodeConnectionListChanged();
 
 	//if no vertex probably recreating graph idk.
 	if (!Vertex) return;
-
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *Vertex->GetName());
+
+	return;
+
 
 	//update CurrentTrackOuputs
 	CurrentTrackOutputs.Empty();
@@ -446,6 +449,7 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 
 void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 {
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s"), *Pin->GetName());
 	//just print the pin data for now please
 	if (!Pin) return;
 	if (!Vertex) return;
