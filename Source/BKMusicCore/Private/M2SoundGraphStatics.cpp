@@ -2,15 +2,23 @@
 
 
 #include "M2SoundGraphStatics.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
+#include "Vertexes/M2SoundVertex.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
-void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerData* InSequencerData, UM2SoundTrackInput* InputVertex, const int Index)
+void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData* InSequencerData, const int Index)
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
+	auto& TrackMetadata = InSequencerData->GetTracksDisplayOptions(Index);
+
+	UM2SoundMidiInputVertex* InputVertex = NewObject<UM2SoundMidiInputVertex>(InSequencerData, NAME_None, RF_Transactional);
+	InputVertex->SequencerData = InSequencerData;
+	InputVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata.TrackIndexInParentMidi, TrackMetadata.ChannelIndexInParentMidi);
+
+	InputVertex->TrackId = Index;
 
 	//UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 
@@ -32,33 +40,19 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputVertex(UDAWSequencerDat
 
 	NewPatch->Outputs.Add(NewAudioOutput);
 	//NewPatch->Inputs.Add(InputVertex);
-	//NewPatch->MainInput = InputVertex;
+	NewPatch->MainInput = InputVertex;
 
 	//NewAudioOutput->Inputs.Add(NewPatch);
-	//NewAudioOutput->MainInput = NewPatch;
+	NewAudioOutput->MainInput = NewPatch;
+	InSequencerData->AddVertex(InputVertex);
+	InSequencerData->AddVertex(NewPatch);
+	InSequencerData->AddVertex(NewAudioOutput);
 
-	InSequencerData->Outputs.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewAudioOutput);
-	InSequencerData->Patches.Add(FName(*FString::Printf(TEXT("Track %d"), Index)), NewPatch);
 }
 
 TArray<UM2SoundVertex*> UM2SoundGraphStatics::GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData)
 {
 	TArray<UM2SoundVertex*> Vertexes;
-
-	for (auto& Output : SequencerData->Outputs)
-	{
-		Vertexes.Add(Output.Value);
-	}
-
-	for (auto& Patch : SequencerData->Patches)
-	{
-		Vertexes.Add(Patch.Value);
-	}
-
-	for (auto& Input : SequencerData->TrackInputs)
-	{
-		Vertexes.Add(Input.Value);
-	}
 
 	return Vertexes;
 
@@ -79,6 +73,23 @@ UMetaSoundPatch* UM2SoundGraphStatics::GetPatchByName(FString Name)
 	}
 
 	return nullptr;
+}
+
+void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs)
+{
+	for (SIZE_T i = 0; i < InMixerNodeInputs.Num(); i += 3)
+	{
+		//the outputs are always sorted "In 0 L", "In 0 R", "Gain 0"
+		FAssignableAudioOutput AssignableOutput;
+		AssignableOutput.AudioLeftOutputInputHandle = InMixerNodeInputs[i];
+		AssignableOutput.AudioRightOutputInputHandle = InMixerNodeInputs[i + 1];
+		AssignableOutput.GainParameterInputHandle = InMixerNodeInputs[i + 2];
+
+		AssignableOutput.OutputName = FName(FGuid::NewGuid().ToString());
+
+		OutAssignableOutputs.Add(AssignableOutput);
+
+	}
 }
 
 TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumetInterface()

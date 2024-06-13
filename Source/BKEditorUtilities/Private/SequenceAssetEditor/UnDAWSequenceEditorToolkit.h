@@ -5,7 +5,7 @@
 #include "Toolkits/AssetEditorToolkit.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "EditorUndoClient.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
 #include "SPianoRollGraph.h"
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
@@ -79,7 +79,7 @@ public:
    // ~FUnDAWSequenceEditorToolkit();
 
 protected:
-    UDAWSequencerData* SequenceData;
+    //UDAWSequencerData* SequenceData;
     TSharedPtr<FUICommandList> AdditionalGraphCommands;
     TSharedPtr<SPianoRollGraph> PianoRollGraph;
 

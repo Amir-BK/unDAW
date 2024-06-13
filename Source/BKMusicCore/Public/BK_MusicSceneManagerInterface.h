@@ -17,8 +17,8 @@
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 #include "MetasoundGeneratorHandle.h"
-#include "SequencerData.h"
-#include "UnDAWSequencePerformer.h"
+#include "M2SoundGraphData.h"
+#include "M2SoundGraphRenderer.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "BK_MusicSceneManagerInterface.generated.h"
@@ -63,6 +63,7 @@ public:
 
 	
 	FOnTransportSeekCommand OnSeekEvent;
+
 
 	EBKPlayState PlayState = EBKPlayState::NotReady;
 

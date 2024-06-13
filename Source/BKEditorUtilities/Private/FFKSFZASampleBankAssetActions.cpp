@@ -2,7 +2,7 @@
 
 
 #include "FFKSFZASampleBankAssetActions.h"
-#include "BKMusicCore/Public/UnDAWSFZAsset.h"
+#include "BKMusicCore/Public/SFZ/UnDAWSFZAsset.h"
 
 
 UClass* FFksfzaSampleBankAssetActions::GetSupportedClass() const

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
 #include "SGraphNode.h"
 #include "M2SoundGraphStatics.h"
 #include "M2SoundEdGraphSchema.h"
@@ -17,9 +17,8 @@ class BK_EDITORUTILITIES_API SM2SoundPatchContainerGraphNode : public SGraphNode
 {
 public:
 	SLATE_BEGIN_ARGS(SM2SoundPatchContainerGraphNode)
-	{}
+		{}
 	SLATE_END_ARGS()
-
 
 	//probably a little expensive but we only use this with editor now, so, we'll see.
 	void RegenPatchOptions()
@@ -39,7 +38,6 @@ public:
 			auto DisplayName = Patch->GetDisplayName();
 			auto FormattedName = FString::Printf(TEXT("%s - %s"), *PatchName, *DisplayName.ToString());
 			PatchOptions.Add(MakeShareable(new FString(PatchName)));//  GetDocumentChecked(). Version.Name.ToString())));
-
 		}
 	}
 
@@ -59,41 +57,31 @@ public:
 			{
 				auto PatchName = PatchVertex->Patch->GetName();
 				SelectedPatch = MakeShareable(new FString(PatchName));
-
 			}
 		}
-
 
 		Audio::FParameterInterface Interface = T();
 
 		auto InterfaceAsFrontEndVersion = Interface.GetName();
-
-		
 
 		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
 		RegenPatchOptions();
 
 		UpdateGraphNode();
-
 	}
 
 private:
 	T ParameterInterface;
 
-
 	//Begin SWidget interface
 	//set desired size of the widget
 	//virtual FVector2D ComputeDesiredSize(float) const override { return FVector2D(500, 200); }
-
 
 	//SGraphNode interface
 
 	TSharedRef<SWidget> CreateNodeContentArea() override
 	{
-
-		
-
 		// NODE CONTENT AREA
 		return SNew(SBorder)
 			.BorderImage(FAppStyle::GetBrush("NoBorder"))
@@ -145,48 +133,43 @@ private:
 			];
 	}
 
-	protected:
-		TSharedPtr<SVerticalBox> MainVerticalBox;
+protected:
+	TSharedPtr<SVerticalBox> MainVerticalBox;
 
+	TArray<TSharedPtr<FString>> PatchOptions;
+	TSharedPtr<FString> SelectedPatch;
+	FMetasoundFrontendVersion Version;
 
-		TArray<TSharedPtr<FString>> PatchOptions;
-		TSharedPtr<FString> SelectedPatch;
-		FMetasoundFrontendVersion Version;
+	TSharedRef<SWidget> MakePatchComboWidget(TSharedPtr<FString> InItem)
+	{
+		return SNew(STextBlock)
+			.Text(FText::FromString(*InItem));
+	}
 
-		TSharedRef<SWidget> MakePatchComboWidget(TSharedPtr<FString> InItem)
+	void OnPatchSelected(TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+	{
+		SelectedPatch = InItem;
+		//find the patch asset, assign it to the vertex and call update
+		UMetaSoundPatch* Patch = UM2SoundGraphStatics::GetPatchByName(*SelectedPatch);
+		if (Patch)
 		{
-			return SNew(STextBlock)
-				.Text(FText::FromString(*InItem));
-
+			PatchVertex->Patch = Patch;
+			PatchVertex->VertexNeedsBuilderUpdates();
 		}
+	}
 
-		void OnPatchSelected(TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+	FText GetSelectedPatchName() const
+	{
+		if (SelectedPatch.IsValid())
 		{
-			SelectedPatch = InItem;
-			//find the patch asset, assign it to the vertex and call update
-			UMetaSoundPatch* Patch = UM2SoundGraphStatics::GetPatchByName(*SelectedPatch);
-			if (Patch)
-			{
-				PatchVertex->Patch = Patch;
-				PatchVertex->VertexNeedsBuilderUpdates();
-			}
-
-
+			return FText::FromString(*SelectedPatch);
 		}
-
-		FText GetSelectedPatchName() const
+		else
 		{
-			if (SelectedPatch.IsValid())
-			{
-				return FText::FromString(*SelectedPatch);
-			}
-			else
-			{
-				return FText::FromString(TEXT("No Patch Selected"));
-			}
-
+			return FText::FromString(TEXT("No Patch Selected"));
 		}
+	}
 
-		//patch vertex
-		UM2SoundPatch* PatchVertex;
+	//patch vertex
+	UM2SoundPatch* PatchVertex;
 };

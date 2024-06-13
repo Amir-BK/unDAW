@@ -1,7 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,18 +13,16 @@
 #include "Curves/CurveFloat.h"
 #include "EdGraph/EdGraph.h"
 
-
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
 
-
 #include "TrackPlaybackAndDisplayOptions.h"
 
-#include "SequencerData.generated.h"
-
+#include "M2SoundGraphData.generated.h"
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 class UM2SoundGraphRenderer;
+class UM2SoundVertex;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexNeedsBuilderUpdates, UM2SoundVertex*, UpdatedVertex);
@@ -40,13 +36,15 @@ USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMidiExplicitMidiInstrumentTrack
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY()
 	int32 TrackId = INDEX_NONE;
 
 	UPROPERTY()
 	int32 ChannelId = INDEX_NONE;
 };
+
+
 
 //the output creation logic will generate an array of these structs, each struct will contain the data needed to create an output in the metasound patch
 // once not needed these can be returned to the pool
@@ -55,7 +53,7 @@ struct FAssignableAudioOutput
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FName OutputName;
 
 	//this is the name of the parameter in the metasound patch that will be used to control the gain of this output
@@ -68,7 +66,6 @@ struct FAssignableAudioOutput
 
 	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle GainParameterInputHandle;
-
 };
 
 struct FM2VertexBuilderMessages
@@ -89,22 +86,17 @@ enum EBKTransportCommands : uint8
 	TransportForward,
 	NextMarker,
 	PrevMarker
-
 };
-
-
 
 UENUM(BlueprintType, Category = "unDAW Sequence", meta = (Bitflags))
 enum EBKPlayState : uint8
 {
-	NoPerformer = 0,
+	NoBuilder = 0,
 	NotReady = 1,
 	Preparing = 2,
 	ReadyToPlay = 4,
 	Playing = 8,
 	Paused = 16
-
-
 };
 
 UENUM(BlueprintType, Category = "unDAW Sequence")
@@ -132,25 +124,12 @@ struct FM2SoundMetasoundBuilderPinData
 
 	UPROPERTY()
 	TObjectPtr<UM2SoundVertex> OutputVertex;
-
 };
 
-USTRUCT()
-struct FM2SoundGraphConnection
-{
-	GENERATED_BODY()
-	
-	FMetaSoundBuilderNodeInputHandle InputHandle;
-	FMetaSoundBuilderNodeOutputHandle OutputHandle;
-
-	EM2SoundGraphConnectionStatus Status = EM2SoundGraphConnectionStatus::Pending;
-
-};
 
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {
-
 	GENERATED_BODY()
 
 	FLinkedMidiEvents(const FMidiEvent& StartEvent, const FMidiEvent& EndEvent, const int32 inStartIndex, const int32 inEndindex)
@@ -165,7 +144,6 @@ struct FLinkedMidiEvents
 
 	FLinkedMidiEvents()
 	{
-
 	}
 
 	//
@@ -174,14 +152,11 @@ struct FLinkedMidiEvents
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 StartIndex = 0;
 
-
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 EndIndex = 0;
 
-
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	uint8 pitch = 0;
-
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 StartTick = 0;
@@ -207,14 +182,12 @@ struct FLinkedMidiEvents
 	{
 		StartTime = SongsMap->TickToMs(StartTick);
 		Duration = SongsMap->TickToMs(EndTick) - StartTime;
-		
 	}
 
 	FString GetFormmatedString()
 	{
 		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackId);
 	}
-
 };
 
 USTRUCT(BlueprintType)
@@ -226,70 +199,36 @@ struct FLinkedNotesTrack
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
-
-USTRUCT(BlueprintType)
-struct FBPMidiStruct {
-
-GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly, Category="unDAW|Midi|Note Data")
-	int StartTick = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
-	int EndTick = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
-	int Duration = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
-	int Pitch = 0;
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi|Note Data")
-	int Velocity = 0;
-};
-
-
-
 //Helper object used by the pianoroll and other visualizers to easily query the end time of a playing note and the next note on a give track/pitch
 UCLASS(BlueprintType)
 class BKMUSICCORE_API UParsedMidiTrack : public UObject
 {
-	
 	GENERATED_BODY()
 public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi Data")
 	int TrackUniqueIndex = -1;
 
-	
 	//This can't be a UPROPERTY, we need to expose functions to interact with this data
 	TArray<FLinkedMidiEvents> TrackData;
-
-
 };
-
-
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMasterChannelOutputSettings {
 	GENERATED_BODY()
 
-
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
 	float MasterVolume = 1.0f;
 
-
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence", meta = (ClampMin = 0.0f, ClampMax = 1.0f))
 	float ClickVolume = 1.0f;
-
-
 
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	bool bClickActive = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence")
 	EMetaSoundOutputAudioFormat OutputFormat = EMetaSoundOutputAudioFormat::Stereo;
-
-
-
 };
-
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FTimeStamppedWavContainer {
@@ -300,7 +239,6 @@ struct FTimeStamppedWavContainer {
 
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	TObjectPtr <USoundWave> SoundWave;
-
 };
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
@@ -313,7 +251,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	TObjectPtr <UCurveFloat> Curve;
-
 };
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
@@ -335,7 +272,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
 	TMap<int, UParsedMidiTrack*> TrackMidiDataMap;
-
 };
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
@@ -353,197 +289,56 @@ public:
 	virtual void InitializeGraph() {};
 };
 
-
-//nodes
-
-UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
-class BKMUSICCORE_API UM2SoundVertex : public UObject
+//for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
+USTRUCT()
+struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 {
+	
 	GENERATED_BODY()
 
-public:
+	//patch references
+	UPROPERTY()
+	TScriptInterface<IMetaSoundDocumentInterface> MidiFilterDocument;
 
-	//for book keeping and tracking the color of the track in the sequencer, can also be used to assosciate groups of vertexes for the MIXER (that is to come)
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	int TrackId = INDEX_NONE;
-
-	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
-	void BreakTrackInputConnection();
-
-	void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
-
-	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
-
-
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
-	FOnVertexUpdated OnVertexUpdated;
-
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
-	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderUpdates;
-
-	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
-	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
-	// metasound i/os that are exposed via our metasound parameter interfaces
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	UM2SoundVertex* MainInput;
-
-	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding. 
-	//UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	//TArray<UM2SoundVertex*> Inputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TArray<UM2SoundVertex*> Outputs;
-
-	UFUNCTION()
-	UDAWSequencerData* GetSequencerData() const;
+	//internal node references
 
 	UPROPERTY()
-	TObjectPtr<UDAWSequencerData> SequencerData;
-
-	bool bBuiltSuccessfully = false;
-	bool bIsInput = false;
-	bool bIsOutput = false;
+	FMetaSoundNodeHandle MidiPlayerNode;
 
 	UPROPERTY()
-	FString VertexErrors;
+	FMetaSoundBuilderNodeOutputHandle MainMidiStreamOutput; //the stream going out of our 'main' player
 
 	UPROPERTY()
-	bool bHasErrors = false;
+	FMetaSoundBuilderNodeOutputHandle OnPlayOutputNode;
 
 	UPROPERTY()
-	int32 ErrorType = EMessageSeverity::Info;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundInputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundOutputs;
-
-	UFUNCTION(BlueprintCallable)
-	virtual void VertexNeedsBuilderUpdates();
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
-
-#if WITH_EDITORONLY_DATA
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override {};
-#endif
-
-	void TransmitAudioParameter(FAudioParameter Parameter);
-
-};
-
-UCLASS()
-//this is a literal node that can be used to pass a value to the metasound graph
-class BKMUSICCORE_API UM2SoundLiteralNodeVertex : public UM2SoundVertex
-{
-	GENERATED_BODY()
-
-public:
-
-};
-
-// this vertex represends a midi output that can be queried from blueprint using the Listeners
-UCLASS(AutoExpandCategories = ("M2Sound"))
-class BKMUSICCORE_API UM2SoundMidiOutput : public UM2SoundVertex
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditAnywhere, Category = "M2Sound")
-	FName OutputName;
-	//FText GetTooltip() const override
-	//{
-	//	return INVTEXT("An output that can be queried from Blueprint.");
-	//}
-
-	//TArray<FInputInfo> GetInputInfo() const override
-	//{
-	//	return
-	//	{
-	//		{ {}, {}, INVTEXT("Output"), "0" }
-	//	};
-	//}
-
-};
-
-UCLASS()
-class BKMUSICCORE_API UM2SoundAudioOutput : public UM2SoundVertex
-{
-	GENERATED_BODY()
-
-public:
-
-	UPROPERTY(EditAnywhere, Category = "M2Sound")
-	float Gain = 1.0f;
+	FMetaSoundBuilderNodeInputHandle OnFinishedNodeInput;
+	UPROPERTY()
+	TArray<FMetaSoundBuilderNodeInputHandle> AudioOuts;
 
 	UPROPERTY(VisibleAnywhere)
-	FName GainParameterName = NAME_None;
+	TArray<FAssignableAudioOutput> MasterOutputs;
 
+	//graph build results and metadata
 
-};
+	UPROPERTY(VisibleAnywhere)
+	TMap<FName,EMetaSoundBuilderResult> BuilderResults;
 
+	FAssignableAudioOutput GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext);
 
-UCLASS()
-class BKMUSICCORE_API UM2SoundTrackInput : public UM2SoundVertex
-{
-	GENERATED_BODY()
+protected:
+	friend class UDAWSequencerData;
 
-public:
+	void InitCoreNodes(UMetaSoundSourceBuilder* BuilderContext, UDAWSequencerData* ParentSession);
 
-	//Represents the index of the track in the sequencer data, to get the actual midi metadata use this index to get the track from the sequencer data
+private:
 
+	UPROPERTY();
+	UDAWSequencerData* SessionData;
+	void CreateMidiPlayerAndMainClock(UMetaSoundSourceBuilder* BuilderContext);
+	void CreateMainMixer(UMetaSoundSourceBuilder* BuilderContext);
 
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	FString TrackPrefix;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	FMetaSoundBuilderNodeOutputHandle MidiStreamOutput;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "M2Sound")
-	bool bOutputToBlueprints = true;
-
-};
-
-UCLASS()
-class BKMUSICCORE_API UM2SoundPatch : public UM2SoundVertex
-{
-	GENERATED_BODY()
-public:
-
-	UPROPERTY(EditAnywhere, Category = "M2Sound")
-	UMetaSoundPatch* Patch;
-
-	//for now can be used to rebuild the node manually if the user changes the metasound patch
-	bool bForceRebuild = false;
-
-	//Audio::FParameterInterfacePtr interface = nullptr;
-
-
-	//post import property edit
-#if WITH_EDITORONLY_DATA
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-
-
-};
-
-UCLASS()
-class BKMUSICCORE_API UM2SoundAudioInsert : public UM2SoundVertex
-{
-	GENERATED_BODY()
-public:
-
-	UPROPERTY(EditAnywhere, Category = "M2Sound")
-	UMetaSoundPatch* Patch;
-
-	//post import property edit
-#if WITH_EDITORONLY_DATA
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-	// yada
+	void ResizeOutputMixer(UMetaSoundSourceBuilder* BuilderContext);
 
 };
 
@@ -557,18 +352,46 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject
 	GENERATED_BODY()
 public:
 
+
+private:
+	UPROPERTY(VisibleAnywhere, Transient)
+	UAudioComponent* AuditionComponent = nullptr;
+
+	UPROPERTY()
+	UMetasoundGeneratorHandle* GeneratorHandle;
+public:
+
+	void SendTransportCommand(EBKTransportCommands Command);
+
+	void SendSeekCommand(float InSeek);
+
+	bool isInEditorPreview = false;
+
+	UPROPERTY(VisibleAnywhere)
+	FM2SoundCoreNodesComposite CoreNodes;
+
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexAdded OnVertexAdded;
 
 	void AddVertex(UM2SoundVertex* Vertex);
 
-
-
-
 	FMidiDataChanged OnMidiDataChanged;
 
+	FMusicTimestamp CurrentTimestampData;
+
 	FOnSelectionChanged OnSelectionChanged;
-	
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW Sequence")
+	UMetaSoundSourceBuilder* BuilderContext;
+
+	UMetaSoundBuilderSubsystem* MSBuilderSystem;
+
+	UPROPERTY(VisibleAnywhere)
+	FName BuilderName;
+
+
+	UPROPERTY()
+	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
 
 	UPROPERTY()
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
@@ -577,11 +400,20 @@ public:
 
 	FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);
 
+	UFUNCTION()
+	void CalculateSequenceDuration();
+
+	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
+
+	UFUNCTION()
+	void PopulateFromMidiFile(UMidiFile* inMidiFile);
+
+	UFUNCTION()
+	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);
+
+	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
 
 #if WITH_EDITORONLY_DATA
-
-	UPROPERTY(VisibleAnywhere, Category = "unDAW", Transient)
-	UM2SoundGraphRenderer* EditorPreviewPerformer;
 
 	UPROPERTY()
 	UM2SoundGraphBase* M2SoundGraph;
@@ -592,42 +424,31 @@ public:
 	UPROPERTY()
 	FVector2D GraphZoom;
 
-
 #endif
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence|Meta Sound")
 	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	float SequenceDuration = 100.0f;
+	void BeginDestroy() override;
 
+	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
+	float SequenceDuration = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "2", ExposeOnSpawn = "true", EditInLine = "true"))
-	TArray<FTimeStamppedCurveContainer> TimeStampedCurves;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "3", ExposeOnSpawn = "true", EditInLine = "true"))
-	TArray<FTimeStamppedWavContainer> TimeStampedWavs;
+	TEnumAsByte<EBKPlayState> PlayState;
 
-	UFUNCTION()
-	void CalculateSequenceDuration();
-
-
-	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
 
 	UFUNCTION()
-	void PopulateFromMidiFile(UMidiFile* inMidiFile);
-
-	UFUNCTION()
-	UM2SoundGraphRenderer* CreatePerformer(UAudioComponent* AuditionComponent);
+	bool AuditionBuilder(UAudioComponent* InAuditionComponent);
 
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
-
-	
 
 	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
@@ -643,36 +464,27 @@ public:
 	//UPROPERTY()
 	//TMap <FMidiExplicitMidiInstrumentTrack, FLinkedMidiEvents> SievedLinkedMidiEventsMap;
 
-	
-
 #if WITH_EDITORONLY_DATA
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	private:
+private:
 
-		FTrackDisplayOptions InvalidTrackRef;
+	FTrackDisplayOptions InvalidTrackRef;
+
+	UPROPERTY(VisibleAnywhere)
+	TSet<UM2SoundVertex*> Vertexes;
+
+	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
+	// in the future we will add a curvetable to the sequencer data, this will allow us to store the data for the curves in the sequencer, this will be used to create the curves in the performer
+
+public:
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FAssignableAudioOutput> AudioOutputs;
 
 
-
-// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
-// in the future we will add a curvetable to the sequencer data, this will allow us to store the data for the curves in the sequencer, this will be used to create the curves in the performer
-	
-		public:
-		UPROPERTY(VisibleAnywhere)
-		TMap<FName, UM2SoundAudioOutput*> Outputs;
-
-		UPROPERTY(VisibleAnywhere)
-		TMap<FName, UM2SoundPatch*> Patches;
-
-		UPROPERTY(VisibleAnywhere)
-		TArray<FAssignableAudioOutput> AudioOutputs;
-
-		UPROPERTY(VisibleAnywhere)
-		TMap<int, UM2SoundTrackInput*> TrackInputs;
-
-		//This delegate is listened to by the performer and is fired by the vertexes
-		UPROPERTY(BlueprintAssignable, Category = "M2Sound")
-		FOnAudioParameterFromVertex OnAudioParameterFromVertex;
+	//This delegate is listened to by the performer and is fired by the vertexes
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnAudioParameterFromVertex OnAudioParameterFromVertex;
 };
-

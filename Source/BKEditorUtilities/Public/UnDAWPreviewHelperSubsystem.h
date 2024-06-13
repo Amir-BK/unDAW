@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EditorSubsystem.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
 #include "BK_MusicSceneManagerInterface.h"
 #include "UnDAWPreviewHelperSubsystem.generated.h"
 

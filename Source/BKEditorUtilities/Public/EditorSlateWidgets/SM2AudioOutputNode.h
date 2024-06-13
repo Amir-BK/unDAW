@@ -8,13 +8,13 @@
 #include "SAudioRadialSlider.h"
 
 /**
- * 
+ *
  */
 class BK_EDITORUTILITIES_API SM2AudioOutputNode : public SGraphNode
 {
 public:
 	SLATE_BEGIN_ARGS(SM2AudioOutputNode)
-	{	}
+		{	}
 		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
 	SLATE_END_ARGS()
 
@@ -38,6 +38,6 @@ public:
 
 	FLinearColor GetSliderProgressColor() const
 	{
-		return OutputNode->GetNodeTitleColor()	;
+		return OutputNode->GetNodeTitleColor();
 	}
 };

@@ -2,20 +2,20 @@
 
 
 #include "UnDAWPreviewHelperSubsystem.h"
-#include "UnDAWSequencePerformer.h"
+#include "M2SoundGraphRenderer.h"
 
 
 void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview)
 {
 	
-    if (ActivePreviewPerformer.ActiveSession && InSessionToPreview != ActivePreviewPerformer.ActiveSession)
-    {
+   // if (ActivePreviewPerformer.ActiveSession && InSessionToPreview != ActivePreviewPerformer.ActiveSession)
+    //{
 
-			ActivePreviewPerformer.PreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
-            ActivePreviewPerformer.ActiveSession->EditorPreviewPerformer = nullptr;
-            ActivePreviewPerformer.PreviewPerformer->RemoveFromParent();
-            ActivePreviewPerformer.PreviewPerformer->ConditionalBeginDestroy();
-	}
+			//ActivePreviewPerformer.PreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
+           // ActivePreviewPerformer.ActiveSession->EditorPreviewPerformer = nullptr;
+           // ActivePreviewPerformer.PreviewPerformer->RemoveFromParent();
+           // ActivePreviewPerformer.PreviewPerformer->ConditionalBeginDestroy();
+	//}
     
     if (!hasAlreadyPrimed)
 	{
@@ -40,12 +40,14 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
     //AudioComponent->Set
 
     ;
-    InSessionToPreview->EditorPreviewPerformer = InSessionToPreview->CreatePerformer(AudioComponent);
+    //InSessionToPreview->EditorPreviewPerformer = InSessionToPreview->CreatePerformer(AudioComponent);
     //InSessionToPreview->EditorPreviewPerformer->AuditionComponentRef = AudioComponent;
-    InSessionToPreview->EditorPreviewPerformer->CreateAuditionableMetasound(AudioComponent, true);
+    //InSessionToPreview->EditorPreviewPerformer->CreateAuditionableMetasound(AudioComponent, true);
+    //InSessionToPreview
+    InSessionToPreview->AuditionBuilder(AudioComponent);
 
     ActivePreviewPerformer.ActiveSession = InSessionToPreview;
-    ActivePreviewPerformer.PreviewPerformer = InSessionToPreview->EditorPreviewPerformer;
+    //ActivePreviewPerformer.PreviewPerformer = InSessionToPreview->EditorPreviewPerformer;
 
 
 }

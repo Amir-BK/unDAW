@@ -14,15 +14,13 @@
 #include "M2SoundEdGraphSchema.h"
 #include "SEnumCombo.h"
 
-
 #include "Widgets/Layout/SScaleBox.h"
-
 
 void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
 	SequenceData = Cast<UDAWSequencerData>(InObjects[0]);
 	GEditor->RegisterForUndo(this);
-	CurrentTimestamp = CurrentTimestamp.CreateLambda([this]() { return Performer ? Performer->CurrentTimestamp : FMusicTimestamp(); });
+	CurrentTimestamp = CurrentTimestamp.CreateLambda([this]() { return SequenceData ? SequenceData->CurrentTimestampData : FMusicTimestamp(); });
 	ExtendToolbar();
 
 	const TSharedRef<FTabManager::FLayout> Layout = FTabManager::NewLayout("DAWSequenceEditorLayout")
@@ -56,18 +54,14 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 			)
 		);
 	FAssetEditorToolkit::InitAssetEditor(EToolkitMode::Standalone, TSharedPtr<IToolkitHost>(), "DAWSequenceEditor", Layout, true, true, InObjects, false);
-	
-
 }
 
 void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
 {
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
- 
- 
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
- 
+
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
@@ -80,21 +74,21 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 						.cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
 						// .OnMusicTimestamp_Lambda([this](const FMusicTimestamp& NewTimestamp) { OnPerformerTimestampUpdated(NewTimestamp); })
 						.OnSeekEvent(OnSeekEvent)
-					   // .CurrentTimestamp(CurrentTimestamp)
+						// .CurrentTimestamp(CurrentTimestamp)
 				];
 
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
 			if (SequenceData->HarmonixMidiFile) {
 				PianoRollGraph->Init();
-				if (!SequenceData->EditorPreviewPerformer) {
+				if (true) {
 					SetupPreviewPerformer();
 					PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 				}
 				else {
-					Performer = SequenceData->EditorPreviewPerformer;
-					Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-					PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UM2SoundGraphRenderer::SendSeekCommand);
+					//Performer = SequenceData->EditorPreviewPerformer;
+					//Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
+					PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
 					PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 					//PianoRollGraph->OnMusicTimestamp.operator=(Performer->OnMusicTimestampFromPerformer);
 				}
@@ -115,45 +109,41 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	CreateGraphEditorWidget();
 
 	InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
-	{
+		{
 			return SAssignNew(MetasoundGraphEditorBox, SDockTab)
 				.Content()
 				[
 					MetasoundGraphEditor.ToSharedRef()
 				];
-	  
-	}))
-	.SetDisplayName(INVTEXT("Builder Graph"))
-	.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+		}))
+		.SetDisplayName(INVTEXT("Builder Graph"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
-   // MetasoundGraphEditorBox->SetContent(MetasoundGraphEditor.ToSharedRef());
+	// MetasoundGraphEditorBox->SetContent(MetasoundGraphEditor.ToSharedRef());
 
- 
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	TSharedRef<IDetailsView> DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
 	DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
 
+	// FDetailsViewArgs NodeDetailsViewArgs;
+   //  NodeDetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
 
-   // FDetailsViewArgs NodeDetailsViewArgs;
-  //  NodeDetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
-
-	//NodeDetailsView = PropertyEditorModule.CreateDetailView(NodeDetailsViewArgs);
-
+	 //NodeDetailsView = PropertyEditorModule.CreateDetailView(NodeDetailsViewArgs);
 
 	InTabManager->RegisterTabSpawner("DAWSequenceDetailsTab", FOnSpawnTab::CreateLambda([=](const FSpawnTabArgs&)
-	{
-		return SNew(SDockTab)
-		[
-				 DetailsView
+		{
+			return SNew(SDockTab)
+				[
+					DetailsView
 
-		];
-	}))
-	.SetDisplayName(INVTEXT("Details"))
-	.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+				];
+		}))
+		.SetDisplayName(INVTEXT("Details"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 }
- 
+
 void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class FTabManager>& InTabManager)
 {
 	PianoRollGraph->OnSeekEvent.Unbind();
@@ -166,31 +156,29 @@ void FUnDAWSequenceEditorToolkit::UnregisterTabSpawners(const TSharedRef<class F
 
 TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EBKTransportCommands InCommand)
 {
-
 	auto NewButton = UTransportGlyphButton::CreateTransportButton(InCommand);
 	NewButton->SetOnClicked(FOnClicked::CreateLambda([&, InCommand]() { SendTransportCommand(InCommand); return FReply::Handled(); }));
 
-	switch(InCommand)
+	switch (InCommand)
 	{
-		case Play:
-			NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return Performer != nullptr && (Performer->PlayState == ReadyToPlay || Performer->PlayState == Paused)  ; }));
-			NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && ((Performer->PlayState == ReadyToPlay)
-				|| (Performer->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
-			break;
-		case Stop:
+	case Play:
+		NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == ReadyToPlay || SequenceData->PlayState == Paused); }));
+		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && ((SequenceData->PlayState == ReadyToPlay)
+			|| (SequenceData->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
+		break;
+	case Stop:
 
-			break;
+		break;
 
-		case Pause:
-			NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return Performer != nullptr && (Performer->PlayState == Playing)
-				 ? EVisibility::Visible : EVisibility::Collapsed; }));
-			break;
-		default:
-			break;
+	case Pause:
+		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == Playing)
+			? EVisibility::Visible : EVisibility::Collapsed; }));
+		break;
+	default:
+		break;
 	}
 
 	return NewButton;
-
 }
 
 void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
@@ -200,7 +188,7 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 	Graph->SelectedNodes.Empty();
 	Graph->SelectedVertices.Empty();
 
-	for(auto& Node : SelectedNodes)
+	for (auto& Node : SelectedNodes)
 	{
 		if (UM2SoundEdGraphNode* SoundNode = Cast<UM2SoundEdGraphNode>(Node))
 		{
@@ -208,7 +196,6 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 			Graph->SelectedVertices.Add(SoundNode->Vertex);
 		}
 	}
-
 }
 
 void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
@@ -228,37 +215,35 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	   // auto Metasound = Performer->AuditionComponentRef->GetSound();
 		//FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
 		//check(MetasoundAsset);
-		FGraphAppearanceInfo AppearanceInfo;
-		FString CornerText = TEXT("M");
-		CornerText.AppendChar(0x00B2);
-		CornerText.Append(TEXT("Sound Graph"));
-		AppearanceInfo.CornerText = FText::FromString(CornerText);
-		AppearanceInfo.PIENotifyText = FText::FromString(TEXT("PIE is active"));
+	FGraphAppearanceInfo AppearanceInfo;
+	FString CornerText = TEXT("M");
+	CornerText.AppendChar(0x00B2);
+	CornerText.Append(TEXT("Sound Graph"));
+	AppearanceInfo.CornerText = FText::FromString(CornerText);
+	AppearanceInfo.PIENotifyText = FText::FromString(TEXT("PIE is active"));
 
-		SGraphEditor::FGraphEditorEvents GraphEvents;
-	   // GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
-	   // GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
-	   GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
-	   GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
-	   GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeDoubleClicked);
+	SGraphEditor::FGraphEditorEvents GraphEvents;
+	// GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
+	// GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
+	GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
+	GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
+	GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeDoubleClicked);
 
-		AdditionalGraphCommands = MakeShared<FUICommandList>();
-		SAssignNew(MetasoundGraphEditor, SGraphEditor)
+	AdditionalGraphCommands = MakeShared<FUICommandList>();
+	SAssignNew(MetasoundGraphEditor, SGraphEditor)
 		//   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
-		   .AssetEditorToolkit(SharedThis(this))
-		   .AdditionalCommands(AdditionalGraphCommands)
-		   .Appearance(AppearanceInfo)
-		   .GraphEvents(GraphEvents)
-		   .GraphToEdit(SequenceData->M2SoundGraph);
+		.AssetEditorToolkit(SharedThis(this))
+		.AdditionalCommands(AdditionalGraphCommands)
+		.Appearance(AppearanceInfo)
+		.GraphEvents(GraphEvents)
+		.GraphToEdit(SequenceData->M2SoundGraph);
 
-	   
-   // }
+	// }
 }
 
 void FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp)
 {
-	if(PianoRollGraph)    PianoRollGraph->UpdateTimestamp(NewTimestamp);
-
+	if (PianoRollGraph)    PianoRollGraph->UpdateTimestamp(NewTimestamp);
 }
 
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
@@ -272,13 +257,12 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 		GetToolkitCommands(),
 		FToolBarExtensionDelegate::CreateLambda([this](FToolBarBuilder& ToolbarBuilder)
 			{
-				
 				auto StopButton = GetConfiguredTransportButton(Stop);
 				auto PlayButton = GetConfiguredTransportButton(Play);
 				auto PauseButton = GetConfiguredTransportButton(Pause);
 
 				ToolbarBuilder.BeginSection("Transport");
-  
+
 				ToolbarBuilder.AddWidget(SNew(SBox).VAlign(VAlign_Center)
 					[
 						SNew(SHorizontalBox)
@@ -288,84 +272,72 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 								SNew(SButton)
 									.Text(INVTEXT("ReInit"))
 									.OnClicked_Lambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); })
-								   // .IsEnabled_Lambda([this]() { return Performer == nullptr; })
+									// .IsEnabled_Lambda([this]() { return Performer == nullptr; })
 							]
 
 							+ SHorizontalBox::Slot()
 							[
 								PlayButton
-							] 
+							]
 							+ SHorizontalBox::Slot()
 							[
 								PauseButton
-							]                           
+							]
 							+ SHorizontalBox::Slot()
 							[
 								StopButton
 							]
-	 
-				]);
+
+					]);
 
 				ToolbarBuilder.EndSection();
 
-				 ToolbarBuilder.BeginSection("Performer Status");
-				 ToolbarBuilder.AddWidget(SNew(SVerticalBox)
-					 + SVerticalBox::Slot()
-					 [
-						 CurrentPlayStateTextBox.ToSharedRef()
-					 ]                    
-					 + SVerticalBox::Slot()
+				ToolbarBuilder.BeginSection("Performer Status");
+				ToolbarBuilder.AddWidget(SNew(SVerticalBox)
+					+ SVerticalBox::Slot()
 					[
-					SNew(STextBlock)
+						CurrentPlayStateTextBox.ToSharedRef()
+					]
+					+ SVerticalBox::Slot()
+					[
+						SNew(STextBlock)
 							.Text_Lambda([this]() -> FText
-					{if (Performer)                  
-						  {
-						 return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), Performer->CurrentTimestamp.Bar, Performer->CurrentTimestamp.Beat));
-						 }
-					return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), 0, 0.0f)); })
+								{if (SequenceData)
+						{
+							return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), SequenceData->CurrentTimestampData.Bar, SequenceData->CurrentTimestampData.Beat));
+						}
+						return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), 0, 0.0f)); })
 					]);
 
+				ToolbarBuilder.EndSection();
 
-				 ToolbarBuilder.EndSection();
+				ToolbarBuilder.BeginSection("Graph Input");
+				ToolbarBuilder.AddWidget(SNew(SEnumComboBox, StaticEnum<EPianoRollEditorMouseMode>())
+					.CurrentValue_Lambda([this]() -> int32
+						{
+							if (!PianoRollGraph) return (int32)EPianoRollEditorMouseMode::empty;
+							return (int32)PianoRollGraph->InputMode;
+						})
+					.OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if (PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
 
-				 ToolbarBuilder.BeginSection("Graph Input");
-				 ToolbarBuilder.AddWidget(SNew(SEnumComboBox, StaticEnum<EPianoRollEditorMouseMode>())
-					 .CurrentValue_Lambda([this]() -> int32
-				 {
-					 if (!PianoRollGraph) return (int32)EPianoRollEditorMouseMode::empty;
-					 return (int32)PianoRollGraph->InputMode;
-				 })
-					 .OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if(PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
+				);
 
-				 );
+				//add follow cursor checkbox
+				ToolbarBuilder.AddWidget(SNew(SCheckBox)
+					.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (PianoRollGraph) PianoRollGraph->bFollowCursor = NewState == ECheckBoxState::Checked; })
+					.IsChecked_Lambda([this]() -> ECheckBoxState { return PianoRollGraph && PianoRollGraph->bFollowCursor ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					.Content()
+					[
+						SNew(STextBlock).Text(INVTEXT("Follow Cursor"))
+					]
+				);
 
-				 //add follow cursor checkbox
-				 ToolbarBuilder.AddWidget(SNew(SCheckBox)
-					 .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (PianoRollGraph) PianoRollGraph->bFollowCursor = NewState == ECheckBoxState::Checked; })
-					 .IsChecked_Lambda([this]() -> ECheckBoxState { return PianoRollGraph && PianoRollGraph->bFollowCursor ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-					 .Content()
-					 [
-						 SNew(STextBlock).Text(INVTEXT("Follow Cursor"))
-					 ]
-				 );
-	
-				 ToolbarBuilder.EndSection();
-
-
+				ToolbarBuilder.EndSection();
 			}));
 
 	AddToolbarExtender(ToolbarExtender);
 }
 
-//inline FUnDAWSequenceEditorToolkit::~FUnDAWSequenceEditorToolkit()
-//{
-//    SequenceData->OnMidiDataChanged.RemoveAll(this);
-//    //if (Performer)    Performer->OnTimestampUpdated.Clear();
-//    //PianoRollGraph->SessionData.Reset();
-//    PianoRollGraph.Reset();
-//    SequenceData = nullptr;
-//    GEditor->UnregisterForUndo(this);
-//}
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
@@ -373,22 +345,12 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 	PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
 
-	Performer = SequenceData->EditorPreviewPerformer;
-	Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-	//Performer->OnTimestampUpdated.Add (this, &FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated);
-	//Performer->OnTimestampUpdated.AddLambda([this](const FMusicTimestamp& NewTimestamp) { PianoRollGraph->UpdateTimestamp(NewTimestamp); });
-	PianoRollGraph->OnSeekEvent.BindUObject(Performer, &UM2SoundGraphRenderer::SendSeekCommand);
-	//PianoRollGraph->OnMusicTimestamp.operator=(Performer->OnMusicTimestampFromPerformer);
-   // Performer->OnMusicTimestampFromPerformer.BindLambda(this, &FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated);
-	//OnSeekEvent.BindUObject(Performer, &UDAWSequencerPerformer::SendSeekCommand);
-	//OnSeekEvent.BindLambda([this](float Seek) { 
+	//Performer = SequenceData->EditorPreviewPerformer;
+	//Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
 
-	//    
-	//    Performer->SendSeekCommand(Seek); });
- 
+	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
+
 }
-
-
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
@@ -401,7 +363,7 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		.AddCustomRow(FText::FromString("Tracks"))
 		.WholeRowContent()
 		[
-			SAssignNew(MidiInputTracks, SVerticalBox)      
+			SAssignNew(MidiInputTracks, SVerticalBox)
 		];
 
 	UpdateMidiInputTracks();
@@ -410,12 +372,11 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			UpdateMidiInputTracks();
 		});
 
-
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	DetailsViewArgs.bAllowSearch = false;
-   // DetailsViewArgs.
+	// DetailsViewArgs.
 	NodeDetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
 	NodeDetailsView->SetObjects(TArray<UObject*>{ SequenceData->M2SoundGraph });
 	DetailBuilder.EditCategory("Selection")
@@ -423,27 +384,23 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		.WholeRowContent()
 		[
 			NodeDetailsView.ToSharedRef()
-			
+
 		];
 }
 
 FSequenceAssetDetails::~FSequenceAssetDetails()
 {
-		SequenceData->OnMidiDataChanged.RemoveAll(this);
+	SequenceData->OnMidiDataChanged.RemoveAll(this);
 
-		MidiInputTracks.Reset();
-		NodeDetailsView.Reset();
-
-
-
+	MidiInputTracks.Reset();
+	NodeDetailsView.Reset();
 }
-
 
 void FSequenceAssetDetails::UpdateMidiInputTracks()
 {
 	MidiInputTracks->ClearChildren();
 
-	for(SIZE_T i = 0; i < SequenceData->M2TrackMetadata.Num(); i++)
+	for (SIZE_T i = 0; i < SequenceData->M2TrackMetadata.Num(); i++)
 	{
 		MidiInputTracks->AddSlot()
 			.AutoHeight()
@@ -457,5 +414,4 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 
 			];
 	}
-
 }

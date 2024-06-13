@@ -23,7 +23,7 @@ namespace unDAWMetasound
 	namespace TimeStampedTransportVertexNames
 	{
 		METASOUND_PARAM(TriggerDuringSeek, "Trigger During Seek", "Whether a trigger should be generated is a seek over the timestamp is detected.")
-		METASOUND_PARAM(LoopTimeStamp, "Loop", "If set to false the timestamp will only fire once until it changes")
+			METASOUND_PARAM(LoopTimeStamp, "Loop", "If set to false the timestamp will only fire once until it changes")
 	}
 
 	class FTriggerAndTimestampToTransportOperator : public TExecutableOperator<FTriggerAndTimestampToTransportOperator>, public FMidiPlayCursor
@@ -34,17 +34,17 @@ namespace unDAWMetasound
 		static TUniquePtr<IOperator> CreateOperator(const FBuildOperatorParams& InParams, FBuildResults& OutResults);
 
 		FTriggerAndTimestampToTransportOperator(const FBuildOperatorParams& InParams,
-									const FTriggerReadRef&         InTriggerPrepare,
-									const FTriggerReadRef&         InTriggerPlay,
-									const FTriggerReadRef&         InTriggerPause, 
-									const FTriggerReadRef&         InTriggerContinue, 
-									const FTriggerReadRef&         InTriggerStop, 
-									const FTriggerReadRef&         InTriggerKill,
-									const FTriggerReadRef&         InTriggerSeek,
-									const FMusicSeekTargetReadRef& InSeekDestination,
-									const FBoolReadRef& InTriggerDuringSeek,
-									const FBoolReadRef& InLoopTimeStamp,
-									const FMusicTimestampReadRef& InTimestamp);
+			const FTriggerReadRef& InTriggerPrepare,
+			const FTriggerReadRef& InTriggerPlay,
+			const FTriggerReadRef& InTriggerPause,
+			const FTriggerReadRef& InTriggerContinue,
+			const FTriggerReadRef& InTriggerStop,
+			const FTriggerReadRef& InTriggerKill,
+			const FTriggerReadRef& InTriggerSeek,
+			const FMusicSeekTargetReadRef& InSeekDestination,
+			const FBoolReadRef& InTriggerDuringSeek,
+			const FBoolReadRef& InLoopTimeStamp,
+			const FMusicTimestampReadRef& InTimestamp);
 
 		virtual void BindInputs(FInputVertexInterfaceData& InVertexData) override;
 		virtual void BindOutputs(FOutputVertexInterfaceData& InVertexData) override;
@@ -52,7 +52,7 @@ namespace unDAWMetasound
 		virtual FDataReferenceCollection GetOutputs() const override;
 
 		void Reset(const FResetParams& ResetParams);
-		
+
 		void Execute();
 
 		void CalculateTriggerTick();
@@ -79,11 +79,10 @@ namespace unDAWMetasound
 		//** OUTPUTS
 		HarmonixMetasound::FMusicTransportEventStreamWriteRef TransportOutPin;
 
+		//Midi play cursor thingies
 
-		//Midi play cursor thingies 
-
-		 		//** DATA (current state)
-		FMusicTimestamp CurrentTimestamp{1, 1.0f};
+				//** DATA (current state)
+		FMusicTimestamp CurrentTimestamp{ 1, 1.0f };
 		EMidiClockSubdivisionQuantization Quantize = EMidiClockSubdivisionQuantization::None;
 
 		int32 TriggerTick = 0;
@@ -110,7 +109,6 @@ namespace unDAWMetasound
 		// We have to override this to disambiguate the FMidiPlayCursor Reset and the MS operator Reset
 		virtual void Reset(bool ForceNoBroadcast) override { FMidiPlayCursor::Reset(ForceNoBroadcast); }
 		//** END FMidiPlayCursor
-
 	};
 
 	class FTriggerToTransportNode : public FNodeFacade
@@ -124,22 +122,22 @@ namespace unDAWMetasound
 
 	METASOUND_REGISTER_NODE(FTriggerToTransportNode)
 
-	const FNodeClassMetadata& FTriggerAndTimestampToTransportOperator::GetNodeInfo()
+		const FNodeClassMetadata& FTriggerAndTimestampToTransportOperator::GetNodeInfo()
 	{
 		auto InitNodeInfo = []() -> FNodeClassMetadata
-		{
-			FNodeClassMetadata Info;
-			Info.ClassName        = { TEXT("unDAW"), TEXT("EnhancedTriggerToTransport"), TEXT("") };
-			Info.MajorVersion     = 0;
-			Info.MinorVersion     = 2;
-			Info.DisplayName      = INVTEXT("unDAW TimeStamped Music Transport");
-			Info.Description      = INVTEXT("Adds an innate time stamp trigger to to the transport which enables musically accurrate jumping and looping");
-			Info.Author           = TEXT("Amir Ben-Kiki");
-			Info.PromptIfMissing  = PluginNodeMissingPrompt;
-			Info.DefaultInterface = GetVertexInterface();
-			Info.CategoryHierarchy = { INVTEXT("unDAW"), INVTEXT("Music") };
-			return Info;
-		};
+			{
+				FNodeClassMetadata Info;
+				Info.ClassName = { TEXT("unDAW"), TEXT("EnhancedTriggerToTransport"), TEXT("") };
+				Info.MajorVersion = 0;
+				Info.MinorVersion = 2;
+				Info.DisplayName = INVTEXT("unDAW TimeStamped Music Transport");
+				Info.Description = INVTEXT("Adds an innate time stamp trigger to to the transport which enables musically accurrate jumping and looping");
+				Info.Author = TEXT("Amir Ben-Kiki");
+				Info.PromptIfMissing = PluginNodeMissingPrompt;
+				Info.DefaultInterface = GetVertexInterface();
+				Info.CategoryHierarchy = { INVTEXT("unDAW"), INVTEXT("Music") };
+				return Info;
+			};
 
 		static const FNodeClassMetadata Info = InitNodeInfo();
 
@@ -178,17 +176,16 @@ namespace unDAWMetasound
 		using namespace HarmonixMetasound::CommonPinNames;
 
 		const FInputVertexInterfaceData& InputData = InParams.InputData;
-		FTriggerReadRef InTriggerPrepare          = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPrepare), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerPlay             = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPlay), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerPause            = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPause), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerContinue         = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportContinue), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerStop             = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportStop), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerKill             = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportKill), InParams.OperatorSettings);
-		FTriggerReadRef InTriggerSeek             = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TriggerSeek), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerPrepare = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPrepare), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerPlay = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPlay), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerPause = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportPause), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerContinue = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportContinue), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerStop = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportStop), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerKill = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TransportKill), InParams.OperatorSettings);
+		FTriggerReadRef InTriggerSeek = InputData.GetOrConstructDataReadReference<FTrigger>(METASOUND_GET_PARAM_NAME(Inputs::TriggerSeek), InParams.OperatorSettings);
 		FMusicSeekTargetReadRef InSeekDestination = InputData.GetOrConstructDataReadReference<FMusicSeekTarget>(METASOUND_GET_PARAM_NAME(Inputs::SeekDestination));
 		FBoolReadRef  InTriggerDuringSeek = InputData.GetOrCreateDefaultDataReadReference<bool>(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::TriggerDuringSeek), InParams.OperatorSettings);
 		FBoolReadRef  InLoopTimeStamp = InputData.GetOrCreateDefaultDataReadReference<bool>(METASOUND_GET_PARAM_NAME(TimeStampedTransportVertexNames::LoopTimeStamp), InParams.OperatorSettings);
-
 
 		//FMusicTransportEventStreamReadRef InTransport = InputData.GetOrConstructDataReadReference<FMusicTransportEventStream>(METASOUND_GET_PARAM_NAME(Inputs::Transport), InParams.OperatorSettings);
 		FMusicTimestampReadRef InTimestamp = InputData.GetOrConstructDataReadReference<FMusicTimestamp>(METASOUND_GET_PARAM_NAME(Inputs::Timestamp), 1, 1.0f);
@@ -208,18 +205,18 @@ namespace unDAWMetasound
 	}
 
 	FTriggerAndTimestampToTransportOperator::FTriggerAndTimestampToTransportOperator(const FBuildOperatorParams& InParams,
-															 const FTriggerReadRef&   InTriggerPrepare,
-															 const FTriggerReadRef&   InTriggerPlay,
-															 const FTriggerReadRef&   InTriggerPause,
-															 const FTriggerReadRef&   InTriggerContinue,
-															 const FTriggerReadRef&   InTriggerStop,
-															 const FTriggerReadRef&   InTriggerKill,
-															 const FTriggerReadRef&   InTriggerSeek,
-															 const FMusicSeekTargetReadRef& InSeekDestination,
-															const FBoolReadRef& InTriggerDuringSeek,
-															const FBoolReadRef& InLoopTimeStamp,
+		const FTriggerReadRef& InTriggerPrepare,
+		const FTriggerReadRef& InTriggerPlay,
+		const FTriggerReadRef& InTriggerPause,
+		const FTriggerReadRef& InTriggerContinue,
+		const FTriggerReadRef& InTriggerStop,
+		const FTriggerReadRef& InTriggerKill,
+		const FTriggerReadRef& InTriggerSeek,
+		const FMusicSeekTargetReadRef& InSeekDestination,
+		const FBoolReadRef& InTriggerDuringSeek,
+		const FBoolReadRef& InLoopTimeStamp,
 
-															const FMusicTimestampReadRef& InTimestamp)
+		const FMusicTimestampReadRef& InTimestamp)
 		: PrepareInPin(InTriggerPrepare)
 		, PlayInPin(InTriggerPlay)
 		, PauseInPin(InTriggerPause)
@@ -228,10 +225,10 @@ namespace unDAWMetasound
 		, KillInPin(InTriggerKill)
 		, TriggerSeekInPin(InTriggerSeek)
 		, SeekDestinationInPin(InSeekDestination)
-		,TimestampInPin(InTimestamp)
-		,TriggerDuringSeekInPin(InTriggerDuringSeek)
-		,LoopTimeStampInPin(InLoopTimeStamp)
-		,TransportOutPin(HarmonixMetasound::FMusicTransportEventStreamWriteRef::CreateNew(InParams.OperatorSettings))
+		, TimestampInPin(InTimestamp)
+		, TriggerDuringSeekInPin(InTriggerDuringSeek)
+		, LoopTimeStampInPin(InLoopTimeStamp)
+		, TransportOutPin(HarmonixMetasound::FMusicTransportEventStreamWriteRef::CreateNew(InParams.OperatorSettings))
 	{
 		Reset(InParams);
 	}
@@ -244,7 +241,7 @@ namespace unDAWMetasound
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportPlay), PlayInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportPause), PauseInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportContinue), ContinueInPin);
-		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportStop),  StopInPin);
+		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportStop), StopInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TransportKill), KillInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::TriggerSeek), TriggerSeekInPin);
 		InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Inputs::SeekDestination), SeekDestinationInPin);
@@ -319,9 +316,8 @@ namespace unDAWMetasound
 
 		// The order here is intentional. It assures that for requests on the exact same sample index...
 		// 1 - Stops and Kills will be processed last. This is important to avoid "stuck notes".
-		// 2 - Seeks happen before Plays so that we don't "pre-roll" for a play from the beginning 
+		// 2 - Seeks happen before Plays so that we don't "pre-roll" for a play from the beginning
 		//     and then immediately "pre-roll" again to start from the seeked to position.
-
 
 		// BK: So I'll need to enter the timestamp same as seek??
 
@@ -335,9 +331,7 @@ namespace unDAWMetasound
 		AddEvents(ContinueInPin, HarmonixMetasound::EMusicPlayerTransportRequest::Continue);
 		AddEvents(StopInPin, HarmonixMetasound::EMusicPlayerTransportRequest::Stop);
 		AddEvents(KillInPin, HarmonixMetasound::EMusicPlayerTransportRequest::Kill);
-		
 	}
-
 
 	//Midi play cursor methods
 
@@ -347,7 +341,7 @@ namespace unDAWMetasound
 		//TriggerTick = SongMaps.CalculateMidiTick(CurrentTimestamp, Quantize);
 	}
 
-		void FTriggerAndTimestampToTransportOperator::SeekThruTick(int32 Tick)
+	void FTriggerAndTimestampToTransportOperator::SeekThruTick(int32 Tick)
 	{
 		int32 TickProceedingThisAdvance = CurrentTick;
 		FMidiPlayCursor::SeekThruTick(Tick);
@@ -374,8 +368,6 @@ namespace unDAWMetasound
 
 		//TickSpans.Emplace(TickProceedingThisAdvance, CurrentTick, MidiClockInPin->GetCurrentBlockFrameIndex(), false);
 	}
-
-
 }
 
 #undef LOCTEXT_NAMESPACE // "unDAWMetasound"

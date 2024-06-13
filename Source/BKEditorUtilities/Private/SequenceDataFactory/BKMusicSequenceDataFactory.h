@@ -6,10 +6,10 @@
 #include "Factories/Factory.h"
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
-#include "UnDAWSequencePerformer.h"
+#include "M2SoundGraphRenderer.h"
 #include "AssetTypeActions_Base.h"
 #include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
 #include "Widgets/SWidget.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
@@ -70,7 +70,7 @@ public:
 				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 				//auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 
-				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing)
+				if (SequenceData && SequenceData->PlayState == Playing)
 				{
 					return FAppStyle::GetBrush("MediaAsset.AssetActions.Stop.Large");
 				}
@@ -82,10 +82,10 @@ public:
 			{
 				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 
-				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing)
+				if (SequenceData && SequenceData->PlayState == Playing)
 				{
 					//unDAW::PreviewPlayback::StopSound();
-					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
+					SequenceData->SendTransportCommand(EBKTransportCommands::Stop);
 				}
 				else
 				{
@@ -93,14 +93,14 @@ public:
 					auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 					//PreviewHelper->OnDAWPerformerReady
 
-					if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == ReadyToPlay)
+					if (SequenceData && SequenceData->PlayState == ReadyToPlay)
 					{
-						SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+						SequenceData->SendTransportCommand(EBKTransportCommands::Play);
 						//SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 						return FReply::Handled();
 					}
 					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+					SequenceData->SendTransportCommand(EBKTransportCommands::Play);
 
 
 				}

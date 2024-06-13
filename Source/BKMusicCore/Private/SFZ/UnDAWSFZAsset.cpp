@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UnDAWSFZAsset.h"
+#include "SFZ/UnDAWSFZAsset.h"
 
-#include "UnDAWSFZPerformer.h"
+#include "SFZ/UnDAWSFZPerformer.h"
 
 UFKSFZAsset::UFKSFZAsset()
 {

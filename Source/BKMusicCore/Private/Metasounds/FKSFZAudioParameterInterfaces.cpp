@@ -4,7 +4,7 @@
 #include "Metasounds/FKSFZAudioParameterInterfaces.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "MetasoundDataReference.h"
-#include  "UnDAWSFZAsset.h"
+#include  "SFZ/UnDAWSFZAsset.h"
 
 
 using namespace Metasound;

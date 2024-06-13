@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "MusicScenePlayerActor.h"
-#include "SequencerData.h"
+#include "M2SoundGraphData.h"
 #include "DAWListenerComponent.generated.h"
 
 

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UnDAWSFZPerformer.h"
+#include "SFZ/UnDAWSFZPerformer.h"
 
-#include "UnDAWSFZAsset.h"
+#include "SFZ/UnDAWSFZAsset.h"
 #include "MetasoundSource.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"

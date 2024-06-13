@@ -13,7 +13,7 @@
 #include "MetasoundTrigger.h"
 #include "MetasoundAudioBuffer.h"
 #include "MetasoundWave.h"
-#include "UnDAWSFZAsset.h"
+#include "SFZ/UnDAWSFZAsset.h"
 
 
 class F_FK_SFZ_Asset_Proxy;

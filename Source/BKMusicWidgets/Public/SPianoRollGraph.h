@@ -20,7 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include <Widgets/Layout/SConstraintCanvas.h>
 #include "BKMusicWidgets.h"
-#include "UnDAWSequencePerformer.h"
+#include "M2SoundGraphRenderer.h"
 #include "EngravingSubsystem.h"
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"
@@ -29,18 +29,14 @@
 
 #define PIANO_ROLL_DEBUG
 
-
 BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPIANOROLLLOG, Verbose, All);
 
-
 struct FLinkedMidiEvents;
-
-
 
 struct FPianoRollKeyLines
 {
 public:
-	
+
 	FLinearColor* lineColor;
 };
 
@@ -57,16 +53,11 @@ public:
 
 	int32 trackindexInHarmonixMidi = -1;
 
-
-
-	
 	int SelectedTrackID = -1;
 
 	FLinkedMidiEvents* MidiNoteData;
 
-
-
-	FZoomablePanelSlotContainer(FLinkedMidiEvents* InNote, int32 InTrackId ): MidiNoteData(nullptr)
+	FZoomablePanelSlotContainer(FLinkedMidiEvents* InNote, int32 InTrackId) : MidiNoteData(nullptr)
 	{
 		MidiNoteData = InNote;
 		pitch = 127 - MidiNoteData->pitch;
@@ -92,8 +83,7 @@ public:
 	}
 };
 
-
-// this can probably be deleted 
+// this can probably be deleted
 class BKMUSICWIDGETS_API STrackResizeArea : public SCompoundWidget
 {
 public:
@@ -101,7 +91,7 @@ public:
 		{}
 		SLATE_ARGUMENT(TSharedPtr<ITimeSyncedPanel>, parentMidiEditor)
 		SLATE_ARGUMENT(int, slotInParentID)
-		
+
 	SLATE_END_ARGS()
 
 	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
@@ -114,14 +104,11 @@ public:
 		slotInParentID = InArgs._slotInParentID;
 	};
 
-
-
 	// Begin SWidget overrides.
-	virtual FVector2D ComputeDesiredSize(float) const override 
+	virtual FVector2D ComputeDesiredSize(float) const override
 	{
 		return FVector2D(1000, 10);
 	};
-
 
 	TOptional<EMouseCursor::Type> GetCursor() const override
 	{
@@ -129,12 +116,10 @@ public:
 	}
 	// End SWidget overrides.
 
-	
-
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
 		lmbDown = true;
-		
+
 		return FReply::Handled().CaptureMouse(AsShared());
 	};
 	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
@@ -144,30 +129,25 @@ public:
 	};
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
-		if(lmbDown) parentMidiEditor->ResizePanel(slotInParentID, MouseEvent.GetCursorDelta().Y);
-		
+		if (lmbDown) parentMidiEditor->ResizePanel(slotInParentID, MouseEvent.GetCursorDelta().Y);
+
 		return FReply::Handled();
 	};
 };
 
-
 DECLARE_DELEGATE(FOnInitComplete)
 
-
 /**
- * 
+ *
  */
-class BKMUSICWIDGETS_API SPianoRollGraph : public SCompoundWidget 
+class BKMUSICWIDGETS_API SPianoRollGraph : public SCompoundWidget
 {
 public:
-
-
-
 
 	//SLATE_DECLARE_WIDGET_API(SPianoRollGraph, SCanvas)
 
 	SLATE_BEGIN_ARGS(SPianoRollGraph)
-	{}
+		{}
 		SLATE_ARGUMENT(FText, Text)
 		SLATE_ARGUMENT(FSlateBrush, gridBrush)
 		SLATE_ARGUMENT(FLinearColor, gridColor)
@@ -188,10 +168,10 @@ public:
 #if defined PIANO_ROLL_DEBUG
 	FString debugData;
 #endif
-	
+
 private:
 	TAttribute<FMusicTimestamp> CurrentTimestamp;
-	
+
 	bool bIsAttributeBoundMusicTimestamp = false;
 
 public:
@@ -199,8 +179,6 @@ public:
 	void SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimestamp);
 
 	//FMusicTimestamp CurrentTimestamp;
-
-
 
 	FOnTransportSeekCommand OnSeekEvent;
 
@@ -230,7 +208,7 @@ public:
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
 	TMap<int, bool> availableSamplesMap;
-	
+
 	FMeasuredGlyph CursorTest;
 
 	TArray<int32> visibleBeats;
@@ -262,7 +240,7 @@ public:
 
 	FVector2D localMousePosition = FVector2D::ZeroVector;
 	FVector2D absMousePosition = FVector2D::ZeroVector;
-	
+
 	TArray<FLinearColor*> colorsArray;
 
 	double verticalHeight = 500;
@@ -281,12 +259,10 @@ public:
 	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
-
 	//tempo and time events
 	TArray<FMidiEvent> TempoEvents;
 	TArray<FMidiEvent> TimeSignatureEvents;
 	TArray<int> FoundChannels;
-
 
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
@@ -302,7 +278,7 @@ public:
 
 	void SetInputMode(EPianoRollEditorMouseMode newMode);
 
-	FSongMaps* MidiSongMap; 
+	FSongMaps* MidiSongMap;
 
 	void AddHorizontalX(float inputX);
 
@@ -333,7 +309,7 @@ protected:
 	TSharedPtr<SConstraintCanvas> RootConstraintCanvas;
 	TArray<SCanvas::FSlot*> widgetSlots;
 
-	//This is where we actually store the notes! It should jsut be a multimap! but for now. 
+	//This is where we actually store the notes! It should jsut be a multimap! but for now.
 	TMap<int32, FZoomablePanelSlotContainer> slotMap;
 	//auto newSlot = RootCanvas->AddSlot();
 
@@ -344,11 +320,8 @@ protected:
 	bool wasLMDownLastFrame = false;
 	bool isCtrlPressed = false;
 	bool isShiftPressed = false;
-	
-	
-	
-	
-	double pixelsPerSecond = 1000 ;
+
+	double pixelsPerSecond = 1000;
 	double rowHeight = 200;
 
 	//
@@ -363,7 +336,6 @@ protected:
 	FSlateBrush gridBrush = FSlateBrush();
 
 	void RecalculateSlotOffsets();
-	
 
 	FReply NoteClickedDelegate(FZoomablePanelSlotContainer notedata);
 	FReply NotePressed(FZoomablePanelSlotContainer notedata);
@@ -373,22 +345,15 @@ protected:
 	// Begin SWidget overrides.
 	//virtual FVector2D ComputeDesiredSize(float) const override;
 
-	
 	virtual void CacheDesiredSize(float InLayoutScaleMultiplier) override;
-
-	
 
 	TOptional<EMouseCursor::Type> GetCursor() const override
 	{
 		if (InputMode == EPianoRollEditorMouseMode::empty) return EMouseCursor::Default;
-		
-			
+
 		return EMouseCursor::None;
-
-
 	}
 	// End SWidget overrides.
-	
 
 public:
 	// SWidget interface
@@ -402,8 +367,6 @@ public:
 	virtual FReply OnKeyUp(const FGeometry& MyGeometry,
 		const FKeyEvent& InKeyEvent) override;
 
-
-
 	virtual bool SupportsKeyboardFocus() const override { return true; }
 
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
@@ -411,11 +374,9 @@ public:
 	void DragNote(const FPointerEvent& MouseEvent);
 	void StopDraggingNote();
 
-	
 	SPianoRollGraph* pointerToSelf;
 	bool isNotePressed = false;
 	int32 selectedNoteMapIndex;
 
 	float dragDeltaAccumulator = 0;
-	
 };

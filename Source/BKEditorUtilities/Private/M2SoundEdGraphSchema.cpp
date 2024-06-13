@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "M2SoundEdGraphSchema.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
+
 #include "AudioParameter.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "SGraphNode.h"
@@ -11,12 +11,11 @@
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
-
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
 {
 	if (A->Direction == B->Direction)
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
-	
+
 	if (A->PinType.PinCategory == "Track" && B->PinType.PinCategory == "Track")
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track Bus"));
@@ -33,7 +32,6 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Midi"));
 	}
 
-
 	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
 }
 
@@ -41,7 +39,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 {
 	UEdGraphSchema::GetGraphContextActions(ContextMenuBuilder);
 
-	if(auto& FromPin = ContextMenuBuilder.FromPin)
+	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
 		if (FromPin->PinType.PinCategory == "Track-Midi")
 		{
@@ -69,7 +67,6 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder)
 	: FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, 0)
 {
-
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode)
@@ -97,7 +94,6 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 	return NewNode;
 }
 
-
 void UM2SoundGraphMidiOutputNode::AllocateDefaultPins()
 {
 	// Create any pin for testing
@@ -114,10 +110,8 @@ void UM2SoundGraphMidiOutputNode::GetMenuEntries(FGraphContextMenuBuilder& Conte
 
 void UM2SoundGraphMidiOutputNode::NodeConnectionListChanged()
 {
-
 	if (!Pins[0]->HasAnyConnections())
 	{
-
 		bHasCompilerMessage = true;
 		ErrorType = EMessageSeverity::Info;
 		ErrorMsg = FString("MIDI output vertex has no inputs");
@@ -130,7 +124,6 @@ void UM2SoundGraphMidiOutputNode::NodeConnectionListChanged()
 	}
 
 	UM2SoundEdGraphNodeConsumer::NodeConnectionListChanged();
-
 }
 
 TSharedPtr<class SGraphNode> FM2SoundGraphPanelNodeFactory::CreateNode(UEdGraphNode* InNode) const
@@ -151,47 +144,40 @@ TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Directi
 
 void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2SoundEdGraphNode& B)
 {
-
 	UEdGraphPin* AOutputPin = nullptr;
 
 	auto IsPinValidCategory = [](UEdGraphPin* Pin)
+		{
+			return Pin->PinType.PinCategory == "Track" || Pin->PinType.PinCategory == "Track-Audio" || Pin->PinType.PinCategory == "Track-Midi";
+		};
+
+	for (UEdGraphPin* Pin : A.Pins)
 	{
-		return Pin->PinType.PinCategory == "Track" || Pin->PinType.PinCategory == "Track-Audio" || Pin->PinType.PinCategory == "Track-Midi";
-	};
-	
-	for(UEdGraphPin* Pin : A.Pins)
-	{
-		
 		if (Pin->Direction == EGPD_Output && IsPinValidCategory(Pin))
 		{
 			AOutputPin = Pin;
 		}
 	}
 
-	if(!AOutputPin) return;
+	if (!AOutputPin) return;
 
-	for(UEdGraphPin* Pin : B.Pins)
+	for (UEdGraphPin* Pin : B.Pins)
 	{
 		if (Pin->Direction == EGPD_Input && IsPinValidCategory(Pin))
 		{
 			bool bSuccess = GetSchema()->TryCreateConnection(AOutputPin, Pin);
-			if(bSuccess)
+			if (bSuccess)
 			{
 				//A.NodeConnectionListChanged();
 				//B.NodeConnectionListChanged();
 			}
 		}
 	}
-
-
-	
 }
 
 template<class T>
 inline UM2SoundEdGraphNode* UM2SoundGraph::CreateNodeForVertexClass(int ColumnPosition, int VerticalPosition, UM2SoundEdGraphNode* InputNode)
 {
-
-	
 	FGraphNodeCreator<T> NodeCreator(*this);
 	T* Node = NodeCreator.CreateNode();
 	//Node->Vertex = NewObject<T>(Node->GetSequencerData(), NAME_None, RF_Transactional);
@@ -208,91 +194,96 @@ inline UM2SoundEdGraphNode* UM2SoundGraph::CreateNodeForVertexClass(int ColumnPo
 }
 
 
+
 //The initialize graph is not really safe to be called other than through the initialization sequence of the m2sound asset
 void UM2SoundGraph::InitializeGraph()
 {
 	Nodes.Empty();
 
-	const int OffsetBetweenNodes = 200;
-	const int OutputsColumnPosition = 1400;
-	const int InputsColumnPosition = 300;
-	const int MidiOutsColumnPosition = 800;
-	const int InstrumentColumns = 950;
-
-	auto AudioOutputPlacement = [&] (int RowIndex)
+	for (const auto& Vertex : GetSequencerData()->GetVertexes())
 	{
-		return RowIndex * OffsetBetweenNodes;
-	};
+		//UM2SoundEdGraphNode* NewNode = nullptr;
+		//FGraphNodeCreator<void>* NodeCreatorPtr = nullptr;
+		////create node in accordance to the vertex class, a little ugly but we have only three cases
 
-	auto MidiOutputPlacement = [&](int RowIndex)
+		//for now check for the node class, we're looking for Patch Vertex, Audio Output Vertex and 'Input Handle Node' vertex
+
+		if (Vertex->IsA<UM2SoundPatch>())
 		{
-			return RowIndex * OffsetBetweenNodes + OffsetBetweenNodes / 2;
-		};
-
-
-	int i = 0;
-
-
-	for(const auto& [index, Track] : GetSequencerData()->TrackInputs)
-	{
-		FGraphNodeCreator<UM2SoundGraphInputNode> NodeCreator(*this);
-		UM2SoundGraphInputNode* Node = NodeCreator.CreateNode();
-
-		Node->Vertex = Track;
-		Node->TrackId = index;
-		Node->AssignedTrackId = index;
-		Node->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Node->TrackId).trackName);
-		//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
-		Node->NodePosX = InputsColumnPosition;
-		Node->NodePosY = i * OffsetBetweenNodes;
-		NodeCreator.Finalize();
-
-		FGraphNodeCreator<UM2SoundPatchContainerNode> InstrumentNodeCreator(*this);
-		UM2SoundPatchContainerNode* InstrumentNode = InstrumentNodeCreator.CreateNode();
-		//InstrumentNode->InterfaceClass = unDAW::Metasounds::FunDAWInstrumentRendererInterface;
-
-		auto& InstrumentVertex = Track->Outputs[0];
-
-		InstrumentNode->Vertex = InstrumentVertex;
-		InstrumentNode->NodePosX = InstrumentColumns;
-		InstrumentNode->NodePosY = i * OffsetBetweenNodes;
-		
-		InstrumentNodeCreator.Finalize();
-
-		TArray<UM2SoundEdGraphNode*> Outputs;
-
-		for(auto& Output : InstrumentVertex->Outputs)
-		{
-			//CreateNodeForVertexClass<Output>(i, OutputsColumnPosition, AudioOutputPlacement(i));
-			if(Output->IsA<UM2SoundAudioOutput>())
-			{
-				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphAudioOutputNode>(OutputsColumnPosition, AudioOutputPlacement(i), InstrumentNode));
-				
-			}
-
-			if(Output->IsA<UM2SoundMidiOutput>())
-			{
-				Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphMidiOutputNode>(MidiOutsColumnPosition, MidiOutputPlacement(i), Node));
-			}
-			Outputs.Last()->Vertex = Output;
+			CreateDefaultNodeForVertex<UM2SoundPatchContainerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
 		}
 
-		AutoConnectTrackPinsForNodes(*Node, *InstrumentNode);
-		
-
-		Node->VertexUpdated();
-		InstrumentNode->VertexUpdated();
-
-		for (auto Output : Outputs)
+		if(Vertex->IsA<UM2SoundAudioOutput>())
 		{
-			AutoConnectTrackPinsForNodes(*InstrumentNode, *Output);
-			Output->VertexUpdated();
+			CreateDefaultNodeForVertex<UM2SoundGraphAudioOutputNode>(Vertex, FPlacementDefaults::OutputsColumnPosition);
 		}
 
-		i++;
+		if(Vertex->IsA<UM2SoundBuilderInputHandleNode>())
+		{
+			CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
+		}
+
+
 	}
 
-	PerformVertexToNodeBinding();
+	//for (const auto& [index, Track] : GetSequencerData()->TrackInputs)
+	//{
+	//	FGraphNodeCreator<UM2SoundGraphInputNode> NodeCreator(*this);
+	//	UM2SoundGraphInputNode* Node = NodeCreator.CreateNode();
+
+	//	Node->Vertex = Track;
+	//	Node->TrackId = index;
+	//	Node->AssignedTrackId = index;
+	//	Node->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Node->TrackId).trackName);
+	//	//Node->GetNodeTitle(ENodeTitleType::FullTitle).SetUseLargeFont(true);
+	//	Node->NodePosX = InputsColumnPosition;
+	//	Node->NodePosY = i * OffsetBetweenNodes;
+	//	NodeCreator.Finalize();
+
+	//	FGraphNodeCreator<UM2SoundPatchContainerNode> InstrumentNodeCreator(*this);
+	//	UM2SoundPatchContainerNode* InstrumentNode = InstrumentNodeCreator.CreateNode();
+	//	//InstrumentNode->InterfaceClass = unDAW::Metasounds::FunDAWInstrumentRendererInterface;
+
+	//	auto& InstrumentVertex = Track->Outputs[0];
+
+	//	InstrumentNode->Vertex = InstrumentVertex;
+	//	InstrumentNode->NodePosX = InstrumentColumns;
+	//	InstrumentNode->NodePosY = i * OffsetBetweenNodes;
+
+	//	InstrumentNodeCreator.Finalize();
+
+	//	TArray<UM2SoundEdGraphNode*> Outputs;
+
+	//	for (auto& Output : InstrumentVertex->Outputs)
+	//	{
+	//		//CreateNodeForVertexClass<Output>(i, OutputsColumnPosition, AudioOutputPlacement(i));
+	//		if (Output->IsA<UM2SoundAudioOutput>())
+	//		{
+	//			Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphAudioOutputNode>(OutputsColumnPosition, AudioOutputPlacement(i), InstrumentNode));
+	//		}
+
+	//		//if(Output->IsA<UM2SoundMidiOutput>())
+	//		//{
+	//		//	Outputs.Add(CreateNodeForVertexClass<UM2SoundGraphMidiOutputNode>(MidiOutsColumnPosition, MidiOutputPlacement(i), Node));
+	//		//}
+	//		Outputs.Last()->Vertex = Output;
+	//	}
+
+	//	AutoConnectTrackPinsForNodes(*Node, *InstrumentNode);
+
+	//	Node->VertexUpdated();
+	//	InstrumentNode->VertexUpdated();
+
+	//	for (auto Output : Outputs)
+	//	{
+	//		AutoConnectTrackPinsForNodes(*InstrumentNode, *Output);
+	//		Output->VertexUpdated();
+	//	}
+
+	//	i++;
+	//}
+
+	//PerformVertexToNodeBinding();
 	NotifyGraphChanged();
 
 	GetSequencerData()->OnVertexAdded.AddUniqueDynamic(this, &UM2SoundGraph::OnVertexAdded);
@@ -303,14 +294,13 @@ void UM2SoundGraph::PerformVertexToNodeBinding()
 	for (const auto NodeAsObject : Nodes)
 	{
 		auto Node = Cast<UM2SoundEdGraphNode>(NodeAsObject);
-		if(!Node) continue;
+		if (!Node) continue;
 
 		UM2SoundVertex* Vertex = Node->Vertex;
 		if (!Vertex) continue;
 
 		Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	}
-
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
@@ -319,13 +309,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 	UM2SoundGraphMidiOutputNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Output");
 
-	Node->Vertex = NewObject<UM2SoundMidiOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+	//Node->Vertex = NewObject<UM2SoundMidiOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
 	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	NodeCreator.Finalize();
 
-
-	
 	return Node;
 }
 
@@ -367,8 +355,6 @@ void UM2SoundPatchContainerNode::AllocateDefaultPins()
 
 	CreatePin(EGPD_Output, "Track-Audio", FName("Track (Audio)", 0));
 	Pins.Last()->DefaultValue = "Default";
-
-
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
@@ -389,11 +375,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 void UM2SoundEdGraphNode::NodeConnectionListChanged()
 {
 	return;
-	
+
 	UEdGraphNode::NodeConnectionListChanged();
 
-	//if no vertex probably recreating graph idk. 
-	if(!Vertex) return;
+	//if no vertex probably recreating graph idk.
+	if (!Vertex) return;
 
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *Vertex->GetName());
 
@@ -418,11 +404,8 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 						Outputs.Add(Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()));
 					}
 				}
-
 			}
 		}
-
-		
 
 		//find if track input is connected
 		if (Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
@@ -436,25 +419,16 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 						FoundTrackInput = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode());
 					}
 				}
-
 			}
 		}
-
-		
-
-
 	}
 
 	//if meaningful connections (only track input is relevant here?) changed, inform the vertex so that the builder can be triggered
-
-
 
 	for (auto Output : Outputs)
 	{
 		CurrentTrackOutputs.AddUnique(Output);
 	}
-
-
 
 	//check if we have a track input
 	//if(FoundTrackInput)
@@ -467,15 +441,14 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 	//	Vertex->BreakTrackInputConnection();
 	//}
 
-
 	GetGraph()->NotifyGraphChanged();
 }
 
 void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 {
 	//just print the pin data for now please
-	if(!Pin) return;
-	if(!Vertex) return;
+	if (!Pin) return;
+	if (!Vertex) return;
 
 	auto PinName = Pin->GetName();
 	auto PinLinkedTo = Pin->LinkedTo.Num();
@@ -483,15 +456,14 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *PinName, *PinDirection, PinLinkedTo);
 
 	//if we're either of the track input pins, we need to check if we have a connection
-	if(Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
+	if (Pin->Direction == EGPD_Input && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
 	{
 		if (PinLinkedTo == 0)
 		{
 			Vertex->BreakTrackInputConnection();
 			AssignedTrackId = INDEX_NONE;
-
 		}
-		if(PinLinkedTo > 0)
+		if (PinLinkedTo > 0)
 		{
 			//if we have a connection, we need to find the node that we're connected to
 			//and then we need to find the vertex that the node is connected to
@@ -512,29 +484,25 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 
 	// it's probably better if we just break inputs, and let the vertex handle the rest
 	// still not sure how this would work when we have an external (in game) editor... but we'll get there.
-
-
 }
-
-
 
 bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FString& OutErrorMsg)
 {
 	//this would be the errors from the interfaces and the such
-	if(Node->Vertex->bHasErrors)
+	if (Node->Vertex->bHasErrors)
 	{
 		OutErrorMsg = Node->Vertex->VertexErrors;
 		return true;
 	}
-	
+
 	//now we traverse the builder results and check for errors
 	//EMetaSoundBuilderResult
 
 	bool bHasErrors = false;
 
-	for(const auto& [ErrName, Result] : Node->Vertex->BuilderResults)
+	for (const auto& [ErrName, Result] : Node->Vertex->BuilderResults)
 	{
-		if(Result == EMetaSoundBuilderResult::Failed)
+		if (Result == EMetaSoundBuilderResult::Failed)
 		{
 			OutErrorMsg += ErrName.ToString() + "- Builder Operation Failed\n";
 			bHasErrors = true;
@@ -544,26 +512,23 @@ bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FStrin
 	return bHasErrors;
 }
 
-
 void UM2SoundEdGraphNode::VertexUpdated()
 {
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schemca: VertexUpdated, %s has %d outputs"), *Vertex->GetName(), Vertex->Outputs.Num());
 
-
 	//assuming each vertex only implements one interface, we can keep most of the logic here
 	Audio::FParameterInterfacePtr interface = nullptr;
 
-	if(IsA<UM2SoundPatchContainerNode>())
+	if (IsA<UM2SoundPatchContainerNode>())
 	{
 		interface = unDAW::Metasounds::FunDAWInstrumentRendererInterface::GetInterface();
-
 	}
 
-	if (IsA<UM2SoundAudioInsert>() || IsA<UM2SoundPatchContainerNode>())
+	if (IsA<UM2SoundPatchContainerNode>())
 	{
 		auto AsPatch = Cast<UM2SoundPatch>(Vertex);
 		//if patch is valid, get its name and give it to this node
-		if(AsPatch->Patch)
+		if (AsPatch->Patch)
 		{
 			Name = FName(AsPatch->Patch->GetName());
 		}
@@ -576,7 +541,7 @@ void UM2SoundEdGraphNode::VertexUpdated()
 	bHasCompilerMessage = CheckForErrorMessagesAndReturnIfAny(this, ErrorMsg);
 
 	//clear autogen pins
-	for(auto& Pin : AutoGeneratedPins)
+	for (auto& Pin : AutoGeneratedPins)
 	{
 		Pin->BreakAllPinLinks();
 		RemovePin(Pin);
@@ -592,62 +557,57 @@ void UM2SoundEdGraphNode::VertexUpdated()
 		return;
 	}
 	//create pins for meta sound ios
-	for(auto& VertexMetasoundOutput : Vertex->MetasoundOutputs)
+	for (auto& VertexMetasoundOutput : Vertex->MetasoundOutputs)
 	{
 		bool bBelongsToInterface = false;
 
-		if(interface)
+		if (interface)
 		{
 			TArray<Audio::FParameterInterface::FOutput> FoundMatchingOutputs =
 				interface->GetOutputs().FilterByPredicate([&VertexMetasoundOutput](const Audio::FParameterInterface::FOutput& Output)
-				{
-					return Output.ParamName == VertexMetasoundOutput.PinName;
-				});
+					{
+						return Output.ParamName == VertexMetasoundOutput.PinName;
+					});
 
-			if(FoundMatchingOutputs.Num() > 0)
+			if (FoundMatchingOutputs.Num() > 0)
 			{
 				bBelongsToInterface = true;
 			}
 		}
-		if(!bBelongsToInterface)
+		if (!bBelongsToInterface)
 		{
 			CreatePin(EGPD_Output, VertexMetasoundOutput.DataType, VertexMetasoundOutput.PinName);
 			//Pins.Last()->DefaultValue = VertexMetasoundOutput.Key;
 			AutoGeneratedPins.Add(Pins.Last());
 		}
-		
-
 	}
 
-	for(auto& VertexMetasoundInput : Vertex->MetasoundInputs)
+	for (auto& VertexMetasoundInput : Vertex->MetasoundInputs)
 	{
 		bool bBelongsToInterface = false;
 
-		if(interface)
+		if (interface)
 		{
 			TArray<Audio::FParameterInterface::FInput> FoundMatchingInputs =
 				interface->GetInputs().FilterByPredicate([&VertexMetasoundInput](const Audio::FParameterInterface::FInput& Input)
-				{
-					return Input.InitValue.ParamName == VertexMetasoundInput.PinName;
-				});
+					{
+						return Input.InitValue.ParamName == VertexMetasoundInput.PinName;
+					});
 
-			if(FoundMatchingInputs.Num() > 0)
+			if (FoundMatchingInputs.Num() > 0)
 			{
 				bBelongsToInterface = true;
 			}
 		}
-		if(!bBelongsToInterface)
+		if (!bBelongsToInterface)
 		{
 			CreatePin(EGPD_Input, VertexMetasoundInput.DataType, VertexMetasoundInput.PinName);
 			//Pins.Last()->DefaultValue = VertexMetasoundInput.Key;
 			AutoGeneratedPins.Add(Pins.Last());
 		}
-
-		
 	}
 
 	GetGraph()->NotifyGraphChanged();
-	
 }
 
 void UM2SoundGraphAudioOutputNode::AllocateDefaultPins()
@@ -667,7 +627,7 @@ TSharedPtr<SGraphNode> UM2SoundGraphAudioOutputNode::CreateVisualWidget()
 //		.WithPinLabels(false)
 //		.WithPinDefaultValues(false);
 //
-//		
+//
 //}
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
@@ -695,9 +655,7 @@ void UM2SoundAudioInsertNode::AllocateDefaultPins()
 
 	CreatePin(EGPD_Output, "Track-Audio", FName("Track (Audio)", 0));
 	Pins.Last()->DefaultValue = "Default";
-
 }
-
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
@@ -706,13 +664,13 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	if (FromPin)
 	{
 		UM2SoundEdGraphNode* AsM2SoundNode = Cast<UM2SoundEdGraphNode>(FromPin->GetOwningNode());
-		if(AsM2SoundNode)
+		if (AsM2SoundNode)
 		{
 			Pins = AsM2SoundNode->CurrentTrackOutputs;
 		}
 	}
 
-	if(Pins.Num() > 0)
+	if (Pins.Num() > 0)
 	{
 		//FromPinConnection = Pins[0];
 	}
@@ -725,7 +683,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	//Node->GetSequencerData()->AddVertex(Node->Vertex);
 	Node->Vertex = NewPatchVertex;
 
-	//assign default passthrough patch for audio insert 
+	//assign default passthrough patch for audio insert
 	//'/unDAW/Patches/System/unDAW_PassThroughInsert.unDAW_PassThroughInsert'
 
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_PassThroughInsert.unDAW_PassThroughInsert'"));
@@ -742,7 +700,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 		auto M2SoundVertex = FoundTrackInput->Vertex;
 	}
 	//auto ParentGraph = Cast<UM2SoundGraph>(ParentGraph);
-	
+
 	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 

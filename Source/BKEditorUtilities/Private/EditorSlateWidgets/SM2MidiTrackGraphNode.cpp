@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
@@ -15,12 +14,11 @@ void SM2MidiTrackGraphNode::Construct(const FArguments& InArgs, UEdGraphNode* In
 	//bEnabledAttributesUpdate = true;
 
 	UpdateGraphNode();
-
 }
 TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 {
-	UM2SoundTrackInput* AsInputVertex = Cast< UM2SoundTrackInput>(InputNode->Vertex);
-	
+	UM2SoundMidiInputVertex* AsInputVertex = Cast< UM2SoundMidiInputVertex>(InputNode->Vertex);
+
 	return SNew(SBorder)
 		.BorderImage(FAppStyle::GetBrush("NoBorder"))
 		.HAlign(HAlign_Fill)
@@ -71,11 +69,7 @@ TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 					SAssignNew(RightNodeBox, SVerticalBox)
 				]
 		];
-
-
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 /** Constructs this widget with InArgs */
-
-

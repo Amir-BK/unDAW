@@ -10,19 +10,13 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "MetasoundDataTypeRegistrationMacro.h"
 
-
 #define LOCTEXT_NAMESPACE "unDAWMetaSoundsModule"
-
-
 
 void unDAWMetaSoundsModule::StartupModule()
 {
-	
-
 	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
 	unDAW::Metasounds::FunDAWCustomInsertInterface::RegisterInterface();
 	unDAW::Metasounds::FunDAWMasterGraphInterface::RegisterInterface();
-	
 }
 
 void unDAWMetaSoundsModule::ShutdownModule()
@@ -31,7 +25,6 @@ void unDAWMetaSoundsModule::ShutdownModule()
 	// we call this function before unloading the module.
 }
 
-
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(unDAWMetaSoundsModule, unDAWMetaSounds)

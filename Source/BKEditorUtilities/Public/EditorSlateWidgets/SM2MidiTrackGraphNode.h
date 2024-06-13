@@ -8,13 +8,13 @@
 #include "SAudioRadialSlider.h"
 
 /**
- * 
+ *
  */
 class BK_EDITORUTILITIES_API SM2MidiTrackGraphNode : public SGraphNode
 {
 public:
 	SLATE_BEGIN_ARGS(SM2MidiTrackGraphNode)
-	{	}
+		{	}
 		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
 	SLATE_END_ARGS()
 
@@ -35,6 +35,4 @@ public:
 	TSharedPtr<SVerticalBox> MainVerticalBox;
 
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
-
-
 };

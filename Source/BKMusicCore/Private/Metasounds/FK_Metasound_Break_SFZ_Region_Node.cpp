@@ -3,7 +3,7 @@
 
 #include "Metasounds/FK_Metasound_Break_SFZ_Region_Node.h"
 #include "MetasoundParamHelper.h"
-#include "UnDAWSFZAsset.h"
+#include "SFZ/UnDAWSFZAsset.h"
 
 #define LOCTEXT_NAMESPACE "SFZMetaSound_BreakRegionNode"
 #define TOKENIZE(x) #x

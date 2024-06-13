@@ -10,11 +10,8 @@
 
 #define LOCTEXT_NAMESPACE "BKMusicCoreModule"
 
-
-
 void BKMusicCoreModule::StartupModule()
 {
-	
 	using namespace Metasound::Engine;
 
 	//GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
@@ -22,11 +19,10 @@ void BKMusicCoreModule::StartupModule()
 	Metasound::RegisterDataTypeWithFrontend<Metasound::F_FK_SFZ_Region_Data, Metasound::ELiteralType::UObjectProxy, UFK_Region_Runtime_Performance_Data>();
 	//Metasound::RegisterDataTypeWithFrontend<Metasound::FFKSFKInstrument, Metasound::ELiteralType::UObjectProxy, UFKSFZSample>();
 	//Metasound::RegisterNodeWithFrontend<Metasound::FKSFZSamplePlayerNode>();
-	
+
 	//FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
 
 	FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces::RegisterInterface();
-	
 }
 
 void BKMusicCoreModule::ShutdownModule()
@@ -35,7 +31,6 @@ void BKMusicCoreModule::ShutdownModule()
 	// we call this function before unloading the module.
 }
 
-
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(BKMusicCoreModule, BKMusicCore)

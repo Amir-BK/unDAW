@@ -35,10 +35,10 @@ TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetDa
 		{
 			auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 			
-			if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == Playing )
+			if (SequenceData->PlayState == Playing )
 			{
 				//unDAW::PreviewPlayback::StopSound();
-				SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
+				SequenceData->SendTransportCommand(EBKTransportCommands::Stop);
 			}
 			else
 			{
@@ -46,14 +46,14 @@ TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetDa
 				auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 				//PreviewHelper->OnDAWPerformerReady
 				
-				if (SequenceData->EditorPreviewPerformer && SequenceData->EditorPreviewPerformer->PlayState == ReadyToPlay)
+				if (SequenceData->PlayState == ReadyToPlay)
 				{
-					SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+					SequenceData->SendTransportCommand(EBKTransportCommands::Play);
 					//SequenceData->MetasoundBuilderHelper->AuditionComponentRef->SetTriggerParameter(FName("unDAW.Transport.Play"));
 					return FReply::Handled();
 				}
 				PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
-				SequenceData->EditorPreviewPerformer->SendTransportCommand(EBKTransportCommands::Play);
+				SequenceData->SendTransportCommand(EBKTransportCommands::Play);
 
 				//SequenceData->MetasoundBuilderHelper->OnDAWPerformerReady.AddLambda([](UDAWSequencerData* Data)
 				//{
