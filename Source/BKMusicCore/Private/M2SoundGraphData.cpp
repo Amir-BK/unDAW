@@ -397,6 +397,21 @@ void UDAWSequencerData::BeginDestroy()
 
 }
 
+bool UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
+	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
+	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
+	AuditionComponent = InAuditionComponent;
+	if (bForceRebuild) FindOrCreateBuilderForAsset(true);
+
+	if (!BuilderContext) FindOrCreateBuilderForAsset(false);
+	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
+
+
+	return true;
+}
+
 //UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* InAuditionComponent)
 //{
 //	auto SequencerPerformer = NewObject<UM2SoundGraphRenderer>(this);
@@ -409,18 +424,6 @@ void UDAWSequencerData::BeginDestroy()
 //	return SequencerPerformer;
 //}
 
-bool UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent)
-{
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
-	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
-	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
-	AuditionComponent = InAuditionComponent;
-	if(!BuilderContext) FindOrCreateBuilderForAsset(false);
-	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
-	
-	
-	return true;
-}
 
 #if WITH_EDITOR
 void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)

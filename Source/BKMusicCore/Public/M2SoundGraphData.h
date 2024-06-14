@@ -479,7 +479,7 @@ public:
 
 
 	UFUNCTION()
-	bool AuditionBuilder(UAudioComponent* InAuditionComponent);
+	bool AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
 
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
