@@ -1087,7 +1087,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	FSlateDrawElement::MakeText(OutDrawElements,
 		LayerId,
 	AllottedGeometry.ToPaintGeometry(),
-	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num notes %d \n tick at local 0 mouse %f \n bar %d beat %d  "),
+	FText::FromString(FString::Printf(TEXT("My Culling Rect Left, Right: %f, %f \n abs to local %s \n local size %s \n mouse %s \n zoom H:%f V:%f \n Position Offset %s \n num notes %d \n tick at local 0 mouse %f \n bar %d beat %d \n Current Quantization Value %s "),
 
 	MyCullingRect.Left, MyCullingRect.Right,
 	*OffsetGeometryChild.AbsoluteToLocal(FVector2d::Zero()).ToString(),
@@ -1097,7 +1097,8 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	*positionOffset.ToString(),
 	CulledNotesArray.Num(),
 	MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom),
-		CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor)),
+		CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor,
+		*UEnum::GetValueAsString(QuantizationGridUnit))),
 	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 12),
 	ESlateDrawEffect::None,
 	FLinearColor::White);

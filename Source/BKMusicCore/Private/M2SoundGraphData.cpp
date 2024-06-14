@@ -140,19 +140,21 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	
 	TArray<TTuple<int, int>> FoundChannels;
 	LinkedNoteDataMap.Empty();
-	if (AuditionComponent)
-	{
-				AuditionComponent->Stop();
-				//AuditionComponent->DestroyComponent();
-	}
+
 	//Outputs.Empty();
 	//TrackInputs.Empty();
 	//Patches.Empty();
 	if (!IsRecreatingMidiFile)
 	{
-	Vertexes.Empty();
-	FString BuilderString = FString::Printf(TEXT("unDAW-%s"), *GetName());
-	BuilderName = FName(BuilderString);
+		if (AuditionComponent)
+		{
+			AuditionComponent->Stop();
+			//AuditionComponent->DestroyComponent();
+		}
+		
+		Vertexes.Empty();
+		FString BuilderString = FString::Printf(TEXT("unDAW-%s"), *GetName());
+		BuilderName = FName(BuilderString);
 	}
 
 	HarmonixMidiFile = inMidiFile;
@@ -248,12 +250,13 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	if (IsRecreatingMidiFile) 
 	{
 		IsRecreatingMidiFile = false;
+		if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
 	}
 	else {
 		InitVertexesFromFoundMidiTracks(FoundChannels);
+		FindOrCreateBuilderForAsset(true);
 	}
 
-	FindOrCreateBuilderForAsset(true);
 
 #if WITH_EDITOR
 	if (M2SoundGraph)
