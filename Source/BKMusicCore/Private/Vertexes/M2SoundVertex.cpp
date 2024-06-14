@@ -21,7 +21,7 @@ void UM2SoundVertex::BreakTrackInputConnection()
 		Output->TrackId = INDEX_NONE;
 	}
 
-	VertexNeedsBuilderUpdates();
+	UpdateConnections();
 }
 
 void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
@@ -45,7 +45,8 @@ void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
 
 	MainInput = InputVertex;
 	TrackId = InputVertex->TrackId;
-	VertexNeedsBuilderUpdates();
+	//VertexNeedsBuilderUpdates();
+	UpdateConnections();
 }
 
 void UM2SoundVertex::BreakTrackOutputConnection(UM2SoundVertex* OutputVertex)
@@ -62,14 +63,18 @@ UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 void UM2SoundVertex::VertexNeedsBuilderUpdates()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
-		OnVertexNeedsBuilderNodeUpdates.Broadcast(this);
-	OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
+	BuildVertex();
+	CollectParamsForAutoConnect();
+	UpdateConnections();
+
+	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
 void UM2SoundVertex::VertexConnectionsChanged()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex connections changed!"))
-		OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
+	UpdateConnections();
+	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
 void UM2SoundVertex::TransmitAudioParameter(FAudioParameter Parameter)
@@ -211,8 +216,24 @@ void UM2SoundAudioOutput::UpdateConnections()
 	BuilderConnectionResults.Empty();
 	if (!MainInput)
 	{
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
+		//need to disconnect our own inputs
+		//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+		auto& BuilderContext = SequencerData->BuilderContext;
+
+		if(!BuilderContext)
+		{
+			UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
 			return;
+		}
+
+		EMetaSoundBuilderResult BuildResult;
+		BuilderContext->DisconnectNodeInput(AudioOutput.AudioLeftOutputInputHandle, BuildResult);
+		BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream L")), BuildResult);
+		BuilderContext->DisconnectNodeInput(AudioOutput.AudioRightOutputInputHandle, BuildResult);
+		BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream R")), BuildResult);
+				
+		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
+		return;
 	}
 
 	//otherwise, well, we have an AssignedOutput, we need to find the audio streams of the upstream vertex, connect them and that's it, show me what you got co-pilot

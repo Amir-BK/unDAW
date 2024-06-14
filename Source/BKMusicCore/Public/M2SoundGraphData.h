@@ -353,6 +353,21 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	//this one is called when the vertex needs to be rebuilt, this is used to update the vertexes in the sequencer data
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderNodeUpdates;
+
+	//used for the less 'violent' updates, ones that don't create underlying nodes in the metasound graph but rather only affect the connections between nodes
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderConnectionUpdates;
+
+	UFUNCTION()
+	void RebuildVertex(UM2SoundVertex* Vertex);
+
+	UFUNCTION()
+	void UpdateVertexConnections(UM2SoundVertex* Vertex);
+
+
 	UFUNCTION()
 	void ReceiveAudioParameter(FAudioParameter Parameter);
 

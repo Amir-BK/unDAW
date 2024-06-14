@@ -373,7 +373,7 @@ void UDEPRECATED_M2SoundGraphRenderer::UpdateVertex(UM2SoundVertex* Vertex)
 
 
 	Vertex->OnVertexUpdated.Broadcast();
-	Vertex->OnVertexNeedsBuilderNodeUpdates.AddDynamic(this, &UDEPRECATED_M2SoundGraphRenderer::UpdateVertex);
+	//Vertex->OnVertexNeedsBuilderNodeUpdates.AddDynamic(this, &UDEPRECATED_M2SoundGraphRenderer::UpdateVertex);
 
 }
 

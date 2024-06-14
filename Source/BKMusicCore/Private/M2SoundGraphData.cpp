@@ -16,6 +16,19 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
+{
+	Vertex->BuildVertex();
+	Vertex->CollectParamsForAutoConnect();
+	Vertex->UpdateConnections();
+}
+
+void UDAWSequencerData::UpdateVertexConnections(UM2SoundVertex* Vertex)
+{
+	Vertex->UpdateConnections();
+
+}
+
 void UDAWSequencerData::ReceiveAudioParameter(FAudioParameter Parameter)
 {
 	if (AuditionComponent) AuditionComponent->SetParameter(MoveTemp(Parameter));
@@ -322,8 +335,8 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		
 	}
 	else {
-		InitVertexesFromFoundMidiTracks(FoundChannels);
 		FindOrCreateBuilderForAsset(true);
+		InitVertexesFromFoundMidiTracks(FoundChannels);
 	}
 
 

@@ -50,13 +50,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;
 
-	//this one is called when the vertex needs to be rebuilt, this is used to update the vertexes in the sequencer data
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
-	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderNodeUpdates;
 
-	//used for the less 'violent' updates, ones that don't create underlying nodes in the metasound graph but rather only affect the connections between nodes
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
-	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderConnectionUpdates;
 
 	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
 	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
