@@ -293,7 +293,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			newNote.CalculateDuration(MidiSongMap);
 			LastDrawnNotePitch = hoveredPitch;
 			LastDrawnNoteStartTick = ValueAtMouseCursorPostSnapping;
-			SessionData->PendingLinkedMidiNotesMap.Add(newNote);
+			SessionData->AddLinkedMidiEvent(newNote);
 			UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
 
 		}

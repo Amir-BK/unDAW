@@ -12,6 +12,7 @@
 #include "Engine/DataAsset.h"
 #include "Curves/CurveFloat.h"
 #include "EdGraph/EdGraph.h"
+#include "MetasoundGeneratorHandle.h"
 
 #include "Metasound.h"
 #include "MetasoundBuilderSubsystem.h"
@@ -347,19 +348,45 @@ private:
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
-class BKMUSICCORE_API UDAWSequencerData : public UObject
+class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
+	UMetasoundGeneratorHandle* GeneratorHandle;
+
+	//tickable object interface, neccesary to monitor the sequencer in editor
+
+	bool bShouldTick = false;
+
+	void Tick(float DeltaTime) override;
+
+	virtual bool IsTickable() const;
+
+	virtual ETickableTickType GetTickableTickType() const override { return ETickableTickType::Conditional; }
+	virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT(FUnDawSessionTickInEditor, STATGROUP_Tickables); }
+	virtual bool IsTickableWhenPaused() const { return true; }
+	virtual bool IsTickableInEditor() const { return true; }
 
 private:
 	UPROPERTY(VisibleAnywhere, Transient)
 	UAudioComponent* AuditionComponent = nullptr;
 
-	UPROPERTY()
-	UMetasoundGeneratorHandle* GeneratorHandle;
 public:
+
+	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
+	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;
+
+	// binding to generator outputs, used to monitor transport and midi outputs
+	UFUNCTION()
+	void ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value);
+
+	UFUNCTION()
+	void ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value);
+
+	UFUNCTION()
+	void OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle);
 
 	void SendTransportCommand(EBKTransportCommands Command);
 
@@ -407,8 +434,10 @@ public:
 
 	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TArray<FLinkedMidiEvents> PendingLinkedMidiNotesMap;
+
+	void AddLinkedMidiEvent(FLinkedMidiEvents PendingNote);
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);

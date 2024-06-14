@@ -16,6 +16,42 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+void UDAWSequencerData::Tick(float DeltaTime)
+{
+	if (!AuditionComponent) return;
+
+	GeneratorHandle->UpdateWatchers();
+
+}
+
+bool UDAWSequencerData::IsTickable() const
+{
+	return bShouldTick;
+}
+
+void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
+{
+}
+
+void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
+{
+	Value.Get(CurrentTimestampData);
+
+}
+
+void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
+{
+	GeneratorHandle = Handle;
+	PlayState = ReadyToPlay;
+
+	OnMidiClockOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiClockOutput(OutputName, Value); });
+	OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiStreamOutput(OutputName, Value); });
+
+	bool CanWatchStream = GeneratorHandle->WatchOutput(FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
+	bool CanWatchClock = GeneratorHandle->WatchOutput(FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
+	bShouldTick = true;
+}
+
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 {
 	if (AuditionComponent != nullptr)
@@ -131,6 +167,33 @@ void UDAWSequencerData::CalculateSequenceDuration()
 	}
 }
 
+void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
+{
+	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	
+	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
+	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
+
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
+
+		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
+	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
+	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
+	auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);
+
+	TargetTrack->AddEvent(NewStartNoteMidiEvent);
+	TargetTrack->AddEvent(NewEndNoteMidiEvent);
+
+	PendingLinkedMidiNotesMap.Add(PendingNote);
+	MidiFileCopy->SortAllTracks();
+
+	HarmonixMidiFile = MidiFileCopy;
+
+	if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
+}
+
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
@@ -140,6 +203,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	
 	TArray<TTuple<int, int>> FoundChannels;
 	LinkedNoteDataMap.Empty();
+	PendingLinkedMidiNotesMap.Empty();
 
 	//Outputs.Empty();
 	//TrackInputs.Empty();
@@ -250,7 +314,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	if (IsRecreatingMidiFile) 
 	{
 		IsRecreatingMidiFile = false;
-		if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
+		
 	}
 	else {
 		InitVertexesFromFoundMidiTracks(FoundChannels);
@@ -348,13 +412,14 @@ void UDAWSequencerData::BeginDestroy()
 bool UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
-	FOnCreateAuditionGeneratorHandleDelegate QuickTest;
+	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
+	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
 	if(!BuilderContext) FindOrCreateBuilderForAsset(false);
-	BuilderContext->Audition(this, InAuditionComponent, QuickTest, true);
-	PlayState = ReadyToPlay;
+	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
 	
-	return false;
+	
+	return true;
 }
 
 #if WITH_EDITOR
