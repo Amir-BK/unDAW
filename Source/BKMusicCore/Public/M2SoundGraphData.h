@@ -353,6 +353,9 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	UFUNCTION()
+	void ReceiveAudioParameter(FAudioParameter Parameter);
+
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
 	UMetasoundGeneratorHandle* GeneratorHandle;
 
@@ -441,6 +444,9 @@ public:
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
+
+	UPROPERTY(Transient)
+	bool bVertexParamUpdatesAreBound = false;
 
 	UFUNCTION()
 	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);

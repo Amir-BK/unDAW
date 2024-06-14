@@ -16,6 +16,11 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+void UDAWSequencerData::ReceiveAudioParameter(FAudioParameter Parameter)
+{
+	if (AuditionComponent) AuditionComponent->SetParameter(MoveTemp(Parameter));
+}
+
 void UDAWSequencerData::Tick(float DeltaTime)
 {
 	if (!AuditionComponent) return;
@@ -335,6 +340,12 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
+
+	if(!bVertexParamUpdatesAreBound)
+	{
+		OnAudioParameterFromVertex.AddDynamic(this, &UDAWSequencerData::ReceiveAudioParameter);
+		bVertexParamUpdatesAreBound = true;
+	}
 
 	EMetaSoundBuilderResult BuildResult;
 
