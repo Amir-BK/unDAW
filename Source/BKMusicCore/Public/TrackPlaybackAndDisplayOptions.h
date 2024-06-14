@@ -81,8 +81,8 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 		trackZOrder = 0.0f;
 		isSelected = false;
 		fusionPatch = nullptr;
-		TrackIndexInParentMidi = -1;
-		ChannelIndexInParentMidi = 0;
+		TrackIndexInParentMidi = INDEX_NONE;
+		ChannelIndexInParentMidi = INDEX_NONE;
 		trackName = FString(TEXT("INVALID TRACK"));
 	}
 

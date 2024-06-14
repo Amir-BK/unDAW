@@ -95,7 +95,14 @@ public:
 	FReply SelectThisTrack()
 	{
 		//parentMidiEditor->SelectTrack(slotInParentID);
-
+		if (SequencerData->SelectedTrackIndex != slotInParentID)
+		{
+		SequencerData->SelectedTrackIndex = slotInParentID;
+		}
+		else
+		{
+			SequencerData->SelectedTrackIndex = -1;
+		}
 		return FReply::Handled();
 	}
 

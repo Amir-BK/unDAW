@@ -389,6 +389,8 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FName BuilderName;
 
+	UPROPERTY()
+	int SelectedTrackIndex = INDEX_NONE;
 
 	UPROPERTY()
 	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
@@ -404,6 +406,9 @@ public:
 	void CalculateSequenceDuration();
 
 	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FLinkedMidiEvents> PendingLinkedMidiNotesMap;
 
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
@@ -487,4 +492,9 @@ public:
 	//This delegate is listened to by the performer and is fired by the vertexes
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnAudioParameterFromVertex OnAudioParameterFromVertex;
+
+	bool IsRecreatingMidiFile = false;
+
+	UFUNCTION(CallInEditor)
+	void PushPendingNotesToNewMidiFile();
 };

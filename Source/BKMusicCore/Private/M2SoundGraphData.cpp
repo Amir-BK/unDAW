@@ -6,6 +6,7 @@
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "Vertexes/M2SoundVertex.h"
+#include <EditableMidiFile.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -133,6 +134,10 @@ void UDAWSequencerData::CalculateSequenceDuration()
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
+	
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
+		
+	
 	TArray<TTuple<int, int>> FoundChannels;
 	LinkedNoteDataMap.Empty();
 	if (AuditionComponent)
@@ -235,6 +240,14 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	}
 
 	CalculateSequenceDuration();
+
+	//if we're recreating the midi file we don't need to do anything else
+	if (IsRecreatingMidiFile) 
+	{
+		IsRecreatingMidiFile = false;
+		return;
+	}
+
 	InitVertexesFromFoundMidiTracks(FoundChannels);
 
 	FindOrCreateBuilderForAsset(true);
@@ -365,7 +378,44 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
+
 #endif
+
+void UDAWSequencerData::PushPendingNotesToNewMidiFile()
+{
+	IsRecreatingMidiFile = true;
+
+	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+
+
+	for(auto PendingNote : PendingLinkedMidiNotesMap)
+	{
+		//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
+		auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
+
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
+
+		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+		auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
+		auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
+		auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
+		auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);
+
+		TargetTrack->AddEvent(NewStartNoteMidiEvent);
+		TargetTrack->AddEvent(NewEndNoteMidiEvent);
+
+	}
+
+	MidiFileCopy->SortAllTracks();
+
+	PendingLinkedMidiNotesMap.Empty();
+	PopulateFromMidiFile(MidiFileCopy);
+	//HarmonixMidiFile = MidiFileCopy;
+	//MidiFileCopy->operator new
+		//HarmonixMidiFile
+}
+
 
 FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext)
 {

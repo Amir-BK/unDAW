@@ -191,13 +191,12 @@ void UM2SoundGraph::AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2Soun
 void UM2SoundGraph::InitializeGraph()
 {
 	Nodes.Empty();
+	VertexToNodeMap.Empty();
 
 	for (const auto& Vertex : GetSequencerData()->GetVertexes())
 	{
-		//UM2SoundEdGraphNode* NewNode = nullptr;
-		//FGraphNodeCreator<void>* NodeCreatorPtr = nullptr;
-		////create node in accordance to the vertex class, a little ugly but we have only three cases
 
+		//create node in accordance to the vertex class, a little ugly but we have only three cases
 		//for now check for the node class, we're looking for Patch Vertex, Audio Output Vertex and 'Input Handle Node' vertex
 
 		if (Vertex->IsA<UM2SoundPatch>())

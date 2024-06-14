@@ -204,7 +204,6 @@ public:
 	FVector2f positionOffset;
 	float LastTickTimelinePosition;
 	int32 hoveredPitch;
-	int32 hoveredNotePitch = -1;
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
 	TMap<int, bool> availableSamplesMap;
@@ -264,9 +263,13 @@ public:
 	TArray<FMidiEvent> TimeSignatureEvents;
 	TArray<int> FoundChannels;
 
-	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
+	TMap<int, FLinkedNotesTrack>* LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
 	FLinkedMidiEvents* SelectedNote = nullptr;
+
+	bool bShouldDrawNote = true;
+	int LastDrawnNotePitch = INDEX_NONE;
+	int32 LastDrawnNoteStartTick = INDEX_NONE;
 
 	void InitFromMidiFile(UMidiFile* inMidiFile);
 	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
@@ -320,6 +323,8 @@ protected:
 	bool wasLMDownLastFrame = false;
 	bool isCtrlPressed = false;
 	bool isShiftPressed = false;
+	int32 tickAtMouse = 0;
+
 
 	double pixelsPerSecond = 1000;
 	double rowHeight = 200;
