@@ -685,6 +685,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	auto NewPatchVertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
 	//Node->GetSequencerData()->AddVertex(Node->Vertex);
 	Node->Vertex = NewPatchVertex;
+	Node->Vertex->SequencerData = Node->GetSequencerData();
 
 	//assign default passthrough patch for audio insert
 	//'/unDAW/Patches/System/unDAW_PassThroughInsert.unDAW_PassThroughInsert'
@@ -704,7 +705,9 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	}
 	//auto ParentGraph = Cast<UM2SoundGraph>(ParentGraph);
 
-	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	//Node->GetSequencerData()->AddVertex(NewPatchVertex);
+
+	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
 	NodeCreator.Finalize();

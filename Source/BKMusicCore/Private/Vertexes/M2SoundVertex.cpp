@@ -165,6 +165,20 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			continue;
 		}
 
+		//insert audio outputs unDAW Insert.Audio L 
+
+		if (NodeName == FName(TEXT("unDAW Insert.Audio L")))
+		{
+			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
+			continue;
+		}
+
+		if (NodeName == FName(TEXT("unDAW Insert.Audio R")))
+		{
+			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
+			continue;
+		}
+
 	}
 
 
