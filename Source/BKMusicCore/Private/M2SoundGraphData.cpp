@@ -148,12 +148,16 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	//Outputs.Empty();
 	//TrackInputs.Empty();
 	//Patches.Empty();
+	if (!IsRecreatingMidiFile)
+	{
 	Vertexes.Empty();
+	FString BuilderString = FString::Printf(TEXT("unDAW-%s"), *GetName());
+	BuilderName = FName(BuilderString);
+	}
+
 	HarmonixMidiFile = inMidiFile;
 
-	FString BuilderString = FString::Printf(TEXT("unDAW-%s"), *GetName());
 
-	BuilderName = FName(BuilderString);
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
 	int numTracks = 0;
@@ -240,22 +244,16 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	}
 
 	CalculateSequenceDuration();
-
 	//if we're recreating the midi file we don't need to do anything else
 	if (IsRecreatingMidiFile) 
 	{
 		IsRecreatingMidiFile = false;
-		return;
+	}
+	else {
+		InitVertexesFromFoundMidiTracks(FoundChannels);
 	}
 
-	InitVertexesFromFoundMidiTracks(FoundChannels);
-
 	FindOrCreateBuilderForAsset(true);
-
-	//FoundChannels.Sort();
-
-	//we must create a builder to traverse the graphs and create the nodes
-	//CreatePerformer(nullptr);
 
 #if WITH_EDITOR
 	if (M2SoundGraph)
