@@ -261,6 +261,18 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 }
 
+#if WITH_EDITOR
+
+void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	//VertexNeedsBuilderUpdates();
+	//let's just do a quick test, print param name
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("PostEditChangeProperty %s"), *GetName())
+}
+
+#endif
+
 #undef TOFLAG
 
 

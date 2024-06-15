@@ -58,10 +58,10 @@ struct FM2SoundPinData
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FName DataType;
 
-	UPROPERTY(VisibleAnywhere, meta = (Bitmask, BitmaskEnum = EM2SoundPinFlags))
+	UPROPERTY(VisibleAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/BKMusicCore.EM2SoundPinFlags"))
 	uint8 PinFlags;
 
-	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = EM2SoundPinDisplayFlags))
+	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/BKMusicCore.EM2SoundPinDisplayFlags"))
 	uint8 DisplayFlags;
 
 };
@@ -175,6 +175,10 @@ public:
 	virtual void BuildVertex() {};
 
 	virtual void UpdateConnections() {};
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	#endif
 
 };
 

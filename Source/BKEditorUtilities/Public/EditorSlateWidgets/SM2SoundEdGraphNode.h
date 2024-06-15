@@ -166,6 +166,7 @@ private:
 					[
 
 						SNew(SAudioRadialSlider)
+							.SliderValue(1.0f)
 							.ToolTipText(FText::FromString(Name.ToString()))
 							.AccessibleText(FText::FromString(Name.ToString()))
 
