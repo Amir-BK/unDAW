@@ -97,7 +97,6 @@ public:
 
 	virtual bool TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const override
 	{
-		UE_LOG(LogTemp, Warning, TEXT("TryCreateConnection"));
 		bool success = UEdGraphSchema::TryCreateConnection(A, B);
 		if (success)
 		{
@@ -136,11 +135,15 @@ public:
 	};
 };
 
+DECLARE_DELEGATE(FOnNodeUpdated);
+
 UCLASS()
 class BK_EDITORUTILITIES_API UM2SoundEdGraphNode : public UEdGraphNode
 {
 	GENERATED_BODY()
 public:
+
+	FOnNodeUpdated OnNodeUpdated;
 
 	void NodeConnectionListChanged() override;
 
@@ -333,7 +336,7 @@ class BK_EDITORUTILITIES_API UM2SoundPatchContainerNode : public UM2SoundEdGraph
 
 public:
 
-	UM2SoundPatchContainerNode() { bShowAdvanced = true; }
+	UM2SoundPatchContainerNode() { bShowAdvanced = false; } //for now show advanced is false cause we don't do much with the pins
 
 	// Returns true if it is possible to jump to the definition of this node (e.g., if it's a variable get or a function call)
 	virtual bool CanJumpToDefinition() const override { return true; }

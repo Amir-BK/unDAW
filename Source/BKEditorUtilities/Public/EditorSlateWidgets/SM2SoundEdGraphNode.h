@@ -7,6 +7,8 @@
 #include "M2SoundGraphData.h"
 #include "SGraphNode.h"
 #include "M2SoundGraphStatics.h"
+#include "SAudioRadialSlider.h"
+#include "Widgets/Layout/SWrapBox.h"
 #include "M2SoundEdGraphSchema.h"
 
 /**
@@ -67,7 +69,7 @@ public:
 		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
 		RegenPatchOptions();
-
+		AsM2SoundPatchContainerNode->OnNodeUpdated.BindRaw(this, &SM2SoundPatchContainerGraphNode::UpdateAudioKnobs);
 		UpdateGraphNode();
 	}
 
@@ -82,6 +84,16 @@ private:
 
 	TSharedRef<SWidget> CreateNodeContentArea() override
 	{
+		
+		SAssignNew(MainAudioKnobsBox, SWrapBox)
+			.FlowDirectionPreference(EFlowDirectionPreference::LeftToRight)
+			.Orientation(EOrientation::Orient_Horizontal)
+			.UseAllottedSize(true)
+			.PreferredSize(200);
+
+
+		UpdateAudioKnobs();
+		
 		// NODE CONTENT AREA
 		return SNew(SBorder)
 			.BorderImage(FAppStyle::GetBrush("NoBorder"))
@@ -121,6 +133,11 @@ private:
 											.Text(this, &SM2SoundPatchContainerGraphNode::GetSelectedPatchName)
 									]
 							]
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								MainAudioKnobsBox.ToSharedRef()
+							]
 					]
 
 					+ SHorizontalBox::Slot()
@@ -131,10 +148,39 @@ private:
 						SAssignNew(RightNodeBox, SVerticalBox)
 					]
 			];
+
+		
+	}
+
+	void UpdateAudioKnobs()
+	{
+		if (!MainAudioKnobsBox.IsValid()) return;
+		MainAudioKnobsBox->ClearChildren();
+		if (PatchVertex)
+		{
+			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
+			{
+				if(Pin.DataType != "float") 	continue;
+				MainAudioKnobsBox->AddSlot()
+					
+					[
+
+						SNew(SAudioRadialSlider)
+							.ToolTipText(FText::FromString(Name.ToString()))
+							.AccessibleText(FText::FromString(Name.ToString()))
+
+					];
+
+
+			}
+		}
+
 	}
 
 protected:
 	TSharedPtr<SVerticalBox> MainVerticalBox;
+	TSharedPtr<SWrapBox> MainAudioKnobsBox;
+
 
 	TArray<TSharedPtr<FString>> PatchOptions;
 	TSharedPtr<FString> SelectedPatch;
