@@ -51,6 +51,12 @@ struct FM2SoundPinData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
+	float MinValue = 0.0f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxValue = 1.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FName PinName;
 
@@ -66,6 +72,8 @@ struct FM2SoundPinData
 
 	UPROPERTY()
 	FMetasoundFrontendLiteral LiteralValue;
+
+	FMetaSoundBuilderNodeInputHandle InputHandle;
 
 };
 
@@ -93,6 +101,8 @@ public:
 	void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
 
 	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
+
+	void UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue);
 
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;

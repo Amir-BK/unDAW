@@ -58,6 +58,16 @@ void UM2SoundVertex::BreakTrackOutputConnection(UM2SoundVertex* OutputVertex)
 	UnregisterOutputVertex(OutputVertex);
 }
 
+void UM2SoundVertex::UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue)
+{
+	//in theory we should should check whether this pin has a param connected... but we're just going to set the value for now
+	
+	EMetaSoundBuilderResult BuildResult;
+	GetSequencerData()->BuilderContext->SetNodeInputDefault(Pin.InputHandle, NewValue, BuildResult);
+
+	if(BuildResult == EMetaSoundBuilderResult::Failed)	BuilderConnectionResults.Add(Pin.PinName, BuildResult);
+}
+
 void UM2SoundVertex::RegisterOutputVertex(UM2SoundVertex* OutputVertex)
 {
 	Outputs.Add(OutputVertex);
@@ -150,7 +160,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		
 		FName& NodeName = PinData.PinName;
 		FName& DataType = PinData.DataType;
-
+		PinData.InputHandle = Input;
 
 		bool IsAutoManaged = false;
 		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
@@ -283,6 +293,16 @@ void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChang
 	auto PropertyName = Property->GetFName();
 
 	if (PropertyName == FName(TEXT("DisplayFlags")))
+	{
+		OnVertexUpdated.Broadcast();
+	}
+
+	if (PropertyName == FName(TEXT("MinValue")))
+	{
+		OnVertexUpdated.Broadcast();
+	}	
+	
+	if (PropertyName == FName(TEXT("MaxValue")))
 	{
 		OnVertexUpdated.Broadcast();
 	}
@@ -446,7 +466,7 @@ void UM2SoundPatch::BuildVertex()
 	if (BuilderContext && NodeHandle.IsSet())
 	{
 		BuilderContext->RemoveNode(NodeHandle, BuildResult);
-		BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
+		//BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
 		bIsRebuildingExistingNode = true;
 	}
 

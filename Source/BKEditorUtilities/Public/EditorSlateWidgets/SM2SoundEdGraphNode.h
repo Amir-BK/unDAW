@@ -152,16 +152,35 @@ private:
 		
 	}
 
+	void OnValueChanges(float& NewValue, FM2SoundPinData& Pin)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), NewValue);
+		FMetasoundFrontendLiteral NewLiteral;
+		NewLiteral.Set(NewValue);
+		Pin.LiteralValue = NewLiteral;
+		PatchVertex->UpdateValueForPin(Pin, Pin.LiteralValue);
+
+	}
+
 	void UpdateAudioKnobs()
 	{
+		auto GraphVariables = PatchVertex->Patch->GetDocumentChecked().RootGraph.Graph.Variables;
+
+		
+		
 		if (!MainAudioKnobsBox.IsValid()) return;
 		MainAudioKnobsBox->ClearChildren();
 		if (PatchVertex)
 		{
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
 			{
+				float Value = 0.0f;
+				
+				Pin.LiteralValue.TryGet(Value);
 				if (Pin.DisplayFlags & static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph) && Pin.DataType == "float")
 				{
+					TSharedPtr<SAudioRadialSlider> NewSlider;
+					
 					MainAudioKnobsBox->AddSlot()
 						.Padding(10)
 						[
@@ -178,14 +197,19 @@ private:
 								+ SVerticalBox::Slot()
 								.AutoHeight()
 								[
-									SNew(SAudioRadialSlider)
-										.SliderValue(1.0f)
+									SAssignNew(NewSlider, SAudioRadialSlider)
+										.SliderValue(Value)
 										.ToolTipText(FText::FromString(Name.ToString()))
 										.AccessibleText(FText::FromString(Name.ToString()))
+										.OnValueChanged_Lambda([this, &Pin](float NewValue) { OnValueChanges(NewValue, Pin); })
+
+
 
 								]
 
 						];
+
+					NewSlider->SetOutputRange(FVector2D(Pin.MinValue, Pin.MaxValue));
 				};
 
 			}
