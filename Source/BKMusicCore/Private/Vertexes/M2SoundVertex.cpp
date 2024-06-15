@@ -184,7 +184,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		if(IsAutoManaged)
 		{
 			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
-			EnumAddFlags(PinData.PinTypeFlags, EM2SoundPinFlags::IsAutoManaged & EM2SoundPinFlags::IsConnectedToGraphParam);
+			//EnumAddFlags(PinData.PinTypeFlags, EM2SoundPinFlags::IsAutoManaged & EM2SoundPinFlags::IsConnectedToGraphParam);
 			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
 			//PinData.PinFlags << EM2SoundPinFlags::IsAutoManaged;
 		}
@@ -250,7 +250,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 		if (IsAutoManaged)
 		{
-			PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
+			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
 			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
 		}
 

@@ -154,6 +154,9 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
+	UPROPERTY()
+	bool bShowAdvanced = false;
+
 	UFUNCTION()
 	virtual void VertexUpdated();
 
@@ -329,6 +332,8 @@ class BK_EDITORUTILITIES_API UM2SoundPatchContainerNode : public UM2SoundEdGraph
 	GENERATED_BODY()
 
 public:
+
+	UM2SoundPatchContainerNode() { bShowAdvanced = true; }
 
 	// Returns true if it is possible to jump to the definition of this node (e.g., if it's a variable get or a function call)
 	virtual bool CanJumpToDefinition() const override { return true; }
