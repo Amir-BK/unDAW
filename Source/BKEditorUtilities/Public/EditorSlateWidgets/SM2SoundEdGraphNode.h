@@ -89,7 +89,7 @@ private:
 			.FlowDirectionPreference(EFlowDirectionPreference::LeftToRight)
 			.Orientation(EOrientation::Orient_Horizontal)
 			.UseAllottedSize(true)
-			.PreferredSize(200);
+			.PreferredSize(300);
 
 
 		UpdateAudioKnobs();
@@ -163,14 +163,16 @@ private:
 				if (Pin.DisplayFlags & static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph) && Pin.DataType == "float")
 				{
 					MainAudioKnobsBox->AddSlot()
-
+						.Padding(10)
 						[
 							SNew(SVerticalBox)
 								+ SVerticalBox::Slot()
+								.Padding(5)
 								.AutoHeight()
 								[
 									SNew(STextBlock)
 										.Text(FText::FromString(Name.ToString()))
+										.Justification(ETextJustify::Center)
 										
 								]
 								+ SVerticalBox::Slot()
