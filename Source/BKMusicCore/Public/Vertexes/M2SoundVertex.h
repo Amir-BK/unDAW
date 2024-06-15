@@ -27,6 +27,50 @@ enum class EVertexAutoConnectionPinCategory :  uint8
 	AudioStreamR,
 };
 
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class EM2SoundPinFlags : uint8
+{
+	None = 0 UMETA(Hidden),
+	IsAutoManaged = 1 << 0,
+	IsConnectedToGraphParam = 1 << 1,
+	//ShowInBoth = ShowInGraph | ShowInDetails,
+};
+ENUM_CLASS_FLAGS(EM2SoundPinFlags)
+
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class EM2SoundPinDisplayFlags : uint8
+{
+	None = 0 UMETA(Hidden),
+	ShowInGraph = 1 << 0,
+	ShowInGame = 1 << 1,
+};
+ENUM_CLASS_FLAGS(EM2SoundPinDisplayFlags)
+
+USTRUCT(BlueprintType)
+struct FM2SoundPinData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FName PinName;
+
+	//the underlying metasound datatype
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FName DataType;
+
+	UPROPERTY(VisibleAnywhere, meta = (Bitmask, BitmaskEnum = EM2SoundPinFlags))
+	uint8 PinFlags;
+
+	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = EM2SoundPinDisplayFlags))
+	uint8 DisplayFlags;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	EM2SoundPinFlags PinTypeFlags;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EM2SoundPinDisplayFlags DisplayTypeFlags;
+
+};
 
 UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
 class BKMUSICCORE_API UM2SoundVertex : public UObject
@@ -34,6 +78,13 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "M2Sound", meta=(EditFixedSize))
+	TMap<FName, FM2SoundPinData> InPinsNew;
+
+	UPROPERTY(EditAnywhere, Category = "M2Sound", meta = (EditFixedSize))
+	TMap<FName, FM2SoundPinData> OutPinsNew;
+	
 
 	//for book keeping and tracking the color of the track in the sequencer, can also be used to assosciate groups of vertexes for the MIXER (that is to come)
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")

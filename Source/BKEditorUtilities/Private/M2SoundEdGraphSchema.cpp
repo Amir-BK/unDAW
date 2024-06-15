@@ -88,7 +88,10 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 
 	//NewNode->bHasCompilerMessage = true;
 	//NewNode->GetDeprecationResponse()->Message = FText::FromString("This node is deprecated and will be removed in a future version of the plugin.");
-
+	//cast to m2sound node and bind the vertex to the node
+	UM2SoundEdGraphNode* Node = Cast<UM2SoundEdGraphNode>(NewNode);
+	
+	Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	NewNode->GetGraph()->NotifyGraphChanged();
 
 	return NewNode;
@@ -285,7 +288,7 @@ void UM2SoundGraph::InitializeGraph()
 
 	//PerformVertexToNodeBinding();
 	NotifyGraphChanged();
-
+	PerformVertexToNodeBinding();
 	GetSequencerData()->OnVertexAdded.AddUniqueDynamic(this, &UM2SoundGraph::OnVertexAdded);
 }
 
@@ -375,12 +378,12 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 void UM2SoundEdGraphNode::NodeConnectionListChanged()
 {
 	//return;
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *GetName());
 	UEdGraphNode::NodeConnectionListChanged();
 
 	//if no vertex probably recreating graph idk.
 	if (!Vertex) return;
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *Vertex->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *Vertex->GetName());
 
 	return;
 
@@ -448,7 +451,7 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 
 void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 {
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s"), *Pin->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s"), *Pin->GetName());
 	//just print the pin data for now please
 	if (!Pin) return;
 	if (!Vertex) return;
