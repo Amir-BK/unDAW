@@ -148,6 +148,10 @@ protected:
 
 	void OnPatchSelected(TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
 	{
+		if(InItem == nullptr)
+		{
+			return;
+		}
 		SelectedPatch = InItem;
 		//find the patch asset, assign it to the vertex and call update
 		UMetaSoundPatch* Patch = UM2SoundGraphStatics::GetPatchByName(*SelectedPatch);

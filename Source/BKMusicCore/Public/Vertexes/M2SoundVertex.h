@@ -85,9 +85,6 @@ public:
 	UPROPERTY()
 	TObjectPtr<UDAWSequencerData> SequencerData;
 
-	bool bBuiltSuccessfully = false;
-	bool bIsInput = false;
-	bool bIsOutput = false;
 
 	UPROPERTY()
 	FString VertexErrors;

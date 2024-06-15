@@ -87,6 +87,11 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	CollectParamsForAutoConnect();
 	UpdateConnections();
 
+	//need to inform downstream vertexes to reconnect to our output
+	for (auto Output : Outputs)
+	{
+		Output->UpdateConnections();
+	}
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -356,6 +361,15 @@ void UM2SoundPatch::BuildVertex()
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
 
+	//if context is valid, check if NodeHandle is set, if it is, remove it
+	bool bIsRebuildingExistingNode = false;
+	if (BuilderContext && NodeHandle.IsSet())
+	{
+		BuilderContext->RemoveNode(NodeHandle, BuildResult);
+		BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
+		bIsRebuildingExistingNode = true;
+	}
+
 
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
@@ -363,6 +377,7 @@ void UM2SoundPatch::BuildVertex()
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
 	InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
+
 }
 
 void UM2SoundPatch::UpdateConnections()
@@ -370,10 +385,29 @@ void UM2SoundPatch::UpdateConnections()
 	BuilderConnectionResults.Empty();
 
 
+	BuilderConnectionResults.Empty();
 	if (!MainInput)
 	{
-		UE_LOG(unDAWVertexLogs, Log, TEXT("Main Input is null!"))
-			return;
+		//need to disconnect our own inputs
+		//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+		auto& BuilderContext = SequencerData->BuilderContext;
+
+		if (!BuilderContext)
+		{
+		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
+		return;
+		}
+
+		EMetaSoundBuilderResult BuildResult;
+		for (auto& [key, value] : AutoConnectInPins)
+		{
+			BuilderContext->DisconnectNodeInput(value, BuildResult);
+			FString KeyString = FString::Printf(TEXT("Disconnect %s"), *UEnum::GetValueAsString(key));
+			BuilderConnectionResults.Add(FName(KeyString), BuildResult);
+		}
+
+		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
+		return;
 	}
 
 	//dilligently we ought to check for our interfaces, but, lazy, we'll actually use the builder context to find the inputs and outputs
