@@ -64,6 +64,9 @@ struct FM2SoundPinData
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/BKMusicCore.EM2SoundPinDisplayFlags"))
 	uint8 DisplayFlags;
 
+	UPROPERTY()
+	FMetasoundFrontendLiteral LiteralValue;
+
 };
 
 UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
@@ -140,16 +143,16 @@ public:
 	UPROPERTY()
 	int32 ErrorType = EMessageSeverity::Info;
 
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	UPROPERTY()
 	TArray<FM2SoundMetasoundBuilderPinData> MetasoundInputs;
 
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	UPROPERTY()
 	TArray<FM2SoundMetasoundBuilderPinData> MetasoundOutputs;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	virtual void VertexNeedsBuilderUpdates();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	virtual void VertexConnectionsChanged();
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")

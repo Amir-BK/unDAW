@@ -388,7 +388,7 @@ public:
 	virtual bool IsTickableInEditor() const { return true; }
 
 private:
-	UPROPERTY(VisibleAnywhere, Transient)
+	UPROPERTY(Transient)
 	UAudioComponent* AuditionComponent = nullptr;
 
 public:

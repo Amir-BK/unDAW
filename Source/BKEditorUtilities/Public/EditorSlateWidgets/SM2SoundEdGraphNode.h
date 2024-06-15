@@ -160,18 +160,31 @@ private:
 		{
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
 			{
-				if(Pin.DataType != "float") 	continue;
-				MainAudioKnobsBox->AddSlot()
-					
-					[
+				if (Pin.DisplayFlags & static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph) && Pin.DataType == "float")
+				{
+					MainAudioKnobsBox->AddSlot()
 
-						SNew(SAudioRadialSlider)
-							.SliderValue(1.0f)
-							.ToolTipText(FText::FromString(Name.ToString()))
-							.AccessibleText(FText::FromString(Name.ToString()))
+						[
+							SNew(SVerticalBox)
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(STextBlock)
+										.Text(FText::FromString(Name.ToString()))
+										
+								]
+								+ SVerticalBox::Slot()
+								.AutoHeight()
+								[
+									SNew(SAudioRadialSlider)
+										.SliderValue(1.0f)
+										.ToolTipText(FText::FromString(Name.ToString()))
+										.AccessibleText(FText::FromString(Name.ToString()))
 
-					];
+								]
 
+						];
+				};
 
 			}
 		}

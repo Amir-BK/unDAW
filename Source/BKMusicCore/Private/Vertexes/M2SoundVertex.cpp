@@ -150,9 +150,19 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		
 		FName& NodeName = PinData.PinName;
 		FName& DataType = PinData.DataType;
+
+
 		bool IsAutoManaged = false;
 		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
-		
+		PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
+
+		if (DataType == FName(TEXT("Float")))
+		{
+			UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *NodeName.ToString())
+				PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
+		}
+
+
 		if(NodeName == FName(TEXT("unDAW Instrument.MidiStream")))
 		{
 			IsAutoManaged = true;
@@ -268,8 +278,18 @@ void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChang
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	//VertexNeedsBuilderUpdates();
 	//let's just do a quick test, print param name
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("PostEditChangeProperty %s"), *GetName())
+	//UE_LOG(unDAWVertexLogs, Verbose, TEXT("PostEditChangeProperty %s"), *GetName())
+	auto Property = PropertyChangedEvent.Property;
+	auto PropertyName = Property->GetFName();
+
+	if (PropertyName == FName(TEXT("DisplayFlags")))
+	{
+		OnVertexUpdated.Broadcast();
+	}
+	//auto PropertyValue = (uint8*) Property->CallGetter(this);
+
 }
+
 
 #endif
 

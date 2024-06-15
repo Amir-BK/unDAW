@@ -69,6 +69,8 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 	bool CanWatchStream = GeneratorHandle->WatchOutput(FName("unDAW.Midi Stream"), OnMidiStreamOutputReceived);
 	bool CanWatchClock = GeneratorHandle->WatchOutput(FName("unDAW.Midi Clock"), OnMidiClockOutputReceived);
 	bShouldTick = true;
+
+	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
 }
 
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
