@@ -21,6 +21,7 @@ void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
 	Vertex->BuildVertex();
 	Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
+	Vertex->OnVertexUpdated.Broadcast();
 }
 
 void UDAWSequencerData::UpdateVertexConnections(UM2SoundVertex* Vertex)

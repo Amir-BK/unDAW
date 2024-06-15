@@ -92,6 +92,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	{
 		Output->UpdateConnections();
 	}
+	OnVertexUpdated.Broadcast();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -256,7 +257,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		OutPinsNew.Add(NodeName, PinData);
 
 	}
-
+	OnVertexUpdated.Broadcast();
 
 }
 
@@ -425,7 +426,7 @@ void UM2SoundPatch::BuildVertex()
 	InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
 
-	OnVertexUpdated.Broadcast();
+	
 
 }
 
