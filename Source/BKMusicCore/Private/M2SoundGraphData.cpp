@@ -354,12 +354,6 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 
-	if(!bVertexParamUpdatesAreBound)
-	{
-		OnAudioParameterFromVertex.AddDynamic(this, &UDAWSequencerData::ReceiveAudioParameter);
-		bVertexParamUpdatesAreBound = true;
-	}
-
 	EMetaSoundBuilderResult BuildResult;
 
 	auto SavedBuilder = MSBuilderSystem->FindBuilder(BuilderName);
@@ -402,6 +396,8 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	for (auto& Vertex : Vertexes)
 	{
 		Vertex->UpdateConnections();
+		//to init the graph to the last mix state
+		Vertex->CollectAndTransmitAudioParameters();
 	}
 	//CoreNodes.CreateMidiPlayerAndMainClock(BuilderContext);
 

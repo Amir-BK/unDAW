@@ -22,6 +22,7 @@ void UM2SoundVertex::BreakTrackInputConnection()
 	}
 
 	UpdateConnections();
+
 }
 
 void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
@@ -47,12 +48,31 @@ void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
 	TrackId = InputVertex->TrackId;
 	//VertexNeedsBuilderUpdates();
 	UpdateConnections();
+	MainInput->RegisterOutputVertex(this);
 }
 
 void UM2SoundVertex::BreakTrackOutputConnection(UM2SoundVertex* OutputVertex)
 {
 	//for debugging, print vertex name and track id
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("BreakTrackOutputConnection"))
+	UnregisterOutputVertex(OutputVertex);
+}
+
+void UM2SoundVertex::RegisterOutputVertex(UM2SoundVertex* OutputVertex)
+{
+	Outputs.Add(OutputVertex);
+
+}
+
+bool UM2SoundVertex::UnregisterOutputVertex(UM2SoundVertex* OutputVertex)
+{
+	if(Outputs.Contains(OutputVertex))
+	{
+		Outputs.Remove(OutputVertex);
+		return true;
+	}
+	
+	return false;
 }
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
@@ -81,7 +101,7 @@ void UM2SoundVertex::TransmitAudioParameter(FAudioParameter Parameter)
 {
 	if (GetSequencerData())
 	{
-		GetSequencerData()->OnAudioParameterFromVertex.Broadcast(Parameter);
+		GetSequencerData()->ReceiveAudioParameter(Parameter);
 	}
 	else {
 		UE_LOG(unDAWVertexLogs, Error, TEXT("Outer is not sequencer data FFS!"))
@@ -272,6 +292,12 @@ void UM2SoundAudioOutput::UpdateConnections()
 	}
 
 
+}
+
+void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
+{
+	//this is a test, we just need to transmit the gain parameter
+	TransmitAudioParameter(FAudioParameter(AudioOutput.OutputName, Gain));
 }
 
 

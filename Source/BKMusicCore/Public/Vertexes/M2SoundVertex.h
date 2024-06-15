@@ -28,7 +28,6 @@ enum class EVertexAutoConnectionPinCategory :  uint8
 };
 
 
-
 UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
 class BKMUSICCORE_API UM2SoundVertex : public UObject
 {
@@ -50,7 +49,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;
 
+	void RegisterOutputVertex(UM2SoundVertex* OutputVertex);
 
+	bool UnregisterOutputVertex(UM2SoundVertex* OutputVertex);
 
 	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
 	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
@@ -63,7 +64,7 @@ public:
 	//TArray<UM2SoundVertex*> Inputs;
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TArray<UM2SoundVertex*> Outputs;
+	TSet<UM2SoundVertex*> Outputs;
 
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeOutputHandle> AutoConnectOutPins;
@@ -117,6 +118,8 @@ public:
 
 
 	void TransmitAudioParameter(FAudioParameter Parameter);
+
+	virtual void CollectAndTransmitAudioParameters() {}
 
 
 	bool bIsAudioOutputVertex = false;
@@ -180,6 +183,8 @@ public:
 	void BuildVertex() override;
 
 	void UpdateConnections() override;
+
+	void CollectAndTransmitAudioParameters() override;
 	
 
 };
