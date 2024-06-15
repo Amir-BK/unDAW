@@ -64,12 +64,6 @@ struct FM2SoundPinData
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = EM2SoundPinDisplayFlags))
 	uint8 DisplayFlags;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	EM2SoundPinFlags PinTypeFlags;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EM2SoundPinDisplayFlags DisplayTypeFlags;
-
 };
 
 UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))

@@ -92,6 +92,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	{
 		Output->UpdateConnections();
 	}
+	OnVertexUpdated.Broadcast();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -183,7 +184,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		if(IsAutoManaged)
 		{
 			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
-			EnumAddFlags(PinData.PinTypeFlags, EM2SoundPinFlags::IsAutoManaged & EM2SoundPinFlags::IsConnectedToGraphParam);
+			//EnumAddFlags(PinData.PinTypeFlags, EM2SoundPinFlags::IsAutoManaged & EM2SoundPinFlags::IsConnectedToGraphParam);
 			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
 			//PinData.PinFlags << EM2SoundPinFlags::IsAutoManaged;
 		}
@@ -249,14 +250,14 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 		if (IsAutoManaged)
 		{
-			PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
+			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
 			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
 		}
 
 		OutPinsNew.Add(NodeName, PinData);
 
 	}
-
+	OnVertexUpdated.Broadcast();
 
 }
 
@@ -425,7 +426,7 @@ void UM2SoundPatch::BuildVertex()
 	InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
 
-	OnVertexUpdated.Broadcast();
+	
 
 }
 
