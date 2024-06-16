@@ -157,6 +157,7 @@ private:
 		FMetasoundFrontendLiteral NewLiteral;
 		auto Slider = AudioSliders.Find(Pin.PinName);
 		auto val = Slider->Get()->GetOutputValue(NewValue);
+		Pin.NormalizedValue = NewValue;
 		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), val);
 		NewLiteral.Set(val);
 		Pin.LiteralValue = NewLiteral;
@@ -201,7 +202,7 @@ private:
 								.AutoHeight()
 								[
 									SAssignNew(NewSlider, SAudioRadialSlider)
-										.SliderValue(Value)
+										.SliderValue(Pin.NormalizedValue)
 										.ToolTipText(FText::FromString(Name.ToString()))
 										.AccessibleText(FText::FromString(Name.ToString()))
 										

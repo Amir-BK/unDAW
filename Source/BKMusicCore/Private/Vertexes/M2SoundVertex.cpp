@@ -142,6 +142,8 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	//TMap<FName, FM2SoundPinData> InPinsNew;
 	//TMap<FName, FM2SoundPinData> OutPinsNew;
 
+	auto CopyOfInPins = InPinsNew;
+
 
 	InPinsNew.Empty();
 	OutPinsNew.Empty();
@@ -158,22 +160,40 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	for(const auto& Input : InPins)
 	{
-		FM2SoundPinData PinData = FM2SoundPinData();
 		
-		FName& NodeName = PinData.PinName;
-		FName& DataType = PinData.DataType;
-		PinData.InputHandle = Input;
+		
+		
+		FM2SoundPinData PinData;
+				
+		FName NodeName;
+		FName DataType;
+		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+
+
+		if (CopyOfInPins.Contains(NodeName))
+		{
+			PinData = CopyOfInPins[NodeName];
+			//set the existing literal as default for the input handle
+			BuilderContext->SetNodeInputDefault(Input, PinData.LiteralValue, BuildResult);
+		}
+		else
+		{
+			PinData = FM2SoundPinData();
+			PinData.PinName = NodeName;
+			PinData.DataType = DataType;
+			if (DataType == FName(TEXT("Float")))
+			{
+				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *NodeName.ToString())
+					PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
+			}
+			PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
+		}
 
 		bool IsAutoManaged = false;
-		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
-		PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
+		PinData.InputHandle = Input;
 		
 
-		if (DataType == FName(TEXT("Float")))
-		{
-			UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *NodeName.ToString())
-				PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
-		}
+
 
 
 		if(NodeName == FName(TEXT("unDAW Instrument.MidiStream")))
@@ -280,6 +300,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		OutPinsNew.Add(NodeName, PinData);
 
 	}
+
 	OnVertexUpdated.Broadcast();
 
 }

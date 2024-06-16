@@ -57,6 +57,10 @@ struct FM2SoundPinData
 	UPROPERTY(EditAnywhere)
 	float MaxValue = 1.0f;
 
+	//to init the slider correctly
+	UPROPERTY(VisibleAnywhere)
+	float NormalizedValue = 0.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FName PinName;
 
@@ -179,6 +183,8 @@ public:
 
 	bool bIsAudioOutputVertex = false;
 
+	//This is a key method, should be renamed and probably refactored into being called automatically via a pure virtual method on the
+	//patch vertex base class
 	void CollectParamsForAutoConnect();
 
 	UPROPERTY()
