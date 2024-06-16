@@ -493,7 +493,10 @@ public:
 
 	void BeginDestroy() override;
 
-	
+
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	float BeatsPerMinute = 120.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW")
 	float SequenceDuration = 0.0f;
@@ -517,8 +520,16 @@ public:
 	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
 
+
+	//should remember time signature can only come on bar start
 	UPROPERTY()
 	TArray<FMidiEvent> TimeSignatureEvents;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	TMap<int, FVector2f> TimeSignatureMap;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	TMap<float, double> TempoEventsMap;
 
 	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
 

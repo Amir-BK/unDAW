@@ -287,6 +287,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 	
 	int numTracks = 0;
 	int numTracksRaw = 0;
+	BeatsPerMinute = HarmonixMidiFile->GetSongMaps()->GetTempoAtTick(0);
 
 	for (auto& track : HarmonixMidiFile->GetTracks())
 	{
@@ -322,8 +323,6 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 						{
 							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
 								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
-
-							UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note pair, track %d, channel %d, midi main channel %d"), numTracksInternal, midiChannel, TrackMainChannel)
 								foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
 							foundPair.ChannelId = midiChannel;
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
@@ -346,10 +345,12 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a tempo event! data1 %d data2 %d"), MidiEvent.GetMsg().Data1, MidiEvent.GetMsg().Data2)
 					//MidiEvent.GetMsg().Data1
 				TempoEvents.Add(MidiEvent);
+				TempoEventsMap.Add(MidiEvent.GetTick(), MidiEvent.GetMsg().GetMicrosecPerQuarterNote());
 				break;
 			case FMidiMsg::EType::TimeSig:
 				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a time signature event!"))
 				TimeSignatureEvents.Add(MidiEvent);
+				TimeSignatureMap.Add(MidiEvent.GetTick(), FVector2f(MidiEvent.GetMsg().GetTimeSigNumerator(), MidiEvent.GetMsg().GetTimeSigDenominator()));
 				break;
 			case FMidiMsg::EType::Text:
 				//UE_LOG(unDAWDataLogs, Verbose, TEXT("We receive a text event??? %s"), *MidiEvent.GetMsg().ToString(MidiEvent.GetMsg()))
@@ -439,6 +440,10 @@ void UDAWSequencerData::BeginDestroy()
 
 void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
 {
+	//if Midi file is empty don't audition
+
+	if (HarmonixMidiFile->IsEmpty()) return;
+	
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));

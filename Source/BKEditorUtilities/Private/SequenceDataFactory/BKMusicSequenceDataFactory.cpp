@@ -11,6 +11,10 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 	NewSequence->M2SoundGraph = NewObject<UM2SoundGraph>(NewSequence, FName(), RF_Transactional);
 	NewSequence->M2SoundGraph->Schema = UM2SoundEdGraphSchema::StaticClass();
 
+	auto NewMidiFile = NewObject<UMidiFile>(NewSequence, FName(), RF_Transactional);
+
+	NewSequence->HarmonixMidiFile = NewMidiFile;
+
 	return NewSequence;
 }
 
