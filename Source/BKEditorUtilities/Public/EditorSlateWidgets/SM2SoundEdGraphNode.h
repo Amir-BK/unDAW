@@ -154,9 +154,11 @@ private:
 
 	void OnValueChanges(float& NewValue, FM2SoundPinData& Pin)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), NewValue);
 		FMetasoundFrontendLiteral NewLiteral;
-		NewLiteral.Set(NewValue);
+		auto Slider = AudioSliders.Find(Pin.PinName);
+		auto val = Slider->Get()->GetOutputValue(NewValue);
+		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), val);
+		NewLiteral.Set(val);
 		Pin.LiteralValue = NewLiteral;
 		PatchVertex->UpdateValueForPin(Pin, Pin.LiteralValue);
 
@@ -170,6 +172,7 @@ private:
 		
 		if (!MainAudioKnobsBox.IsValid()) return;
 		MainAudioKnobsBox->ClearChildren();
+		AudioSliders.Empty();
 		if (PatchVertex)
 		{
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
@@ -201,7 +204,9 @@ private:
 										.SliderValue(Value)
 										.ToolTipText(FText::FromString(Name.ToString()))
 										.AccessibleText(FText::FromString(Name.ToString()))
-										.OnValueChanged_Lambda([this, &Pin](float NewValue) { OnValueChanges(NewValue, Pin); })
+										
+										.OnValueChanged_Lambda([this, &Pin, &NewSlider](float NewValue) {	OnValueChanges(NewValue, Pin); })
+										
 
 
 
@@ -209,7 +214,12 @@ private:
 
 						];
 
+
 					NewSlider->SetOutputRange(FVector2D(Pin.MinValue, Pin.MaxValue));
+					NewSlider->SetShowUnitsText(false);
+
+					AudioSliders.Add(Pin.PinName, NewSlider);
+
 				};
 
 			}
@@ -220,6 +230,9 @@ private:
 protected:
 	TSharedPtr<SVerticalBox> MainVerticalBox;
 	TSharedPtr<SWrapBox> MainAudioKnobsBox;
+
+	//sliders array
+	TMap<FName, TSharedPtr<SAudioRadialSlider>> AudioSliders;
 
 
 	TArray<TSharedPtr<FString>> PatchOptions;

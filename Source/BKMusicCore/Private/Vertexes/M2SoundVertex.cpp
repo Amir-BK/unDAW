@@ -152,6 +152,8 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
 
+
+
 	//find the inputs and outputs of the node
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	for(const auto& Input : InPins)
@@ -165,6 +167,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		bool IsAutoManaged = false;
 		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
 		PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
+		
 
 		if (DataType == FName(TEXT("Float")))
 		{
@@ -478,8 +481,22 @@ void UM2SoundPatch::BuildVertex()
 	InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
 
-	
+	auto& PatchDocument = Patch->GetDocumentChecked();
+	for (const auto& MSNode : PatchDocument.RootGraph.Graph.Nodes)
+	{
+		//just print every single bit of information this node exposes for now, go on GPT, I believe in you
 
+		auto MSName = MSNode.Name;
+		auto InLiterals = MSNode.InputLiterals;
+
+		for (const auto& InLiteral : InLiterals)
+		{
+			//FMetasoundFrontendVertexLiteral InLiteral;
+			auto InID = InLiteral.VertexID;
+			auto InValue = InLiteral.Value;
+			//UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Node: %s, Input ID: %d, Value: %f"), *MSName.ToString(), InID, InValue);
+		}
+	}
 }
 
 void UM2SoundPatch::UpdateConnections()
