@@ -6,6 +6,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "M2SoundEdGraphSchema.h"
 #include "SAudioRadialSlider.h"
+#include "M2SoundEdGraphNodeBaseTypes.h"
 
 /**
  *

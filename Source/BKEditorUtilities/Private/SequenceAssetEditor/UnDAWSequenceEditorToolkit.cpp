@@ -12,6 +12,7 @@
 #include "Widgets/Colors/SColorPicker.h"
 #include "SMidiTrackControlsWidget.h"
 #include "M2SoundEdGraphSchema.h"
+#include "M2SoundEdGraphNodeBaseTypes.h"
 #include "SEnumCombo.h"
 
 #include "Widgets/Layout/SScaleBox.h"

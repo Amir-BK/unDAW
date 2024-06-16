@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 #include "M2SoundEdGraphSchema.h"
+#include "M2SoundEdGraphNodeBaseTypes.h"
 #include "SAudioRadialSlider.h"
 
 /**

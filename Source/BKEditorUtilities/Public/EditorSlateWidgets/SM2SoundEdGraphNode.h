@@ -8,6 +8,7 @@
 #include "SGraphNode.h"
 #include "M2SoundGraphStatics.h"
 #include "SAudioRadialSlider.h"
+#include "M2SoundEdGraphNodeBaseTypes.h"
 #include "Widgets/Layout/SWrapBox.h"
 #include "M2SoundEdGraphSchema.h"
 

@@ -4,6 +4,7 @@
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
+#include "M2SoundEdGraphNodeBaseTypes.h"
 #include "SAudioRadialSlider.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION

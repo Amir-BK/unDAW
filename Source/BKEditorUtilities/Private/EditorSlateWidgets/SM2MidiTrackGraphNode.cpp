@@ -3,6 +3,7 @@
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
+
 #include "SAudioRadialSlider.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION

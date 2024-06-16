@@ -460,11 +460,15 @@ public:
 	//can thing of some improvements to this whole process
 	void AddLinkedMidiEvent(FLinkedMidiEvents PendingNote);
 
+	void DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote);
+
 	UFUNCTION()
 	void PopulateFromMidiFile(UMidiFile* inMidiFile);
 
-	UPROPERTY(Transient)
-	bool bVertexParamUpdatesAreBound = false;
+	//this method cleans the pending notes map and populates the main linked notes map with the data from the midi file, which should already contain the pending notes
+	//optionally returns the discovered channels/tracks from the midi file
+	void UpdateNoteDataFromMidiFile(TArray<TTuple<int,int>>& OutDiscoveredChannels);
+
 
 	UFUNCTION()
 	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);

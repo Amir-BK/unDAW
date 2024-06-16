@@ -198,7 +198,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
-		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+	auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
 	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
 	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
 	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
@@ -206,6 +206,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	TargetTrack->AddEvent(NewStartNoteMidiEvent);
 	TargetTrack->AddEvent(NewEndNoteMidiEvent);
+
 
 	PendingLinkedMidiNotesMap.Add(PendingNote);
 	MidiFileCopy->SortAllTracks();
@@ -216,6 +217,11 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
 }
 
+void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
+{
+	//so, before we can delete the note we need to empty our pending notes map and repopulate the main data map
+}
+
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
@@ -224,8 +230,10 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		
 	
 	TArray<TTuple<int, int>> FoundChannels;
-	LinkedNoteDataMap.Empty();
-	PendingLinkedMidiNotesMap.Empty();
+	//LinkedNoteDataMap.Empty();
+	//PendingLinkedMidiNotesMap.Empty();
+	HarmonixMidiFile = inMidiFile;
+	UpdateNoteDataFromMidiFile(FoundChannels);
 
 	//Outputs.Empty();
 	//TrackInputs.Empty();
@@ -243,11 +251,40 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		BuilderName = FName(BuilderString);
 	}
 
-	HarmonixMidiFile = inMidiFile;
-
 
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
+	CalculateSequenceDuration();
+	//if we're recreating the midi file we don't need to do anything else
+	if (IsRecreatingMidiFile) 
+	{
+		IsRecreatingMidiFile = false;
+		
+	}
+	else {
+		FindOrCreateBuilderForAsset(true);
+		InitVertexesFromFoundMidiTracks(FoundChannels);
+	}
+
+
+#if WITH_EDITOR
+	if (M2SoundGraph)
+	{
+		M2SoundGraph->InitializeGraph();
+	}
+#endif
+
+	
+}
+
+void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& OutDiscoveredChannels)
+{
+	
+	LinkedMidiNotesMap.Empty();
+	PendingLinkedMidiNotesMap.Empty();
+	
+	auto& FoundChannels = OutDiscoveredChannels;
+	
 	int numTracks = 0;
 	int numTracksRaw = 0;
 
@@ -326,32 +363,11 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		}
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
 
-		if (LinkedNoteDataMap.IsEmpty()) continue;
+		//if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		//CreateBuilderHelper();
 	}
 
-	CalculateSequenceDuration();
-	//if we're recreating the midi file we don't need to do anything else
-	if (IsRecreatingMidiFile) 
-	{
-		IsRecreatingMidiFile = false;
-		
-	}
-	else {
-		FindOrCreateBuilderForAsset(true);
-		InitVertexesFromFoundMidiTracks(FoundChannels);
-	}
-
-
-#if WITH_EDITOR
-	if (M2SoundGraph)
-	{
-		M2SoundGraph->InitializeGraph();
-	}
-#endif
-
-	
 }
 
 void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
