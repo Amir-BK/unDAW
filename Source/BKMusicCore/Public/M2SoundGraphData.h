@@ -455,6 +455,9 @@ public:
 	UPROPERTY()
 	TArray<FLinkedMidiEvents> PendingLinkedMidiNotesMap;
 
+	//this is actually how we add notes to the midi files, it creates a new 'editable midi file' which is a copy of the harmonix midi file
+	//and not really editable at all, the next time we make a change a copy of this file will be created
+	//can thing of some improvements to this whole process
 	void AddLinkedMidiEvent(FLinkedMidiEvents PendingNote);
 
 	UFUNCTION()
@@ -502,7 +505,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW")
 	void AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
 
-	UPROPERTY(EditAnywhere, Category = "unDAW")
+	//for now this has to be set, although switching midi files is possible it deletes the entire graph
+	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
 
 	UPROPERTY()

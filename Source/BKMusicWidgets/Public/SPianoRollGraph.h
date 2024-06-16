@@ -27,7 +27,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 //#include "SMidiNoteContainer.h"
 
-#define PIANO_ROLL_DEBUG
+//#define PIANO_ROLL_DEBUG
 
 BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPIANOROLLLOG, Verbose, All);
 
@@ -40,50 +40,7 @@ public:
 	FLinearColor* lineColor;
 };
 
-struct FZoomablePanelSlotContainer
-{
-public:
-	double time = 5000;
-	double duration = 0;
-	int32 pitch = 0;
-	int32 uniqueMapKey;
-	SConstraintCanvas::FSlot* slotPointer;
-	int32 trackID = -1;
-	float drawLength = 0;
 
-	int32 trackindexInHarmonixMidi = -1;
-
-	int SelectedTrackID = -1;
-
-	FLinkedMidiEvents* MidiNoteData;
-
-	FZoomablePanelSlotContainer(FLinkedMidiEvents* InNote, int32 InTrackId) : MidiNoteData(nullptr)
-	{
-		MidiNoteData = InNote;
-		pitch = 127 - MidiNoteData->pitch;
-		//time = MidiNoteData.StartEvent->GetTick();
-		//duration = MidiNoteData.EndEvent->GetTick() - time;
-		trackID = InTrackId;
-	}
-
-	void UpdateNotePitch(uint8 newPitch)
-	{
-		//auto newStartMessage = FMidiMsg(MidiNoteData->StartEvent.GetMsg().Status, newPitch, MidiNoteData->StartEvent.GetMsg().Data2);
-		//auto newEndMessage = FMidiMsg(MidiNoteData->EndEvent.GetMsg().Status, newPitch, MidiNoteData->EndEvent.GetMsg().Data2);
-		//MidiNoteData->StartEvent.SetMsg(newStartMessage);
-		//MidiNoteData->StartEvent
-		//MidiNoteData->EndEvent.SetMsg(newEndMessage);
-	}
-
-	void UpdateNoteStartTime(float newTime, int32 newTick)
-	{
-		//time = newTime;
-		//MidiNoteData->StartEvent = FMidiEvent(newTick, MidiNoteData->StartEvent.GetMsg());
-		//MidiNoteData->EndEvent = FMidiEvent(newTick, MidiNoteData->EndEvent.GetMsg());
-	}
-};
-
-// this can probably be deleted
 class BKMUSICWIDGETS_API STrackResizeArea : public SCompoundWidget
 {
 public:
@@ -254,7 +211,7 @@ public:
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo GridFont;
 
-	void AddNote(FLinkedMidiEvents& inNote, int inTrackSlot = 0, int inInternalMidiTrackID = -1);
+
 	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
@@ -265,6 +222,8 @@ public:
 
 	TMap<int, FLinkedNotesTrack>* LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
+
+	FLinkedMidiEvents TemporaryNote;
 	FLinkedMidiEvents* SelectedNote = nullptr;
 
 	bool bShouldDrawNote = true;
@@ -273,6 +232,7 @@ public:
 
 	void InitFromMidiFile(UMidiFile* inMidiFile);
 	void InitFromLinkedMidiData(TMap<int, TArray<FLinkedMidiEvents*>> inLinkedNoteDataMap);
+
 	void Init();
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
@@ -310,10 +270,8 @@ protected:
 
 	TSharedPtr<SCanvas> RootCanvas;
 	TSharedPtr<SConstraintCanvas> RootConstraintCanvas;
-	TArray<SCanvas::FSlot*> widgetSlots;
 
-	//This is where we actually store the notes! It should jsut be a multimap! but for now.
-	TMap<int32, FZoomablePanelSlotContainer> slotMap;
+
 	//auto newSlot = RootCanvas->AddSlot();
 
 	FSlateFontInfo Font;
@@ -336,16 +294,12 @@ protected:
 	TArray<int32> cDiatonic;
 	TArray<FVector2f> gridLine;
 	TArray<FVector2f> vertLine;
-	TArray <FZoomablePanelSlotContainer> slotsContainer;
+
 
 	FSlateBrush gridBrush = FSlateBrush();
 
 	void RecalculateSlotOffsets();
 
-	FReply NoteClickedDelegate(FZoomablePanelSlotContainer notedata);
-	FReply NotePressed(FZoomablePanelSlotContainer notedata);
-	FSimpleDelegate NotePressedDelegate;
-	void NotePressedVoid(FZoomablePanelSlotContainer notedata);
 
 	// Begin SWidget overrides.
 	//virtual FVector2D ComputeDesiredSize(float) const override;

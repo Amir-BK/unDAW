@@ -211,6 +211,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	MidiFileCopy->SortAllTracks();
 
 	HarmonixMidiFile = MidiFileCopy;
+	MarkPackageDirty();
 
 	if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
 }

@@ -275,11 +275,10 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	}
 
 
-	if (bLMBdown && InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)
+	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)
 	{
 
 		hoveredPitch = 127 - FMath::Floor(localMousePosition.Y / rowHeight);
-		UE_LOG(LogTemp, Log, TEXT("Mouse Down, hovered pitch %d, last hovered pitch %d, tick at mouse %d"), hoveredPitch, LastDrawnNotePitch, tickAtMouse);
 
 		if (hoveredPitch != LastDrawnNotePitch || LastDrawnNoteStartTick != ValueAtMouseCursorPostSnapping)
 		{
@@ -293,9 +292,17 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			newNote.CalculateDuration(MidiSongMap);
 			LastDrawnNotePitch = hoveredPitch;
 			LastDrawnNoteStartTick = ValueAtMouseCursorPostSnapping;
-			SessionData->AddLinkedMidiEvent(newNote);
+			
+			TemporaryNote = newNote;
+			SelectedNote = &TemporaryNote;
+		
+		}
+		//if lmb down commit note
+		if (bLMBdown)
+		{
 			UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
-
+			SessionData->AddLinkedMidiEvent(TemporaryNote);
+			SelectedNote = nullptr;
 		}
 
 		//if in note draw mode, add note to pending notes map
@@ -357,41 +364,7 @@ void SPianoRollGraph::AddHorizontalX(float inputX)
 
 	RecalcGrid();
 }
-void SPianoRollGraph::UpdateSlotsZOrder()
-{
-	for (auto slot = slotMap.CreateIterator(); slot; ++slot)
-	{
-		//float slotZorder = parentMidiEditor->GetTracksDisplayOptions(slot.Value().trackID).isSelected ? 1.0f : 0.0f;
-		
-		//slot.Value().slotPointer->SetZOrder(slotZorder);
-	};
-}
 
-//to delete
-void SPianoRollGraph::ResetCanvas()
-{
-	//RootConstraintCanvas->ClearChildren();
-	//RootConstraintCanvas.Reset();
-}
-
-FReply SPianoRollGraph::NoteClickedDelegate(FZoomablePanelSlotContainer InStruct) 
-{
-	slotMap[InStruct.uniqueMapKey].time += 0.5;
-	UE_LOGFMT(LogTemp, Log, "Note Clicked, here is the time! {0}", slotMap[InStruct.uniqueMapKey].time);
-	return FReply::Handled();
-}
-FReply SPianoRollGraph::NotePressed(FZoomablePanelSlotContainer notedata)
-{
-	isNotePressed = true;
-	selectedNoteMapIndex = notedata.uniqueMapKey;
-	
-	return FReply::Handled();
-}
-void SPianoRollGraph::NotePressedVoid(FZoomablePanelSlotContainer notedata)
-{
-	isNotePressed = true;
-	selectedNoteMapIndex = notedata.uniqueMapKey;
-}
 
 void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::CacheDesiredSize(InLayoutScaleMultiplier)
 {
@@ -677,20 +650,23 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		//hoveredNotePitch = -1;
 
   
-
-	SelectedNote = nullptr;
-	CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-		if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
-		{
-			if (note->pitch == hoveredPitch)
+	if(InputMode == EPianoRollEditorMouseMode::empty)
+	{
+		SelectedNote = nullptr;
+		CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+			if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
 			{
-				SelectedNote = note;
-				return true;
+				if (note->pitch == hoveredPitch)
+				{
+					SelectedNote = note;
+					return true;
+				}
 			}
-		}
-		;
-		return false;
-	});
+			;
+			return false;
+			});
+	}
+
 
 
 		if (bLMBdown) {
@@ -975,7 +951,6 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(50, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
 				&gridBrush,
 				ESlateDrawEffect::None,
-				isSelectedNote ? trackColor.CopyWithNewOpacity(1.0f) :
 				offTracksColor.CopyWithNewOpacity(opacity)
 			);
 
@@ -995,7 +970,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 	//mouse crosshairs
-	FLinearColor trackColor = selectedTrackIndex >= 0 ? SessionData->GetTracksDisplayOptions(selectedTrackIndex).trackColor : FLinearColor::White;
+	FLinearColor trackColor = SessionData->SelectedTrackIndex != INDEX_NONE ? SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor : FLinearColor::White;
 
 	////ugly code, can't be in the paint event, needs to be in the mouse move or tick methods. 
 	//int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
@@ -1047,7 +1022,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
-			FLinearColor::Red
+			trackColor.CopyWithNewOpacity(0.5f)
 		);
 	}
 
@@ -1187,91 +1162,17 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	FSlateDrawElement::MakeText(OutDrawElements,
 		PostNotesLayerID,
-		OffsetGeometryChild.ToPaintGeometry(FVector2D(1.0f, 1.0f), FSlateLayoutTransform(1.0f, localMousePosition-FVector2D(0.0f, CursorTest.measuredY))),
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(1.0f, 1.0f), FSlateLayoutTransform(1.0f, localMousePosition - FVector2D(0.0f, CursorTest.measuredY))),
 		&CursorTest.glyph,
 		FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24),
 		ESlateDrawEffect::None,
-		trackColor.CopyWithNewOpacity(1.0f));
+		FLinearColor::White);
 	
 
 	return PostNotesLayerID;
 }
-void SPianoRollGraph::DragNote(const FPointerEvent& MouseEvent)
-{
-
-	auto abs = MouseEvent.GetScreenSpacePosition();
-	localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
-	receivingDragUpdates = true;
-	
-	//update cursor and the such 
-	tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	int tickAtNoteStart = slotMap[selectedNoteMapIndex].MidiNoteData->StartTick;
-	//int delta = tickAtNoteStart - tickAtMouse;
-	
-	CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
-	CurrentBarAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
-	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
-	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
-	ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
-	//if (QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) ValueAtMouseCursorPostSnapping = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
-
-	hoveredPitch = 127 - FMath::Floor(localMousePosition.Y / rowHeight);
-	slotMap[selectedNoteMapIndex].pitch = FMath::Floor(localMousePosition.Y / rowHeight);
-	slotMap[selectedNoteMapIndex].UpdateNotePitch(static_cast<uint8>(hoveredPitch));
-	UE_LOG(LogTemp, Log, TEXT("Time before we destroy it %f, after %d"), slotMap[selectedNoteMapIndex].time, ValueAtMouseCursorPostSnapping)
-	slotMap[selectedNoteMapIndex].UpdateNoteStartTime(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping), ValueAtMouseCursorPostSnapping);
-	
-
-	
-	
-
-	
-}
-
-void SPianoRollGraph::StopDraggingNote()
-{
-	receivingDragUpdates = false;
-	auto& data = slotMap[selectedNoteMapIndex];
-	const int& trackID = slotMap[selectedNoteMapIndex].trackindexInHarmonixMidi;
-
-	//stop and destroy the audio component if it exists and playing
-	if (PerformanceComponent != nullptr && PerformanceComponent->IsValidLowLevel()) {
-		PerformanceComponent->Stop();
-		//destroy it
-		PerformanceComponent->DestroyComponent();
-	}
-
-	
 
 
-		//add new events
-	auto& rawEvents = HarmonixMidiFile->GetTrack(trackID)->GetRawEvents();
-	//rawEvents.
-	auto iterator = HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().CreateConstIterator();
-		
-		//HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->StartEvent);
-		//HarmonixMidiFile->GetTrack(trackID)->AddEvent(data.MidiNoteData->EndEvent);
-		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		//HarmonixMidiFile->GetTrack(trackID)->
-	
-
-		//HarmonixMidiFile->
-		//remove existing note using event index
-		//HarmonixMidiFile->GetTrack(trackID)->GetEvents().(data.MidiNoteData->EndIndex);
-		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->StartEvent);
-		//HarmonixMidiFile->GetTrack(trackID)->GetRawEvents().Remove(data.MidiNoteData->EndEvent);
-		//HarmonixMidiFile->GetTrack(trackID)->Sort();
-	
-		//call all the sorting functions I could find
-		
-		//HarmonixMidiFile->SortAllTracks();
-		//HarmonixMidiFile->TracksChanged();
-		//HarmonixMidiFile->MarkPackageDirty();
-
-		//NeedsRinitDelegate.Broadcast();
-
-}
 
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

@@ -400,6 +400,19 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 {
 	MidiInputTracks->ClearChildren();
 
+	MidiInputTracks->AddSlot()
+		.AutoHeight()
+		[
+			SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SButton)
+						.Text(INVTEXT("Add Track"))
+						//.OnClicked_Lambda([this, i]() { SequenceData->AddTrack(i); return FReply::Handled(); })
+				]
+
+		];
+
 	for (SIZE_T i = 0; i < SequenceData->M2TrackMetadata.Num(); i++)
 	{
 		MidiInputTracks->AddSlot()
@@ -413,5 +426,7 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 					.SequencerData(SequenceData)
 
 			];
+
+
 	}
 }
