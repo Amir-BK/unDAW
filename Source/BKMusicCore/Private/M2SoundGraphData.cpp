@@ -420,7 +420,7 @@ void UDAWSequencerData::BeginDestroy()
 
 }
 
-bool UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
+void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
@@ -431,8 +431,6 @@ bool UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	if (!BuilderContext) FindOrCreateBuilderForAsset(false);
 	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
 
-
-	return true;
 }
 
 //UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* InAuditionComponent)

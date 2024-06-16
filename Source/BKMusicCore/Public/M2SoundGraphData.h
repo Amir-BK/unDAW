@@ -412,10 +412,10 @@ public:
 
 	bool isInEditorPreview = false;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	FM2SoundCoreNodesComposite CoreNodes;
 
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	UPROPERTY(BlueprintAssignable, Category = "unDAW")
 	FOnVertexAdded OnVertexAdded;
 
 	void AddVertex(UM2SoundVertex* Vertex);
@@ -426,7 +426,7 @@ public:
 
 	FOnSelectionChanged OnSelectionChanged;
 
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW Sequence")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW")
 	UMetaSoundSourceBuilder* BuilderContext;
 
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
@@ -481,17 +481,17 @@ public:
 
 #endif
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence|Meta Sound")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW")
 	TObjectPtr<UMetaSoundSource> SavedMetaSound;
 
 	void BeginDestroy() override;
 
 	
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
+	UPROPERTY(BlueprintReadOnly, Category = "unDAW")
 	float SequenceDuration = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
 
@@ -499,8 +499,8 @@ public:
 
 
 
-	UFUNCTION()
-	bool AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
+	void AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
 
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	UMidiFile* HarmonixMidiFile;
@@ -527,7 +527,7 @@ private:
 
 	FTrackDisplayOptions InvalidTrackRef;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TSet<UM2SoundVertex*> Vertexes;
 
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
@@ -535,16 +535,20 @@ private:
 
 public:
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TArray<FAssignableAudioOutput> AudioOutputs;
 
 
 	//This delegate is listened to by the performer and is fired by the vertexes
-	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	UPROPERTY()
 	FOnAudioParameterFromVertex OnAudioParameterFromVertex;
 
 	bool IsRecreatingMidiFile = false;
 
-	UFUNCTION(CallInEditor)
+	//not used, we push notes individually and create a new file for each one, kind of a waste if we're not actually playing back
+	//on the other hand, we don't currently 'manage' the pending notes, we just add to them and the pianoroll uses them to display the notes
+	//alongside the original notes from the midi file; we can get the best of both worlds by sending partial 'chunks'
+	//further optimizations can be achieved by tracking the transport position and state and using that to push notes on time
+	UFUNCTION()
 	void PushPendingNotesToNewMidiFile();
 };
