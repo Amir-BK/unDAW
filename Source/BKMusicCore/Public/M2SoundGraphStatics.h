@@ -19,6 +19,53 @@ struct FMetaSoundBuilderNodeInputHandle;
 struct FMetaSoundBuilderNodeOutputHandle;
 struct FMetaSoundNodeHandle;
 
+//
+//USTRUCT()
+//struct FFloatRange
+//{
+//	GENERATED_BODY()
+//
+//	UPROPERTY(EditAnywhere)
+//	float Min;
+//
+//	UPROPERTY(EditAnywhere)
+//	float Max;
+//
+//	bool IsValueInRange(float Value) const
+//	{
+//		return Value >= Min && Value <= Max;
+//	}
+//};
+
+
+USTRUCT()
+struct FCachedVertexPinInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	TMap<FName, FFloatRange> MappedPins;
+};
+
+/**
+ * A cache of mapped vertices, this is used to store the vertices that are mapped to the sequencer data
+ * To avoid the need to constantly enter min and max values for mapped patches
+ */
+UCLASS()
+class BKMUSICCORE_API UMappedVertexCache : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public: 
+
+	UMappedVertexCache() { AssetType = TEXT("unDAW Vertex Cache"); }
+
+	TMap<FName, FCachedVertexPinInfo> Cache;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Primary Asset")
+	FPrimaryAssetType AssetType;
+};
+
 /**
  * Static and Blueprint functions for M2SoundGraph, hopefully in the future these will also be used for in game representation of the graph (unPatchWork)
  */

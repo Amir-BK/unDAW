@@ -200,19 +200,7 @@ struct FLinkedNotesTrack
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
-//Helper object used by the pianoroll and other visualizers to easily query the end time of a playing note and the next note on a give track/pitch
-UCLASS(BlueprintType)
-class BKMUSICCORE_API UParsedMidiTrack : public UObject
-{
-	GENERATED_BODY()
-public:
 
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Midi Data")
-	int TrackUniqueIndex = -1;
-
-	//This can't be a UPROPERTY, we need to expose functions to interact with this data
-	TArray<FLinkedMidiEvents> TrackData;
-};
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMasterChannelOutputSettings {
@@ -271,8 +259,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence", meta = (TitleProperty = "trackName"))
 	TArray<FTrackDisplayOptions> TracksMappings;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	TMap<int, UParsedMidiTrack*> TrackMidiDataMap;
+
 };
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
@@ -344,14 +331,21 @@ private:
 };
 
 
+class UMappedVertexCache;
+
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
+
+
 
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
 class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY(EditAnywhere, Category = "unDAW")
+	TObjectPtr<UMappedVertexCache> VertexCache;
 
 	//this one is called when the vertex needs to be rebuilt, this is used to update the vertexes in the sequencer data
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
@@ -501,8 +495,6 @@ public:
 
 	void BeginDestroy() override;
 
-	UPROPERTY(VisibleAnywhere)
-	FString TestConfigString;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW")
 	float BeatsPerMinute = 120.0f;

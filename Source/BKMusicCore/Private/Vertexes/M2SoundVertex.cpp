@@ -4,8 +4,21 @@
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "M2SoundGraphRenderer.h"
+#include "unDAWSettings.h"
 
 DEFINE_LOG_CATEGORY(unDAWVertexLogs);
+
+void UM2SoundPatch::SaveDefaultsToVertexCache()
+{
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("SaveDefaultsToVertexCache %s"), *Patch->GetName())
+		//if we have a valid vertex cache, save the defaults to it
+
+
+		UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), FCachedVertexPinInfo());
+		UUNDAWSettings::Get()->SaveConfig();
+
+
+}
 
 void UM2SoundVertex::BreakTrackInputConnection()
 {

@@ -93,6 +93,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound", meta = (EditFixedSize))
 	TMap<FName, FM2SoundPinData> OutPinsNew;
+
+
 	
 
 	//for book keeping and tracking the color of the track in the sequencer, can also be used to assosciate groups of vertexes for the MIXER (that is to come)
@@ -299,6 +301,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
 	UMetaSoundPatch* Patch;
+
+	UFUNCTION(CallInEditor, Category = "M2Sound")
+	void SaveDefaultsToVertexCache();
 
 	//for now can be used to rebuild the node manually if the user changes the metasound patch
 	bool bForceRebuild = false;

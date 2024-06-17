@@ -239,6 +239,8 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	PendingLinkedMidiNotesMap.Add(PendingNote);
 	MidiFileCopy->SortAllTracks();
+	auto LastEventTick = MidiFileCopy->GetLastEventTick();
+	MidiFileCopy->GetSongMaps()->SetLengthTotalBars(16);
 
 	HarmonixMidiFile = MidiFileCopy;
 	MarkPackageDirty();
@@ -248,7 +250,44 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 {
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
 	//so, before we can delete the note we need to empty our pending notes map and repopulate the main data map
+	// no actually, we can just remove the note from the midi file first
+	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+
+	
+
+	auto FoundStartEvent = MidiFileCopy->GetTrack(PendingNote.TrackId)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
+		if (Event.GetMsg().IsNoteOn() && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+		{
+			return true;
+		}
+		return false;
+		});
+
+	//we need to find the real end event, not the one we have in the pending notes map
+
+
+	auto FoundEndEvent = MidiFileCopy->GetTrack(PendingNote.TrackId)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
+		if (Event.GetMsg().IsNoteOff() && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+		{
+			return true;
+		}
+		return false;
+		});
+
+	if (FoundStartEvent && FoundEndEvent)
+	{
+		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundStartEvent);
+		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundEndEvent);
+	}
+	MidiFileCopy->SortAllTracks();
+	HarmonixMidiFile = MidiFileCopy;
+
+	auto FoundChannelsArray = TArray<TTuple<int, int>>();
+
+	UpdateNoteDataFromMidiFile(FoundChannelsArray);
 }
 
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
@@ -312,7 +351,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 	LinkedMidiNotesMap.Empty();
 	PendingLinkedMidiNotesMap.Empty();
 
-	TestConfigString = UunDAWTestSettings::Get()->MyTestString;
+	
 
 	//if midi file is EMPTY we add a track (empty note track) and default tempo and time signature on track 0 (conductor)
 
