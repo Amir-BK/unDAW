@@ -387,6 +387,7 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			NodeDetailsView.ToSharedRef()
 
 		];
+
 }
 
 FSequenceAssetDetails::~FSequenceAssetDetails()

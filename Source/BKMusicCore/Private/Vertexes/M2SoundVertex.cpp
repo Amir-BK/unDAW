@@ -3,6 +3,7 @@
 #include "M2SoundGraphStatics.h"
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
+
 #include "M2SoundGraphRenderer.h"
 #include "unDAWSettings.h"
 
@@ -10,14 +11,16 @@ DEFINE_LOG_CATEGORY(unDAWVertexLogs);
 
 void UM2SoundPatch::SaveDefaultsToVertexCache()
 {
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("SaveDefaultsToVertexCache %s"), *Patch->GetName())
-		//if we have a valid vertex cache, save the defaults to it
+	auto Config = FCachedVertexPinInfo();
 
+	for (const auto& [Name, Pin] : InPinsNew)
+	{
+		Config.MappedPins.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
+	}
 
-		UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), FCachedVertexPinInfo());
-		UUNDAWSettings::Get()->SaveConfig();
-
-
+	
+	UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), Config);
+	UUNDAWSettings::Get()->SaveConfig();
 }
 
 void UM2SoundVertex::BreakTrackInputConnection()
@@ -178,25 +181,65 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		
 		FM2SoundPinData PinData;
 				
-		FName NodeName;
+		FName PinName;
 		FName DataType;
-		BuilderContext->GetNodeInputData(Input, NodeName, DataType, BuildResult);
+		BuilderContext->GetNodeInputData(Input, PinName, DataType, BuildResult);
 
 
-		if (CopyOfInPins.Contains(NodeName))
+		if (CopyOfInPins.Contains(PinName))
 		{
-			PinData = CopyOfInPins[NodeName];
+			PinData = CopyOfInPins[PinName];
 			//set the existing literal as default for the input handle
 			BuilderContext->SetNodeInputDefault(Input, PinData.LiteralValue, BuildResult);
 		}
 		else
 		{
+			
+			//if we're a patchvertex...
+
+			//if we're a patch vertex, we should check the cache for the default values of the pins
+			//if we're not a patch vertex, it doesn't matter
+
+			UM2SoundPatch* Patch = Cast<UM2SoundPatch>(this);
+			FM2SoundPinData* CachedPinData = nullptr;
+
+			if (Patch)
+			{
+				auto& Cache = UUNDAWSettings::Get()->Cache;
+				
+
+				if (Cache.Contains(Patch->Patch->GetFName()))
+				{
+					auto& CachedVertexInfo = Cache[Patch->Patch->GetFName()];
+					if (CachedVertexInfo.MappedPins.Contains(PinName))
+					{
+						auto& CachedPin = CachedVertexInfo.MappedPins[PinName];
+						PinData.MinValue = CachedPin.GetLowerBoundValue();
+						PinData.MaxValue = CachedPin.GetUpperBoundValue();
+						//PinData.LiteralValue = BuilderContext->CreateFloatMetaSoundLiteral(CachedPin.GetLowerBound(), DataType);
+						UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Cached Pin %s"), *PinName.ToString())
+							CachedPinData = &PinData;
+					}
+				}
+
+			}
+
+
+			if (CachedPinData)
+			{
+				PinData = *CachedPinData;
+			}
+			else {
 			PinData = FM2SoundPinData();
-			PinData.PinName = NodeName;
+
+			}
+			
+			
+			PinData.PinName = PinName;
 			PinData.DataType = DataType;
 			if (DataType == FName(TEXT("Float")))
 			{
-				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *NodeName.ToString())
+				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *PinName.ToString())
 					PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
 			}
 			PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
@@ -209,13 +252,13 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 
 
-		if(NodeName == FName(TEXT("unDAW Instrument.MidiStream")))
+		if(PinName == FName(TEXT("unDAW Instrument.MidiStream")))
 		{
 			IsAutoManaged = true;
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Input);
 		}
 		
-		if (NodeName == FName(TEXT("unDAW Instrument.MidiTrack")))
+		if (PinName == FName(TEXT("unDAW Instrument.MidiTrack")))
 		{
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Input);
 			//PinData.PinFlags |=  TOFLAG(EM2SoundPinFlags::IsAutoManaged);
@@ -223,14 +266,14 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		}
 
 		//also check the insert names unDAW Insert.Audio In L etc
-		if(NodeName.ToString().Contains(TEXT("unDAW Insert.Audio In L")))
+		if(PinName.ToString().Contains(TEXT("unDAW Insert.Audio In L")))
 		{
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Input);
 			//PinData.PinFlags |= EM2SoundPinFlags::IsAutoManaged;
 			IsAutoManaged = true;
 		}
 
-		if(NodeName.ToString().Contains(TEXT("unDAW Insert.Audio In R")))
+		if(PinName.ToString().Contains(TEXT("unDAW Insert.Audio In R")))
 		{
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Input);
 			//PinData.PinFlags |=  TOFLAG(EM2SoundPinFlags::IsAutoManaged);
@@ -245,7 +288,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			//PinData.PinFlags << EM2SoundPinFlags::IsAutoManaged;
 		}
 
-		InPinsNew.Add(NodeName, PinData);
+		InPinsNew.Add(PinName, PinData);
 
 	}
 

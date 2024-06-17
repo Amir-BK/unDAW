@@ -31,8 +31,9 @@ public class BKMusicCore : ModuleRules
             {
                 "Core",
 				//"Json",
-				//"JsonUtilities",
-				"AudioMixer",
+				
+
+                "AudioMixer",
                 "DeveloperSettings",
                 "MetasoundEngine",
                 "MetasoundGraphCore",

@@ -32,6 +32,9 @@ class BK_EDITORUTILITIES_API UM2SoundGraph : public UM2SoundGraphBase
 
 public:
 
+	UFUNCTION(CallInEditor, Category = "M2Sound")
+	void GetDefaultRangesForSelectedNodes();
+
 	UDAWSequencerData* GetSequencerData() const { return Cast<UDAWSequencerData>(GetOuter()); }
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;

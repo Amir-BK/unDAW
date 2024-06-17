@@ -52,4 +52,30 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
 
 }
 
+void UUnDAWPreviewHelperSubsystem::MapMetasoundPatchPinValues(UMetaSoundPatch* InPatch)
+{
+	//UE_LOG(unDAWVertexLogs, Verbose, TEXT("SaveDefaultsToVertexCache %s"), *Patch->GetName())
+		//if we have a valid vertex cache, save the defaults to it
+
+
+	//UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), FCachedVertexPinInfo());
+	//UUNDAWSettings::Get()->SaveConfig();
+
+	auto& Document = InPatch->GetDocumentChecked();
+    /*
+	TArray<UMetasoundEditorGraphMemberDefaultFloat*> FloatLiterals;
+	InPatch->GetGraph()->GetNodesOfClass<UMetasoundEditorGraphMemberDefaultFloat>(FloatLiterals);
+
+    for(auto& FloatLiteral : FloatLiterals)
+	{
+		//print range!!!
+        auto RangeMin = FloatLiteral->Range.GetMin();
+        auto RangeMax = FloatLiteral->Range.GetMax();
+
+        UE_LOG(LogTemp, Verbose, TEXT("FloatLiteral %s %f %f"), *FloatLiteral->GetFName().ToString(), RangeMin, RangeMax);
+	}
+    */
+
+}
+
 

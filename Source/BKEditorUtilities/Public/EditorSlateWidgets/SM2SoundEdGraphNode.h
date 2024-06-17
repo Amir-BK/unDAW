@@ -180,6 +180,9 @@ private:
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
 			{
 				float Value = 0.0f;
+				//normalize value within range
+
+				//FMath::GetMappedRangeValueClamped(Pin.MinValue, Pin.MaxValue, Value);
 				
 				Pin.LiteralValue.TryGet(Value);
 				if (Pin.DisplayFlags & static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph) && Pin.DataType == "float")

@@ -10,6 +10,7 @@
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
+#include "UnDAWPreviewHelperSubsystem.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
@@ -102,6 +103,27 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 FM2SoundGraphToOutputAction::FM2SoundGraphToOutputAction(const TArray<UEdGraphPin*>& InSourcePins) : FEdGraphSchemaAction(INVTEXT("Meta"), INVTEXT("To Output"), INVTEXT("Creates a M2Sound output for each selected output pin."), 0)
 , SourcePins(InSourcePins)
 {}
+
+void UM2SoundGraph::GetDefaultRangesForSelectedNodes()
+{
+	//we'll need only the patches
+
+	for(const auto& Vertex : SelectedVertices)
+	{
+		
+		
+			auto asPatchVertex = Cast<UM2SoundPatch>(Vertex);
+
+			if(asPatchVertex)
+			{
+				//get the patch vertex and get the default ranges
+				//asPatchVertex->GetDefaultRanges();
+				asPatchVertex->SaveDefaultsToVertexCache();
+			}
+
+		
+	}
+}
 
 TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Direction) const
 {

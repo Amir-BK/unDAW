@@ -35,7 +35,9 @@ public class BK_EditorUtilities : ModuleRules
                 "XmlParser", "FileUtilities", "MetasoundFrontend", "MetasoundEngine",
                 "BKMusicCore", "ScriptableEditorWidgets", "EditorScriptingUtilities", "AssetTools",
                 "DetailCustomizations", "EditorWidgets", "EditorSubsystem", "AudioExtensions", "unDAWMetaSounds",
-                "GraphEditor", "AudioWidgets"
+                "GraphEditor", "AudioWidgets", "MetasoundEditor",
+                "MetasoundGraphCore",
+                "MetasoundFrontend",
 
                 // ... add other public dependencies that you statically link with here ...
 			}
@@ -55,7 +57,7 @@ public class BK_EditorUtilities : ModuleRules
                 "Blutility",
                 "InputCore",
                 "HarmonixDspEditor",
-                "MetasoundEditor"
+                
 
 				// ... add private dependencies that you statically link with here ...
 			}

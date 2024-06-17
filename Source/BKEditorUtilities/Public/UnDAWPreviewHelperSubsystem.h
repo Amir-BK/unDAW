@@ -6,6 +6,7 @@
 #include "EditorSubsystem.h"
 #include "M2SoundGraphData.h"
 #include "BK_MusicSceneManagerInterface.h"
+
 #include "UnDAWPreviewHelperSubsystem.generated.h"
 
 
@@ -32,7 +33,8 @@ public:
 	UFUNCTION()
 	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);	
 	
-
+	UFUNCTION(BlueprintCallable)
+	static void MapMetasoundPatchPinValues(UMetaSoundPatch* InPatch);
 
 	
 private:
