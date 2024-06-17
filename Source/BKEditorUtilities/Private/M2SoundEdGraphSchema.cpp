@@ -25,12 +25,12 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 	//deal with pin categories - Track-Audio and Track-Midi
 	if (A->PinType.PinCategory == "Track-Audio" && B->PinType.PinCategory == "Track-Audio")
 	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Audio"));
+		return FPinConnectionResponse(CONNECT_RESPONSE_MAKE, TEXT("Connect Track to Audio"));
 	}
 
 	if (A->PinType.PinCategory == "Track-Midi" && B->PinType.PinCategory == "Track-Midi")
 	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Midi"));
+		return FPinConnectionResponse(CONNECT_RESPONSE_MAKE, TEXT("Connect Track to Midi"));
 	}
 
 	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));

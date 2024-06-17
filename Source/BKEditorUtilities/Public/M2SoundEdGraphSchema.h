@@ -75,7 +75,13 @@ public:
 	TArray<UM2SoundVertex*> SelectedVertices;
 
 	UFUNCTION()
-	void OnVertexAdded(UM2SoundVertex* Vertex) { NotifyGraphChanged(); }
+	void OnVertexAdded(UM2SoundVertex* Vertex) { 
+		
+		//so this is definitely not good enough and indicates some issues
+		// we need to think about the node creation process and how to handle the vertex to node mapping
+
+		UE_LOG(LogTemp, Warning, TEXT("Vertex added"));
+		NotifyGraphChanged(); }
 
 
 

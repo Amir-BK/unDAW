@@ -6,6 +6,7 @@
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "Vertexes/M2SoundVertex.h"
+#include "unDAWSettings.h"
 #include <EditableMidiFile.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
@@ -111,6 +112,34 @@ void UDAWSequencerData::SendSeekCommand(float InSeek)
 			AuditionComponent->SetFloatParameter(FName(TEXT("unDAW.Transport.SeekTarget")), InSeek * 1000.f);
 			AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Seek")));
 		}
+}
+
+void UDAWSequencerData::AddTrack()
+{
+	//add track at the end of metadata array, ensure widget is updated
+	FTrackDisplayOptions NewTrackMetaData;
+	NewTrackMetaData.ChannelIndexInParentMidi = 0;
+	NewTrackMetaData.TrackIndexInParentMidi = 1;
+	NewTrackMetaData.trackName = TEXT("New Track");
+	NewTrackMetaData.fusionPatch = nullptr;
+	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
+	M2TrackMetadata.Add(NewTrackMetaData);
+
+	UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
+
+	OnMidiDataChanged.Broadcast();
+}
+
+void UDAWSequencerData::ReinitGraph()
+{
+		FindOrCreateBuilderForAsset(true);
+#if WITH_EDITOR
+	if (M2SoundGraph)
+	{
+		M2SoundGraph->InitializeGraph();
+	}
+#endif
+
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
@@ -282,7 +311,13 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 	
 	LinkedMidiNotesMap.Empty();
 	PendingLinkedMidiNotesMap.Empty();
-	
+
+	TestConfigString = UunDAWTestSettings::Get()->MyTestString;
+
+	//if midi file is EMPTY we add a track (empty note track) and default tempo and time signature on track 0 (conductor)
+
+
+
 	auto& FoundChannels = OutDiscoveredChannels;
 	
 	int numTracks = 0;
@@ -293,7 +328,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 	{
 		//if track has no events we can continue, but this never happens, it might not have note events but it has events.
 		int numTracksInternal = numTracksRaw++;
-		if (track.GetEvents().IsEmpty()) continue;
+		//if (track.GetEvents().IsEmpty()) continue;
 
 		int TrackMainChannel = track.GetPrimaryMidiChannel();
 
@@ -367,6 +402,23 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		//if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		//CreateBuilderHelper();
+	}
+
+	//hacky... 
+	if(FoundChannels.IsEmpty() && M2TrackMetadata.IsEmpty())
+	{
+		//create default track for now
+		auto NewTrackMetaData = FTrackDisplayOptions();
+
+		NewTrackMetaData.ChannelIndexInParentMidi = 0;
+		NewTrackMetaData.TrackIndexInParentMidi = 0;
+		NewTrackMetaData.trackName = TEXT("Default Track");
+		NewTrackMetaData.fusionPatch = nullptr;
+		NewTrackMetaData.trackColor = FLinearColor::Red;
+//
+
+
+		M2TrackMetadata.Add(NewTrackMetaData);
 	}
 
 }
@@ -496,6 +548,7 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 {
 	IsRecreatingMidiFile = true;
+
 
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);

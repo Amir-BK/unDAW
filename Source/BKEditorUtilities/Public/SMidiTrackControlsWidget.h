@@ -175,7 +175,10 @@ public:
 		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
-		CurrentItem = MakeShareable(new FString(TrackData->fusionPatch->GetName()));
+		FString FusionPatchName;
+		if(TrackData->fusionPatch != nullptr) FusionPatchName = TrackData->fusionPatch->GetName(); 
+		else FusionPatchName = TEXT("DEPRECATED");
+		CurrentItem = MakeShareable(new FString(FusionPatchName));
 		//OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
 		ConnectedGraph = InArgs._ConnectedGraph;
 		SequencerData = InArgs._SequencerData;

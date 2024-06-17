@@ -158,7 +158,7 @@ public:
 	UDAWSequencerData* SessionData;
 
 	FLinearColor noteColor;
-	FVector2f positionOffset;
+	FVector2f positionOffset = FVector2f(0, -125);
 	float LastTickTimelinePosition;
 	int32 hoveredPitch;
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
@@ -188,9 +188,9 @@ public:
 
 	int32 ValueAtMouseCursorPostSnapping;
 
-	float horizontalZoom = 0.2f;
+	float horizontalZoom = 0.1f;
 	float hZoomTarget = horizontalZoom;
-	float verticalZoom = 0.05f;
+	float verticalZoom = 0.03f;
 
 	float zoomInterpSpeed = 10.0f;
 
