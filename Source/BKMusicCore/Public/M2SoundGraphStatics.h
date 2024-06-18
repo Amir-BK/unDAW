@@ -38,33 +38,8 @@ struct FMetaSoundNodeHandle;
 //};
 
 
-USTRUCT()
-struct FCachedVertexPinInfo
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere)
-	TMap<FName, FFloatRange> MappedPins;
-};
 
-/**
- * A cache of mapped vertices, this is used to store the vertices that are mapped to the sequencer data
- * To avoid the need to constantly enter min and max values for mapped patches
- */
-UCLASS()
-class BKMUSICCORE_API UMappedVertexCache : public UPrimaryDataAsset
-{
-	GENERATED_BODY()
 
-public: 
-
-	UMappedVertexCache() { AssetType = TEXT("unDAW Vertex Cache"); }
-
-	TMap<FName, FCachedVertexPinInfo> Cache;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Primary Asset")
-	FPrimaryAssetType AssetType;
-};
 
 /**
  * Static and Blueprint functions for M2SoundGraph, hopefully in the future these will also be used for in game representation of the graph (unPatchWork)
@@ -75,6 +50,15 @@ class BKMUSICCORE_API UM2SoundGraphStatics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+
+	/**
+	 * Get the parent preset name of a patch if it has one, otherwise will return the name of the patch itself
+	 * @param Patch The patch to get the parent preset name of
+	 * @return The name of the parent preset if it has one
+	 */
+	UFUNCTION(BlueprintCallable, Category = "unDAW|MetaSound Builder Helper")
+
+	static FName GetParentPresetNameIfAny(UMetaSoundPatch* Patch);
 
 	/**
 	 * Initialize a connected channel in the sequencer data, this is used when

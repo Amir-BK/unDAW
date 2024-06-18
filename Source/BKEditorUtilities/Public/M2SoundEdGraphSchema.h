@@ -32,8 +32,11 @@ class BK_EDITORUTILITIES_API UM2SoundGraph : public UM2SoundGraphBase
 
 public:
 
+	// As currently it is impossible to access to the default ranges specified for input variables in the metasound patch
+	// you need to set the ranges manually once for each node type and cache it, this method saves the ranges for all
+	// currently selected patche vertices in the graph to the cache, the cache can be edited in the project settings
 	UFUNCTION(CallInEditor, Category = "M2Sound")
-	void GetDefaultRangesForSelectedNodes();
+	void SaveVertexRangesToCache();
 
 	UDAWSequencerData* GetSequencerData() const { return Cast<UDAWSequencerData>(GetOuter()); }
 

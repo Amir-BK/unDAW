@@ -344,8 +344,6 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(EditAnywhere, Category = "unDAW")
-	TObjectPtr<UMappedVertexCache> VertexCache;
 
 	//this one is called when the vertex needs to be rebuilt, this is used to update the vertexes in the sequencer data
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")

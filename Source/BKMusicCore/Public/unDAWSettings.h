@@ -5,6 +5,15 @@
 
 #include "unDAWSettings.generated.h"
 
+USTRUCT()
+struct FCachedVertexPinInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TMap<FName, FFloatRange> PinRanges;
+
+};
 
 UCLASS(config = EditorPerProjectUserSettings, meta=(DisplayName = "unDAW Settings"))
 class BKMUSICCORE_API UUNDAWSettings : public UDeveloperSettings

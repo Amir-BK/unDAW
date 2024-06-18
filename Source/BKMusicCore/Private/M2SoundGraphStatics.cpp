@@ -7,6 +7,17 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
+FName UM2SoundGraphStatics::GetParentPresetNameIfAny(UMetaSoundPatch* Patch)
+{
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	TArray<FAssetData> AssetData;
+
+	//AssetRegistryModule.Get().
+	
+	
+	return FName(TEXT("TEST"));
+}
+
 void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData* InSequencerData, const int Index)
 {
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));

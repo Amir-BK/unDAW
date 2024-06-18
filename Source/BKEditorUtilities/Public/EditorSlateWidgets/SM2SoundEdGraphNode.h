@@ -206,7 +206,7 @@ private:
 								.AutoHeight()
 								[
 									SAssignNew(NewSlider, SAudioRadialSlider)
-										.SliderValue(Pin.NormalizedValue)
+										//.SliderValue(Pin.NormalizedValue)
 										.ToolTipText(FText::FromString(Name.ToString()))
 										.AccessibleText(FText::FromString(Name.ToString()))
 										
@@ -218,9 +218,11 @@ private:
 								]
 
 						];
-
+					//setting default value, print value
+					UE_LOG(LogTemp, Warning, TEXT("Value: %f"), Value);
 
 					NewSlider->SetOutputRange(FVector2D(Pin.MinValue, Pin.MaxValue));
+					NewSlider->SetSliderValue(NewSlider->GetSliderValue(Value));
 					NewSlider->SetShowUnitsText(false);
 
 					AudioSliders.Add(Pin.PinName, NewSlider);

@@ -15,7 +15,7 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 
 	for (const auto& [Name, Pin] : InPinsNew)
 	{
-		Config.MappedPins.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
+		Config.PinRanges.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
 	}
 
 	
@@ -184,7 +184,8 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		FName PinName;
 		FName DataType;
 		BuilderContext->GetNodeInputData(Input, PinName, DataType, BuildResult);
-
+		auto LiteralValue = BuilderContext->GetNodeInputClassDefault(Input, BuildResult);
+		
 
 		if (CopyOfInPins.Contains(PinName))
 		{
@@ -206,19 +207,19 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			if (Patch)
 			{
 				auto& Cache = UUNDAWSettings::Get()->Cache;
-				
+
 
 				if (Cache.Contains(Patch->Patch->GetFName()))
 				{
 					auto& CachedVertexInfo = Cache[Patch->Patch->GetFName()];
-					if (CachedVertexInfo.MappedPins.Contains(PinName))
+					if (CachedVertexInfo.PinRanges.Contains(PinName))
 					{
-						auto& CachedPin = CachedVertexInfo.MappedPins[PinName];
+						auto& CachedPin = CachedVertexInfo.PinRanges[PinName];
 						PinData.MinValue = CachedPin.GetLowerBoundValue();
 						PinData.MaxValue = CachedPin.GetUpperBoundValue();
 						//PinData.LiteralValue = BuilderContext->CreateFloatMetaSoundLiteral(CachedPin.GetLowerBound(), DataType);
 						UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Cached Pin %s"), *PinName.ToString())
-							CachedPinData = &PinData;
+						CachedPinData = &PinData;
 					}
 				}
 
@@ -240,9 +241,24 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			if (DataType == FName(TEXT("Float")))
 			{
 				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Float Pin %s"), *PinName.ToString())
-					PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
+				PinData.DisplayFlags |= static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph);
+
+				float TryGetValue;
+				if(LiteralValue.TryGet(TryGetValue))
+				{
+					PinData.NormalizedValue = FMath::GetRangePct(PinData.MinValue, PinData.MaxValue, TryGetValue);
+					//also print try get value...
+					UE_LOG(unDAWVertexLogs, Verbose, TEXT("Got float value from literal %f"), TryGetValue)
+				}
+				else
+				{
+					UE_LOG(unDAWVertexLogs, Error, TEXT("Failed to get float value from literal for float pin"))
+				}
+
+
 			}
-			PinData.LiteralValue = BuilderContext->GetNodeInputDefault(Input, BuildResult);
+			PinData.LiteralValue = LiteralValue;
+			BuilderConnectionResults.Add(FName(TEXT("Get Default Value")), BuildResult);
 		}
 
 		bool IsAutoManaged = false;
