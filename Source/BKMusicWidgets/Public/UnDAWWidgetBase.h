@@ -15,10 +15,28 @@ class BKMUSICWIDGETS_API UUnDAWWidgetBase : public UCommonUserWidget
 {
 	GENERATED_BODY()
 	
-	public:
+public:
+	virtual void SetSceneManager(AMusicScenePlayerActor* InSceneManager)
+	{
+				SceneManager = InSceneManager;
+				
+				if (!SceneManager) return;
+				DawSequencerData = SceneManager->GetDAWSequencerData();
+
+				Init();
+
+	}
+
+	UFUNCTION()
+	virtual void Init() {};
+
+protected:
 	//Scene manager reference
-		UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW|Widget")
+		UPROPERTY()
 		AMusicScenePlayerActor* SceneManager;
+
+		UPROPERTY()
+		UDAWSequencerData* DawSequencerData;
 	
 	
 };

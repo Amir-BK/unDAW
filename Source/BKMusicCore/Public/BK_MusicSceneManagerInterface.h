@@ -82,7 +82,7 @@ public:
 
 	virtual const UM2SoundGraphRenderer* GetPerformer() { return Performer; };
 
-	virtual UDAWSequencerData* GetSequenceData() const;;
+	virtual UDAWSequencerData* GetDAWSequencerData() const;
 
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")

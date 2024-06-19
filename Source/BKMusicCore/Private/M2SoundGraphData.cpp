@@ -57,6 +57,8 @@ void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const 
 {
 	Value.Get(CurrentTimestampData);
 
+	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
+
 }
 
 void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)

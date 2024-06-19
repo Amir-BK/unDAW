@@ -31,6 +31,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, Add
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAudioParameterFromVertex, FAudioParameter, Parameter);
 
+//on timestamp updated dynamic multicast delegate one param please
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeStampUpdated, FMusicTimestamp, NewTimestamp);
+
 class UDAWSequencerData;
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
@@ -344,6 +347,9 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+
+	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
+	FOnTimeStampUpdated OnTimeStampUpdated;
 
 	//this one is called when the vertex needs to be rebuilt, this is used to update the vertexes in the sequencer data
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")

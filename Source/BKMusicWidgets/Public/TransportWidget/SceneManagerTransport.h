@@ -44,6 +44,18 @@ public:
 		//TransportCalled.Broadcast(newCommand);
 	}
 
+	UFUNCTION()
+	void OnTimestampUpdated(FMusicTimestamp NewTimestamp)
+	{
+		auto tick = DawSequencerData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(NewTimestamp, EMidiClockSubdivisionQuantization::None);
+		auto sec = DawSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(tick) * .001f ;
+
+		CurrentSeek = sec;
+		if (PlayPosition) PlayPosition->SetValue(sec);
+		if (CurrentPositionText) CurrentPositionText->SetText(FText::AsNumber(sec));
+
+	}
+
 
 protected:
 
@@ -81,7 +93,8 @@ protected:
 
 public:
 
-
+	
+	void Init() override;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
 	void SetTransportDuration(float newDuration)
@@ -93,16 +106,9 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "unDAW|Transport")
 	void SetTransportSeek(float NewSeek)
 	{
-		
-		if(SceneManager) SceneManager->SendSeekCommand(NewSeek);
-
-
 		if (NewSeek != CurrentSeek)
 		{
-			if (PlayPosition) PlayPosition->SetValue(NewSeek);
-			if (CurrentPositionText) CurrentPositionText->SetText(FText::AsNumber(NewSeek));
-			CurrentSeek = NewSeek;
-			TransportSeekCommand.Broadcast(NewSeek);
+			if (SceneManager) SceneManager->SendSeekCommand(NewSeek);
 		}
 
 	}
@@ -113,20 +119,7 @@ public:
 		TransportPlayState = newPlayState;
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
-	void SetSceneManager(TScriptInterface<IBK_MusicSceneManagerInterface> InSceneManager)
-	{
-		//if (InSceneManager) {
-		//	SceneManager = InSceneManager;
-		//	const auto& SessionData = SceneManager->GetActiveSessionData();
-		//	if (SessionData)
-		//	{
-		//		SetTransportDuration(SessionData->SequenceDuration * .001f);
-		//		//SetTransportSeek(SessionData->TransportPosition);
-		//		//SetTransportPlayState(SceneManager->GetCurrentPlaybackState());
-		//	}
 
-	};
 
 
 	virtual void NativeConstruct() override

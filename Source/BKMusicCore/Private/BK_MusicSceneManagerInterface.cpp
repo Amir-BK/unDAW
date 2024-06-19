@@ -17,13 +17,13 @@ const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
 {
 	{
 
-		if (!GetSequenceData()) return EBKPlayState::NoBuilder;
+		if (!GetDAWSequencerData()) return EBKPlayState::NoBuilder;
 
-		return GetSequenceData()->PlayState;
+		return GetDAWSequencerData()->PlayState;
 	}
 }
 
-inline UDAWSequencerData* IBK_MusicSceneManagerInterface::GetSequenceData() const { 
+inline UDAWSequencerData* IBK_MusicSceneManagerInterface::GetDAWSequencerData() const { 
 	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Getting Sequence Data"))
 	return SequenceData; }
 
@@ -40,9 +40,9 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 {
 	{
 		UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
-		if(!GetSequenceData()) return;
+		if(!GetDAWSequencerData()) return;
 
-		GetSequenceData()->SendTransportCommand(InCommand);
+		GetDAWSequencerData()->SendTransportCommand(InCommand);
 			//if (Performer) Performer->SendTransportCommand(InCommand);
 	}
 }
@@ -55,28 +55,8 @@ void IBK_MusicSceneManagerInterface::SetPlayrate(float newPlayrate)
 
 void IBK_MusicSceneManagerInterface::SendSeekCommand(float InSeek)
 {
-	if(GetSequenceData())
-		GetSequenceData()->SendSeekCommand(InSeek);
-
-	//switch (GetCurrentPlaybackState())
-	//{
-	//case Playing:
-	//	if (GetAudioComponent())
-	//	{
-	//		//SetPlaybackState(EBKPlayState::ReadyToPlay);
-	//		GetAudioComponent()->SetFloatParameter(FName("unDAW.Transport.SeekTarget"), InSeek * 1000.f);
-	//		GetAudioComponent()->SetTriggerParameter(FName("unDAW.Transport.Seek"));
-	//		//SetPlaybackState(Re);
-	//	}
-	//	break;
-
-
-	//default:
-
-	//	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Some other state"))
-	//		break;
-
-	//}
+	if(GetDAWSequencerData())
+		GetDAWSequencerData()->SendSeekCommand(InSeek);
 
 	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Seek Command"))
 }

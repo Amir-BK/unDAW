@@ -64,7 +64,7 @@ public:
 	TObjectPtr<UDAWSequencerData> SessionData;
 
 	//hmmm
-	UDAWSequencerData* GetSequenceData() const override;
+	UDAWSequencerData* GetDAWSequencerData() const override;
 
 	//METHODS
 

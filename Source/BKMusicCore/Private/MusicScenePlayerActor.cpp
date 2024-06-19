@@ -21,7 +21,7 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 
 //hmmm
 
-inline UDAWSequencerData* AMusicScenePlayerActor::GetSequenceData() const {
+inline UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
 	UE_LOG(LogTemp, Log, TEXT("Getting Sequence Data"))
 		return SessionData;
 }

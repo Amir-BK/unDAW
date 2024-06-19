@@ -15,7 +15,7 @@ void UUnDAWWidgetComponent::InitWidget()
 	if (DAWWidgetInstance)
 	{
 		UE_LOG(LogTemp, Log, TEXT("we have a DAW widget instance"))
-			DAWWidgetInstance->SceneManager = SceneManager;
+		DAWWidgetInstance->SetSceneManager(SceneManager);
 	}
 }
 
@@ -24,7 +24,7 @@ void UUnDAWWidgetComponent::BeginPlay()
 {
 	if (DAWWidgetClass)
 	{
-		SetWidgetClass(DAWWidgetClass);
+		//SetWidgetClass(DAWWidgetClass);
 	}
 	Super::BeginPlay();
 
