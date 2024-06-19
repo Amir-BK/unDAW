@@ -63,6 +63,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW", meta = (DisplayPriority = "0"))
 	TObjectPtr<UDAWSequencerData> SessionData;
 
+	//hmmm
+	UDAWSequencerData* GetSequenceData() const override;
+
 	//METHODS
 
 protected:

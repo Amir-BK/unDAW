@@ -18,6 +18,14 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 
 }
 
+
+//hmmm
+
+inline UDAWSequencerData* AMusicScenePlayerActor::GetSequenceData() const {
+	UE_LOG(LogTemp, Log, TEXT("Getting Sequence Data"))
+		return SessionData;
+}
+
 // Called when the game starts or when spawned
 void AMusicScenePlayerActor::BeginPlay()
 {
@@ -25,6 +33,7 @@ void AMusicScenePlayerActor::BeginPlay()
 
 	
 	//PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, nullptr, 1.0f, 1.0f, 0.0f, nullptr, true, false);
+	//GetSequenceData()->AuditionBuilder(PerformanceAudioComponent);
 	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	//if (GetActiveSessionData() && GetActiveSessionData()->SavedMetaSound)
 	//{

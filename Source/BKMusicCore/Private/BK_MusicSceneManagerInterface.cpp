@@ -17,11 +17,15 @@ const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
 {
 	{
 
-		if (!SequenceData) return EBKPlayState::NoBuilder;
+		if (!GetSequenceData()) return EBKPlayState::NoBuilder;
 
-		return SequenceData->PlayState;
+		return GetSequenceData()->PlayState;
 	}
 }
+
+inline UDAWSequencerData* IBK_MusicSceneManagerInterface::GetSequenceData() const { 
+	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Getting Sequence Data"))
+	return SequenceData; }
 
 //void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 //{
@@ -36,7 +40,9 @@ void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands I
 {
 	{
 		UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(GetCurrentPlaybackState()))
-		SequenceData->SendTransportCommand(InCommand);
+		if(!GetSequenceData()) return;
+
+		GetSequenceData()->SendTransportCommand(InCommand);
 			//if (Performer) Performer->SendTransportCommand(InCommand);
 	}
 }

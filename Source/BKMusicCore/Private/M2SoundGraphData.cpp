@@ -61,6 +61,8 @@ void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const 
 
 void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
+	
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Generator Handle Created!"))
 	GeneratorHandle = Handle;
 	PlayState = ReadyToPlay;
 
@@ -76,6 +78,8 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 {
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(PlayState))
+	
 	if (AuditionComponent != nullptr)
 	{
 		switch (Command)
