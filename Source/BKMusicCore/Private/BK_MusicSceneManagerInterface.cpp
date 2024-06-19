@@ -55,6 +55,9 @@ void IBK_MusicSceneManagerInterface::SetPlayrate(float newPlayrate)
 
 void IBK_MusicSceneManagerInterface::SendSeekCommand(float InSeek)
 {
+	if(GetSequenceData())
+		GetSequenceData()->SendSeekCommand(InSeek);
+
 	//switch (GetCurrentPlaybackState())
 	//{
 	//case Playing:
