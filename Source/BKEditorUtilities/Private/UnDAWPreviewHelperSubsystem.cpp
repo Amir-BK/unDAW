@@ -3,9 +3,9 @@
 
 #include "UnDAWPreviewHelperSubsystem.h"
 #include "M2SoundGraphRenderer.h"
-#ifdef CUSTOM_PR_PATCH_DEFAULT_MAPPING //see module build.cs file, 
-#include "MetasoundEditorGraphMemberDefaults.h"
-#endif // CUSTOM_PR_PATCH_DEFAULT_MAPPING //see module build.cs file, 
+
+
+#include "MetasoundEditorGraphInputNode.h"
 
 
 
@@ -56,39 +56,6 @@ void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UD
 
 }
 
-void UUnDAWPreviewHelperSubsystem::MapMetasoundPatchPinValues(UMetaSoundPatch* InPatch)
-{
 
-#ifdef CUSTOM_PR_PATCH_DEFAULT_MAPPING
-    TArray<UMetasoundEditorGraphMemberDefaultFloat*> FloatLiterals;
-    InPatch->GetGraph()->GetNodesOfClass<UMetasoundEditorGraphMemberDefaultFloat>(FloatLiterals);
-
-    for (auto& FloatLiteral : FloatLiterals)
-    {
-        //print range!!!
-        auto RangeMin = FloatLiteral->Range.GetMin();
-        auto RangeMax = FloatLiteral->Range.GetMax();
-
-        UE_LOG(LogTemp, Verbose, TEXT("FloatLiteral %s %f %f"), *FloatLiteral->GetFName().ToString(), RangeMin, RangeMax);
-    }
-
-#endif // CUSTOM_PR_PATCH_DEFAULT_MAPPING
-
-UE_LOG(LogTemp, Log, TEXT("Can't access patch defaults (see BK_EditorUtilities.Build.cs)"))
-		//UE_LOG(unDAWVertexLogs, Verbose, TEXT("MapMetasoundPatchPinValues %s"), *Patch->GetName())
-		//if we have a valid vertex cache, save the defaults to it
-	//UE_LOG(unDAWVertexLogs, Verbose, TEXT("SaveDefaultsToVertexCache %s"), *Patch->GetName())
-		//if we have a valid vertex cache, save the defaults to it
-
-
-	//UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), FCachedVertexPinInfo());
-	//UUNDAWSettings::Get()->SaveConfig();
-
-	auto& Document = InPatch->GetDocumentChecked();
-    
-
-    
-
-}
 
 

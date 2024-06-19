@@ -119,7 +119,7 @@ void UM2SoundGraph::SaveVertexRangesToCache()
 				//get the patch vertex and get the default ranges
 				//asPatchVertex->GetDefaultRanges();
 				asPatchVertex->SaveDefaultsToVertexCache();
-				UUnDAWPreviewHelperSubsystem::MapMetasoundPatchPinValues(asPatchVertex->Patch);
+
 			}
 
 		

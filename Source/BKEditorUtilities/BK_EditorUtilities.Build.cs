@@ -8,9 +8,6 @@ public class BK_EditorUtilities : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        //this needs to be commented out on the repo - must be commented out to work with UE5.4 release
-        //PublicDefinitions.Add("CUSTOM_PR_PATCH_DEFAULT_MAPPING=1");
-
         PublicIncludePaths.AddRange(
             new string[] {
 				// ... add public include paths required here ...

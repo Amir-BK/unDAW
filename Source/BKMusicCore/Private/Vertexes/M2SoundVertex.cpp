@@ -170,7 +170,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
 
-
+	TryFindVertexDefaultRangesInCache();
 
 	//find the inputs and outputs of the node
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
@@ -749,4 +749,18 @@ void UM2SoundPatch::UpdateConnections()
 
 	
 
+}
+
+void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
+{
+	auto& Cache = UUNDAWSettings::Get()->Cache;
+
+	if (Cache.Contains(Patch->GetFName()))
+	{
+
+	}
+	else {
+		BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
+	}
+	
 }

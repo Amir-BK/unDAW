@@ -33,9 +33,6 @@ public:
 
 	UFUNCTION()
 	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);	
-	
-	UFUNCTION(BlueprintCallable)
-	static void MapMetasoundPatchPinValues(UMetaSoundPatch* InPatch);
 
 	
 private:

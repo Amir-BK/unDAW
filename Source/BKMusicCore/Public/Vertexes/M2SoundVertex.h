@@ -81,6 +81,8 @@ struct FM2SoundPinData
 
 };
 
+
+
 UCLASS(Abstract, AutoExpandCategories = ("M2Sound"))
 class BKMUSICCORE_API UM2SoundVertex : public UObject
 {
@@ -180,7 +182,9 @@ public:
 
 	void TransmitAudioParameter(FAudioParameter Parameter);
 
-	virtual void CollectAndTransmitAudioParameters() {}
+	virtual void CollectAndTransmitAudioParameters() {};
+
+	virtual void TryFindVertexDefaultRangesInCache() {};
 
 
 	bool bIsAudioOutputVertex = false;
@@ -314,5 +318,7 @@ public:
 	void BuildVertex() override;
 
 	void UpdateConnections() override;
+
+	void TryFindVertexDefaultRangesInCache() override;
 
 };
