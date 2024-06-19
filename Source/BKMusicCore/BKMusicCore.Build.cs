@@ -41,6 +41,7 @@ public class BKMusicCore : ModuleRules
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
                 "unDAWMetaSounds","MetasoundGenerator",
 
+                //probably don't want to depend on music widget, keep the dependency one directional from widgets -> core
 				// ... add other public dependencies that you statically link with here ...
 			}
 

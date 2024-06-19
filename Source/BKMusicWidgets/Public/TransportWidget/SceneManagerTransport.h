@@ -9,6 +9,7 @@
 #include "GlyphButton.h"
 #include "Components/TextBlock.h"
 #include "M2SoundGraphData.h"
+#include "UnDAWWidgetBase.h"
 #include "SceneManagerTransport.generated.h"
 
 
@@ -21,7 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSeekValueChangedEvent, float, Val
  * Base class for the scene manager transport, you have to inherit this in UMG and use the button binds to make it work. See the BP example.
  */
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class BKMUSICWIDGETS_API USceneManagerTransportWidget : public UUserWidget
+class BKMUSICWIDGETS_API USceneManagerTransportWidget : public UUnDAWWidgetBase
 {
 	GENERATED_BODY()
 
@@ -74,8 +75,8 @@ protected:
 	UPROPERTY()
 	float CurrentSeek = 0;
 
-	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager = nullptr;
+	//UPROPERTY(BlueprintReadOnly)
+	//TScriptInterface<IBK_MusicSceneManagerInterface> SceneManager = nullptr;
 
 public:
 

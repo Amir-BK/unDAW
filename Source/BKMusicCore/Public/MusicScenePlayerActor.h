@@ -17,7 +17,7 @@
 
 
 UCLASS()
-class BKMUSICCORE_API AMusicScenePlayerActor : public AActor //, public IBK_MusicSceneManagerInterface
+class BKMUSICCORE_API AMusicScenePlayerActor : public AActor , public IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 

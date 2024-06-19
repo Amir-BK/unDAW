@@ -53,6 +53,7 @@ void AMusicScenePlayerActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	// TODO [$65cfdef41013620009101dd9]: implement time keeping and cursor updates vs. the game thread
+	// DON'T DO THAT
 
 }
 
