@@ -31,6 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, Add
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAudioParameterFromVertex, FAudioParameter, Parameter);
 
+
 //on timestamp updated dynamic multicast delegate one param please
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeStampUpdated, FMusicTimestamp, NewTimestamp);
 
@@ -110,6 +111,8 @@ enum EM2SoundGraphConnectionStatus : uint8
 	Disconnected,
 	Pending
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlaybackStateChanged, EBKPlayState, NewPlaystate);
 
 // this struct allows us to ensure a M2Sound vertex has intelligible data to be used by the metasound builder and once initialized, assuming metasound frontend data didn't change, we can use this data to recreate the sequencer
 USTRUCT()
@@ -365,6 +368,8 @@ public:
 	UFUNCTION()
 	void UpdateVertexConnections(UM2SoundVertex* Vertex);
 
+	UPROPERTY()
+	FOnPlaybackStateChanged OnPlaybackStateChanged;
 
 	UFUNCTION()
 	void ReceiveAudioParameter(FAudioParameter Parameter);
@@ -385,7 +390,6 @@ public:
 	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const { return true; }
 
-private:
 	UPROPERTY(Transient)
 	UAudioComponent* AuditionComponent = nullptr;
 

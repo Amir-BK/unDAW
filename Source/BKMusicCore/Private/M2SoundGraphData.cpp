@@ -81,7 +81,9 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(PlayState))
-	
+
+		auto CurrentPlaystate = PlayState;
+
 	if (AuditionComponent != nullptr)
 	{
 		switch (Command)
@@ -108,6 +110,8 @@ void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 
 		}
 	}
+
+	if(PlayState != CurrentPlaystate) OnPlaybackStateChanged.Broadcast(PlayState);
 }
 
 void UDAWSequencerData::SendSeekCommand(float InSeek)

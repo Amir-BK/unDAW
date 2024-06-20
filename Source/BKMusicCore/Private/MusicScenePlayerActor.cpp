@@ -19,6 +19,26 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 
 }
 
+void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
+{
+	UE_LOG(LogTemp, Log, TEXT("DAW Sequence Play State Changed to %s"), *UEnum::GetValueAsString(NewState));
+	switch (NewState)
+	{
+		case EBKPlayState::Playing:
+			VideoSyncedMidiClock->Start();
+			break;
+
+		case EBKPlayState::ReadyToPlay:
+			VideoSyncedMidiClock->Stop();
+			break;
+
+		case EBKPlayState::Paused:
+			VideoSyncedMidiClock->Pause();
+			break;
+	}
+}
+
+
 
 //hmmm
 
@@ -45,30 +65,9 @@ void AMusicScenePlayerActor::BeginPlay()
 	
 	auto AudioComponent = UGameplayStatics::CreateSound2D(this, AsWavAsset, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	GetDAWSequencerData()->AuditionBuilder(AudioComponent);
+	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
 
-	if(!MaterialParameterCollection)
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Material Parameter Collection set on Music Scene Player Actor"))
-		//return;
-	}
-	else {
-		//int32 DurationParam =	MaterialParameterCollection->ScalarParameters.IndexOfByPredicate([](const FMaterialParameterInfo& Info) {
-		//	return Info.Name == FName("SongDuration");
-		//});
-
-		//MaterialParameterCollection->ScalarParameters[DurationParam].DefaultValue = GetDAWSequencerData()->SequenceDuration;
-
-	}
-
-	VideoSyncedMidiClock = NewObject<UMusicClockComponent>(this);
-	VideoSyncedMidiClock->RegisterComponent();
-	VideoSyncedMidiClock->ConnectToMetasoundOnAudioComponent(AudioComponent);
-	VideoSyncedMidiClock->Start();
-
-	MusicTempometer = NewObject<UMusicTempometerComponent>(this);
-	MusicTempometer->RegisterComponent();
-	MusicTempometer->SetMaterialParameterCollection(MaterialParameterCollection);
-	MusicTempometer->SetClock(VideoSyncedMidiClock);
+	InitHarmonixComponents();
 
 
 	//MusicTempometer
@@ -112,9 +111,43 @@ void delegateFunc(FName Output, const FMetaSoundOutput& MetaSoundOutput)
 
 void AMusicScenePlayerActor::InitHarmonixComponents()
 {
-	//AudioComponent;
-	//GeneratorHandle = UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(AudioComponent);
-	//GeneratorHandle->WatchOutput(FName("Midi Stream"), delegateFunc);
+
+	auto& AudioComponent = GetDAWSequencerData()->AuditionComponent;
+
+	if (!MaterialParameterCollection)
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Material Parameter Collection set on Music Scene Player Actor"))
+			//return;
+	}
+	else {
+
+		FCollectionScalarParameter* DurationParam;
+		DurationParam = MaterialParameterCollection->ScalarParameters.FindByPredicate([](const FCollectionScalarParameter& Info) {
+			return Info.ParameterName == FName("SongDuration");
+			});
+
+		if (DurationParam)
+		{
+			DurationParam->DefaultValue = GetDAWSequencerData()->SequenceDuration;
+		}
+		//int32 DurationParam =	MaterialParameterCollection->ScalarParameters.IndexOfByPredicate([](const FMaterialParameterInfo& Info) {
+		//	return Info.Name == FName("SongDuration");
+		//});
+
+		//MaterialParameterCollection->ScalarParameters[DurationParam].DefaultValue = GetDAWSequencerData()->SequenceDuration;
+
+	}
+
+	VideoSyncedMidiClock = NewObject<UMusicClockComponent>(this);
+	VideoSyncedMidiClock->RegisterComponent();
+	VideoSyncedMidiClock->ConnectToMetasoundOnAudioComponent(AudioComponent);
+	//VideoSyncedMidiClock->PlayStateEvent.AddUniqueDynamic(this, &AMusicScenePlayerActor::OnMusicClockPlaystate);
+	//VideoSyncedMidiClock->Start();	
+
+	MusicTempometer = NewObject<UMusicTempometerComponent>(this);
+	MusicTempometer->RegisterComponent();
+	MusicTempometer->SetMaterialParameterCollection(MaterialParameterCollection);
+	MusicTempometer->SetClock(VideoSyncedMidiClock);
 	
 }
 

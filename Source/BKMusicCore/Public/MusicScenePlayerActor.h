@@ -33,10 +33,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "unDAW|Transport")
 	FOnPlaybackStateChanged PlaystateDelegate;
 
-
-	//PROPERTIES
-
-
+	UFUNCTION()
+	void DAWSequencePlayStateChange(EBKPlayState NewState);
 
 
 
@@ -82,6 +80,8 @@ public:
 	//creates tempometer and music clock components
 	UFUNCTION()
 	virtual void InitHarmonixComponents();
+
+
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
