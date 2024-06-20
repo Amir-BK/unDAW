@@ -34,16 +34,16 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 
 
 	NewMidiFile->BuildConductorTrack();
-	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(50000, 0);
+	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(500000, 0);
 	NewMidiFile->GetSongMaps()->GetBarMap().AddTimeSignatureAtBarIncludingCountIn(0, 4, 4, true);
 
 
 	auto NewTrack = NewMidiFile->AddTrack(FString::Printf(TEXT("New Track %d"), 0));
-	NewTrack->AddEvent(NoteOnEvent);
-	NewTrack->AddEvent(NoteOffEvent);
+	//NewTrack->AddEvent(NoteOnEvent);
+	//NewTrack->AddEvent(NoteOffEvent);
 
-	NewTrack->AddEvent(NoteOnEvent2);
-	NewTrack->AddEvent(NoteOffEvent2);
+	//NewTrack->AddEvent(NoteOnEvent2);
+	//NewTrack->AddEvent(NoteOffEvent2);
 
 	
 
