@@ -28,7 +28,8 @@ void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile)
 void UEditableMidiFile::FinishRebuildingMidiFile()
 {
 	
-
+	//hack for now we set the loop to 4
+	//GetSongMaps()->SetLengthTotalBars(4);
 	// we are now "dirty"... so make sure any new requests for renderable data 
 	// get a new copy...
 	RenderableCopyOfMidiFileData = nullptr;

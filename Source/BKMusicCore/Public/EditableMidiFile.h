@@ -16,6 +16,13 @@ class BKMUSICCORE_API UEditableMidiFile : public UMidiFile
 	
 
 	public:
+
+		UPROPERTY()
+		bool bSimpleLoop = false;
+
+		UPROPERTY()
+		int32 LoopBarDuration = 4;
+
 		void LoadFromHarmonixBaseFile(UMidiFile* BaseFile);
 
 		void FinishRebuildingMidiFile();

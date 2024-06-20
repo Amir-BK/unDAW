@@ -290,6 +290,9 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	
 	GENERATED_BODY()
 
+	UPROPERTY()
+	bool bIsLooping = false;
+
 	//patch references
 	UPROPERTY()
 	TScriptInterface<IMetaSoundDocumentInterface> MidiFilterDocument;
@@ -319,6 +322,8 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	TMap<FName,EMetaSoundBuilderResult> BuilderResults;
 
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext);
+
+	
 
 protected:
 	friend class UDAWSequencerData;
@@ -397,6 +402,9 @@ public:
 
 	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
 	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;
+
+
+	void SetLoopSettings(const bool& InbIsLooping, const int32& BarDuration);
 
 	// binding to generator outputs, used to monitor transport and midi outputs
 	UFUNCTION()

@@ -24,8 +24,7 @@ const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
 }
 
 inline UDAWSequencerData* IBK_MusicSceneManagerInterface::GetDAWSequencerData() const { 
-	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Getting Sequence Data"))
-	return SequenceData; }
+		return SequenceData; }
 
 //void IBK_MusicSceneManagerInterface::SendTransportCommand(EBKTransportCommands InCommand)
 //{

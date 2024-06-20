@@ -49,6 +49,21 @@ bool UDAWSequencerData::IsTickable() const
 	return bShouldTick;
 }
 
+void UDAWSequencerData::SetLoopSettings(const bool& InbIsLooping, const int32& BarDuration)
+{
+	EMetaSoundBuilderResult BuildResult;
+	FName DataTypeName;
+	CoreNodes.bIsLooping = InbIsLooping;
+	auto SimpleLoopBoolInput = BuilderContext->FindNodeInputByName(CoreNodes.MidiPlayerNode, FName(TEXT("Simple Loop")), BuildResult);
+	CoreNodes.BuilderResults.Add(FName(TEXT("Find Simple Loop Input")), BuildResult);
+	BuilderContext->SetNodeInputDefault(SimpleLoopBoolInput, MSBuilderSystem->CreateBoolMetaSoundLiteral(InbIsLooping, DataTypeName), BuildResult);
+	CoreNodes.BuilderResults.Add(FName(TEXT("Set Simple Loop Input")), BuildResult);
+
+	if(BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Setting Loop Settings %s, %d"), InbIsLooping? TEXT("True") : TEXT("False"), BarDuration)
+
+}
+
 void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 }
@@ -249,8 +264,9 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	PendingLinkedMidiNotesMap.Add(PendingNote);
 	MidiFileCopy->SortAllTracks();
-	auto LastEventTick = MidiFileCopy->GetLastEventTick();
-	MidiFileCopy->GetSongMaps()->SetLengthTotalBars(16);
+	//auto LastEventTick = MidiFileCopy->GetLastEventTick();
+	//MidiFileCopy->GetSongMaps()->SetLengthTotalBars(4);
+	//MidiFileCopy->LoopBarDuration = 4;
 
 	HarmonixMidiFile = MidiFileCopy;
 	MarkPackageDirty();
@@ -506,6 +522,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
 	CoreNodes.InitCoreNodes(BuilderContext, this);
+	SetLoopSettings(CoreNodes.bIsLooping, INDEX_NONE);
 
 	//iterate over vertexes and create the nodes
 	for(auto& Vertex : Vertexes)

@@ -288,6 +288,19 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 							[
 								StopButton
 							]
+							+ SHorizontalBox::Slot()
+							
+							// loop control check box, monitors the value of CoreNodes.bIsLooping and calls 'SetLoopSettings' on assign value
+							[
+								SNew(SCheckBox)
+									.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (SequenceData) SequenceData->SetLoopSettings(NewState == ECheckBoxState::Checked, 4); })
+									.IsChecked_Lambda([this]() -> ECheckBoxState { return SequenceData && SequenceData->CoreNodes.bIsLooping ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+									.ToolTipText(INVTEXT("Set simple loop, right now will loop the first 4 bars of the MIDI, more nuance to come\nUnfortunatley the harmonix node jump to 0 when loop is toggled"))
+									.Content()
+									[
+										SNew(STextBlock).Text(INVTEXT("Loop"))
+									]
+							]
 
 					]);
 
