@@ -38,7 +38,9 @@ public:
 
 
 
-
+	//To get the accurate timestamp for our MIDI players it's better to read the timestamp on the DAWSequecerData
+	//The harmonix music clock component exposes a lot of nice functions and writes the tempo data to the MaterialParameterCollection
+	//but it has some quirks, it's bar reading might not be accurate, especially if you send seek events to the midi player
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UMusicClockComponent* VideoSyncedMidiClock;
 

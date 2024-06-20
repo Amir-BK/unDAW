@@ -390,7 +390,7 @@ public:
 	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const { return true; }
 
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
 	UAudioComponent* AuditionComponent = nullptr;
 
 public:
@@ -455,6 +455,7 @@ public:
 
 	void InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
 	FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);
 
 	UFUNCTION()

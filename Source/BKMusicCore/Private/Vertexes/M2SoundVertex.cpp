@@ -541,6 +541,12 @@ void UM2SoundBuilderInputHandleNode::BuildVertex()
 
 	auto NewNodeMidiStreamOutput = BuilderContext->FindNodeOutputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
 
+	auto NewMidiStreamGraphOutputInput = BuilderContext->AddGraphOutputNode(FName(TrackPrefix + ("MidiOutput")), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult, false );
+
+	BuilderContext->ConnectNodes(NewNodeMidiStreamOutput, NewMidiStreamGraphOutputInput, BuildResult);
+
+	BuilderResults.Add(FName(TEXT("Expose Midi Stream To Graph")), BuildResult);
+
 	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, NewNodeMidiStreamOutput);
 	BuilderResults.Add(FName(TEXT("Expose Auto Connect Midi Stream MetaPin")), BuildResult);
 
