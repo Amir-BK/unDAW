@@ -40,8 +40,6 @@ public:
 
 
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UAudioComponent* PerformanceAudioComponent;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UMusicClockComponent* VideoSyncedMidiClock;
@@ -49,7 +47,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
 	UMusicTempometerComponent* MusicTempometer;
 
-
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "unDAW|Music Scene")
+	TObjectPtr<UMaterialParameterCollection> MaterialParameterCollection;
 
 	//UPROPERTY()
 	TSharedPtr<UMetasoundGeneratorHandle> GeneratorHandle;
@@ -80,9 +79,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// TODO [$65cfdef41013620009101dda]: implement clock init in MusicSceneActor, register to clock events and route them to subscribers
-	UFUNCTION(BlueprintCallable, Category = "BK Music")
-	virtual void InitClock(float inBPM);
+	//creates tempometer and music clock components
+	UFUNCTION()
+	virtual void InitHarmonixComponents();
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
