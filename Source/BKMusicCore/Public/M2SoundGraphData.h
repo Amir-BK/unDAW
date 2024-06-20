@@ -183,6 +183,9 @@ struct FLinkedMidiEvents
 	double StartTime = 0.0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	float NoteVelocity = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	float cornerRadius = 0.0f;
 
 	void CalculateDuration(FSongMaps* SongsMap)

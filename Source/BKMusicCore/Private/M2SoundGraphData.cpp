@@ -143,12 +143,12 @@ void UDAWSequencerData::AddTrack()
 {
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
+	M2TrackMetadata.Add(NewTrackMetaData);
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
 	NewTrackMetaData.TrackIndexInParentMidi = 1;
 	NewTrackMetaData.trackName = TEXT("New Track");
 	NewTrackMetaData.fusionPatch = nullptr;
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
-	M2TrackMetadata.Add(NewTrackMetaData);
 
 	UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
 
@@ -253,7 +253,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
 	auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
-	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
+	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, PendingNote.NoteVelocity);
 	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
 	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
 	auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);

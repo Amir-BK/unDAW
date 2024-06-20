@@ -283,6 +283,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 		if (hoveredPitch != LastDrawnNotePitch || LastDrawnNoteStartTick != ValueAtMouseCursorPostSnapping)
 		{
 			FLinkedMidiEvents newNote = FLinkedMidiEvents();
+			newNote.NoteVelocity = NewNoteVelocity;
 			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
 			newNote.pitch = hoveredPitch;
 			newNote.TrackId = SessionData->SelectedTrackIndex;
@@ -324,6 +325,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 					return false;
 					});
 
+				//this is so stupid... fix tomorrow.
 				if (TempNotePtr != nullptr)
 				{
 					//we also need to look for it in the pending notes map

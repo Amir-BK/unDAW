@@ -55,6 +55,9 @@ public:
 	int slotInParentID;
 	bool lmbDown = false;
 
+
+
+
 	void Construct(const FArguments& InArgs)
 	{
 		parentMidiEditor = InArgs._parentMidiEditor;
@@ -154,6 +157,8 @@ public:
 
 	double LastMeasuredAudioTime = 0.0;
 	double CurrentTimelinePosition = 0.0;
+
+	float NewNoteVelocity = 100.0f;
 
 	UDAWSequencerData* SessionData;
 

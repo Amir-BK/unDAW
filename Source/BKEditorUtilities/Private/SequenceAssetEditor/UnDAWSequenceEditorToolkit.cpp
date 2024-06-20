@@ -14,6 +14,8 @@
 #include "M2SoundEdGraphSchema.h"
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "SEnumCombo.h"
+#include "SlateFwd.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 
 #include "Widgets/Layout/SScaleBox.h"
 
@@ -345,6 +347,16 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 						SNew(STextBlock).Text(INVTEXT("Follow Cursor"))
 					]
 				);
+
+				ToolbarBuilder.AddWidget(SNew(SNumericEntryBox<float>)
+					.AllowSpin(true)
+					.MinValue(0.0f)
+					.MaxValue(127.0f)
+					.MaxSliderValue(127.0f)
+					.MaxFractionalDigits(2)
+					.MinFractionalDigits(2)
+					.Value_Lambda([this]() -> float { return PianoRollGraph ? PianoRollGraph->NewNoteVelocity : 0.0f; })
+					.OnValueChanged_Lambda([this](float NewValue) { if (PianoRollGraph) PianoRollGraph->NewNoteVelocity = NewValue; }));
 
 				ToolbarBuilder.EndSection();
 			}));
