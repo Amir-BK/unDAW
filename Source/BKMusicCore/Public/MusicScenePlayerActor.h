@@ -24,7 +24,9 @@ class BKMUSICCORE_API AMusicScenePlayerActor : public AActor , public IBK_MusicS
 	GENERATED_BODY()
 
 public:
-
+	
+	//creates a transient music timestamp to trigger node using the metasound builder, connects its output to the graph output, watches the output
+	// via the metasound output subsystem and FINALLY, calls the delegate when the trigger is executed
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta=(AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToTriggerEventOnMusicTimestamp(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
