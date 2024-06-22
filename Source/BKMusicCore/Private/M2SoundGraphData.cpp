@@ -196,16 +196,8 @@ void UDAWSequencerData::AddTrack()
 
 void UDAWSequencerData::ReinitGraph()
 {
-		FindOrCreateBuilderForAsset(true);
-#if WITH_EDITOR
-	if (M2SoundGraph)
-	{
-		M2SoundGraph->InitializeGraph();
-	}
-#endif
 
-	//UpdateNoteDataFromMidiFile
-
+	PopulateFromMidiFile(HarmonixMidiFile);
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
@@ -326,17 +318,26 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 {
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
 	//so, before we can delete the note we need to empty our pending notes map and repopulate the main data map
 	// no actually, we can just remove the note from the midi file first
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
 
 	auto& NoteMetadata = M2TrackMetadata[PendingNote.TrackId];
+	PendingNote.ChannelId = NoteMetadata.ChannelIndexInParentMidi;
+
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
+	//print pending note data
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pending Note Data: Start %d, End %d, Pitch %d, Channel %d"), PendingNote.StartTick, PendingNote.EndTick, PendingNote.pitch, PendingNote.ChannelId)
 	
 
 	auto FoundStartEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
-		if (Event.GetMsg().IsNoteOn() && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+		
+		// print event tick and data
+		if (!Event.GetMsg().IsNoteOn()) return false;
+
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note on Event Tick %d, Data1 %d, Data2 %d, Channel %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
+		if(Event.GetTick() == PendingNote.StartTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
 		{
 			return true;
 		}
@@ -346,18 +347,32 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	//we need to find the real end event, not the one we have in the pending notes map
 
 
-	auto FoundEndEvent = MidiFileCopy->GetTrack(PendingNote.TrackId)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
-		if (Event.GetMsg().IsNoteOff() && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
-		{
-			return true;
-		}
+	auto FoundEndEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
+		
+		//if (Event.GetTick() == PendingNote.EndTick) return true;
+
+		if (!Event.GetMsg().IsNoteOff()) return false;
+		
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note off Event Tick %d, Data1 %d, Data2 %d, Channel: %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
+			//start with comparing the tick and the channel...
+			if(Event.GetTick() == PendingNote.EndTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+			{
+				return true;
+			}
+
+		
+
 		return false;
 		});
 
+	//print indexes
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Found Start Event %d, Found End Event %d"), FoundStartEvent, FoundEndEvent)
+
 	if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
 	{
-		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundStartEvent);
-		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundEndEvent);
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
+		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAtSwap(FoundEndEvent);
+		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAtSwap(FoundStartEvent);
 	}
 	else {
 		UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
@@ -430,7 +445,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& OutDiscoveredChannels)
 {
 	
-	LinkedMidiNotesMap.Empty();
+	LinkedNoteDataMap.Empty();
 	PendingLinkedMidiNotesMap.Empty();
 
 	

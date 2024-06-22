@@ -475,7 +475,6 @@ public:
 	UFUNCTION()
 	void CalculateSequenceDuration();
 
-	TMap<int, FLinkedMidiEvents> LinkedMidiNotesMap;
 
 	UPROPERTY()
 	TArray<FLinkedMidiEvents> PendingLinkedMidiNotesMap;

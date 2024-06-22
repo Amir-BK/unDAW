@@ -289,7 +289,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
 			newNote.pitch = hoveredPitch;
 			newNote.TrackId = SessionData->SelectedTrackIndex;
-			//newNote.ChannelId = TrackMetadata.ChannelIndexInParentMidi;
+			newNote.ChannelId = TrackMetadata.ChannelIndexInParentMidi;
 			newNote.StartTick = ValueAtMouseCursorPostSnapping;
 			newNote.EndTick = ValueAtMouseCursorPostSnapping + 500;
 			newNote.CalculateDuration(MidiSongMap);
@@ -1030,7 +1030,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		auto& note = SelectedNote;
 		FSlateDrawElement::MakeBox(OutDrawElements,
 			LayerId,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D((note->Duration + 16) * horizontalZoom, rowHeight + (50 * verticalZoom)), FSlateLayoutTransform(1.0f, FVector2D((note->StartTime - 4.0f) * horizontalZoom, (-25.0f * verticalZoom) + rowHeight * (127 - note->pitch)))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D((note->Duration + 20) * horizontalZoom, rowHeight + (50 * verticalZoom)), FSlateLayoutTransform(1.0f, FVector2D((note->StartTime - 5.0f) * horizontalZoom, (-25.0f * verticalZoom) + rowHeight * (127 - note->pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
 			colorNegative.CopyWithNewOpacity(0.5f)
