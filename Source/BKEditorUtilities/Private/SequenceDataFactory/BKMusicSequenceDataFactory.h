@@ -14,6 +14,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
 #include "AssetRegistry/AssetData.h"
+#include "ImportTestFunctions/ImportTestFunctionsBase.h"
 #include <UnDAWPreviewHelperSubsystem.h>
 #include "BKMusicSequenceDataFactory.generated.h"
 
@@ -179,3 +180,15 @@ public:
 
 };
 
+UCLASS()
+class BK_EDITORUTILITIES_API UDAWAssetsTestFunctions : public UImportTestFunctionsBase, public FSelfRegisteringExec
+
+{
+	GENERATED_BODY()
+
+	UFUNCTION(Exec)
+	static void PrintTestMessage(const FString& Message)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Test Message: %s"), *Message);
+	}
+};

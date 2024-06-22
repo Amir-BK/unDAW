@@ -139,8 +139,39 @@ void UDAWSequencerData::SendSeekCommand(float InSeek)
 		}
 }
 
+void UDAWSequencerData::PrintMidiData()
+{
+	UE_LOG(unDAWDataLogs, Log, TEXT("Printing Midi Data (unDAW Current Copy)"))
+		for (auto& [Channel, LinkedNotes] : LinkedNoteDataMap)
+		{
+			UE_LOG(unDAWDataLogs, Verbose, TEXT("Channel %d"), Channel)
+				for (auto& Note : LinkedNotes.LinkedNotes)
+				{
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Note %d, Start %d, End %d"), Note.pitch, Note.StartTick, Note.EndTick)
+				}
+		}
+
+	//tracks in metadata
+	UE_LOG(unDAWDataLogs, Log, TEXT("Tracks in unDAW Metadata"))
+	for (auto& Track : M2TrackMetadata)
+	{
+		UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *Track.trackName)
+	}
+
+	//tracks in midi file
+	UE_LOG(unDAWDataLogs, Log, TEXT("Tracks in midi file"))
+	for (auto& Track : HarmonixMidiFile->GetTracks())
+	{
+		UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *FString(*Track.GetName()))
+	}
+}
+
 void UDAWSequencerData::AddTrack()
 {
+	
+	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
@@ -148,14 +179,17 @@ void UDAWSequencerData::AddTrack()
 	NewTrackMetaData.fusionPatch = nullptr;
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
 
-	UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num());
 
-	auto NewTrack = HarmonixMidiFile->AddTrack(NewTrackMetaData.trackName);
-	NewTrackMetaData.TrackIndexInParentMidi = HarmonixMidiFile->GetTracks().IndexOfByPredicate([NewTrack](const FMidiTrack& Track) {
-		return Track.GetName() == NewTrack->GetName();
-		});
+	auto NewTrack = MidiFileCopy->AddTrack(NewTrackMetaData.trackName);
+	
+	//auto TrackIndexByName = HarmonixMidiFile->FindTrackIndexByName(NewTrackMetaData.trackName);
+	NewTrackMetaData.TrackIndexInParentMidi = MidiFileCopy->GetTracks().Num() - 1;
 
+	//HarmonixMidiFile->SortAllTracks();
 	M2TrackMetadata.Add(NewTrackMetaData);
+	UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
+
+	HarmonixMidiFile = MidiFileCopy;
 
 	OnMidiDataChanged.Broadcast();
 }
@@ -258,7 +292,15 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
 	// why - 1 ? ffs. 
-	auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi - 1);
+	//auto TargetTrackIndex = MidiFileCopy->FindTrackIndexByName(TrackMetaData.trackName);
+	auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+
+	if(!TargetTrack)
+	{
+		UE_LOG(unDAWDataLogs, Error, TEXT("Target Track not found!"))
+		return;
+	}
+
 	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, PendingNote.NoteVelocity);
 	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
 	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);

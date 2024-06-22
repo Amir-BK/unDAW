@@ -296,71 +296,74 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			
 			TemporaryNote = newNote;
 			SelectedNote = &TemporaryNote;
-		
-		}
-		//if lmb down commit note
-		if (bLMBdown)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
-			
-			if (isCtrlPressed) {
 
-				//this crashes disabling for now
-				return;
+			// to fix note creation, put this loop here, but deleting won't work, it shouldn't be called for here anyway... 
+			//if lmb down commit note
+			if (bLMBdown)
+			{
+				UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
 
-				//SelectedNote = nullptr;
-				//we need to find the real end event of the hovered note
-				if(CulledNotesArray.Num() == 0) return;
+				if (isCtrlPressed) {
 
-				auto TempNotePtr = *CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-					if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
-					{
-						if (note->pitch == hoveredPitch)
+					//this crashes disabling for now
+					return;
+
+					//SelectedNote = nullptr;
+					//we need to find the real end event of the hovered note
+					if (CulledNotesArray.Num() == 0) return;
+
+					auto TempNotePtr = *CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+						if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
 						{
-							//SelectedNote = note;
-							return true;
-						}
-					}
-					
-					return false;
-					});
-
-				//this is so stupid... fix tomorrow.
-				if (TempNotePtr != nullptr)
-				{
-					//we also need to look for it in the pending notes map
-					TempNotePtr = SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents note) {
-						if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
-						{
-							if (note.pitch == hoveredPitch)
+							if (note->pitch == hoveredPitch)
 							{
-								//SelectedNote = &note;
+								//SelectedNote = note;
 								return true;
 							}
 						}
-						
+
 						return false;
 						});
 
-					if (TempNotePtr == nullptr)
+					//this is so stupid... fix tomorrow.
+					if (TempNotePtr != nullptr)
 					{
-						//we're not hovering on any note! kinda stupid we should run all of these checks 
-						//long story short, deleting a note should only be possible if we have a selected note
-						UE_LOG(LogTemp, Log, TEXT("No note found! Not Deleting Anything!"));
-						return;
+						//we also need to look for it in the pending notes map
+						TempNotePtr = SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents note) {
+							if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
+							{
+								if (note.pitch == hoveredPitch)
+								{
+									//SelectedNote = &note;
+									return true;
+								}
+							}
+
+							return false;
+							});
+
+						if (TempNotePtr == nullptr)
+						{
+							//we're not hovering on any note! kinda stupid we should run all of these checks 
+							//long story short, deleting a note should only be possible if we have a selected note
+							UE_LOG(LogTemp, Log, TEXT("No note found! Not Deleting Anything!"));
+							return;
+						}
+
+						//TemporaryNote = *TempNotePtr;
+
 					}
 
-					//TemporaryNote = *TempNotePtr;
-
+					SessionData->DeleteLinkedMidiEvent(TemporaryNote);
+				}
+				else {
+					SessionData->AddLinkedMidiEvent(TemporaryNote);
 				}
 
-				SessionData->DeleteLinkedMidiEvent(TemporaryNote);
-			}
-			else {
-				SessionData->AddLinkedMidiEvent(TemporaryNote);
-			}
-			
-			//SelectedNote = nullptr;
+				//SelectedNote = nullptr;
+		
+		}
+		
 		}
 
 		//if in note draw mode, add note to pending notes map

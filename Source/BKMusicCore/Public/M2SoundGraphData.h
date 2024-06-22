@@ -425,6 +425,9 @@ public:
 
 	bool isInEditorPreview = false;
 
+	UFUNCTION(CallInEditor, Category = "unDAW")
+	void PrintMidiData();
+
 	//for now I'll mark this call in editor for testing, but we need fancier management of track add and removal, it should probably
 	//edit the midi data and be registered in undos
 	UFUNCTION(CallInEditor, Category = "unDAW")
@@ -461,7 +464,7 @@ public:
 	UPROPERTY()
 	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
 
 	void InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
