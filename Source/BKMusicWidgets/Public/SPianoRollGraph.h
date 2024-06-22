@@ -192,6 +192,7 @@ public:
 	TCHAR CursorString;
 
 	int32 ValueAtMouseCursorPostSnapping;
+	int32 TickAtEndEvent;
 
 	float horizontalZoom = 0.1f;
 	float hZoomTarget = horizontalZoom;

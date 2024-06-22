@@ -279,11 +279,15 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)
 	{
-
 		
 
 		if (!isCtrlPressed && hoveredPitch != LastDrawnNotePitch || LastDrawnNoteStartTick != ValueAtMouseCursorPostSnapping)
 		{
+			//calculate end tick, for now just add the quantization value to the start stick
+			auto NumTicksPerSubdivision = MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), ValueAtMouseCursorPostSnapping);
+
+			
+			
 			FLinkedMidiEvents newNote = FLinkedMidiEvents();
 			newNote.NoteVelocity = NewNoteVelocity;
 			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
@@ -291,7 +295,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			newNote.TrackId = SessionData->SelectedTrackIndex;
 			newNote.ChannelId = TrackMetadata.ChannelIndexInParentMidi;
 			newNote.StartTick = ValueAtMouseCursorPostSnapping;
-			newNote.EndTick = ValueAtMouseCursorPostSnapping + 500;
+			newNote.EndTick = ValueAtMouseCursorPostSnapping + NumTicksPerSubdivision;
 			newNote.CalculateDuration(MidiSongMap);
 			LastDrawnNotePitch = hoveredPitch;
 			LastDrawnNoteStartTick = ValueAtMouseCursorPostSnapping;
