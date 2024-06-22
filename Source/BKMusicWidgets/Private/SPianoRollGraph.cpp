@@ -295,79 +295,82 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			LastDrawnNoteStartTick = ValueAtMouseCursorPostSnapping;
 			
 			TemporaryNote = newNote;
-			SelectedNote = &TemporaryNote;
+			PreviewNotePtr = &TemporaryNote;
 
 			// to fix note creation, put this loop here, but deleting won't work, it shouldn't be called for here anyway... 
 			//if lmb down commit note
-			if (bLMBdown)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
-
-				if (isCtrlPressed) {
-
-					//this crashes disabling for now
-					return;
-
-					//SelectedNote = nullptr;
-					//we need to find the real end event of the hovered note
-					if (CulledNotesArray.Num() == 0) return;
-
-					auto TempNotePtr = *CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-						if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
-						{
-							if (note->pitch == hoveredPitch)
-							{
-								//SelectedNote = note;
-								return true;
-							}
-						}
-
-						return false;
-						});
-
-					//this is so stupid... fix tomorrow.
-					if (TempNotePtr != nullptr)
-					{
-						//we also need to look for it in the pending notes map
-						TempNotePtr = SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents note) {
-							if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
-							{
-								if (note.pitch == hoveredPitch)
-								{
-									//SelectedNote = &note;
-									return true;
-								}
-							}
-
-							return false;
-							});
-
-						if (TempNotePtr == nullptr)
-						{
-							//we're not hovering on any note! kinda stupid we should run all of these checks 
-							//long story short, deleting a note should only be possible if we have a selected note
-							UE_LOG(LogTemp, Log, TEXT("No note found! Not Deleting Anything!"));
-							return;
-						}
-
-						//TemporaryNote = *TempNotePtr;
-
-					}
-
-					SessionData->DeleteLinkedMidiEvent(TemporaryNote);
-				}
-				else {
-					SessionData->AddLinkedMidiEvent(TemporaryNote);
-				}
-
-				//SelectedNote = nullptr;
-		
-		}
+			
 		
 		}
 
 		//if in note draw mode, add note to pending notes map
 		//TimeAtMouse
+	}
+
+	if (bLMBdown && PreviewNotePtr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
+
+		if (isCtrlPressed) {
+
+			//this crashes disabling for now
+			return;
+
+			//SelectedNote = nullptr;
+			//we need to find the real end event of the hovered note
+			if (CulledNotesArray.Num() == 0) return;
+
+			auto TempNotePtr = *CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
+				if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
+				{
+					if (note->pitch == hoveredPitch)
+					{
+						//SelectedNote = note;
+						return true;
+					}
+				}
+
+				return false;
+				});
+
+			//this is so stupid... fix tomorrow.
+			if (TempNotePtr != nullptr)
+			{
+				//we also need to look for it in the pending notes map
+				TempNotePtr = SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents note) {
+					if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
+					{
+						if (note.pitch == hoveredPitch)
+						{
+							//SelectedNote = &note;
+							return true;
+						}
+					}
+
+					return false;
+					});
+
+				if (TempNotePtr == nullptr)
+				{
+					//we're not hovering on any note! kinda stupid we should run all of these checks 
+					//long story short, deleting a note should only be possible if we have a selected note
+					UE_LOG(LogTemp, Log, TEXT("No note found! Not Deleting Anything!"));
+					return;
+				}
+
+				//TemporaryNote = *TempNotePtr;
+
+			}
+
+			//SessionData->DeleteLinkedMidiEvent(TemporaryNote);
+		}
+		else {
+			SessionData->AddLinkedMidiEvent(TemporaryNote);
+			PreviewNotePtr = nullptr;
+		}
+
+		//SelectedNote = nullptr;
+
 	}
 
 
@@ -711,8 +714,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		//hoveredNotePitch = -1;
 
   
-	if(InputMode == EPianoRollEditorMouseMode::empty)
-	{
+
 		SelectedNote = nullptr;
 		CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
 			if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
@@ -726,7 +728,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 			;
 			return false;
 			});
-	}
+
 
 
 
@@ -1083,9 +1085,23 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
+			FLinearColor::Red
+		);
+	}
+
+	//draw preview note
+	if(PreviewNotePtr != nullptr)
+		{
+		auto& note = PreviewNotePtr;
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			PostNotesLayerID,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			&gridBrush,
+			ESlateDrawEffect::None,
 			trackColor.CopyWithNewOpacity(0.5f)
 		);
 	}
+
 
 
 //#define PIANO_ROLL_DEBUG

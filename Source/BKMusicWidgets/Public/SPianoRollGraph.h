@@ -230,6 +230,7 @@ public:
 
 	FLinkedMidiEvents TemporaryNote;
 	FLinkedMidiEvents* SelectedNote = nullptr;
+	FLinkedMidiEvents* PreviewNotePtr = nullptr;
 
 	bool bShouldDrawNote = true;
 	int LastDrawnNotePitch = INDEX_NONE;
