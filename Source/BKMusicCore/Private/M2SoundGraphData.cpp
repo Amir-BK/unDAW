@@ -196,8 +196,13 @@ void UDAWSequencerData::AddTrack()
 
 void UDAWSequencerData::ReinitGraph()
 {
-
-	PopulateFromMidiFile(HarmonixMidiFile);
+	FindOrCreateBuilderForAsset(true);
+#if WITH_EDITOR
+	if (M2SoundGraph)
+	{
+		M2SoundGraph->InitializeGraph();
+	}
+#endif
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
@@ -593,7 +598,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
 	CoreNodes.InitCoreNodes(BuilderContext, this);
-	SetLoopSettings(CoreNodes.bIsLooping, 4);
+	SetLoopSettings(CoreNodes.bIsLooping, 2);
 
 	//iterate over vertexes and create the nodes
 	for(auto& Vertex : Vertexes)

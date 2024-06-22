@@ -34,7 +34,7 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 
 
 	NewMidiFile->BuildConductorTrack();
-	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(120), 0);
+	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(140), 0);
 	NewMidiFile->GetSongMaps()->GetBarMap().AddTimeSignatureAtBarIncludingCountIn(0, 4, 4, true);
 
 
