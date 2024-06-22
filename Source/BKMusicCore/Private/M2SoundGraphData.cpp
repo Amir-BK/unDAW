@@ -17,6 +17,12 @@ struct FEventsWithIndex
 	int32 eventIndex;
 };
 
+void UDAWSequencerData::SaveDebugMidiFileTest()
+{
+	auto UniqueID = FGuid::NewGuid().ToString() + TEXT(".mid");
+	HarmonixMidiFile->SaveStdMidiFile(FPaths::ProjectContentDir() / UniqueID);
+}
+
 void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
 {
 	Vertex->BuildVertex();
@@ -376,8 +382,8 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
 	{
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
-		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAtSwap(FoundEndEvent);
-		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAtSwap(FoundStartEvent);
+		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent,1, false);
+		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent,1, false);
 	}
 	else {
 		UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))

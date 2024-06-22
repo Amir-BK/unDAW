@@ -358,6 +358,8 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	UFUNCTION(CallInEditor, Category = "unDAW")
+	void SaveDebugMidiFileTest();
 
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnTimeStampUpdated OnTimeStampUpdated;
