@@ -274,13 +274,15 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	}
 
+	//we need to update hovered pitch every tick
+	hoveredPitch = 127 - FMath::Floor(localMousePosition.Y / rowHeight);
 
 	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)
 	{
 
-		hoveredPitch = 127 - FMath::Floor(localMousePosition.Y / rowHeight);
+		
 
-		if (hoveredPitch != LastDrawnNotePitch || LastDrawnNoteStartTick != ValueAtMouseCursorPostSnapping)
+		if (!isCtrlPressed && hoveredPitch != LastDrawnNotePitch || LastDrawnNoteStartTick != ValueAtMouseCursorPostSnapping)
 		{
 			FLinkedMidiEvents newNote = FLinkedMidiEvents();
 			newNote.NoteVelocity = NewNoteVelocity;
@@ -307,74 +309,29 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 		//TimeAtMouse
 	}
 
-	if (bLMBdown && PreviewNotePtr)
+	if (bLMBdown)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
+		
 
-		if (isCtrlPressed) {
+		if (isCtrlPressed && SelectedNote != nullptr) {
 
-			//this crashes disabling for now
-			return;
-
-			//SelectedNote = nullptr;
-			//we need to find the real end event of the hovered note
-			if (CulledNotesArray.Num() == 0) return;
-
-			auto TempNotePtr = *CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
-				if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
-				{
-					if (note->pitch == hoveredPitch)
-					{
-						//SelectedNote = note;
-						return true;
-					}
-				}
-
-				return false;
-				});
-
-			//this is so stupid... fix tomorrow.
-			if (TempNotePtr != nullptr)
-			{
-				//we also need to look for it in the pending notes map
-				TempNotePtr = SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents note) {
-					if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
-					{
-						if (note.pitch == hoveredPitch)
-						{
-							//SelectedNote = &note;
-							return true;
-						}
-					}
-
-					return false;
-					});
-
-				if (TempNotePtr == nullptr)
-				{
-					//we're not hovering on any note! kinda stupid we should run all of these checks 
-					//long story short, deleting a note should only be possible if we have a selected note
-					UE_LOG(LogTemp, Log, TEXT("No note found! Not Deleting Anything!"));
-					return;
-				}
-
-				//TemporaryNote = *TempNotePtr;
-
-			}
-
-			//SessionData->DeleteLinkedMidiEvent(TemporaryNote);
+			SessionData->DeleteLinkedMidiEvent(*SelectedNote);
+			SelectedNote = nullptr;
+			UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to delete note!"))
 		}
-		else {
+
+		if (PreviewNotePtr && !isCtrlPressed)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"))
 			SessionData->AddLinkedMidiEvent(TemporaryNote);
 			PreviewNotePtr = nullptr;
 		}
 
 		//SelectedNote = nullptr;
-
 	}
-
-
 }
+
+
 void SPianoRollGraph::UpdateTimestamp(FMusicTimestamp newTimestamp)
 {
 	const auto tick = MidiSongMap->CalculateMidiTick(newTimestamp, EMidiClockSubdivisionQuantization::None);
@@ -398,6 +355,7 @@ void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 		if (isCtrlPressed)
 		{
 			CursorTest = FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(0xF014);
+			PreviewNotePtr = nullptr;
 		}else{
 			CursorTest = FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(0xF040);
 		}
@@ -721,6 +679,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 			{
 				if (note->pitch == hoveredPitch)
 				{
+
 					SelectedNote = note;
 					return true;
 				}
@@ -729,7 +688,22 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 			return false;
 			});
 
-
+		//ugly and hacky, we have two maps to traverse, I don't think this makes anything more efficient
+		//in the coming refactor we will push all notes to the midi file as they come
+		//perhaps compartmantalizing each track to its own file, need some tests
+		SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents& note) {
+			if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
+			{
+				if (note.pitch == hoveredPitch)
+				{
+	
+					SelectedNote = &note;
+					return true;
+				}
+			}
+			;
+			return false;
+			});
 
 
 		if (bLMBdown) {
@@ -1045,7 +1019,23 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
 		//paint hovered note
+	if (SelectedNote != nullptr)
+	{
+		//	FSlateDrawElement::bord
 
+		// get selected note color based on metadata and produce negative color
+		auto& SelectedNoteTrackColor = SessionData->GetTracksDisplayOptions(SelectedNote->TrackId).trackColor;
+		auto colorNegative = FLinearColor::White.operator-(SelectedNoteTrackColor);
+
+		auto& note = SelectedNote;
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			LayerId,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D((note->Duration + 16) * horizontalZoom, rowHeight + (50 * verticalZoom)), FSlateLayoutTransform(1.0f, FVector2D((note->StartTime - 4.0f) * horizontalZoom, (-25.0f * verticalZoom) + rowHeight * (127 - note->pitch)))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			colorNegative.CopyWithNewOpacity(0.5f)
+		);
+	}
 
 
 	for (auto& note : CulledNotesArray)
@@ -1075,19 +1065,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	// anything we want over the notes should have higher layer ID... 
 	int PostNotesLayerID = LayerId + SessionData->M2TrackMetadata.Num() + 1;
 
-	if (SelectedNote != nullptr)
-	{
-		//	FSlateDrawElement::bord
 
-		auto& note = SelectedNote;
-		FSlateDrawElement::MakeBox(OutDrawElements,
-			PostNotesLayerID,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
-			&gridBrush,
-			ESlateDrawEffect::None,
-			FLinearColor::Red
-		);
-	}
 
 	//draw preview note
 	if(PreviewNotePtr != nullptr)

@@ -204,6 +204,8 @@ void UDAWSequencerData::ReinitGraph()
 	}
 #endif
 
+	//UpdateNoteDataFromMidiFile
+
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
@@ -330,9 +332,10 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
 
+	auto& NoteMetadata = M2TrackMetadata[PendingNote.TrackId];
 	
 
-	auto FoundStartEvent = MidiFileCopy->GetTrack(PendingNote.TrackId)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
+	auto FoundStartEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
 		if (Event.GetMsg().IsNoteOn() && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
 		{
 			return true;
@@ -351,10 +354,15 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 		return false;
 		});
 
-	if (FoundStartEvent && FoundEndEvent)
+	if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
 	{
 		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundStartEvent);
 		MidiFileCopy->GetTrack(PendingNote.TrackId)->GetRawEvents().RemoveAtSwap(FoundEndEvent);
+	}
+	else {
+		UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
+		return;
+	
 	}
 	MidiFileCopy->SortAllTracks();
 	HarmonixMidiFile = MidiFileCopy;
