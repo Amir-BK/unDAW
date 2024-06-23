@@ -5,7 +5,9 @@
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "Vertexes/M2SoundVertex.h"
+#include "Components/AudioComponent.h"
 #include "unDAWSettings.h"
+#include "MetasoundSource.h"
 #include <EditableMidiFile.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
