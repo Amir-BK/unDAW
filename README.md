@@ -25,7 +25,7 @@ Some videos until I make a proper demo - https://drive.google.com/drive/folders/
 
 **M2SoundGraph** - M-square-sound or Meta-Meta-Sound Graph, basically it's a live metasound with some abstractions that hide 'system nodes' from the user, using the builder to filter the MIDI stream into its constituent tracks and channels which are presented to the user as 'Midi Track Inputs', which can then be connected to 'Patch Instruments' and to audio outputs, the graph automatically exposes the controls of the instrument/insert patches as graph controls. The roadmap is to also to create in game representation for the graph, think MIDI driven 'Patchwork' accessible in unreal editor.
 
-**DSPreset/SFZ to Fusion Patch Importer ** - just drab DSPreset and SFZ instrument libraries into the unreal content editor and they will get auto-imported as Fusion Patches, all of the non-standard fusion patches used in the demo videos are SFZ/DS instruments I found free around the web, there are many open source repos containing free instruments. There is also WIP support for importing DSLibrary instruments which are more common but it's unfinished at the moment. 
+**DSPreset/SFZ to Fusion Patch Importer** - just grab DSPreset and SFZ instrument libraries into the unreal content editor and they will get auto-imported as Fusion Patches, all of the non-standard fusion patches used in the demo videos are free SFZ/DS instruments from around the web. There is also WIP support for importing DSLibrary instruments which are more common but it's unfinished at the moment. 
 
 **[Early WIP] Glyph Viewer Widget** - some initial tests using SMUFL music fonts to render MIDI info as actual music notes, this was an early attempt and is unfinished, it's in the repo largely as reference.
 
