@@ -37,6 +37,8 @@ Some videos until I make a proper demo - https://drive.google.com/drive/folders/
 
 https://discord.gg/hTKjSfcbEn
 
+# Samples and Midi Files
+I don't own the rights to any of the samples or midi files I use in the demo so no midi files or extra instruments are shared in the repo, the default fusion instruments can be found in the harmonix plugin (which must be enabled for unDAW to work). 
 
 # Roadmap Features
 
