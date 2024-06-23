@@ -217,7 +217,7 @@ class BK_EDITORUTILITIES_API UM2SoundPatchContainerNode : public UM2SoundEdGraph
 
 public:
 
-	UM2SoundPatchContainerNode() { bShowAdvanced = false; } //for now show advanced is false cause we don't do much with the pins
+	UM2SoundPatchContainerNode() { bShowAdvanced = true; } //for now show advanced is false cause we don't do much with the pins
 
 	// Returns true if it is possible to jump to the definition of this node (e.g., if it's a variable get or a function call)
 	virtual bool CanJumpToDefinition() const override { return true; }
