@@ -7,6 +7,7 @@ public class unDAWMetaSounds : ModuleRules
     public unDAWMetaSounds(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        bUseUnity = false;
 
         // This next flag is needed as there are Metasound node derivatives
         // that are implemented in .cpp files only... no header files.

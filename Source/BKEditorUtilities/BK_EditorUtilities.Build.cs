@@ -7,6 +7,7 @@ public class BK_EditorUtilities : ModuleRules
     public BK_EditorUtilities(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        bUseUnity = false;
 
         PublicIncludePaths.AddRange(
             new string[] {

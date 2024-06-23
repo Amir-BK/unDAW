@@ -9,6 +9,7 @@ public class BKMusicCore : ModuleRules
     public BKMusicCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        bUseUnity = false;
 
         PublicIncludePaths.AddRange(
             new string[] {
