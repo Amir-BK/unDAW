@@ -1,10 +1,9 @@
 #include "Vertexes/M2SoundVertex.h"
-#include "M2SoundGraphRenderer.h"
+
 #include "M2SoundGraphStatics.h"
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
-#include "M2SoundGraphRenderer.h"
 #include "unDAWSettings.h"
 
 DEFINE_LOG_CATEGORY(unDAWVertexLogs);

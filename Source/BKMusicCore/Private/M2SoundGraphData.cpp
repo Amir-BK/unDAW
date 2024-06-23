@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "M2SoundGraphData.h"
-#include "M2SoundGraphRenderer.h"
 #include "M2SoundGraphStatics.h"
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"

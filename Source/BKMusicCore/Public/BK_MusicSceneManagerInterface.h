@@ -18,7 +18,6 @@
 #include "MetasoundBuilderSubsystem.h"
 #include "MetasoundGeneratorHandle.h"
 #include "M2SoundGraphData.h"
-#include "M2SoundGraphRenderer.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "BK_MusicSceneManagerInterface.generated.h"
@@ -28,8 +27,15 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(BKMusicInterfaceLogs, Verbose, All);
 
 
-class UM2SoundGraphRenderer;
 
+
+
+DECLARE_MULTICAST_DELEGATE(FDAWPerformerReady);
+DECLARE_MULTICAST_DELEGATE(FDAWPerformerDeleted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMusicTimestampUpdated, FMusicTimestamp, NewTimestamp);
+
+DECLARE_DELEGATE_OneParam(FOnTransportSeekCommand, float)
+DECLARE_DELEGATE_OneParam(FOnMusictimestampFromPerformer, FMusicTimestamp)
 
 
 
@@ -69,9 +75,7 @@ public:
 
 	TObjectPtr<UDAWSequencerData> SequenceData;
 
-	//as the music scene manager is a data container the core playback functionality is managed by the performer,
-	//this is true both for in scene usages as well as for the asset toolkit preview/editing in editor
-	UM2SoundGraphRenderer* Performer;
+
 
 	void CreatePerformer(UAudioComponent* InAudioComponent);
 	
@@ -79,8 +83,6 @@ public:
 	virtual const EBKPlayState GetCurrentPlaybackState();
 
 	virtual void Entry_Initializations() {};
-
-	virtual const UM2SoundGraphRenderer* GetPerformer() { return Performer; };
 
 	virtual UDAWSequencerData* GetDAWSequencerData() const;
 

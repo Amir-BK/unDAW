@@ -20,7 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include <Widgets/Layout/SConstraintCanvas.h>
 #include "BKMusicWidgets.h"
-#include "M2SoundGraphRenderer.h"
+
 #include "EngravingSubsystem.h"
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"

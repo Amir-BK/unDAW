@@ -6,7 +6,6 @@
 #include "Factories/Factory.h"
 #include "UObject/Object.h"
 #include "BK_MusicSceneManagerInterface.h"
-#include "M2SoundGraphRenderer.h"
 #include "AssetTypeActions_Base.h"
 #include "../SequenceAssetEditor/UnDawSequenceEditorToolkit.h"
 #include "M2SoundGraphData.h"

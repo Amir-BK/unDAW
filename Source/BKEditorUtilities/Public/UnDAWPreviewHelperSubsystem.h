@@ -14,7 +14,7 @@
 struct FSoftClassPreviewHolder
 {
 	UDAWSequencerData* ActiveSession;
-	UM2SoundGraphRenderer* PreviewPerformer;
+
 };
 
 /**
@@ -29,7 +29,6 @@ public:
 
 	FSoftClassPreviewHolder ActivePreviewPerformer;
 
-	TMap<FSoftObjectPath, UM2SoundGraphRenderer*> PreviewBuilders;
 
 	UFUNCTION()
 	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);	

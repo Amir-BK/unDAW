@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "EdGraph/EdGraphSchema.h"
 #include "M2SoundGraphData.h"
-#include "M2SoundGraphRenderer.h"
+
 #include <EdGraphUtilities.h>
 #include <EdGraph/EdGraphNode.h>
 #include "SGraphNode.h"
