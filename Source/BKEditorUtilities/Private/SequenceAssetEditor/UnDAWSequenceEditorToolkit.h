@@ -74,6 +74,8 @@ public:
 
     void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
+    void SetPaintingMode(bool bPaintingMode);
+
     void ExtendToolbar();
 
    // ~FUnDAWSequenceEditorToolkit();
@@ -93,4 +95,13 @@ protected:
     //void StopAudioComponent();
 
     //UAudioComponent* AudioComponent = nullptr;
+
+
+public:
+    //midi editing - it for the purpose of tracking editor undo operations,
+    //this requires changing SPianoRoll graph so that it exposes mouse and key down events to the asset editor
+
+    FReply OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+
+
 };

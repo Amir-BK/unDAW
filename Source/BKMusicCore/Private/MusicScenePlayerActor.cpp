@@ -26,7 +26,7 @@ void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
 	UE_LOG(LogTemp, Log, TEXT("DAW Sequence Play State Changed to %s"), *UEnum::GetValueAsString(NewState));
 	switch (NewState)
 	{
-		case EBKPlayState::Playing:
+		case EBKPlayState::TransportPlaying:
 			VideoSyncedMidiClock->Start();
 			break;
 
@@ -34,7 +34,7 @@ void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
 			VideoSyncedMidiClock->Stop();
 			break;
 
-		case EBKPlayState::Paused:
+		case EBKPlayState::TransportPaused:
 			VideoSyncedMidiClock->Pause();
 			break;
 	}
@@ -59,6 +59,8 @@ void AMusicScenePlayerActor::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("No DAW Sequencer Data set on Music Scene Player Actor"))
 		return;
 	}
+
+	CurrentTimestamp = CurrentTimestamp.CreateLambda([this]() { return GetDAWSequencerData()->CurrentTimestampData; });
 
 	//we need to do this because 'create sound 2d' is not reliable without a wav file, this one actually play but this adds a point of weakness to the system
 	//in the form of the wav file.

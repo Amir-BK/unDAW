@@ -25,6 +25,7 @@
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"
 #include "HarmonixMidi/MusicTimeSpan.h"
+
 //#include "SMidiNoteContainer.h"
 
 //#define PIANO_ROLL_DEBUG
@@ -96,26 +97,29 @@ public:
 };
 
 DECLARE_DELEGATE(FOnInitComplete)
+DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
+
+
+class ITimeSliderController;
 
 /**
  *
  */
 class BKMUSICWIDGETS_API SPianoRollGraph : public SCompoundWidget
 {
+	//SLATE_DECLARE_WIDGET(SPianoRollGraph)
 public:
 
-	//SLATE_DECLARE_WIDGET_API(SPianoRollGraph, SCanvas)
 
 	SLATE_BEGIN_ARGS(SPianoRollGraph)
 		{}
-		SLATE_ARGUMENT(FText, Text)
 		SLATE_ARGUMENT(FSlateBrush, gridBrush)
-		SLATE_ARGUMENT(FLinearColor, gridColor)
-		SLATE_ARGUMENT(FLinearColor, accidentalGridColor)
-		SLATE_ARGUMENT(FLinearColor, cNoteColor)
-		SLATE_ARGUMENT(FLinearColor, noteColor)
-		SLATE_ARGUMENT(float, pixelsPerBeat)
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, gridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00")));
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, accidentalGridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082")));
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, cNoteColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220")));
+		SLATE_ARGUMENT(TSharedPtr<ITimeSliderController>, ExternalTimeSliderController)
 		SLATE_ARGUMENT(UDAWSequencerData*, SessionData)
+		SLATE_EVENT(FOnMouseButtonDown, OnMouseButtonDown)
 		SLATE_ATTRIBUTE(FMusicTimestamp, CurrentTimestamp)
 		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
 
@@ -136,17 +140,18 @@ private:
 
 public:
 
+	/** Optional time slider controller */
+	TSharedPtr<ITimeSliderController> TimeSliderController;
+
+	/** Called when the graph is clicked */
+	FOnMouseButtonDown OnMouseButtonDownDelegate;
+
 	void SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimestamp);
 
 	//FMusicTimestamp CurrentTimestamp;
 
 	FOnTransportSeekCommand OnSeekEvent;
 
-	bool bIsInitialized = false;
-
-	FOnInitComplete OnInitCompleteDelegate;
-
-	UAudioComponent* PerformanceComponent;
 	UBKEditorUtilsKeyboardMappings* KeyMappings;
 
 	TScriptInterface<IBK_MusicSceneManagerInterface> MonitoredSceneManager;
@@ -155,13 +160,13 @@ public:
 	FLinearColor accidentalGridColor = FLinearColor::Gray;
 	FLinearColor cNoteColor = FLinearColor::Blue;
 
-	double LastMeasuredAudioTime = 0.0;
 	double CurrentTimelinePosition = 0.0;
 
 	float NewNoteVelocity = 100.0f;
 
 	UDAWSequencerData* SessionData;
 
+	float drawLength = 0;
 	FLinearColor noteColor;
 	FVector2f positionOffset = FVector2f(0, -125);
 	float LastTickTimelinePosition;
@@ -175,19 +180,17 @@ public:
 	TArray<int32> visibleBeats;
 	TArray<int32> visibleBars;
 
-	UObject* WorldContextObject = nullptr;
+
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
 
-	float pixelsPerBeat = 1000.0f;
-	float drawLength = 0;
 
 	bool receivingDragUpdates = false;
 
 	int CurrentBeatAtMouseCursor = 0;
 	int CurrentBarAtMouseCursor = 0;
 
-	SPianoRollGraph() = default;
+	//SPianoRollGraph() = default;
 	FString PluginDir;
 	TCHAR CursorString;
 
@@ -266,11 +269,11 @@ public:
 
 	bool bFollowCursor = true;
 
+	EPianoRollEditorMouseMode InputMode = EPianoRollEditorMouseMode::empty;
 protected:
 
 	friend class FUnDAWSequenceEditorToolkit;
 
-	EPianoRollEditorMouseMode InputMode = EPianoRollEditorMouseMode::empty;
 
 	bool FollowedCursorLastFrame = false;
 	FText Text = FText::FromString(TEXT("Hello from custom widget"));

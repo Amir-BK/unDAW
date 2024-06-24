@@ -20,6 +20,9 @@ class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands : public TCommands<FDAWEd
 		FDAWEditorToolbarCommands() : TCommands<FDAWEditorToolbarCommands>("unDAW Toolbar", INVTEXT("unDAW Toobar"), NAME_None, TEXT("EditorStyle")) {};
 
 		TSharedPtr<FUICommandInfo> TransportPlay;
+		TSharedPtr<FUICommandInfo> TransportStop;
+
+		TSharedPtr<FUICommandInfo> ToggleNotePaintingMode;
 
 		virtual void RegisterCommands() override;
 	

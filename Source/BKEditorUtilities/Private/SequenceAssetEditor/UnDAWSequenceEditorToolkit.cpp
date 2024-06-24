@@ -13,7 +13,10 @@
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "SEnumCombo.h"
 #include "SlateFwd.h"
+#include "ITimeSlider.h"
+#include "ISequencerWidgetsModule.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -63,6 +66,10 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
+	ISequencerWidgetsModule& SequencerWidgets = FModuleManager::Get().LoadModuleChecked<ISequencerWidgetsModule>("SequencerWidgets");
+	//TSharedRef<ITimeSliderController> TimelineTimeSliderController = MakeShared<FSequencerCurveEditorTimeSliderController>(TimeSliderArgs, SequencerPtr, InSequencer->GetCurveEditor().ToSharedRef());
+
+	//SequencerWidgets.CreateTimeSlider(TimelineTimeSliderController, false);
 
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
@@ -71,36 +78,27 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 					SAssignNew(PianoRollGraph, SPianoRollGraph)
 						.SessionData(SequenceData)
 						.Clipping(EWidgetClipping::ClipToBounds)
-						.gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
-						.accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
-						.cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))))
-						// .OnMusicTimestamp_Lambda([this](const FMusicTimestamp& NewTimestamp) { OnPerformerTimestampUpdated(NewTimestamp); })
+
 						.OnSeekEvent(OnSeekEvent)
 						// .CurrentTimestamp(CurrentTimestamp)
 				];
 
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
-			if (SequenceData->HarmonixMidiFile) {
-				PianoRollGraph->Init();
-				if (true) {
-					SetupPreviewPerformer();
-					PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
-				}
-				else {
-					//Performer = SequenceData->EditorPreviewPerformer;
-					//Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
-					PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
-					PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
-					//PianoRollGraph->OnMusicTimestamp.operator=(Performer->OnMusicTimestampFromPerformer);
-				}
-			}
+
+			PianoRollGraph->Init();
+				
+			SetupPreviewPerformer();
+			PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
+			PianoRollGraph->OnMouseButtonDownDelegate.BindRaw(this, &FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown);
+
 
 			SequenceData->OnMidiDataChanged.AddLambda([&]()
 				{
-					PianoRollGraph->Init();
-					SetupPreviewPerformer();
-					PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
+					UE_LOG(LogTemp, Warning, TEXT("Midi Data Changed - did something not refresh?"));
+					//PianoRollGraph->Init();
+					//SetupPreviewPerformer();
+					//PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 				});
 
 			return DockTab;
@@ -164,16 +162,16 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 	switch (InCommand)
 	{
 	case Play:
-		NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == ReadyToPlay || SequenceData->PlayState == Paused); }));
+		NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == ReadyToPlay || SequenceData->PlayState == TransportPaused); }));
 		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && ((SequenceData->PlayState == ReadyToPlay)
-			|| (SequenceData->PlayState == Paused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
+			|| (SequenceData->PlayState == TransportPaused)) ? EVisibility::Visible : EVisibility::Collapsed; }));
 		break;
 	case Stop:
 
 		break;
 
 	case Pause:
-		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == Playing)
+		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == TransportPlaying)
 			? EVisibility::Visible : EVisibility::Collapsed; }));
 		break;
 	default:
@@ -248,6 +246,11 @@ void FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated(const FMusicTimest
 	if (PianoRollGraph)    PianoRollGraph->UpdateTimestamp(NewTimestamp);
 }
 
+void FUnDAWSequenceEditorToolkit::SetPaintingMode(bool bPaintingMode)
+{
+		if (PianoRollGraph) PianoRollGraph->SetInputMode(bPaintingMode ? EPianoRollEditorMouseMode::drawNotes : EPianoRollEditorMouseMode::Panning);
+}
+
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
 	FDAWEditorToolbarCommands::Register();
@@ -255,6 +258,11 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 	//transport
 	ToolkitCommands->MapAction(Commands.TransportPlay, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Play); }));
+	ToolkitCommands->MapAction(Commands.TransportStop, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Stop); }));
+
+	
+	//map note draw mode toggle
+	ToolkitCommands->MapAction(Commands.ToggleNotePaintingMode, FExecuteAction::CreateLambda([this]() { SetPaintingMode(PianoRollGraph->InputMode != EPianoRollEditorMouseMode::drawNotes); }));
 	
 	TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
 	CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); })
@@ -263,7 +271,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 	ToolbarExtender->AddToolBarExtension("Asset",
 		EExtensionHook::After,
 		GetToolkitCommands(),
-		FToolBarExtensionDelegate::CreateLambda([this](FToolBarBuilder& ToolbarBuilder)
+		FToolBarExtensionDelegate::CreateLambda([this, Commands](FToolBarBuilder& ToolbarBuilder)
 			{
 				auto StopButton = GetConfiguredTransportButton(Stop);
 				auto PlayButton = GetConfiguredTransportButton(Play);
@@ -285,7 +293,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 							+ SHorizontalBox::Slot()
 							[
-								PlayButton
+								PlayButton->SetToolTip(Commands.TransportPlay->GetInputText())
 							]
 							+ SHorizontalBox::Slot()
 							[
@@ -340,6 +348,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 							return (int32)PianoRollGraph->InputMode;
 						})
 					.OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if (PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
+					.ToolTip(Commands.ToggleNotePaintingMode->GetInputText())
 
 				);
 
@@ -381,6 +390,12 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
 
+}
+
+FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Mouse Down"));
+	return FReply::Handled();
 }
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)

@@ -5,20 +5,34 @@
 
 TSharedRef<SWidget> UPianoroll::RebuildWidget()
 {
-	SAssignNew(PianoRollGraph, SPianoRollGraph)
-		.SessionData(SceneManager->GetDAWSequencerData())
-		.Clipping(EWidgetClipping::ClipToBounds)
-		.gridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00"))))
-		.accidentalGridColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082"))))
-		.cNoteColor(FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220"))));
+	UDAWSequencerData* SequencerData;
 
-	//not CLEVER!!!! Should not be done like this, the scene manager needs to update its own timestamp for all potential listeners!
-	SceneManager->CurrentTimestamp = SceneManager->CurrentTimestamp.CreateLambda([this]() { return SceneManager->GetDAWSequencerData() ? SceneManager->GetDAWSequencerData()->CurrentTimestampData : FMusicTimestamp(); });
+	if(SceneManager && SceneManager->GetDAWSequencerData())
+	{
+		SequencerData = SceneManager->GetDAWSequencerData();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SceneManager or SequencerData is null!"));
+		SequencerData = nullptr;
+	}
+	
+	SAssignNew(PianoRollGraph, SPianoRollGraph)
+		.SessionData(SequencerData)
+		.Clipping(EWidgetClipping::ClipToBounds);
+
 	
 	PianoRollGraph->bFollowCursor = false;
 	PianoRollGraph->Init();
-	PianoRollGraph->OnSeekEvent.BindUObject(SceneManager->GetDAWSequencerData(), &UDAWSequencerData::SendSeekCommand);
-	PianoRollGraph->SetCurrentTimestamp(SceneManager->CurrentTimestamp);
+
+	if(SceneManager)
+	{
+		PianoRollGraph->SetCurrentTimestamp(SceneManager->CurrentTimestamp);
+	}
+
+
+	//test connection to on mouse button down lambda, just print something
+	PianoRollGraph->OnMouseButtonDownDelegate.BindLambda([](const FGeometry& Geometry, const FPointerEvent& PointerEvent) { UE_LOG(LogTemp, Warning, TEXT("Mouse button down!")); return FReply::Handled(); });
 
 	return PianoRollGraph.ToSharedRef();
 }

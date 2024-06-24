@@ -100,8 +100,8 @@ enum EBKPlayState : uint8
 	NotReady = 1,
 	Preparing = 2,
 	ReadyToPlay = 4,
-	Playing = 8,
-	Paused = 16
+	TransportPlaying = 8,
+	TransportPaused = 16
 };
 
 UENUM(BlueprintType, Category = "unDAW Sequence")

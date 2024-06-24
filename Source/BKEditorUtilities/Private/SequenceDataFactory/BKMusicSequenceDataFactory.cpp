@@ -80,7 +80,7 @@ TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetDa
 		{
 			auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 			
-			if (SequenceData->PlayState == Playing )
+			if (SequenceData->PlayState == TransportPlaying )
 			{
 				//unDAW::PreviewPlayback::StopSound();
 				SequenceData->SendTransportCommand(EBKTransportCommands::Stop);

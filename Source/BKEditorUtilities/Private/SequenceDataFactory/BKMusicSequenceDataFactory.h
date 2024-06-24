@@ -68,7 +68,7 @@ public:
 				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 				//auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 
-				if (SequenceData && SequenceData->PlayState == Playing)
+				if (SequenceData && SequenceData->PlayState == TransportPlaying)
 				{
 					return FAppStyle::GetBrush("MediaAsset.AssetActions.Stop.Large");
 				}
@@ -80,7 +80,7 @@ public:
 			{
 				auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
 
-				if (SequenceData && SequenceData->PlayState == Playing)
+				if (SequenceData && SequenceData->PlayState == TransportPlaying)
 				{
 					//unDAW::PreviewPlayback::StopSound();
 					SequenceData->SendTransportCommand(EBKTransportCommands::Stop);

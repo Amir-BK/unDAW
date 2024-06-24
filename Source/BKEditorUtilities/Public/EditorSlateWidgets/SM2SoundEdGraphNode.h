@@ -174,7 +174,7 @@ private:
 		
 		if (!MainAudioKnobsBox.IsValid()) return;
 		//for(auto& [Name, Slider] : AudioSliders) Slider.Reset();
-		MainAudioKnobsBox->ClearChildren();
+		//MainAudioKnobsBox->ClearChildren();
 		
 
 

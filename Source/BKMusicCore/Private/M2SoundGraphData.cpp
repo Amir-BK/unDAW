@@ -116,15 +116,15 @@ void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 
 			switch (PlayState)
 			{
-				case EBKPlayState::Playing:
+				case EBKPlayState::TransportPlaying:
 					AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Pause")));
-					PlayState = EBKPlayState::Paused;
+					PlayState = EBKPlayState::TransportPaused;
 					break;
 
 					case EBKPlayState::ReadyToPlay:
-					case EBKPlayState::Paused:
+					case EBKPlayState::TransportPaused:
 						AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Play")));
-						PlayState = EBKPlayState::Playing;
+						PlayState = EBKPlayState::TransportPlaying;
 						break;
 			}
 

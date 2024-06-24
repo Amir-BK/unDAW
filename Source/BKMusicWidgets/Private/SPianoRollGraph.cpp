@@ -4,6 +4,7 @@
 #include "SPianoRollGraph.h"
 #include "SlateOptMacros.h"
 #include "Logging/StructuredLog.h"
+#include "ITimeSlider.h"
 #include "Algo/BinarySearch.h"
 
 //#include <BKMusicWidgets.h>
@@ -92,6 +93,7 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 
 	OnSeekEvent = InArgs._OnSeekEvent;
+	OnMouseButtonDownDelegate = InArgs._OnMouseButtonDown;
 	//OnMusicTimestamp = InArgs._OnMusicTimestamp;
 
 	//OnMusicTimestamp.BindLambda([&](FMusicTimestamp newTimestamp) { UpdateTimestamp(newTimestamp); });
@@ -106,8 +108,6 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	gridColor = InArgs._gridColor;
 	accidentalGridColor = InArgs._accidentalGridColor;
 	cNoteColor = InArgs._cNoteColor;
-	noteColor = InArgs._noteColor;
-	pixelsPerBeat = InArgs._pixelsPerBeat;
 
 
 	ChildSlot
@@ -157,24 +157,26 @@ void SPianoRollGraph::SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimesta
 
 void SPianoRollGraph::Init()
 {
+	if(!SessionData) return;
 	
-	
+	OnSeekEvent.BindUObject(SessionData, &UDAWSequencerData::SendSeekCommand);
+
+
 	if (SessionData->HarmonixMidiFile)
 	{
 		SetCanTick(true);
 		MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
 		LinkedNoteDataMap = &SessionData->LinkedNoteDataMap;
-		bIsInitialized = true;
+
 		InputMode = EPianoRollEditorMouseMode::Panning;
 
 	}
 	else {
-		bIsInitialized = false;
+
 		SetCanTick(false);
 		InputMode = EPianoRollEditorMouseMode::empty;
 	}
-	
-	OnInitCompleteDelegate.ExecuteIfBound();
+
 }
 
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -212,50 +214,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	}
 
-	// here we perform whatever tick logics related to the play head cursor
-	if (WorldContextObject != nullptr)
-	{
 	
-		double AudioTime = UGameplayStatics::GetAudioTimeSeconds(WorldContextObject);
-		switch (TransportPlaystate)
-		{
-			
-		case Preparing:
-			break;
-		case ReadyToPlay:
-			break;
-		case Playing:
-		//to track the playhead accurately we want to calculate the delta audio time, but due to some quirks with unreal
-		//we can't rely on the audio time measurement if the user interacts with the GUI, so if we're playing and suddenly the audio delta is 0,
-		//such as what happens when the user pans the graph, then we fall back on the normal delta time.
-			//if (AudioTime - LastMeasuredAudioTime > 0)
-			//{
-			//	parentMidiEditor->AddDeltaToTimeLine(AudioTime - LastMeasuredAudioTime);
-			//}
-			//else {
-			//	parentMidiEditor->AddDeltaToTimeLine(InDeltaTime);
-			//}
-			//UE_LOG(LogTemp,Log, TEXT("Audio Time: %f, Previous Measurement: %f, Audio Delta Time: %f"), AudioTime, LastMeasuredAudioTime, AudioTime - LastMeasuredAudioTime)
-			break;
-		//case Seeking:
-		//	break;
-		case Paused:
-			break;
-		default:
-			break;
-		}
-		LastMeasuredAudioTime = AudioTime;
-
-	}
-
-	
-	//if (parentMidiEditor->getFollowCursor())
-	//{
-	//		float currentTickTimeLinePosition = parentMidiEditor->currentTimelineCursorPosition;
-	//		positionOffset.X -= (currentTickTimeLinePosition - LastTickTimelinePosition) * horizontalZoom * 1000.0f;
-	//		LastTickTimelinePosition = currentTickTimeLinePosition;
-	//}
-
 	positionOffset.X = FMath::Min(positionOffset.X, 0.0f);
 
 
@@ -574,6 +533,21 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 {
 	//UE_LOG(LogTemp, Log, TEXT("Is this locking?"))
 	
+	FReply Reply = FReply::Unhandled();
+	if (OnMouseButtonDownDelegate.IsBound())
+	{
+		Reply = OnMouseButtonDownDelegate.Execute(MyGeometry, MouseEvent);
+	}
+
+	//if in note draw mode, add note to pending notes map
+	//TimeAtMouse
+	//SessionData->PendingLinkedMidiNotesMap.Add(1, CreateNoteAtMousePosition(localMousePosition, MidiSongMap, QuantizationGridUnit));
+	//UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
+
+
+	
+
+
 	if (HasKeyboardFocus())
 	{
 		
@@ -581,20 +555,13 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 		{
 			bLMBdown = true;
 
-			//if in note draw mode, add note to pending notes map
-			//TimeAtMouse
-			//SessionData->PendingLinkedMidiNotesMap.Add(1, CreateNoteAtMousePosition(localMousePosition, MidiSongMap, QuantizationGridUnit));
-			//UE_LOG(LogTemp, Log, TEXT("Mouse Down! should have tried to create note!"));
-
-
-			return FReply::Handled();
 			//return OnMouseMove(MyGeometry, MouseEvent);
 			//return FReply::Unhandled().CaptureMouse(AsShared());
 		}
 	}
 
 
-	return FReply::Unhandled();
+	return Reply;
 }
 FReply SPianoRollGraph::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
@@ -658,7 +625,7 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 
 FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if(!bIsInitialized) return FReply::Unhandled();
+	//if(!bIsInitialized) return FReply::Unhandled();
 	
 	const bool bIsRightMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
 	const bool bIsLeftMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton);
@@ -888,10 +855,14 @@ FReply SPianoRollGraph::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& In
 int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	
-	if (!bIsInitialized) return LayerId;
+	//if (!bIsInitialized) return LayerId;
 
 	// bad stupid code, this should happen in the tick event
-	auto PaintPosVector = positionOffset;
+
+	bool bShowPianotable = true;
+
+	auto MarginVector = bShowPianotable ? FVector2f(50, 0) : FVector2f(0, 0);
+	auto PaintPosVector = positionOffset + MarginVector;
 
 	
 	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f,(FVector2d)PaintPosVector));
@@ -914,21 +885,21 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 		}
 
-		
-		int vertLineIndices = MyCullingRect.Right / pixelsPerBeat;
-		int firstGridLine = MyCullingRect.Left / pixelsPerBeat;
+		//
+		//int vertLineIndices = MyCullingRect.Right / pixelsPerBeat;
+		//int firstGridLine = MyCullingRect.Left / pixelsPerBeat;
 
-		for (int i = firstGridLine; i <= vertLineIndices; i++)
-		{
-			FSlateDrawElement::MakeLines(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(firstGridLine + horizontalZoom * pixelsPerBeat * 1000 * i, 0))),
-				vertLine,
-				ESlateDrawEffect::None,
-				FLinearColor::Blue,
-				false,
-				5.0f * horizontalZoom);
-		}
+		//for (int i = firstGridLine; i <= vertLineIndices; i++)
+		//{
+		//	FSlateDrawElement::MakeLines(OutDrawElements,
+		//		LayerId,
+		//		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(firstGridLine + horizontalZoom * pixelsPerBeat * 1000 * i, 0))),
+		//		vertLine,
+		//		ESlateDrawEffect::None,
+		//		FLinearColor::Blue,
+		//		false,
+		//		5.0f * horizontalZoom);
+		//}
 	};
 
 	//bar and beatlines, calculated earlier, not on the paint event
@@ -974,37 +945,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	//if in note draw mode, draw note overlay 
 	
-	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)// && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
-	{
-		FLinearColor trackColor = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor;
-		FLinearColor offTracksColor = trackColor.Desaturate(0.5);
-		FLinearColor colorNegative = FLinearColor::White.operator-(trackColor);
 
-
-
-		for (int i = 0; i <= 127; i++)
-		{
-			bool isSelectedNote = i == hoveredPitch;
-			float opacity = (float)0.7f * (127.0f - FMath::Abs(i - hoveredPitch) * 12) / 127.0f;
-
-			FSlateDrawElement::MakeBox(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
-				&gridBrush,
-				ESlateDrawEffect::None,
-				offTracksColor.CopyWithNewOpacity(opacity)
-			);
-
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(150, rowHeight), FSlateLayoutTransform(1.0f, FVector2D((double)-PaintPosVector.X, rowHeight * (127 - i)))),
-				FText::FromString(FString::Printf(TEXT("%d"), i)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 9),
-				ESlateDrawEffect::None,
-				isSelectedNote ? colorNegative.CopyWithNewOpacity(1.0f) : colorNegative.CopyWithNewOpacity(opacity)
-			);
-		}
-	}
 
 	//here we're gonna run some tests, so maybe some of this code will be useful to debug later, surrounding it with the if def
 	// allows us to completly remove this section when compiling, the actual define is in the header file, can easily be commented out.
@@ -1227,6 +1168,47 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		ESlateDrawEffect::None,
 		FLinearColor::White);
 	
+
+	//draw piano roll, overlayed on the original geometry (not the offset geometry), let's start with drawing a big gray background rectangle
+	FSlateDrawElement::MakeBox(OutDrawElements,
+		PostNotesLayerID,
+		AllottedGeometry.ToPaintGeometry(FVector2D(MarginVector.X, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(0.0f, 0.0f))),
+		&gridBrush,
+		ESlateDrawEffect::None,
+		FLinearColor::White
+	);
+
+	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)// && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
+	{
+		//FLinearColor trackColor = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor;
+		FLinearColor offTracksColor = trackColor.Desaturate(0.5);
+		FLinearColor colorNegative = FLinearColor::White.operator-(trackColor);
+
+
+
+		for (int i = 0; i <= 127; i++)
+		{
+			bool isSelectedNote = i == hoveredPitch;
+			float opacity = (float)0.7f * (127.0f - FMath::Abs(i - hoveredPitch) * 12) / 127.0f;
+
+			FSlateDrawElement::MakeBox(OutDrawElements,
+				PostNotesLayerID++,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
+				&gridBrush,
+				ESlateDrawEffect::None,
+				offTracksColor.CopyWithNewOpacity(opacity)
+			);
+
+			FSlateDrawElement::MakeText(OutDrawElements,
+				PostNotesLayerID++,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(150, rowHeight), FSlateLayoutTransform(1.0f, FVector2D((double)-PaintPosVector.X, rowHeight * (127 - i)))),
+				FText::FromString(FString::Printf(TEXT("%d"), i)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Bold.ttf"), 9),
+				ESlateDrawEffect::None,
+				isSelectedNote ? colorNegative.CopyWithNewOpacity(1.0f) : colorNegative.CopyWithNewOpacity(opacity)
+			);
+		}
+	}
 
 	return PostNotesLayerID;
 }
