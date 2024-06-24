@@ -173,8 +173,11 @@ private:
 		
 		
 		if (!MainAudioKnobsBox.IsValid()) return;
+		//for(auto& [Name, Slider] : AudioSliders) Slider.Reset();
 		MainAudioKnobsBox->ClearChildren();
-		AudioSliders.Empty();
+		
+
+
 		if (PatchVertex)
 		{
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)

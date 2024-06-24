@@ -14,6 +14,7 @@
 #include "SEnumCombo.h"
 #include "SlateFwd.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "SequenceAssetEditor/DAWEditorCommands.h"
 
 #include "Widgets/Layout/SScaleBox.h"
 
@@ -249,6 +250,12 @@ void FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated(const FMusicTimest
 
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
+	FDAWEditorToolbarCommands::Register();
+	const FDAWEditorToolbarCommands& Commands = FDAWEditorToolbarCommands::Get();
+
+	//transport
+	ToolkitCommands->MapAction(Commands.TransportPlay, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Play); }));
+	
 	TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
 	CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); })
 		.Justification(ETextJustify::Center);
