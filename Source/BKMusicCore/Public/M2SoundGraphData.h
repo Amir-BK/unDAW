@@ -296,6 +296,9 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY()
 	bool bIsLooping = false;
 
+	UPROPERTY()
+	int32 BarLoopDuration = 4;
+
 	//patch references
 	UPROPERTY()
 	TScriptInterface<IMetaSoundDocumentInterface> MidiFilterDocument;

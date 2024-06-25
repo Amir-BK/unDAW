@@ -616,7 +616,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
 	CoreNodes.InitCoreNodes(BuilderContext, this);
-	SetLoopSettings(CoreNodes.bIsLooping, 2);
+	SetLoopSettings(CoreNodes.bIsLooping, CoreNodes.BarLoopDuration);
 
 	//iterate over vertexes and create the nodes
 	for(auto& Vertex : Vertexes)

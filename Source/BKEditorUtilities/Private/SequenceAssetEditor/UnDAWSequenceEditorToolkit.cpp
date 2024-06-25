@@ -251,6 +251,9 @@ void FUnDAWSequenceEditorToolkit::SetPaintingMode(bool bPaintingMode)
 		if (PianoRollGraph) PianoRollGraph->SetInputMode(bPaintingMode ? EPianoRollEditorMouseMode::drawNotes : EPianoRollEditorMouseMode::Panning);
 }
 
+
+// So, we learned from flow that it's possible to make this a lot simpler by using the style class and the manu builder
+// still, some 'extensions' probably need to happen here so it's not a complete waste
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
 	FDAWEditorToolbarCommands::Register();
@@ -276,7 +279,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 				auto StopButton = GetConfiguredTransportButton(Stop);
 				auto PlayButton = GetConfiguredTransportButton(Play);
 				auto PauseButton = GetConfiguredTransportButton(Pause);
-
+				PlayButton->SetToolTipText(Commands.TransportPlay->GetInputText());
 				ToolbarBuilder.BeginSection("Transport");
 
 				ToolbarBuilder.AddWidget(SNew(SBox).VAlign(VAlign_Center)
@@ -293,7 +296,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 							+ SHorizontalBox::Slot()
 							[
-								PlayButton->SetToolTip(Commands.TransportPlay->GetInputText())
+								PlayButton
 							]
 							+ SHorizontalBox::Slot()
 							[
@@ -308,7 +311,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 							// loop control check box, monitors the value of CoreNodes.bIsLooping and calls 'SetLoopSettings' on assign value
 							[
 								SNew(SCheckBox)
-									.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (SequenceData) SequenceData->SetLoopSettings(NewState == ECheckBoxState::Checked, 4); })
+									.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (SequenceData) SequenceData->SetLoopSettings(NewState == ECheckBoxState::Checked, SequenceData->CoreNodes.BarLoopDuration); })
 									.IsChecked_Lambda([this]() -> ECheckBoxState { return SequenceData && SequenceData->CoreNodes.bIsLooping ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 									.ToolTipText(INVTEXT("Set simple loop, right now will loop the first 4 bars of the MIDI, more nuance to come\nUnfortunatley the harmonix node jump to 0 when loop is toggled"))
 									.Content()
@@ -316,7 +319,21 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 										SNew(STextBlock).Text(INVTEXT("Loop"))
 									]
 							]
+							// loop duration int numberic entry box
 
+							+ SHorizontalBox::Slot()
+							[
+								SNew(SNumericEntryBox<int32>)
+									.AllowSpin(true)
+									.MinValue(1)
+									.MaxValue(100)
+									.MaxSliderValue(100)
+									.MaxFractionalDigits(0)
+									.MinFractionalDigits(0)
+									.Value_Lambda([this]() -> int32 { return SequenceData ? SequenceData->CoreNodes.BarLoopDuration : 4; })
+									.OnValueChanged_Lambda([this](int32 NewValue) { if (SequenceData) SequenceData->SetLoopSettings(true, NewValue); })
+
+							]
 					]);
 
 				ToolbarBuilder.EndSection();
@@ -348,7 +365,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 							return (int32)PianoRollGraph->InputMode;
 						})
 					.OnEnumSelectionChanged_Lambda([this](int32 NewSelection, ESelectInfo::Type InSelectionInf) { if (PianoRollGraph) PianoRollGraph->SetInputMode(EPianoRollEditorMouseMode(NewSelection)); })
-					.ToolTip(Commands.ToggleNotePaintingMode->GetInputText())
+					.ToolTipText(Commands.ToggleNotePaintingMode->GetInputText())
 
 				);
 
