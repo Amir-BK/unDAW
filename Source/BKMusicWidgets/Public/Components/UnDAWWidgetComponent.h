@@ -23,7 +23,7 @@ class BKMUSICWIDGETS_API UUnDAWWidgetComponent : public UWidgetComponent
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW|Widget")
 	TSubclassOf<UUnDAWWidgetBase> DAWWidgetClass;
 
-	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Widget")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Widget")
 	TObjectPtr<UUnDAWWidgetBase> DAWWidgetInstance;
 
 

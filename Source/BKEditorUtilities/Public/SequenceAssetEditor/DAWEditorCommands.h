@@ -27,3 +27,4 @@ class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands : public TCommands<FDAWEd
 		virtual void RegisterCommands() override;
 	
 };
+

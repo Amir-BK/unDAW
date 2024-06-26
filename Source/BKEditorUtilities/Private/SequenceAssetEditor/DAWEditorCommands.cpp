@@ -12,4 +12,8 @@ inline void FDAWEditorToolbarCommands::RegisterCommands()
 
 	UI_COMMAND(ToggleNotePaintingMode, "Toggle Note Painting Mode", "Toggle Note Painting Mode", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::B));
 
-}
+};
+
+#undef LOCTEXT_NAMESPACE
+
+

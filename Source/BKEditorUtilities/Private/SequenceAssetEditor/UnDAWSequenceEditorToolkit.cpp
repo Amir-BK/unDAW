@@ -15,6 +15,7 @@
 #include "SlateFwd.h"
 #include "ITimeSlider.h"
 #include "ISequencerWidgetsModule.h"
+#include "Framework/Commands/GenericCommands.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
@@ -78,7 +79,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 					SAssignNew(PianoRollGraph, SPianoRollGraph)
 						.SessionData(SequenceData)
 						.Clipping(EWidgetClipping::ClipToBounds)
-
+						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
 						.OnSeekEvent(OnSeekEvent)
 						// .CurrentTimestamp(CurrentTimestamp)
 				];
@@ -86,10 +87,10 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
 
-			PianoRollGraph->Init();
+			//PianoRollGraph->Init();
 				
 			SetupPreviewPerformer();
-			PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
+			//PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 			PianoRollGraph->OnMouseButtonDownDelegate.BindRaw(this, &FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown);
 
 
@@ -208,6 +209,11 @@ void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETe
 	//AdditionalDetailsView->ForceRefresh();
 }
 
+void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Delete Selected Nodes"));
+}
+
 void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 {
 	//if (Performer && Performer->AuditionComponentRef)
@@ -215,6 +221,12 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	   // auto Metasound = Performer->AuditionComponentRef->GetSound();
 		//FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
 		//check(MetasoundAsset);
+
+
+	//AdditionalGraphCommands = MakeShared<FUICommandList>();
+
+	//AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete,)
+
 	FGraphAppearanceInfo AppearanceInfo;
 	FString CornerText = TEXT("M");
 	CornerText.AppendChar(0x00B2);
@@ -225,11 +237,15 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	SGraphEditor::FGraphEditorEvents GraphEvents;
 	// GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
 	// GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
+
 	GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
 	GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
 	GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeDoubleClicked);
 
 	AdditionalGraphCommands = MakeShared<FUICommandList>();
+
+	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete, FExecuteAction::CreateLambda([this]() { DeleteSelectedNodes(); }));
+
 	SAssignNew(MetasoundGraphEditor, SGraphEditor)
 		//   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
 		.AssetEditorToolkit(SharedThis(this))

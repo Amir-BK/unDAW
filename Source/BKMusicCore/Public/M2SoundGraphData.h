@@ -328,6 +328,7 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	TMap<FName,EMetaSoundBuilderResult> BuilderResults;
 
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext);
+	void ReleaseMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext, FAssignableAudioOutput Output);
 
 	
 

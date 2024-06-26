@@ -16,11 +16,17 @@ class BKMUSICWIDGETS_API UPianoroll : public UUnDAWWidgetBase
 {
 	GENERATED_BODY()
 	
+	UDAWSequencerData* SequencerData;
+
 	public:
 
-	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Pianoroll")
+	float PianoTabMargin = 100.0f;
+
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	TSharedPtr<SPianoRollGraph> PianoRollGraph;
+
 };

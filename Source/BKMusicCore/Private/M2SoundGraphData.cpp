@@ -229,8 +229,11 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 
 	//update builder, in the future we may want to be a little bit more conservative with this
 	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
-	
-	OnVertexAdded.Broadcast(Vertex);
+	Vertex->SequencerData = this;
+	Vertex->BuildVertex();
+	Vertex->CollectParamsForAutoConnect();
+	Vertex->UpdateConnections();
+	Vertex->OnVertexUpdated.Broadcast();
 }
 
 inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
@@ -753,6 +756,17 @@ FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput
 		ResizeOutputMixer(BuilderContext);
 		return GetFreeMasterMixerAudioOutput(BuilderContext);
 	}
+}
+
+void FM2SoundCoreNodesComposite::ReleaseMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext, FAssignableAudioOutput Output)
+{
+	MasterOutputs.Add(Output);
+
+	EMetaSoundBuilderResult BuildResult;
+
+	BuilderContext->DisconnectNodeInput(Output.AudioLeftOutputInputHandle, BuildResult);
+	BuilderContext->DisconnectNodeInput(Output.AudioRightOutputInputHandle, BuildResult);
+
 }
 
 void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* BuilderContext, UDAWSequencerData* ParentSession)
