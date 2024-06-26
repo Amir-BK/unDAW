@@ -260,7 +260,22 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	if (bFollowCursor)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
-		positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
+
+		float MidOfScreen = GetCachedGeometry().GetLocalSize().X * 0.5f - positionOffset.X;
+		float LocalSpacePlayBackPosition = CurrentTimeMiliSeconds * horizontalZoom; //+ positionOffset.X;
+
+		if (LocalSpacePlayBackPosition > MidOfScreen)
+		{
+			float DeltaPos = LocalSpacePlayBackPosition - MidOfScreen;
+			positionOffset.X -= DeltaPos * horizontalZoom;
+		}
+
+		
+			//positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom + MidOfScreen;
+		
+
+		
+		//positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
 	}
 
 
