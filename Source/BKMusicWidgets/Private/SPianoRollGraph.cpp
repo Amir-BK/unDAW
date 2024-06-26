@@ -270,6 +270,25 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			positionOffset.X -= DeltaPos * horizontalZoom;
 		}
 
+		//check if we're ahead of the cursor and lerp to it
+
+		float BeginningOfScreen = -positionOffset.X;
+
+		UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), BeginningOfScreen, LocalSpacePlayBackPosition);
+		if (LocalSpacePlayBackPosition < BeginningOfScreen)
+		{
+			float DeltaPos = LocalSpacePlayBackPosition - BeginningOfScreen;
+			positionOffset.X = CurrentTimeMiliSeconds;
+
+			//print log, all three floats, delta pos, beginning and position offset .x, yalla
+
+			UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f, DeltaPos %f"), BeginningOfScreen, LocalSpacePlayBackPosition, positionOffset.X);
+			//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback, moving view back %f "), DeltaPos);
+		}
+
+
+
+
 		
 			//positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom + MidOfScreen;
 		
