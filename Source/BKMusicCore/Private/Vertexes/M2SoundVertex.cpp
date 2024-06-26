@@ -494,6 +494,14 @@ void UM2SoundAudioOutput::UpdateConnections()
 
 }
 
+void UM2SoundAudioOutput::DestroyVertex()
+{
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Destroying Audio Output Vertex"))
+	GetSequencerData()->CoreNodes.ReleaseMasterMixerAudioOutput(GetSequencerData()->BuilderContext, AudioOutput);
+
+	GetSequencerData()->RemoveVertex(this);
+}
+
 void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
 {
 	//this is a test, we just need to transmit the gain parameter

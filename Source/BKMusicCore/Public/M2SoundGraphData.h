@@ -505,6 +505,8 @@ public:
 
 	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
 
+	void RemoveVertex(UM2SoundVertex* Vertex);
+
 #if WITH_EDITORONLY_DATA
 
 	UPROPERTY()

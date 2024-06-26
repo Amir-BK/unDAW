@@ -212,6 +212,13 @@ void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETe
 void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Delete Selected Nodes"));
+	UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
+
+	for (auto& Node : Graph->SelectedNodes)
+	{
+		Node->DestroyNode();
+	}
+	
 }
 
 void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()

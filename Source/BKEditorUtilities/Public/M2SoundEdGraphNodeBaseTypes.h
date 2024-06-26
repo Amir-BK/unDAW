@@ -82,6 +82,11 @@ public:
 		}
 	}
 
+	void DestroyNode() override {
+		Vertex->DestroyVertex();
+		Super::DestroyNode();
+	}
+
 protected:
 
 	bool bHasChanges = false;
