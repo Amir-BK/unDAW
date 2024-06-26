@@ -2,10 +2,10 @@
 
 
 #include "Pianoroll.h"
+#include "M2SoundGraphStatics.h"
 
 TSharedRef<SWidget> UPianoroll::RebuildWidget()
 {
-	UDAWSequencerData* SequencerData;
 
 	if(SceneManager && SceneManager->GetDAWSequencerData())
 	{
@@ -13,13 +13,16 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SceneManager or SequencerData is null!"));
-		SequencerData = nullptr;
+		UE_LOG(LogTemp, Warning, TEXT("SceneManager or SequencerData is null, creating transient session, this should only happen with the UMG Designer"));
+		SequencerData = UM2SoundGraphStatics::CreateEmptySequencerData();
 	}
+
+
 	
 	SAssignNew(PianoRollGraph, SPianoRollGraph)
 		.SessionData(SequencerData)
-		.Clipping(EWidgetClipping::ClipToBounds);
+		.Clipping(EWidgetClipping::ClipToBounds)
+		.PianoTabWidth(PianoTabMargin);
 
 	
 	PianoRollGraph->bFollowCursor = false;
@@ -27,7 +30,7 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 
 	if(SceneManager)
 	{
-		PianoRollGraph->SetCurrentTimestamp(SceneManager->CurrentTimestamp);
+		//PianoRollGraph->SetCurrentTimestamp(SceneManager->CurrentTimestamp);
 	}
 
 
@@ -35,4 +38,12 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 	PianoRollGraph->OnMouseButtonDownDelegate.BindLambda([](const FGeometry& Geometry, const FPointerEvent& PointerEvent) { UE_LOG(LogTemp, Warning, TEXT("Mouse button down!")); return FReply::Handled(); });
 
 	return PianoRollGraph.ToSharedRef();
+}
+
+void UPianoroll::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	SequencerData = nullptr;
+	PianoRollGraph.Reset();
 }

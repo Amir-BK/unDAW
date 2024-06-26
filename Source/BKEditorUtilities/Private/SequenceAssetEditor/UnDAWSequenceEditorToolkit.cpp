@@ -78,7 +78,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 					SAssignNew(PianoRollGraph, SPianoRollGraph)
 						.SessionData(SequenceData)
 						.Clipping(EWidgetClipping::ClipToBounds)
-
+						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
 						.OnSeekEvent(OnSeekEvent)
 						// .CurrentTimestamp(CurrentTimestamp)
 				];
@@ -89,7 +89,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			PianoRollGraph->Init();
 				
 			SetupPreviewPerformer();
-			PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
+			//PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 			PianoRollGraph->OnMouseButtonDownDelegate.BindRaw(this, &FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown);
 
 

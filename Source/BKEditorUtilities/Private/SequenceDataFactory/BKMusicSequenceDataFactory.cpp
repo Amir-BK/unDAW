@@ -38,7 +38,7 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 	NewMidiFile->GetSongMaps()->GetBarMap().AddTimeSignatureAtBarIncludingCountIn(0, 4, 4, true);
 
 
-	auto NewTrack = NewMidiFile->AddTrack(FString::Printf(TEXT("New Track %d"), 0));
+	//auto NewTrack = NewMidiFile->AddTrack(FString::Printf(TEXT("New Track %d"), 0));
 	//NewTrack->AddEvent(NoteOnEvent);
 	//NewTrack->AddEvent(NoteOffEvent);
 

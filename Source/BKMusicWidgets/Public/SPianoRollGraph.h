@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 //#include "SGraphPanel.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/SLeafWidget.h"
 #include "Widgets/SCanvas.h"
 #include "Input/Events.h"
 #include "Input/Reply.h"
@@ -25,6 +26,8 @@
 #include "Components/AudioComponent.h"
 #include "HarmonixMidi/MidiFile.h"
 #include "HarmonixMidi/MusicTimeSpan.h"
+#include "Widgets/DeclarativeSyntaxSupport.h"
+#include "Types/SlateAttribute.h"
 
 //#include "SMidiNoteContainer.h"
 
@@ -105,26 +108,28 @@ class ITimeSliderController;
 /**
  *
  */
-class BKMUSICWIDGETS_API SPianoRollGraph : public SCompoundWidget
+class BKMUSICWIDGETS_API SPianoRollGraph : public SLeafWidget
 {
 	//SLATE_DECLARE_WIDGET(SPianoRollGraph)
+	SLATE_DECLARE_WIDGET(SPianoRollGraph, SLeafWidget)
 public:
 
 
-	SLATE_BEGIN_ARGS(SPianoRollGraph)
+	SLATE_BEGIN_ARGS(SPianoRollGraph) 
 		{}
 		SLATE_ARGUMENT(FSlateBrush, gridBrush)
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, gridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00")));
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, accidentalGridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082")));
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, cNoteColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220")));
-		SLATE_ARGUMENT(TSharedPtr<ITimeSliderController>, ExternalTimeSliderController)
 		SLATE_ARGUMENT(UDAWSequencerData*, SessionData)
 		SLATE_EVENT(FOnMouseButtonDown, OnMouseButtonDown)
-		SLATE_ATTRIBUTE(FMusicTimestamp, CurrentTimestamp)
+		SLATE_ATTRIBUTE(float, PianoTabWidth)
 		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
 
 		//SLATE_ARGUMENT(TSharedPtr<UMIDIEditorBase>, parentMidiEditor)
 	SLATE_END_ARGS()
+
+	SPianoRollGraph();
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
@@ -134,9 +139,11 @@ public:
 #endif
 
 private:
-	TAttribute<FMusicTimestamp> CurrentTimestamp;
+	
+	TSlateAttribute<float> PianoTabWidth;
 
 	bool bIsAttributeBoundMusicTimestamp = false;
+
 
 public:
 
@@ -179,7 +186,7 @@ public:
 
 	TArray<int32> visibleBeats;
 	TArray<int32> visibleBars;
-
+	FVector2D ComputeDesiredSize(float) const override {return FVector2D(1000, 1000);};
 
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
@@ -221,7 +228,6 @@ public:
 	FSlateFontInfo GridFont;
 
 
-	TSharedPtr<SPianoRollGraph> selfSharedPtr;
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
 	//tempo and time events
@@ -318,7 +324,7 @@ protected:
 
 	TOptional<EMouseCursor::Type> GetCursor() const override
 	{
-		if (InputMode == EPianoRollEditorMouseMode::empty) return EMouseCursor::Default;
+		if (InputMode == EPianoRollEditorMouseMode::empty || InputMode == EPianoRollEditorMouseMode::Panning) return EMouseCursor::Default;
 
 		return EMouseCursor::None;
 	}

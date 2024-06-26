@@ -87,7 +87,8 @@ public:
 		// we need to think about the node creation process and how to handle the vertex to node mapping
 
 		UE_LOG(LogTemp, Warning, TEXT("Vertex added"));
-		NotifyGraphChanged(); }
+		NotifyGraphChanged(); 
+	}
 
 
 

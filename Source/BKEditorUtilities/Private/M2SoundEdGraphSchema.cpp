@@ -244,7 +244,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 	UM2SoundGraphMidiOutputNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Output");
 
-	//Node->Vertex = NewObject<UM2SoundMidiOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+	//Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
 	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	NodeCreator.Finalize();
@@ -275,7 +275,10 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* Pare
 	Node->Name = FName("Audio Output");
 
 	Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
+
+	Node->Vertex->SequencerData = Node->GetSequencerData();
 	NodeCreator.Finalize();
 
 	return Node;

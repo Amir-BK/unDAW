@@ -60,6 +60,9 @@ public:
 
 	static FName GetParentPresetNameIfAny(UMetaSoundPatch* Patch);
 
+	//Doesn't have attached graph data, just used for UMG designer placeholder
+	static UDAWSequencerData* CreateEmptySequencerData();
+
 	/**
 	 * Initialize a connected channel in the sequencer data, this is used when
 	 * @param SequencerData The sequencer data to add the vertex to

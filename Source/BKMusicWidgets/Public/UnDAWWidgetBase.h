@@ -30,6 +30,8 @@ public:
 	UFUNCTION()
 	virtual void Init() {};
 
+
+
 protected:
 	//Scene manager reference
 		UPROPERTY()

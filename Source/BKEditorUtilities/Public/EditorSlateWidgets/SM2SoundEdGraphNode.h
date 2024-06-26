@@ -74,6 +74,13 @@ public:
 		UpdateGraphNode();
 	}
 
+	~SM2SoundPatchContainerGraphNode()
+	{
+		UM2SoundPatchContainerNode* AsM2SoundPatchContainerNode = Cast<UM2SoundPatchContainerNode>(GraphNode);
+		if(AsM2SoundPatchContainerNode) AsM2SoundPatchContainerNode->OnNodeUpdated.Unbind();
+		//GraphNode->OnNodeUpdated.Unbind();
+	}
+
 private:
 	T ParameterInterface;
 

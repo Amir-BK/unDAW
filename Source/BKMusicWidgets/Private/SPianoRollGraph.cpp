@@ -9,9 +9,26 @@
 
 //#include <BKMusicWidgets.h>
 
+
+#define LOCTEXT_NAMESPACE "PianoRollGraph"
+
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 DEFINE_LOG_CATEGORY(SPIANOROLLLOG);
+
+SLATE_IMPLEMENT_WIDGET(SPianoRollGraph)
+void SPianoRollGraph::PrivateRegisterAttributes(FSlateAttributeInitializer& AttributeInitializer)
+{
+   // SLATE_ADD_MEMBER_ATTRIBUTE_DEFINITION_WITH_NAME(AttributeInitializer, "CurrentTimestamp", CurrentTimestamp, EInvalidateWidgetReason::None);
+	SLATE_ADD_MEMBER_ATTRIBUTE_DEFINITION_WITH_NAME(AttributeInitializer, "PianoTabWidth", PianoTabWidth, EInvalidateWidgetReason::None);
+
+}
+
+SPianoRollGraph::SPianoRollGraph()
+	: 	PianoTabWidth(*this, 0.0f)
+{
+	//OnMusicTimestamp.Unbind();
+}
 
 struct FEventsWithIndex
 {
@@ -87,6 +104,7 @@ EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits inT
 
 	
 void SPianoRollGraph::Construct(const FArguments& InArgs)
+	
 {	
 	PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
 	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/KeyboardMappings/MidiEditorKeyBindings.MidiEditorKeyBindings");
@@ -95,6 +113,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	OnSeekEvent = InArgs._OnSeekEvent;
 	OnMouseButtonDownDelegate = InArgs._OnMouseButtonDown;
 	//OnMusicTimestamp = InArgs._OnMusicTimestamp;
+	PianoTabWidth.Assign(*this, InArgs._PianoTabWidth);
+
 
 	//OnMusicTimestamp.BindLambda([&](FMusicTimestamp newTimestamp) { UpdateTimestamp(newTimestamp); });
 	//OnMusicTimestamp.Unbind();
@@ -110,10 +130,10 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	cNoteColor = InArgs._cNoteColor;
 
 
-	ChildSlot
-		[
-			SAssignNew(RootConstraintCanvas, SConstraintCanvas)
-		];
+	//ChildSlot
+	//	[
+	//		SAssignNew(RootConstraintCanvas, SConstraintCanvas)
+	//	];
 
 	CursorTest = FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(0xF040);
 	
@@ -152,7 +172,8 @@ void SPianoRollGraph::SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimesta
 {
 	bIsAttributeBoundMusicTimestamp = newTimestamp.IsBound();
 
-	CurrentTimestamp = newTimestamp;
+	//CurrentTimestamp = newTimestamp;
+	//CurrentTimestamp.Set(this, newTimestamp.Steal());
 }
 
 void SPianoRollGraph::Init()
@@ -182,7 +203,7 @@ void SPianoRollGraph::Init()
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	
-	const auto tick = MidiSongMap->CalculateMidiTick(CurrentTimestamp.Get(), EMidiClockSubdivisionQuantization::None);
+	const auto tick = MidiSongMap->CalculateMidiTick(SessionData->CurrentTimestampData, EMidiClockSubdivisionQuantization::None);
 	const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
 
 	//timeline is in miliseconds
@@ -223,7 +244,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	//update cursor and the such 
 	if (!receivingDragUpdates)
 	{
-		tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
+		tickAtMouse = MidiSongMap->MsToTick((localMousePosition.X - PianoTabWidth.Get()) / horizontalZoom);
 		CurrentBeatAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
 		CurrentBarAtMouseCursor = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
 		//int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(bar, beat, 0);
@@ -859,9 +880,9 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	// bad stupid code, this should happen in the tick event
 
-	bool bShowPianotable = true;
+	bool bShowPianoTab = true;
 
-	auto MarginVector = bShowPianotable ? FVector2f(50, 0) : FVector2f(0, 0);
+	auto MarginVector = FVector2f(PianoTabWidth.Get(), 0);
 	auto PaintPosVector = positionOffset + MarginVector;
 
 	
@@ -1160,13 +1181,17 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		false,
 		FMath::Max(2.0f * horizontalZoom, 1.0f));
 
-	FSlateDrawElement::MakeText(OutDrawElements,
-		PostNotesLayerID,
-		OffsetGeometryChild.ToPaintGeometry(FVector2D(1.0f, 1.0f), FSlateLayoutTransform(1.0f, localMousePosition - FVector2D(0.0f, CursorTest.measuredY))),
-		&CursorTest.glyph,
-		FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24),
-		ESlateDrawEffect::None,
-		FLinearColor::White);
+	if (InputMode == EPianoRollEditorMouseMode::drawNotes)
+	{
+		FSlateDrawElement::MakeText(OutDrawElements,
+			PostNotesLayerID,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(1.0f, 1.0f), FSlateLayoutTransform(1.0f, localMousePosition - FVector2D(0.0f, CursorTest.measuredY))),
+			&CursorTest.glyph,
+			FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24),
+			ESlateDrawEffect::None,
+			FLinearColor::White);
+	}
+
 	
 
 	//draw piano roll, overlayed on the original geometry (not the offset geometry), let's start with drawing a big gray background rectangle
@@ -1217,3 +1242,4 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+#undef LOCTEXT_NAMESPACE
