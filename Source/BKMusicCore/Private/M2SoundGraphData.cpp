@@ -641,6 +641,13 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 
 }
 
+void UDAWSequencerData::RemoveVertex(UM2SoundVertex* Vertex)
+{
+	Vertexes.Remove(Vertex);
+	//Vertex->DestroyVertex();
+	//Vertex->OnVertexDestroyed.Broadcast();
+}
+
 void UDAWSequencerData::BeginDestroy()
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Destroying Sequencer Data"))

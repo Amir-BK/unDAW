@@ -210,6 +210,7 @@ public:
 	float horizontalZoom = 0.1f;
 	float hZoomTarget = horizontalZoom;
 	float verticalZoom = 0.03f;
+	float vZoomTarget = verticalZoom;
 
 	float zoomInterpSpeed = 10.0f;
 

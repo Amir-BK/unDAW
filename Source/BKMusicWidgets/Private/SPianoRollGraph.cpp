@@ -270,12 +270,18 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			positionOffset.X -= DeltaPos * horizontalZoom;
 		}
 
-		
-			//positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom + MidOfScreen;
-		
+		//check if we're ahead of the cursor and lerp to it
 
-		
-		//positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
+		float BeginningOfScreen = -positionOffset.X;
+
+		//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), BeginningOfScreen, LocalSpacePlayBackPosition);
+		if (LocalSpacePlayBackPosition < BeginningOfScreen)
+		{
+			float DeltaPos = LocalSpacePlayBackPosition - BeginningOfScreen;
+			positionOffset.X = CurrentTimeMiliSeconds;
+
+		}
+
 	}
 
 
@@ -296,6 +302,27 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 		positionOffset.X += timeDelta * horizontalZoom;
 		positionOffset.X = FMath::Min(positionOffset.X, 0.0f);
 
+		//verticalZoom = FMath::Clamp(verticalZoom, 0.01, 2.0);
+		RecalculateSlotOffsets();
+
+	}
+
+	if (verticalZoom != vZoomTarget)
+	{
+		//here we keep our zoom position close to where the mouse was, I need to also add interpolation towards the center
+		//and make this 2d instead of 1d
+
+		float preZoomTimeAtMouse = localMousePosition.Y / verticalZoom;
+
+		verticalZoom = FMath::Lerp<float>(verticalZoom, vZoomTarget, 0.2f);
+
+		float postZoomTimeAtMouse = localMousePosition.Y / verticalZoom;
+		float timeDelta = postZoomTimeAtMouse - preZoomTimeAtMouse;
+		positionOffset.Y += timeDelta * verticalZoom;
+		positionOffset.Y = FMath::Min(positionOffset.Y, 0.0f);
+
+		verticalZoom = FMath::Clamp(verticalZoom, 0.01, 2.0);
+		RecalculateSlotOffsets();
 	}
 
 	
@@ -444,7 +471,7 @@ void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::C
 
 void SPianoRollGraph::RecalcGrid()
 {
-	if (!SessionData->IsValidLowLevelFast()) return;
+	if (SessionData == nullptr) return;
 
 	auto* MidiSongMap = MidiFile->GetSongMaps();
 	//after much figuring out, this is the code that generates the grid based on quantization size
@@ -697,13 +724,13 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 	{
 		if (InMouseEvent.GetWheelDelta() >= 0.1)
 		{
-			verticalZoom *= 1.1f;
+			vZoomTarget *= 1.1f;
 		}
 		else {
-			verticalZoom *= 0.9f;
+			vZoomTarget *= 0.9f;
 		}
-		verticalZoom = FMath::Clamp(verticalZoom, 0.01, 2.0);
-		RecalculateSlotOffsets();
+
+
 		return FReply::Handled();
 	}
 	

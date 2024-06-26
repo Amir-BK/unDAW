@@ -201,6 +201,8 @@ public:
 
 	virtual void UpdateConnections() {};
 
+	virtual void DestroyVertex() {};
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif
@@ -255,7 +257,10 @@ public:
 
 	void UpdateConnections() override;
 
+	void DestroyVertex() override;
+
 	void CollectAndTransmitAudioParameters() override;
+
 	
 
 };

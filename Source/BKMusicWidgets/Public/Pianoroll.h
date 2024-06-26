@@ -21,7 +21,7 @@ class BKMUSICWIDGETS_API UPianoroll : public UUnDAWWidgetBase
 	public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Pianoroll")
-	float PianoTabMargin = 100.0f;
+	float PianoTabMargin = 0.0f;
 
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 
