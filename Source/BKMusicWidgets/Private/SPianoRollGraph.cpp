@@ -123,8 +123,13 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	//we don't want to tick unless there's a midi file
 	SetCanTick(false);
 	//tick
+	if (InArgs._SessionData) {
+		SetSessionData(InArgs._SessionData);
+	}
+	else if(InArgs._MidiFile) {
+		SetMidiFile(InArgs._MidiFile);
+	}
 
-	SessionData = InArgs._SessionData;
 	gridColor = InArgs._gridColor;
 	accidentalGridColor = InArgs._accidentalGridColor;
 	cNoteColor = InArgs._cNoteColor;
@@ -148,7 +153,7 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 		}
 	}
 
-	FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
+	//FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
 
 	//SetCurrentTimestamp(InArgs._CurrentTimestamp);
 	//CurrentTimestamp.
@@ -168,41 +173,84 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 
 
 
-void SPianoRollGraph::SetCurrentTimestamp(TAttribute<FMusicTimestamp> newTimestamp)
-{
-	bIsAttributeBoundMusicTimestamp = newTimestamp.IsBound();
+//void SPianoRollGraph::Init()
+//{
+//	if(!SessionData) return;
+//	
+//	OnSeekEvent.BindUObject(SessionData, &UDAWSequencerData::SendSeekCommand);
+//
+//
+//	if (SessionData->HarmonixMidiFile)
+//	{
+//		SetCanTick(true);
+//		//MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
+//		LinkedNoteDataMap = &SessionData->LinkedNoteDataMap;
+//
+//		InputMode = EPianoRollEditorMouseMode::Panning;
+//
+//	}
+//	else {
+//
+//		SetCanTick(false);
+//		InputMode = EPianoRollEditorMouseMode::empty;
+//	}
+//
+//}
 
-	//CurrentTimestamp = newTimestamp;
-	//CurrentTimestamp.Set(this, newTimestamp.Steal());
-}
-
-void SPianoRollGraph::Init()
+void SPianoRollGraph::SetSessionData(UDAWSequencerData* inSessionData)
 {
-	if(!SessionData) return;
+	UE_LOG(SPIANOROLLLOG, Log, TEXT("Setting Session Data!"));
 	
-	OnSeekEvent.BindUObject(SessionData, &UDAWSequencerData::SendSeekCommand);
-
-
-	if (SessionData->HarmonixMidiFile)
+	if (SessionData)
 	{
-		SetCanTick(true);
-		MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
+		if (SessionData == inSessionData) return;
+
+		OnSeekEvent.Unbind();
+	}
+
+	if (inSessionData) {
+		OnSeekEvent.BindUObject(inSessionData, &UDAWSequencerData::SendSeekCommand);
+		SessionData = inSessionData;
+		//this is... annoying but we'll deal with later. 
 		LinkedNoteDataMap = &SessionData->LinkedNoteDataMap;
 
+		if (SessionData->HarmonixMidiFile) SetMidiFile(SessionData->HarmonixMidiFile);
+
 		InputMode = EPianoRollEditorMouseMode::Panning;
-
-	}
-	else {
-
+		SetCanTick(true);
+	}else{
+		SessionData = nullptr;
+		LinkedNoteDataMap = nullptr;
 		SetCanTick(false);
-		InputMode = EPianoRollEditorMouseMode::empty;
 	}
 
+
+
+
+
+}
+
+void SPianoRollGraph::SetMidiFile(UMidiFile* inMidiFile)
+{
+	MidiFile = inMidiFile;
+
+	if (MidiFile)
+	{
+		SetCanTick(true);
+	}
+	else
+	{
+		SetCanTick(false);
+	}
 }
 
 void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	
+	if (SessionData == nullptr) return;
+
+	auto* MidiSongMap = MidiFile->GetSongMaps();
+
 	const auto tick = MidiSongMap->CalculateMidiTick(SessionData->CurrentTimestampData, EMidiClockSubdivisionQuantization::None);
 	const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
 
@@ -318,17 +366,18 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 void SPianoRollGraph::UpdateTimestamp(FMusicTimestamp newTimestamp)
 {
-	const auto tick = MidiSongMap->CalculateMidiTick(newTimestamp, EMidiClockSubdivisionQuantization::None);
-	const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
-	
-	//timeline is in miliseconds
-	CurrentTimelinePosition = CurrentTimeMiliSeconds * .001f;
+	checkNoEntry();
+	//const auto tick = MidiSongMap->CalculateMidiTick(newTimestamp, EMidiClockSubdivisionQuantization::None);
+	//const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(tick);
+	//
+	////timeline is in miliseconds
+	//CurrentTimelinePosition = CurrentTimeMiliSeconds * .001f;
 
-	if(bFollowCursor)
-	{
-		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
-		positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
-	}
+	//if(bFollowCursor)
+	//{
+	//	//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
+	//	positionOffset.X = -CurrentTimeMiliSeconds * horizontalZoom;
+	//}
 	//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 }
 void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
@@ -374,12 +423,15 @@ void SPianoRollGraph::AddHorizontalX(float inputX)
 
 void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::CacheDesiredSize(InLayoutScaleMultiplier)
 {
-		if(SessionData->HarmonixMidiFile) RecalcGrid();
+
+		RecalcGrid();
 };
 
 void SPianoRollGraph::RecalcGrid()
 {
-	
+	if (!SessionData->IsValidLowLevelFast()) return;
+
+	auto* MidiSongMap = MidiFile->GetSongMaps();
 	//after much figuring out, this is the code that generates the grid based on quantization size
 	visibleBeats.Empty();
 	float LeftMostTick = MidiSongMap->MsToTick(-positionOffset.X / horizontalZoom);
@@ -391,7 +443,7 @@ void SPianoRollGraph::RecalcGrid()
 	
 	//populate subdiv array
 	float subDivTick = LeftMostTick;
-	while(subDivTick <= RightMostTick)
+	while(!MidiSongMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
 	{
 		visibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(QuantizationGridUnit)));
 		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
@@ -403,7 +455,7 @@ void SPianoRollGraph::RecalcGrid()
 	//populate bar array 
 	// can probably just leave it as time, rather than calculate back and forth...
 	float barTick = LeftMostTick;
-	while(barTick <= RightMostTick)
+	while(!MidiSongMap->GetBarMap().IsEmpty() && barTick <= RightMostTick)
 	{
 		//MidiSongMap->GetBarMap()
 		visibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(barTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));
@@ -414,6 +466,8 @@ void SPianoRollGraph::RecalcGrid()
 
 	//cull notes
 	CulledNotesArray.Empty();
+
+	if(!LinkedNoteDataMap) return;
 
 	for (auto& track : *LinkedNoteDataMap)
 	{
@@ -658,7 +712,9 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - positionOffset;
 		hoveredPitch = 127 -FMath::Floor(localMousePosition.Y / rowHeight);
 
-	
+		if (MidiFile == nullptr) return FReply::Unhandled();
+
+		auto* MidiSongMap = MidiFile->GetSongMaps();
 		
 		tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
 		//hoveredNotePitch = -1;
@@ -876,6 +932,8 @@ FReply SPianoRollGraph::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& In
 int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	
+	
+	//FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), CursorTest, ESlateDrawEffect::None, FLinearColor::White);
 	//if (!bIsInitialized) return LayerId;
 
 	// bad stupid code, this should happen in the tick event
@@ -923,6 +981,10 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		//}
 	};
 
+	if(SessionData == nullptr) return LayerId;
+
+	auto* MidiSongMap = MidiFile->GetSongMaps();
+
 	//bar and beatlines, calculated earlier, not on the paint event
 	for (auto& beat : visibleBeats)
 	{
@@ -960,29 +1022,14 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		FMath::Max(5.0f * horizontalZoom, 1.0f));
 
 
-
-	// draw the child canvas, (that is all the actual notes) 
-	//int postCanvasLayerID = RootConstraintCanvas.Get()->Paint(Args, OffsetGeometryChild, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
-
-	//if in note draw mode, draw note overlay 
 	
-
-
-	//here we're gonna run some tests, so maybe some of this code will be useful to debug later, surrounding it with the if def
-	// allows us to completly remove this section when compiling, the actual define is in the header file, can easily be commented out.
-
 
 	//mouse crosshairs
 	FLinearColor trackColor = SessionData->SelectedTrackIndex != INDEX_NONE ? SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor : FLinearColor::White;
 
-	////ugly code, can't be in the paint event, needs to be in the mouse move or tick methods. 
-	//int tickAtMouse = MidiSongMap->MsToTick(localMousePosition.X / horizontalZoom);
-	//int beat = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Beat;
-	//int bar = MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse).Bar;
+
 	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
 	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
-	//auto PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), TimeSpanToSubDiv(QuantizationGridUnit));
-	//if(QuantizationGridUnit == EMusicTimeSpanOffsetUnits::Ms) PrevSubDivTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(tickAtMouse), EMidiClockSubdivisionQuantization::None);
 
 		//paint hovered note
 	if (SelectedNote != nullptr)

@@ -86,7 +86,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
 
-			PianoRollGraph->Init();
+			//PianoRollGraph->Init();
 				
 			SetupPreviewPerformer();
 			//PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);

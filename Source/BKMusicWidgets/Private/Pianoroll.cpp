@@ -9,24 +9,24 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 
 	if(SceneManager && SceneManager->GetDAWSequencerData())
 	{
-		SequencerData = SceneManager->GetDAWSequencerData();
+		DawSequencerData = SceneManager->GetDAWSequencerData();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SceneManager or SequencerData is null, creating transient session, this should only happen with the UMG Designer"));
-		SequencerData = UM2SoundGraphStatics::CreateEmptySequencerData();
+		//SequencerData = UM2SoundGraphStatics::CreateEmptySequencerData();
 	}
 
 
 	
 	SAssignNew(PianoRollGraph, SPianoRollGraph)
-		.SessionData(SequencerData)
+		.SessionData(DawSequencerData)
 		.Clipping(EWidgetClipping::ClipToBounds)
 		.PianoTabWidth(PianoTabMargin);
 
 	
 	PianoRollGraph->bFollowCursor = false;
-	PianoRollGraph->Init();
+	//PianoRollGraph->Init();
 
 	if(SceneManager)
 	{

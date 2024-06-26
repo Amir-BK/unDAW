@@ -37,8 +37,8 @@ protected:
 		UPROPERTY()
 		AMusicScenePlayerActor* SceneManager;
 
-		UPROPERTY()
-		UDAWSequencerData* DawSequencerData;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", Meta = (DisplayName = "DAW Sequencer Data"))
+		TObjectPtr<UDAWSequencerData> DawSequencerData;
 	
 	
 };
