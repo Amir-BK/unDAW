@@ -229,8 +229,11 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 
 	//update builder, in the future we may want to be a little bit more conservative with this
 	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
-	
-	OnVertexAdded.Broadcast(Vertex);
+	Vertex->SequencerData = this;
+	Vertex->BuildVertex();
+	Vertex->CollectParamsForAutoConnect();
+	Vertex->UpdateConnections();
+	Vertex->OnVertexUpdated.Broadcast();
 }
 
 inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
