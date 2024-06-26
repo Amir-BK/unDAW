@@ -59,6 +59,8 @@ public:
     FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
     FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
 
+    void DeleteSelectedNodes();
+
     void OnNodeDoubleClicked(UEdGraphNode* Node)
     {
         if (Node && Node->CanJumpToDefinition())

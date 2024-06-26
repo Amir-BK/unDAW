@@ -25,7 +25,7 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 		.PianoTabWidth(PianoTabMargin);
 
 	
-	PianoRollGraph->bFollowCursor = false;
+	PianoRollGraph->bFollowCursor = true;
 	//PianoRollGraph->Init();
 
 	if(SceneManager)

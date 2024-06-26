@@ -758,6 +758,17 @@ FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput
 	}
 }
 
+void FM2SoundCoreNodesComposite::ReleaseMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext, FAssignableAudioOutput Output)
+{
+	MasterOutputs.Add(Output);
+
+	EMetaSoundBuilderResult BuildResult;
+
+	BuilderContext->DisconnectNodeInput(Output.AudioLeftOutputInputHandle, BuildResult);
+	BuilderContext->DisconnectNodeInput(Output.AudioRightOutputInputHandle, BuildResult);
+
+}
+
 void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* BuilderContext, UDAWSequencerData* ParentSession)
 {
 	//populate midi filter document
