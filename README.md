@@ -13,6 +13,10 @@ Creating new fusion patches with unDAW from existing SFZ and DSPreset instrument
 
 Some videos until I make a proper demo - https://drive.google.com/drive/folders/1-tbrrys2V091Wv94E5xbvGdLrwm_79i_?usp=sharing
 
+# General Info
+
+The core playback capabilities of unDAW are basically an abstraction layer on top of the MetasoundBuilder, and it's a rather thin one that I plan to make thinner still be exposing more parameters from the metasound nodes as pins, as such ultimately all the normal metasound systems work with unDAW, the 'Midi Listener' component for instance just sets up a metasound output watch, as the Builder used to build the graph is Blueprint exposed you can do anything you want with it in BP, but of course M2Sound graph (the unDAW graph) will lose sync, this also means that if you just want to use unDAW to set up a static metasound from the live metasound you can easily call the relevant builder function, the metasound can then be edited with the metasound editor as per usual. My intention is to expose more relevant functionality through unDAW to limit the need for direct interactions with the Audio Component or the Builder itself but both are exposed if you know what you're doing unDAW doesn't really limit you from doing anything with this systems. 
+
 # Features & Current Status 
 
 **UDAWSequencerData** - This is a UObject class that is managed as an asset in the editor or in game, this class contains an editable copy of the midi data and of the "M2Sound Graph" which is basically a graph like description of a metasound that can be instantiated using the metasound builder, this allows creating 'live metasounds' that render the MIDI data via metasound instrument patches (and the new Harmonix Fusion Sampler metasound node that allows rendering polyphonic sounds with a single node inside a metasound). **Right blicking a midi file and generating a DAWSequencerData asset from it allows playing back multi-track midi files with 2-3 clicks**.
