@@ -34,6 +34,18 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Midi"));
 	}
 
+	//if Pin Category == MetasoundLiteral check Pin Subcategory
+
+	if (A->PinType.PinCategory == "MetasoundLiteral" && B->PinType.PinCategory == "MetasoundLiteral")
+	{
+		//compare subcategories 
+		if(A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+			{
+				return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
+
+			}
+	}
+
 	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
 }
 
