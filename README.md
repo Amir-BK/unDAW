@@ -49,5 +49,6 @@ All third party resources include their original licensing documents in the reso
 - [SMUFL Fonts - Bravura](https://github.com/steinbergmedia/bravura)
 - [SIMPLE UI icons] (https://github.com/Semantic-Org/UI-Icon)
 - https://github.com/steinbergmedia/petaluma
+- Using metasound effect patches from https://github.com/JanKXSKI/Concord
 
 
