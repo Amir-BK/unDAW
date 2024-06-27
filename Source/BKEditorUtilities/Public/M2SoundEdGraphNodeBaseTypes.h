@@ -69,7 +69,7 @@ public:
 		AssignedTrackId = NewTrackId;
 		for (UEdGraphPin* Pin : Pins)
 		{
-			if (Pin->Direction == EGPD_Output && Pin->PinType.PinCategory == "Track")
+			if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
 			{
 				for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
 				{
@@ -80,10 +80,14 @@ public:
 				}
 			}
 		}
+
+		NodeConnectionListChanged();	
 	}
 
 	void DestroyNode() override {
-		Vertex->DestroyVertex();
+		UpdateDownstreamTrackAssignment(INDEX_NONE);
+
+		Vertex->DestroyVertexInternal();
 		Super::DestroyNode();
 	}
 

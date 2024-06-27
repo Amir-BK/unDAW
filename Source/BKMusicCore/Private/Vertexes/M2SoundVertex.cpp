@@ -311,24 +311,24 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	{
 		FM2SoundPinData PinData = FM2SoundPinData();
 
-		FName& NodeName = PinData.PinName;
+		FName& PinName = PinData.PinName;
 		FName& DataType = PinData.DataType;
 		bool IsAutoManaged = false;
-		BuilderContext->GetNodeOutputData(Output, NodeName, DataType, BuildResult);
+		BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
 
-		if (NodeName == FName(TEXT("unDAW Instrument.Audio L")))
+		if (PinName == FName(TEXT("unDAW Instrument.Audio L")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
 			IsAutoManaged = true;
 		}
 
-		if (NodeName == FName(TEXT("unDAW Instrument.Audio R")))
+		if (PinName == FName(TEXT("unDAW Instrument.Audio R")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
 			IsAutoManaged = true;
 		}
 
-		if (NodeName == FName(TEXT("MIDI Stream")))
+		if (PinName == FName(TEXT("MIDI Stream")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Output);
 			IsAutoManaged = true;
@@ -336,7 +336,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	
 		}
 
-		if (NodeName == FName(TEXT("Track")))
+		if (PinName == FName(TEXT("Track")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Output);
 			IsAutoManaged = true;
@@ -346,7 +346,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 		//insert audio outputs unDAW Insert.Audio L 
 
-		if (NodeName == FName(TEXT("unDAW Insert.Audio L")))
+		if (PinName == FName(TEXT("unDAW Insert.Audio L")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
 			IsAutoManaged = true;
@@ -354,7 +354,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 		}
 
-		if (NodeName == FName(TEXT("unDAW Insert.Audio R")))
+		if (PinName == FName(TEXT("unDAW Insert.Audio R")))
 		{
 			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
 			IsAutoManaged = true;
@@ -368,7 +368,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
 		}
 
-		OutPinsNew.Add(NodeName, PinData);
+		OutPinsNew.Add(PinName, PinData);
 
 	}
 
@@ -377,6 +377,18 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 }
 
 #if WITH_EDITOR
+
+void UM2SoundVertex::DestroyVertexInternal()
+{
+	
+
+	if(MainInput)
+	{
+		MainInput->UnregisterOutputVertex(this);
+	}
+
+	DestroyVertex();
+}
 
 void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {

@@ -130,13 +130,13 @@ public:
 	FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override
 	{
 		//Tracks are blue
-		if (PinType.PinCategory == "Track")
+		if (PinType.PinCategory == "Track-Audio")
 		{
 			return FLinearColor(0.0f, 0.0f, 1.0f);
 		}
 
 		//Audio is purple
-		if (PinType.PinCategory == "Audio")
+		if (PinType.PinCategory == "Track-Midi")
 		{
 			return FLinearColor(0.5f, 0.0f, 0.5f);
 		}
@@ -144,7 +144,7 @@ public:
 		//metasound literals get the value from the metasound literal schema according to their data type
 		if (PinType.PinCategory == "MetasoundLiteral")
 		{
-			return FLinearColor(0.0f, 0.5f, 0.5f);
+			return FLinearColor::Red;
 		}
 
 		return UEdGraphSchema::GetPinTypeColor(PinType);

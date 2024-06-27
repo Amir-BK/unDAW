@@ -404,8 +404,11 @@ public:
 	virtual bool IsTickableWhenPaused() const { return true; }
 	virtual bool IsTickableInEditor() const { return true; }
 
+	//After BeginPlay it is safe to use this audio component to set up additional output watchers or to send audio parameters
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
 	UAudioComponent* AuditionComponent = nullptr;
+
+
 
 public:
 
