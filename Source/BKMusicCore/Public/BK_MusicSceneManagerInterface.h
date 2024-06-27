@@ -104,6 +104,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
 	virtual void SendSeekCommand(float InSeek);
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport", CallInEditor)
+	virtual TArray<FString> GetMidiOutputNames();
+
 
 
 	FOnCreateAuditionGeneratorHandleDelegate GeneratorCreated;

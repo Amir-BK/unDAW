@@ -44,10 +44,6 @@ void UDAWListenerComponent::SetSceneManager(AMusicScenePlayerActor* inSceneManag
 {
 	SceneManager = inSceneManager;
 
-
-
-
-
 	InitEvent();
 
 }

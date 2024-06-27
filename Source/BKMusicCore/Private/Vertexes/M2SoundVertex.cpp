@@ -777,3 +777,12 @@ void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 	}
 	
 }
+
+void UM2SoundLiteralNodeVertex::DestroyVertex()
+{
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Destroying Literal Node Vertex"))
+	EMetaSoundBuilderResult BuildResult;
+
+	GetSequencerData()->BuilderContext->RemoveNode(NodeHandle, BuildResult);
+	GetSequencerData()->RemoveVertex(this);
+}

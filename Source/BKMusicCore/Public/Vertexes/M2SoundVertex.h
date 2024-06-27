@@ -227,6 +227,8 @@ public:
 
 	UPROPERTY()
 	FMetaSoundNodeHandle NodeHandle;
+
+	void DestroyVertex() override;
 };
 
 //the audio output is a bit of a special case due to the way the output graph works, we need to add another channel to the mixer for each one

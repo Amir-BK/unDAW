@@ -1,0 +1,4 @@
+unDAW uses metasound patches created by JanKXSKI - https://github.com/JanKXSKI as part of his tremendous Concord project - https://github.com/JanKXSKI/Concord
+
+Concord, like unDAW, is an open source repo under MIT License, the original license terms apply to all assets copied from the Concord repo which can be found in:
+'unDAW Content/Patches/ConcordDSP/' - All concord patches have been renamed to avoid conflict with original concord plugin. 

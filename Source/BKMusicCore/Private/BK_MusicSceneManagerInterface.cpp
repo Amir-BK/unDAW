@@ -60,6 +60,24 @@ void IBK_MusicSceneManagerInterface::SendSeekCommand(float InSeek)
 	UE_LOG(BKMusicInterfaceLogs, Verbose, TEXT("Received Seek Command"))
 }
 
+TArray<FString> IBK_MusicSceneManagerInterface::GetMidiOutputNames()
+{
+	//make dummy array, populate an array of FStrings with musical instrument names for co-pilot
+
+	TArray<FString> MidiOutputNames;
+
+	MidiOutputNames.Add("Piano");
+	MidiOutputNames.Add("Guitar");
+	MidiOutputNames.Add("Drums");
+	MidiOutputNames.Add("Bass");
+	MidiOutputNames.Add("Strings");
+	MidiOutputNames.Add("Brass");
+	MidiOutputNames.Add("Woodwinds");
+
+	return MidiOutputNames;
+
+}
+
 
 
 

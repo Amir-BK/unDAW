@@ -33,9 +33,22 @@ protected:
 	FName MidiOutputName;
 	int IndexInSceneManager;
 
-	
+	TArray<FString> MidiOutputNames;
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
+	TArray<FString> GetMidiOutputNames()
+	{
+		if (SceneManager)
+		{
+			return SceneManager->GetMidiOutputNames();
+		}
 
+		return TArray<FString>();
+
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", meta = (GetOptions = "GetMidiOutputNames"))
+	FString WatchedOutput;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager, Category="unDAW")
 	TObjectPtr<AMusicScenePlayerActor> SceneManager;
