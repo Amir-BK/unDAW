@@ -78,7 +78,7 @@ void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const
 void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	Value.Get(CurrentTimestampData);
-
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Midi Clock Output %f"), CurrentTimestampData.Beat)
 	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 
 }
@@ -132,9 +132,10 @@ void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 		case EBKTransportCommands::Stop:
 			AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Stop")));
 			//set time to 0
-			CurrentTimestampData = FMusicTimestamp();
+			CurrentTimestampData.Reset();
 			PlayState = EBKPlayState::ReadyToPlay;
-
+			SendSeekCommand(0.f);
+			//OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 			break;
 
 		default:
