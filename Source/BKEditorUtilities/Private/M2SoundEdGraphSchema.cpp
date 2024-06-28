@@ -352,12 +352,12 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 	UM2SoundAudioInsertNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Audio Insert");
 
-	auto NewPatchVertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	auto NewPatchVertex = FVertexCreator::CreateVertex<UM2SoundPatch>(Node->GetSequencerData());
 	//Node->GetSequencerData()->AddVertex(Node->Vertex);
 	//M2SoundVertex->Outputs.Empty();
 	Node->Vertex = NewPatchVertex;
 	//Node->Vertex->Outputs = M2SoundVertex->Outputs;
-	Node->Vertex->SequencerData = Node->GetSequencerData();
+	//Node->Vertex->SequencerData = Node->GetSequencerData();
 
 	//for(auto& Output : Node->Vertex->Outputs)
 	//{
@@ -418,12 +418,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* P
 		Node->Name = FName(TrackMetadata[MyMetadata].trackName);
 	}
 
-	auto NewInputVertex = NewObject<UM2SoundMidiInputVertex>(Node->GetSequencerData(), NAME_None, RF_Transactional);
-	Node->Vertex = NewInputVertex;
-	Node->Vertex->SequencerData = Node->GetSequencerData();
+	//auto NewInputVertex = NewObject<UM2SoundMidiInputVertex>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundMidiInputVertex>(Node->GetSequencerData());
 	Node->Vertex->TrackId = Node->TrackId;
-	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
-
+	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
 	NodeCreator.Finalize();
 

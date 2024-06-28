@@ -18,6 +18,26 @@ BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWVertexLogs, Verbose, All);
 class UM2SoundGraphRenderer;
 struct FBuilderVertexCompositeData;
 
+
+
+class FVertexCreator
+{
+public:
+	
+	template<typename T>
+	static inline T* CreateVertex(UDAWSequencerData* InGraphData)
+	{
+		T* Vertex = NewObject<T>(InGraphData, NAME_None, RF_Transactional);
+		Vertex->SequencerData = InGraphData;
+
+		return Vertex;
+
+	}
+
+
+};
+
+
 UENUM()
 enum class EVertexAutoConnectionPinCategory :  uint8
 {
