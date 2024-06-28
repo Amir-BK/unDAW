@@ -51,6 +51,8 @@ struct FM2SoundPinData
 {
 	GENERATED_BODY()
 
+	EEdGraphPinDirection Direction;
+
 	UPROPERTY(EditAnywhere)
 	float MinValue = 0.0f;
 
@@ -77,7 +79,10 @@ struct FM2SoundPinData
 	UPROPERTY()
 	FMetasoundFrontendLiteral LiteralValue;
 
+	//not the most elegant 
 	FMetaSoundBuilderNodeInputHandle InputHandle;
+
+	FMetaSoundBuilderNodeOutputHandle OutputHandle;
 
 };
 
@@ -119,6 +124,8 @@ public:
 
 	bool UnregisterOutputVertex(UM2SoundVertex* OutputVertex);
 
+	EMetaSoundBuilderResult TryConnectPinToPin(const FM2SoundPinData& MyInputPin, const FM2SoundPinData& OtherOutputPin);
+
 	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
 	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
 	// metasound i/os that are exposed via our metasound parameter interfaces
@@ -147,6 +154,9 @@ public:
 
 	UFUNCTION()
 	UDAWSequencerData* GetSequencerData() const;
+
+
+	UMetaSoundSourceBuilder& GetBuilderContext() const;
 
 	UPROPERTY()
 	TObjectPtr<UDAWSequencerData> SequencerData;

@@ -100,9 +100,28 @@ bool UM2SoundVertex::UnregisterOutputVertex(UM2SoundVertex* OutputVertex)
 	return false;
 }
 
+EMetaSoundBuilderResult UM2SoundVertex::TryConnectPinToPin(const FM2SoundPinData& MyInputPin, const FM2SoundPinData& OtherOutputPin)
+{
+	EMetaSoundBuilderResult BuildResult;
+
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Trying to connect pin %s to pin %s"), *MyInputPin.PinName.ToString(), *OtherOutputPin.PinName.ToString())
+	//GetBuilderContext().Connect
+	GetBuilderContext().ConnectNodes(OtherOutputPin.OutputHandle, MyInputPin.InputHandle, BuildResult);
+	BuilderConnectionResults.Add(MyInputPin.PinName, BuildResult);
+	
+	return BuildResult;
+}
+
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {
 	return SequencerData;
+}
+
+UMetaSoundSourceBuilder& UM2SoundVertex::GetBuilderContext() const
+{
+	return *SequencerData->BuilderContext;
+	
+	// TODO: insert return statement here
 }
 
 void UM2SoundVertex::VertexNeedsBuilderUpdates()
@@ -182,6 +201,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 				
 		FName PinName;
 		FName DataType;
+		PinData.InputHandle = Input;
 		BuilderContext->GetNodeInputData(Input, PinName, DataType, BuildResult);
 		auto LiteralValue = BuilderContext->GetNodeInputClassDefault(Input, BuildResult);
 		
@@ -261,7 +281,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		}
 
 		bool IsAutoManaged = false;
-		PinData.InputHandle = Input;
+		
 		
 
 
@@ -314,6 +334,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		FName& PinName = PinData.PinName;
 		FName& DataType = PinData.DataType;
 		bool IsAutoManaged = false;
+		PinData.OutputHandle = Output;
 		BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
 
 		if (PinName == FName(TEXT("unDAW Instrument.Audio L")))

@@ -96,6 +96,8 @@ void UM2SoundEdGraphNode::NodeConnectionListChanged()
 
 	UEdGraphNode::NodeConnectionListChanged();
 
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: NodeConnectionListChanged, %s"), *GetName());
+
 	//if no vertex probably recreating graph idk.
 	if (!Vertex) return;
 
@@ -231,6 +233,14 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 			auto LinkedToNode = LinkedToPin->GetOwningNode();
 			auto AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
 			auto LinkedToVertex = AsM2Node->Vertex;
+
+			const auto& MyPin = Vertex->InPinsNew.Find(Pin->PinName);
+			const auto& OtherPin = AsM2Node->Vertex->OutPinsNew.Find(LinkedToPin->PinName);
+
+			auto Result = Vertex->TryConnectPinToPin(*MyPin, *OtherPin);
+
+			//print results and name
+			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *Pin->PinName.ToString(), *LinkedToPin->PinName.ToString(), Result);
 			//Vertex->MakeTrackInputConnection(LinkedToVertex);
 
 			//print this pin name and the linked to pin name
@@ -271,7 +281,7 @@ bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FStrin
 
 void UM2SoundEdGraphNode::VertexUpdated()
 {
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schemca: VertexUpdated, %s has %d outputs"), *Vertex->GetName(), Vertex->Outputs.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("m2sound graph schemca: VertexUpdated, %s has %d outputs"), *Vertex->GetName(), Vertex->Outputs.Num());
 
 	//assuming each vertex only implements one interface, we can keep most of the logic here
 	Audio::FParameterInterfacePtr interface = nullptr;

@@ -57,17 +57,6 @@ public:
 
 		NodeCreator.Finalize();
 
-		//connect node pins based on vertex bindings, note that the target vertex may not have been created yet
-
-
-		//for (auto& Output : Vertex->Outputs)
-		//{
-		//	if (VertexToNodeMap.Contains(Output))
-		//	{
-		//		AutoConnectTrackPinsForNodes(*Node, *VertexToNodeMap[Output]);
-		//	}
-		//};
-
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
 	}

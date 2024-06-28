@@ -12,6 +12,12 @@ ABaseUnpatchActor::ABaseUnpatchActor()
 
 }
 
+void ABaseUnpatchActor::SetVertex(UM2SoundVertex* InVertex)
+{
+	M2Vertex = InVertex;;
+	VertexName = TEXT("Crap");
+}
+
 // Called when the game starts or when spawned
 void ABaseUnpatchActor::BeginPlay()
 {
