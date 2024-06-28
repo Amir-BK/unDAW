@@ -491,8 +491,10 @@ public:
 	//this is actually how we add notes to the midi files, it creates a new 'editable midi file' which is a copy of the harmonix midi file
 	//and not really editable at all, the next time we make a change a copy of this file will be created
 	//can thing of some improvements to this whole process
+	UFUNCTION(BlueprintAuthorityOnly, Category = "unDAW")
 	void AddLinkedMidiEvent(FLinkedMidiEvents PendingNote);
 
+	UFUNCTION(BlueprintAuthorityOnly, Category = "unDAW")
 	void DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote);
 
 	UFUNCTION()

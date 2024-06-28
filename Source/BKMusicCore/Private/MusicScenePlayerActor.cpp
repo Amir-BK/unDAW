@@ -72,19 +72,6 @@ void AMusicScenePlayerActor::BeginPlay()
 	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
 
 	InitHarmonixComponents();
-
-
-	//MusicTempometer
-	
-	//Audio->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	//if (GetActiveSessionData() && GetActiveSessionData()->SavedMetaSound)
-	//{
-	//	//GetActiveSessionData()->PerformanceMetaSound->OnGeneratorInstanceCreated.Add(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
-	//	PerformanceAudioComponent = UGameplayStatics::CreateSound2D(this, GetActiveSessionData()->SavedMetaSound, 1.0f, 1.0f, 0.0f, nullptr, true);
-	//	//PerformanceAudioComponent->AddToRoot();
-	//	//PerformanceAudioComponent->SetSound();
-	//	UMetasoundGeneratorHandle::CreateMetaSoundGeneratorHandle(PerformanceAudioComponent);
-	//} 
 	
 }
 
