@@ -63,6 +63,11 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		DummyInputs.Add(Track.trackName);
 	}
 
+	for (const auto& [Name, Output] : SequencerData->CoreNodes.MappedOutputs)
+	{
+		DummyInputs.Add(Name.ToString());
+	}
+
 	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
 		if (FromPin->PinType.PinCategory == "Track-Midi")
@@ -85,6 +90,11 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+
+			if(FromPin->Direction == EGPD_Output)
+			{
+				ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
+			}
 		}
 	}
 
@@ -94,6 +104,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
 
 		for (auto Input : DummyInputs)
 		{
@@ -131,8 +142,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 	//NewNode->GetDeprecationResponse()->Message = FText::FromString("This node is deprecated and will be removed in a future version of the plugin.");
 	//cast to m2sound node and bind the vertex to the node
 	UM2SoundEdGraphNode* Node = Cast<UM2SoundEdGraphNode>(NewNode);
-	
-	Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	if(IsValid(Node->Vertex))
+	{
+		Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	}
+	//Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	NewNode->GetGraph()->NotifyGraphChanged();
 
 	return NewNode;
@@ -432,6 +446,19 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* P
 
 
 
+	
+	return Node;
+}
+
+UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
+{
+	
+	FGraphNodeCreator<UM2SoundVariMixerNode> NodeCreator(*ParentGraph);
+
+	auto Node = NodeCreator.CreateUserInvokedNode();
+	Node->Name = FName("VariMixer");
+
+	NodeCreator.Finalize();
 	
 	return Node;
 }

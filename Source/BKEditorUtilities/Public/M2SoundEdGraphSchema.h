@@ -223,3 +223,12 @@ struct FM2SoundGraphAddNodeAction_NewGraphInputNode : public FM2SoundGraphAddNod
 	FM2SoundGraphAddNodeAction_NewGraphInputNode() : FM2SoundGraphAddNodeAction(INVTEXT("Inputs"), INVTEXT("Midi Track"), INVTEXT("Tooltip"), 0, 0, 0) {}
 	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
 };
+
+USTRUCT()
+struct FM2SoundGraphAddNodeAction_NewVariMixerNode : public FM2SoundGraphAddNodeAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphAddNodeAction_NewVariMixerNode() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Mixer"), INVTEXT("A variable width mixer"), 0, 0, 0) {}
+	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
+};

@@ -276,3 +276,15 @@ public:
 	//void SyncModelConnections();
 };
 
+UCLASS()
+class UM2SoundVariMixerNode : public UM2SoundGraphConsumer
+{
+	GENERATED_BODY()
+public:
+
+	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
+	//TSharedPtr<SM2VariMixerNode> MixerWidget;
+
+	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
+};

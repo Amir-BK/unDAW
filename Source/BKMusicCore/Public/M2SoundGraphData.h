@@ -286,6 +286,22 @@ public:
 	virtual void InitializeGraph() {};
 };
 
+
+USTRUCT(BlueprintType, Category = "unDAW Sequence")
+struct FMappableBuilderNodeOutput
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FName OutputName;
+
+	UPROPERTY()
+	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+
+	UPROPERTY()
+	bool bGraphOutput = false;
+};
+
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
 USTRUCT()
 struct BKMUSICCORE_API FM2SoundCoreNodesComposite
@@ -330,12 +346,16 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext);
 	void ReleaseMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext, FAssignableAudioOutput Output);
 
-	
+	//Might be nicer user experience to categorize outputs by data types, for now this will only contain MIDI outputs
+	UPROPERTY()
+	TMap<FName, FMappableBuilderNodeOutput> MappedOutputs;
 
 protected:
 	friend class UDAWSequencerData;
 
 	void InitCoreNodes(UMetaSoundSourceBuilder* BuilderContext, UDAWSequencerData* ParentSession);
+
+	void CreateFilterNodeForTrack(UMetaSoundSourceBuilder* BuilderContext, int32 TrackMetadataIndex);
 
 private:
 

@@ -373,3 +373,8 @@ void UM2SoundAudioInsertNode::AllocateDefaultPins()
 	CreatePin(EGPD_Output, "Track-Audio", FName("Track (Audio)", 0));
 	Pins.Last()->DefaultValue = "Default";
 }
+
+TSharedPtr<SGraphNode> UM2SoundVariMixerNode::CreateVisualWidget()
+{
+	return SNew(SM2VariMixerNode, this);
+}

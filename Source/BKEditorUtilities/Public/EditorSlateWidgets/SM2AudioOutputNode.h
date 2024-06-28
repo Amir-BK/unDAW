@@ -6,6 +6,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "M2SoundEdGraphSchema.h"
 #include "SAudioRadialSlider.h"
+#include "SAudioSlider.h"
 #include "M2SoundEdGraphNodeBaseTypes.h"
 
 /**
@@ -41,4 +42,26 @@ public:
 	{
 		return OutputNode->GetNodeTitleColor();
 	}
+};
+
+
+class BK_EDITORUTILITIES_API SM2VariMixerNode : public SGraphNode
+{
+	public:
+	SLATE_BEGIN_ARGS(SM2VariMixerNode)
+		{	}
+		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
+	SLATE_END_ARGS()
+
+	/** Constructs this widget with InArgs */
+	void Construct(const FArguments& InArgs, UEdGraphNode* InGraphNode);
+
+	TSharedRef<SWidget> CreateNodeContentArea() override;
+
+
+
+	TArray<TSharedPtr<SAudioSlider>> Sliders;
+
+	TSharedPtr<SVerticalBox> MainVerticalBox;
+
 };

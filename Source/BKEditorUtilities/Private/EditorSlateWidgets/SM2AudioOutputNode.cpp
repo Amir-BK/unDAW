@@ -73,4 +73,89 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 /** Constructs this widget with InArgs */
 
+void SM2VariMixerNode::Construct(const FArguments& InArgs, UEdGraphNode* InGraphNode)
+{
+	GraphNode = InGraphNode;
 
+	UpdateGraphNode();
+}
+
+TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
+{
+	return SNew(SBorder)
+		.BorderImage(FAppStyle::GetBrush("NoBorder"))
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)
+
+		.Padding(FMargin(0, 3))
+		[
+			SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				.FillWidth(1.0f)
+				[
+					// LEFT
+					SAssignNew(LeftNodeBox, SVerticalBox)
+				]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Center)
+				.AutoWidth()
+
+				[
+					// Center
+					SAssignNew(MainVerticalBox, SVerticalBox)
+						+ SVerticalBox::Slot()
+
+						//patch select
+
+						.AutoHeight()
+						[
+							//make FAudioRadialSliderStyle
+
+							SNew(SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								.HAlign(HAlign_Left)
+								.FillWidth(1.0f)
+								[
+									SNew(SAudioSlider)
+										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
+										.SliderValue(1.0f)
+									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
+
+								]	
+								+ SHorizontalBox::Slot()
+								.HAlign(HAlign_Left)
+								.FillWidth(1.0f)
+								[
+									SNew(SAudioSlider)
+										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
+										.SliderValue(1.0f)
+									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
+
+								]	
+								+ SHorizontalBox::Slot()
+								.HAlign(HAlign_Left)
+								.FillWidth(1.0f)
+								[
+									SNew(SAudioSlider)
+										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
+										.SliderValue(1.0f)
+									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
+
+								]						
+
+						]						
+
+
+				]
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				.HAlign(HAlign_Right)
+				[
+					// RIGHT
+					SAssignNew(RightNodeBox, SVerticalBox)
+				]
+		];
+
+}

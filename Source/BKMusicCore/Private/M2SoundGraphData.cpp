@@ -275,6 +275,9 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 		M2TrackMetadata[IndexOfNewTrack].trackColor = trackColor;
 
 
+		//So actually here we can create the Midi Stream Core Nodes...
+
+
 		//AddVertex(NewInput);
 		//TrackInputs.Add(IndexOfNewTrack, NewInput);
 		UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, IndexOfNewTrack);
@@ -792,6 +795,11 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* BuilderC
 	CreateMainMixer(BuilderContext);
 }
 
+void FM2SoundCoreNodesComposite::CreateFilterNodeForTrack(UMetaSoundSourceBuilder* BuilderContext, int32 TrackMetadataIndex)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Filter Node for Track %d"), TrackMetadataIndex)
+}
+
 void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock(UMetaSoundSourceBuilder* BuilderContext)
 {
 	// Create the midi player block
@@ -814,6 +822,15 @@ void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock(UMetaSoundSourceBu
 
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = BuilderContext->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
 	MainMidiStreamOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
+	FMappableBuilderNodeOutput MainMidiStreamOutputHandle = FMappableBuilderNodeOutput();
+	MainMidiStreamOutputHandle.OutputHandle = MainMidiStreamOutput;
+	MainMidiStreamOutputHandle.OutputName = FName(TEXT("Main Midi Stream"));
+	MainMidiStreamOutputHandle.bGraphOutput = true;
+
+	MappedOutputs.Add(MainMidiStreamOutputHandle.OutputName, MainMidiStreamOutputHandle);
+
+
+
 	auto MidiInputPinOutputHandle = BuilderContext->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), SessionData->MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
 	BuilderContext->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
 
