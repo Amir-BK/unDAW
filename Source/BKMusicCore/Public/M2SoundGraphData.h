@@ -459,9 +459,10 @@ public:
 
 	//for now I'll mark this call in editor for testing, but we need fancier management of track add and removal, it should probably
 	//edit the midi data and be registered in undos
-	UFUNCTION(CallInEditor, Category = "unDAW")
+	UFUNCTION(Category = "unDAW")
 	void AddTrack();
 
+	//Just for development and debug! don't call unless you want to destroy the session! 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void ReinitGraph();
 

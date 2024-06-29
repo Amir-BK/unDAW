@@ -495,7 +495,7 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 				[
 					SNew(SButton)
 						.Text(INVTEXT("Add Track"))
-						//.OnClicked_Lambda([this, i]() { SequenceData->AddTrack(i); return FReply::Handled(); })
+						.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); })
 				]
 
 		];

@@ -434,8 +434,11 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* P
 	}
 
 	//auto NewInputVertex = NewObject<UM2SoundMidiInputVertex>(Node->GetSequencerData(), NAME_None, RF_Transactional);
-	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundMidiInputVertex>(Node->GetSequencerData());
+		
+	auto InVertex 	= FVertexCreator::CreateVertex<UM2SoundMidiInputVertex>(Node->GetSequencerData());
+	Node->Vertex = InVertex;
 	Node->Vertex->TrackId = Node->TrackId;
+	InVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata[MyMetadata].TrackIndexInParentMidi, TrackMetadata[MyMetadata].ChannelIndexInParentMidi);
 	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
