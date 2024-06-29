@@ -428,6 +428,7 @@ public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
 	UAudioComponent* AuditionComponent = nullptr;
 
+	TSet<TTuple<int32, int32>> CurrentlyActiveNotes;
 
 
 public:

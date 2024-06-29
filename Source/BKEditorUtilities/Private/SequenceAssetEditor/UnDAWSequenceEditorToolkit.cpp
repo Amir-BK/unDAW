@@ -216,7 +216,7 @@ void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
 
 	for (auto& Node : Graph->SelectedNodes)
 	{
-		Node->DestroyNode();
+		if(Node->CanUserDeleteNode())	Node->DestroyNode();
 	}
 	
 }

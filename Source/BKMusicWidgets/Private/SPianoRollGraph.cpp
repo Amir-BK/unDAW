@@ -1315,14 +1315,22 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 				FLinearColor::Black,
 				false,
 				2.0f);
-	
-
-
-
-
-
 
 	}
+
+
+	for (const auto& [MetadataIndex, NoteNumber] : SessionData->CurrentlyActiveNotes)
+	{
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			PostNotesLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MarginVector.X, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - NoteNumber)))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			SessionData->GetTracksDisplayOptions(MetadataIndex).trackColor
+		);
+	
+	}
+
 	//FSlateDrawElement::MakeBox(OutDrawElements,
 	//	PostNotesLayerID,
 	//	AllottedGeometry.ToPaintGeometry(FVector2D(MarginVector.X, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(0.0f, 0.0f))),

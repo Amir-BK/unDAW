@@ -230,21 +230,21 @@ public:
 											//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
 									]
 
-									+ SVerticalBox::Slot()
-									[
-										SNew(SComboBox<TSharedPtr<FString>>)
-											.OptionsSource(&optionsArray)
-											.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
-											.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
+									//+ SVerticalBox::Slot()
+									//[
+									//	SNew(SComboBox<TSharedPtr<FString>>)
+									//		.OptionsSource(&optionsArray)
+									//		.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
+									//		.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
 
-											.InitiallySelectedItem(CurrentItem)
-											[
+									//		.InitiallySelectedItem(CurrentItem)
+									//		[
 
-												SNew(STextBlock)
-													.Text_Lambda([this]() {return GetCurrentItemLabel(); })
+									//			SNew(STextBlock)
+									//				.Text_Lambda([this]() {return GetCurrentItemLabel(); })
 
-											]
-									]
+									//		]
+									//]
 
 									+ SVerticalBox::Slot()
 									[

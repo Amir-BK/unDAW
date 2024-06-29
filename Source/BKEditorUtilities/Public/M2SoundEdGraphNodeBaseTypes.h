@@ -170,6 +170,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
 	float Gain = 1.0f;
 
+	bool CanUserDeleteNode() const override { return false; }
+
 	UM2SoundAudioOutput* AsOutputVertex = nullptr;
 
 	void AllocateDefaultPins() override;

@@ -8,6 +8,7 @@
 #include "SAudioRadialSlider.h"
 #include "SAudioSlider.h"
 #include "M2SoundEdGraphNodeBaseTypes.h"
+#include <AutoPatchWidgets/SVariMixerWidget.h>
 
 /**
  *
@@ -58,6 +59,7 @@ class BK_EDITORUTILITIES_API SM2VariMixerNode : public SGraphNode
 
 	TSharedRef<SWidget> CreateNodeContentArea() override;
 
+	TSharedPtr<SVariMixerWidget> MixerWidget;
 
 
 	TArray<TSharedPtr<SAudioSlider>> Sliders;

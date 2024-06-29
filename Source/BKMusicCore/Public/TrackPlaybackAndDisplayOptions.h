@@ -51,6 +51,11 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
 	int ChannelIndexInParentMidi;
+	
+	//I don't fully understand what harmonix are doing with the 'is primary channel' but this leads to different results when
+	// sending notes to fusion vs. when receiving notes from the watch subsystem, to account for that, we save both values
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	int ChannelIndexRaw;
 
 	//the desired render mode, if Custom Patch is selected a custom metasound patch will be inserted into the graph by the builder. Make sure this patch can receive a MIDI stream and output audio, consult the example instrument for reference.
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")

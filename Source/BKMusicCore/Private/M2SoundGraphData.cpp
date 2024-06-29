@@ -9,6 +9,8 @@
 #include "unDAWSettings.h"
 #include "MetasoundSource.h"
 #include <EditableMidiFile.h>
+#include <HarmonixMidi/Blueprint/MidiNote.h>
+#include <HarmonixMetasound/DataTypes/MidiEventInfo.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -73,6 +75,37 @@ void UDAWSequencerData::SetLoopSettings(const bool& InbIsLooping, const int32& B
 
 void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
 {
+
+	FMidiEventInfo MidiEvent;
+
+	Value.Get(MidiEvent);
+	
+	//find the metadata index for this event
+	auto FoundTrack = M2TrackMetadata.IndexOfByPredicate([MidiEvent](const FTrackDisplayOptions& Track) {
+		return Track.ChannelIndexRaw == MidiEvent.GetChannel() && MidiEvent.TrackIndex == Track.TrackIndexInParentMidi;
+		});
+
+	if (FoundTrack == INDEX_NONE) return;
+
+	//if is note on, add to map with found index, else look in map for note with same number and remove it
+
+	if (MidiEvent.IsNote())
+	{
+		if (MidiEvent.IsNoteOn())
+		{
+			CurrentlyActiveNotes.Add(TTuple<int, int>(FoundTrack, MidiEvent.GetNoteNumber()));
+		}
+		else {
+			CurrentlyActiveNotes.Remove(TTuple<int, int>(FoundTrack, MidiEvent.GetNoteNumber()));
+		}
+	}
+
+
+
+	//auto ValueType = Value.GetDataTypeName();
+	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Midi Stream Output %s, %s"), *OutputName.ToString(), *ValueType.ToString())
+
+	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Midi Stream Output %s, %d, %d"), *OutputName.ToString(), MidiEvent.GetMsg().GetStdData1(), MidiEvent.GetMsg().GetStdData2())
 }
 
 void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
@@ -259,6 +292,7 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 		FTrackDisplayOptions newTrack;
 		bool bIsPrimaryChannel = HarmonixMidiFile->GetTrack(trackID)->GetPrimaryMidiChannel() == channelID;
 		newTrack.ChannelIndexInParentMidi = bIsPrimaryChannel ? 0 : channelID;
+		newTrack.ChannelIndexRaw = channelID;
 		newTrack.TrackIndexInParentMidi = trackID;
 
 		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
@@ -273,7 +307,7 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 			trackColor = FLinearColor::Red;
 			break;
 		case 1:
-			trackColor = FLinearColor::White;
+			trackColor = FLinearColor::Blue;
 			break;
 		case 2:
 			trackColor = FLinearColor::Green;

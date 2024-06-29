@@ -112,38 +112,8 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 						[
 							//make FAudioRadialSliderStyle
 
-							SNew(SHorizontalBox)
-								+ SHorizontalBox::Slot()
-								.HAlign(HAlign_Left)
-								.FillWidth(1.0f)
-								[
-									SNew(SAudioSlider)
-										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
-										.SliderValue(1.0f)
-									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
-
-								]	
-								+ SHorizontalBox::Slot()
-								.HAlign(HAlign_Left)
-								.FillWidth(1.0f)
-								[
-									SNew(SAudioSlider)
-										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
-										.SliderValue(1.0f)
-									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
-
-								]	
-								+ SHorizontalBox::Slot()
-								.HAlign(HAlign_Left)
-								.FillWidth(1.0f)
-								[
-									SNew(SAudioSlider)
-										//.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
-										.SliderValue(1.0f)
-									//	.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
-
-								]						
-
+							SAssignNew(MixerWidget, SVariMixerWidget)
+		
 						]						
 
 
