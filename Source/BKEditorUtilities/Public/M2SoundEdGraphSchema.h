@@ -47,7 +47,7 @@ public:
 	void InitializeGraph() override;
 
 	template<class T>
-	void CreateDefaultNodeForVertex(UM2SoundVertex* Vertex, const int ColumnPosition)
+	T* CreateDefaultNodeForVertex(UM2SoundVertex* Vertex, const int ColumnPosition)
 	{
 		FGraphNodeCreator<T> NodeCreator(*this);
 		T* Node = NodeCreator.CreateNode();
@@ -59,6 +59,8 @@ public:
 
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
+
+		return Node;
 	}
 
 	void PerformVertexToNodeBinding();

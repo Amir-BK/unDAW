@@ -184,6 +184,17 @@ void UDAWSequencerData::PrintMidiData()
 	}
 }
 
+FString GetUniqueNameForTrack(const FString& BaseName, const UMidiFile& MidiFile)
+{
+	FString NewName = BaseName;
+	int TrackIndex = 0;
+	while (MidiFile.FindTrackIndexByName(NewName) != INDEX_NONE)
+	{
+		NewName = FString::Printf(TEXT("%s %d"), *BaseName, TrackIndex++);
+	}
+	return NewName;
+}
+
 void UDAWSequencerData::AddTrack()
 {
 	
@@ -193,7 +204,7 @@ void UDAWSequencerData::AddTrack()
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
-	NewTrackMetaData.trackName = FGuid::NewGuid().ToString();
+	NewTrackMetaData.trackName = GetUniqueNameForTrack(TEXT("New Track"), *MidiFileCopy);
 	NewTrackMetaData.fusionPatch = nullptr;
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
 

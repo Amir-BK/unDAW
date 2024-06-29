@@ -85,6 +85,7 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData*
 	InputVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata.TrackIndexInParentMidi, TrackMetadata.ChannelIndexInParentMidi);
 
 	InputVertex->TrackId = Index;
+	//InputVertex->
 
 	//UM2SoundMidiOutput* NewOutput = NewObject<UM2SoundMidiOutput>(SequencerData->GetOuter(), NAME_None, RF_Transactional);
 

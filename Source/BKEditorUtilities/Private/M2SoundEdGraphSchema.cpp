@@ -256,7 +256,9 @@ void UM2SoundGraph::InitializeGraph()
 
 		if(Vertex->IsA<UM2SoundBuilderInputHandleNode>())
 		{
-			CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
+			auto InNode = CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
+			
+			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackName);
 		}
 
 
