@@ -288,5 +288,7 @@ public:
 
 	void AllocateDefaultPins() override;
 
+	void NodeConnectionListChanged() override;
+
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
 };

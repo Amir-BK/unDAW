@@ -76,7 +76,9 @@ public:
 
     void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
-    void SetPaintingMode(bool bPaintingMode);
+    void TogglePaintingMode();
+
+    void TogglePianoTab();
 
     void ExtendToolbar();
 

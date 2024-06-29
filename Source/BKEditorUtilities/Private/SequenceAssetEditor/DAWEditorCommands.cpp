@@ -11,7 +11,7 @@ inline void FDAWEditorToolbarCommands::RegisterCommands()
 	UI_COMMAND(TransportStop, "Stop", "Stop", EUserInterfaceActionType::Button, FInputChord(EKeys::SpaceBar, EModifierKey::Control));
 
 	UI_COMMAND(ToggleNotePaintingMode, "Toggle Note Painting Mode", "Toggle Note Painting Mode", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::B));
-
+	UI_COMMAND(TogglePianoTabView, "Toggle Piano Tab View", "Toggle Piano Tab View", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::P));
 };
 
 #undef LOCTEXT_NAMESPACE

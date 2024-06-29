@@ -269,9 +269,21 @@ void FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated(const FMusicTimest
 	if (PianoRollGraph)    PianoRollGraph->UpdateTimestamp(NewTimestamp);
 }
 
-void FUnDAWSequenceEditorToolkit::SetPaintingMode(bool bPaintingMode)
+void FUnDAWSequenceEditorToolkit::TogglePaintingMode()
 {
-		if (PianoRollGraph) PianoRollGraph->SetInputMode(bPaintingMode ? EPianoRollEditorMouseMode::drawNotes : EPianoRollEditorMouseMode::Panning);
+
+	bool bPaintingMode = PianoRollGraph->InputMode == EPianoRollEditorMouseMode::drawNotes;
+
+	if (PianoRollGraph) PianoRollGraph->SetInputMode(!bPaintingMode ? EPianoRollEditorMouseMode::drawNotes : EPianoRollEditorMouseMode::Panning);
+}
+
+void FUnDAWSequenceEditorToolkit::TogglePianoTab()
+{
+	if (PianoRollGraph)
+	{
+		PianoRollGraph->PianoTabWidth.Set(*PianoRollGraph, PianoRollGraph->PianoTabWidth.Get() == 0.0f ? 50.0f : 0.0f);
+
+	}
 }
 
 
@@ -287,8 +299,12 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 	ToolkitCommands->MapAction(Commands.TransportStop, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Stop); }));
 
 	
+	
 	//map note draw mode toggle
-	ToolkitCommands->MapAction(Commands.ToggleNotePaintingMode, FExecuteAction::CreateLambda([this]() { SetPaintingMode(PianoRollGraph->InputMode != EPianoRollEditorMouseMode::drawNotes); }));
+	ToolkitCommands->MapAction(Commands.ToggleNotePaintingMode, FExecuteAction::CreateLambda([this]() { TogglePaintingMode(); }));
+
+	//map piano tab toggle
+	ToolkitCommands->MapAction(Commands.TogglePianoTabView, FExecuteAction::CreateLambda([this]() { TogglePianoTab(); }));
 	
 	TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
 	CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); })

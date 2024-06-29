@@ -1288,13 +1288,48 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	
 
 	//draw piano roll, overlayed on the original geometry (not the offset geometry), let's start with drawing a big gray background rectangle
-	FSlateDrawElement::MakeBox(OutDrawElements,
-		PostNotesLayerID,
-		AllottedGeometry.ToPaintGeometry(FVector2D(MarginVector.X, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(0.0f, 0.0f))),
-		&gridBrush,
-		ESlateDrawEffect::None,
-		FLinearColor::White
-	);
+	for (int i = 0; i <= 127; i++)
+	{
+		bool isSelectedNote = i == hoveredPitch;
+		//float opacity = (float)0.7f * (127.0f - FMath::Abs(i - hoveredPitch) * 12) / 127.0f;
+		FLinearColor TracksColor = UEngravingSubsystem::IsNoteInCmajor(i) ? FLinearColor::White : FLinearColor::Black;
+
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			PostNotesLayerID++,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MarginVector.X, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			TracksColor
+		);
+
+		TArray<FVector2D> HorizontalLinePoints;
+		HorizontalLinePoints.Add(FVector2D(0, rowHeight));
+		HorizontalLinePoints.Add(FVector2D(MarginVector.X, rowHeight));
+		//also draw black lines for the white keys
+
+			FSlateDrawElement::MakeLines(OutDrawElements,
+				PostNotesLayerID++,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(0.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
+				HorizontalLinePoints,
+				ESlateDrawEffect::None,
+				FLinearColor::Black,
+				false,
+				2.0f);
+	
+
+
+
+
+
+
+	}
+	//FSlateDrawElement::MakeBox(OutDrawElements,
+	//	PostNotesLayerID,
+	//	AllottedGeometry.ToPaintGeometry(FVector2D(MarginVector.X, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(0.0f, 0.0f))),
+	//	&gridBrush,
+	//	ESlateDrawEffect::None,
+	//	FLinearColor::White
+	//);
 
 	if (InputMode == EPianoRollEditorMouseMode::drawNotes && SessionData->SelectedTrackIndex != INDEX_NONE)// && someTrackIsSelected && parentMidiEditor->getCurrentInputMode() == EPianoRollEditorMouseMode::drawNotes)
 	{

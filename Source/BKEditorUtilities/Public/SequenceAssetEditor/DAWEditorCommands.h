@@ -23,6 +23,7 @@ class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands : public TCommands<FDAWEd
 		TSharedPtr<FUICommandInfo> TransportStop;
 
 		TSharedPtr<FUICommandInfo> ToggleNotePaintingMode;
+		TSharedPtr<FUICommandInfo> TogglePianoTabView;
 
 		virtual void RegisterCommands() override;
 	
