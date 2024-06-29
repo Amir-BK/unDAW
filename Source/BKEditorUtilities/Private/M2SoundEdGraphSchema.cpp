@@ -11,6 +11,7 @@
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "UnDAWPreviewHelperSubsystem.h"
+#include "Vertexes/M2VariMixerVertex.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
@@ -456,6 +457,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* Pa
 	FGraphNodeCreator<UM2SoundVariMixerNode> NodeCreator(*ParentGraph);
 
 	auto Node = NodeCreator.CreateUserInvokedNode();
+	Node->Vertex = FVertexCreator::CreateVertex<UM2VariMixerVertex>(Node->GetSequencerData());
 	Node->Name = FName("VariMixer");
 
 	NodeCreator.Finalize();

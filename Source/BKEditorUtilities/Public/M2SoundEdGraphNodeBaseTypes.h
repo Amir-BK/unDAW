@@ -286,5 +286,7 @@ public:
 
 	//TSharedPtr<SM2VariMixerNode> MixerWidget;
 
+	void AllocateDefaultPins() override;
+
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
 };

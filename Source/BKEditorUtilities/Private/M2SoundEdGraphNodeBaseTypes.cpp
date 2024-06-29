@@ -55,7 +55,7 @@ FText UM2SoundGraphConsumer::GetPinDisplayName(const UEdGraphPin* Pin) const
 {
 	if (Pin->Direction == EGPD_Output) return FText::FromName(Pin->PinName);
 	int32 Index = Pins.Find(const_cast<UEdGraphPin*>(Pin));
-	check(Index != INDEX_NONE && Vertex);
+	//check(Index != INDEX_NONE && Vertex);
 	//if (Index >= Vertex->GetInputInfo().Num()) return INVTEXT("This pin should not exist! Remove and re-add the node.");
 	//return Vertex->GetInputInfo()[Index].DisplayName;
 
@@ -377,4 +377,13 @@ void UM2SoundAudioInsertNode::AllocateDefaultPins()
 TSharedPtr<SGraphNode> UM2SoundVariMixerNode::CreateVisualWidget()
 {
 	return SNew(SM2VariMixerNode, this);
+}
+
+void UM2SoundVariMixerNode::AllocateDefaultPins()
+{
+	CreatePin(EGPD_Input, "Track-Audio", FName("Track (Audio)", 0));
+	Pins.Last()->DefaultValue = "Default";
+
+	CreatePin(EGPD_Output, "Track-Audio", FName("Track (Audio)", 0));
+	Pins.Last()->DefaultValue = "Default";
 }

@@ -517,9 +517,13 @@ void SPianoRollGraph::RecalcGrid()
 		{
 			bool NoteInRightBound = note.StartTick < RightMostTick;
 
-			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop
-			if(!NoteInRightBound) break;
+			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop, no, we actually CAN'T 
+			// cause tracks
+			//if (!NoteInRightBound) {
+			//	//This is the bad note? print its values
+			//	UE_LOG(SPIANOROLLLOG, Log, TEXT("Bad Note! StartTick %d, EndTick %d, RightMostTick %f"), note.StartTick, note.EndTick, RightMostTick);
 
+			//	}
 			if (note.EndTick >= LeftMostTick)
 			{
 				//if notes are too small, don't draw 

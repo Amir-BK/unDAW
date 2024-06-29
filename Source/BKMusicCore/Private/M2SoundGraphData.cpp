@@ -165,7 +165,7 @@ void UDAWSequencerData::PrintMidiData()
 			UE_LOG(unDAWDataLogs, Verbose, TEXT("Channel %d"), Channel)
 				for (auto& Note : LinkedNotes.LinkedNotes)
 				{
-					UE_LOG(unDAWDataLogs, Verbose, TEXT("Note %d, Start %d, End %d"), Note.pitch, Note.StartTick, Note.EndTick)
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Note %d, Start %d, End %d, [TR: %d, CH: %d]"), Note.pitch, Note.StartTick, Note.EndTick, Note.TrackId, Note.ChannelId)
 				}
 		}
 
