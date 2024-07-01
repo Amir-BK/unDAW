@@ -43,7 +43,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 		DEFINE_INPUT_METASOUND_PARAM(MidiStream, "MidiStream", "MidiStream");
 		DEFINE_INPUT_METASOUND_PARAM(MinTrackIndex, "Track Index", "Track");
 		DEFINE_INPUT_METASOUND_PARAM(MaxTrackIndex, "Channel Index", "Channel");
-		DEFINE_INPUT_METASOUND_PARAM(IncludeConductorTrack, "Include Conductor Track", "Enable to include the conductor track (AKA track 0)");
+		//DEFINE_INPUT_METASOUND_PARAM(IncludeConductorTrack, "Include Conductor Track", "Enable to include the conductor track (AKA track 0)");
 	}
 
 	namespace Outputs
@@ -83,8 +83,8 @@ namespace unDAWMetasounds::TrackIsolatorNode
 					TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::Enable), true),
 					TInputDataVertex<FMidiStream>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MidiStream)),
 					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MinTrackIndex), 0),
-					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MaxTrackIndex), 0),
-					TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::IncludeConductorTrack), false)
+					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MaxTrackIndex), 0)
+					//TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::IncludeConductorTrack), false)
 				),
 				FOutputVertexInterface(
 					TOutputDataVertex<FMidiStream>(METASOUND_GET_PARAM_NAME_AND_METADATA(Outputs::MidiStream))
@@ -100,7 +100,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 			FMidiStreamReadRef MidiStream;
 			FInt32ReadRef MinTrackIndex;
 			FInt32ReadRef MaxTrackIndex;
-			FBoolReadRef IncludeConductorTrack;
+			//FBoolReadRef IncludeConductorTrack;
 		};
 
 		struct FOutputs
@@ -118,7 +118,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 				InputData.GetOrConstructDataReadReference<FMidiStream>(Inputs::MidiStreamName),
 				InputData.GetOrCreateDefaultDataReadReference<int32>(Inputs::MinTrackIndexName, InParams.OperatorSettings),
 				InputData.GetOrCreateDefaultDataReadReference<int32>(Inputs::MaxTrackIndexName, InParams.OperatorSettings),
-				InputData.GetOrCreateDefaultDataReadReference<bool>(Inputs::IncludeConductorTrackName, InParams.OperatorSettings)
+				//InputData.GetOrCreateDefaultDataReadReference<bool>(Inputs::IncludeConductorTrackName, InParams.OperatorSettings)
 			};
 
 			FOutputs Outputs
@@ -143,7 +143,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 			InVertexData.BindReadVertex(Inputs::MidiStreamName, Inputs.MidiStream);
 			InVertexData.BindReadVertex(Inputs::MinTrackIndexName, Inputs.MinTrackIndex);
 			InVertexData.BindReadVertex(Inputs::MaxTrackIndexName, Inputs.MaxTrackIndex);
-			InVertexData.BindReadVertex(Inputs::IncludeConductorTrackName, Inputs.IncludeConductorTrack);
+			//InVertexData.BindReadVertex(Inputs::IncludeConductorTrackName, Inputs.IncludeConductorTrack);
 		}
 
 		virtual void BindOutputs(FOutputVertexInterfaceData& InVertexData) override
@@ -157,7 +157,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 
 		void Execute()
 		{
-			Filter.SetFilterValues(*Inputs.MinTrackIndex, *Inputs.MaxTrackIndex, *Inputs.IncludeConductorTrack);
+			Filter.SetFilterValues(*Inputs.MinTrackIndex, *Inputs.MaxTrackIndex, false);
 
 			Outputs.MidiStream->PrepareBlock();
 
