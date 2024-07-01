@@ -17,6 +17,7 @@ void unDAWMetaSoundsModule::StartupModule()
 	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
 	unDAW::Metasounds::FunDAWCustomInsertInterface::RegisterInterface();
 	unDAW::Metasounds::FunDAWMasterGraphInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWMidiInsertInterface::RegisterInterface();
 }
 
 void unDAWMetaSoundsModule::ShutdownModule()

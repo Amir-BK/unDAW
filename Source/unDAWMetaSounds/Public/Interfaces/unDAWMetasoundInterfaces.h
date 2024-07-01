@@ -92,6 +92,69 @@
 
         };
 
+        class UNDAWMETASOUNDS_API FunDAWMidiInsertInterface : public Audio::FParameterInterface
+        {
+            inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
+
+        public:
+            FunDAWMidiInsertInterface() : FParameterInterface("unDAW Midi Insert", { 0, 1 })
+            {
+                Inputs.Append(GeneratedInputs);
+                Outputs.Append(GeneratedOutputs);
+            }
+
+            static Audio::FParameterInterfacePtr GetInterface()
+            {
+                if (!InstancePointer.IsValid())
+                {
+                    InstancePointer = MakeShared<FunDAWMidiInsertInterface>();
+                }
+                return InstancePointer;
+            }
+
+            static void RegisterInterface()
+            {
+                //UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+                Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+                InterfaceRegistry.RegisterInterface(GetInterface());
+            }
+
+            ~FunDAWMidiInsertInterface() {};
+
+        private:
+
+
+            //so this is how we wind up declaring params, at least I don't have to do it 40 times 
+            const FInput GeneratedInputs[2] =
+            {
+
+                DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
+                    unDAW Instrument.MidiStream,
+                    Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+
+                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
+                    unDAW Instrument.MidiTrack,
+                    Metasound::GetMetasoundDataTypeName<int>(), 0)
+
+            };
+
+            const FOutput GeneratedOutputs[2] =
+            {
+
+                DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
+                    unDAW Instrument.MidiStream,
+                    Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+
+                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
+                    unDAW Instrument.MidiTrack,
+                    Metasound::GetMetasoundDataTypeName<int>(), 0)
+
+            };
+
+
+
+        };
+
 
         class UNDAWMETASOUNDS_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
         {
