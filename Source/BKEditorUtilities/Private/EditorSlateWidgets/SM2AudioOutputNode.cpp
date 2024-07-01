@@ -82,6 +82,9 @@ void SM2VariMixerNode::Construct(const FArguments& InArgs, UEdGraphNode* InGraph
 
 TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 {
+	UM2SoundVariMixerNode* MixerNode = Cast<UM2SoundVariMixerNode>(GraphNode);
+	UM2VariMixerVertex* MixerVertex = Cast<UM2VariMixerVertex>(MixerNode->Vertex);
+	
 	return SNew(SBorder)
 		.BorderImage(FAppStyle::GetBrush("NoBorder"))
 		.HAlign(HAlign_Fill)
@@ -112,7 +115,7 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 						[
 							//make FAudioRadialSliderStyle
 
-							SAssignNew(MixerWidget, SVariMixerWidget)
+							SAssignNew(MixerWidget, SVariMixerWidget, MixerVertex)
 		
 						]						
 
@@ -128,4 +131,45 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 				]
 		];
 
+}
+
+void SM2VariMixerNode::UpdateGraphNode()
+{
+	SGraphNode::UpdateGraphNode();
+
+	UM2SoundVariMixerNode* MixerNode = Cast<UM2SoundVariMixerNode>(GraphNode);
+	UM2VariMixerVertex* MixerVertex = Cast<UM2VariMixerVertex>(MixerNode->Vertex);
+
+	// add a channel widget for each input pin
+
+	for(const auto& Pin : GraphNode->Pins)
+	{
+		if (Pin->Direction == EEdGraphPinDirection::EGPD_Input)
+		{
+			//find vertex owning the connection, safe for now
+			if (Pin->HasAnyConnections())
+			{
+				UEdGraphPin* LinkedPin = Pin->LinkedTo[0];
+				UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode());
+				UM2SoundEdGraphNodeConsumer* ConsumerNode = Cast<UM2SoundEdGraphNodeConsumer>(LinkedNode);
+				if (ConsumerNode) {
+					MixerWidget->AddChannelWidget(ConsumerNode->Vertex->TrackId);
+					continue;
+					}
+
+				//check if it's a mixer node
+				UM2SoundVariMixerNode* LinkedMixerNode = Cast<UM2SoundVariMixerNode>(LinkedNode);
+				if (LinkedMixerNode) {
+					UM2VariMixerVertex* LinkedMixerVertex = Cast<UM2VariMixerVertex>(LinkedMixerNode->Vertex);
+					MixerWidget->AddChannelWidget(INDEX_NONE);
+					continue;
+				}
+			}
+
+			//MixerWidget->AddChannelWidget(MixerVertex, Pin->PinName);
+		}
+	}
+
+
+	//UpdateAudioKnobs();
 }

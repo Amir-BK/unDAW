@@ -307,7 +307,7 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 			trackColor = FLinearColor::Red;
 			break;
 		case 1:
-			trackColor = FLinearColor::Blue;
+			trackColor = FLinearColor::Yellow;
 			break;
 		case 2:
 			trackColor = FLinearColor::Green;
@@ -672,6 +672,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	//iterate over vertexes and create the nodes
 	for(auto& Vertex : Vertexes)
 	{
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Vertex Node, Vertex Name %s"), *Vertex->GetName())
 		Vertex->BuildVertex();
 		Vertex->CollectParamsForAutoConnect();
 		//CoreNodes.BuilderResults.Add(FName(TEXT("Create Vertex Node")), BuildResult);

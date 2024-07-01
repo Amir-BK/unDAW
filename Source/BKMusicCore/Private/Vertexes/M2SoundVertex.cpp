@@ -209,6 +209,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		if (CopyOfInPins.Contains(PinName))
 		{
 			PinData = CopyOfInPins[PinName];
+			PinData.InputHandle = Input;
 			//set the existing literal as default for the input handle
 			BuilderContext->SetNodeInputDefault(Input, PinData.LiteralValue, BuildResult);
 		}
@@ -282,9 +283,6 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 		bool IsAutoManaged = false;
 		
-		
-
-
 
 
 		if(PinName == FName(TEXT("unDAW Instrument.MidiStream")))

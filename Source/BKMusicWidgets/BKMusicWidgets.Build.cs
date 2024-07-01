@@ -43,7 +43,8 @@ public class BKMusicWidgets : ModuleRules
                 "SlateCore",
                 "UMG",
                 "Projects",
-                "InputCore"
+                "InputCore",
+                "AudioWidgets"
 				// ... add private dependencies that you statically link with here ...
 			}
             );

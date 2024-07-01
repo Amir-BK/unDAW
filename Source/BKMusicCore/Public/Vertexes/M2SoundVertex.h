@@ -15,7 +15,7 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWVertexLogs, Verbose, All);
 
 //class UM2SoundGraphData;
-class UM2SoundGraphRenderer;
+
 struct FBuilderVertexCompositeData;
 
 
@@ -129,9 +129,9 @@ public:
 	int TrackId = INDEX_NONE;
 
 	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
-	void BreakTrackInputConnection();
+	virtual void BreakTrackInputConnection();
 
-	void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
+	virtual void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
 
 	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
 
@@ -165,7 +165,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeInputHandle> AutoConnectInPins;
 
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	TArray<FMetaSoundBuilderNodeOutputHandle> OutPins;
 
 	UPROPERTY()
@@ -178,7 +179,7 @@ public:
 
 	UMetaSoundSourceBuilder& GetBuilderContext() const;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDAWSequencerData> SequencerData;
 
 
@@ -221,7 +222,7 @@ public:
 
 	//This is a key method, should be renamed and probably refactored into being called automatically via a pure virtual method on the
 	//patch vertex base class
-	void CollectParamsForAutoConnect();
+	virtual void CollectParamsForAutoConnect();
 
 	UPROPERTY()
 	bool bHideInGraph = false;

@@ -82,7 +82,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	FTrackDisplayOptions()
 	{
 		isVisible = true;
-		trackColor = FLinearColor::Blue;
+		trackColor = FLinearColor::Gray;
 		trackZOrder = 0.0f;
 		isSelected = false;
 		fusionPatch = nullptr;

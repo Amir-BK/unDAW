@@ -464,6 +464,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* Pa
 	auto Node = NodeCreator.CreateUserInvokedNode();
 	Node->Vertex = FVertexCreator::CreateVertex<UM2VariMixerVertex>(Node->GetSequencerData());
 	Node->Name = FName("VariMixer");
+	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
 	NodeCreator.Finalize();
 	

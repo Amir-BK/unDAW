@@ -5,14 +5,108 @@
 #include "SlateOptMacros.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
-void SVariMixerWidget::Construct(const FArguments& InArgs)
+void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex)
 {
-	
+	MixerVertex = InMixerVertex;
+
 	ChildSlot
 	[
-		SNew(STextBlock)
-			.Text(FText::FromString("VariMixerWidget"))
+		SAssignNew(MainHorizontalBox, SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(SMixerChannelWidget, InMixerVertex, INDEX_NONE)
+					.IsEnabled(false)
+					.Visibility_Lambda([this]() -> EVisibility { return ChannelWidgets.Num() > 0 ? EVisibility::Collapsed : EVisibility::Visible; })
+			]
+			
 	];
 	
 }
+
+void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex)
+{
+	MixerVertex = InMixerVertex;
+	ChannelIndex = InChannelIndex;
+	
+	ChildSlot
+	[
+		SNew(SVerticalBox)
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5)
+
+			[
+
+				SNew(STextBlock)
+					.Text(FText::FromString(FString::Printf(TEXT("Channel %d"), ChannelIndex)))
+			]
+
+
+			+ SVerticalBox::Slot()
+			.MaxHeight(175)
+			.Padding(5)
+			[
+				SAssignNew(VolumeSlider, SAudioSlider)
+					.SliderBackgroundColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
+					.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
+				//	.Value(this, &SMixerChannelWidget::GetVolumeSliderValue)
+			]
+			//+ SVerticalBox::Slot()
+			//[
+			//	SAssignNew(RadialSlider, SAudioRadialSlider)
+
+			//		//.Value(this, &SMixerChannelWidget::GetRadialSliderValue)
+			//]
+
+
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(5)
+
+			[
+				SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.HAlign(HAlign_Center)
+				[
+					SNew(SBorder)
+						.BorderBackgroundColor(FLinearColor::Yellow)
+						.BorderImage(FCoreStyle::Get().GetBrush("Menu.Background"))
+
+						[
+							SAssignNew(MuteCheckBox, SCheckBox)
+								
+						]
+					
+						
+						
+						//	.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
+				]
+
+					+ SHorizontalBox::Slot()
+					.HAlign(HAlign_Center)
+
+				[
+					SNew(SBorder)
+						.BorderBackgroundColor(FLinearColor::Green)
+						.BorderImage(FCoreStyle::Get().GetBrush("Menu.Background"))
+						
+						[
+							SAssignNew(SoloCheckBox, SCheckBox)
+						]
+
+
+						//	.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
+				]
+				
+
+			]
+
+
+	];
+
+	//RadialSlider->SetOutputRange(FVector2D(-1, 1));
+}
+
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

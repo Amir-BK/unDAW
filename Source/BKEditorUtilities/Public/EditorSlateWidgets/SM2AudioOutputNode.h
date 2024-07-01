@@ -59,6 +59,8 @@ class BK_EDITORUTILITIES_API SM2VariMixerNode : public SGraphNode
 
 	TSharedRef<SWidget> CreateNodeContentArea() override;
 
+	void UpdateGraphNode() override;
+
 	TSharedPtr<SVariMixerWidget> MixerWidget;
 
 
