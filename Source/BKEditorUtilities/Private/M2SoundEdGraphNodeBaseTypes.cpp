@@ -6,6 +6,7 @@
 #include "AudioParameter.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "SGraphNode.h"
+#include "SGraphNodeKnot.h"
 #include "Sound/SoundBase.h"
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
@@ -198,7 +199,11 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 			// still not sure how this would work when we have an external (in game) editor... but we'll get there.
 			auto LinkedToPin = Pin->LinkedTo[0];
 			auto LinkedToNode = LinkedToPin->GetOwningNode();
-			auto AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
+			while(UM2SoundRerouteNode* AsReroute = Cast<UM2SoundRerouteNode>(LinkedToNode))
+			{
+				LinkedToNode = AsReroute->GetInputPin()->LinkedTo[0]->GetOwningNode();
+			}
+			UM2SoundEdGraphNode* AsM2Node =  Cast<UM2SoundEdGraphNode>(LinkedToNode);
 			auto LinkedToVertex = AsM2Node->Vertex;
 			Vertex->MakeTrackInputConnection(LinkedToVertex);
 			AssignedTrackId = AsM2Node->AssignedTrackId;
@@ -405,4 +410,9 @@ void UM2SoundVariMixerNode::NodeConnectionListChanged()
 		CreatePin(EGPD_Input, "Track-Audio", FName("Track (Audio)", 0));
 		Pins.Last()->DefaultValue = "Default";
 	}
+}
+
+TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
+{
+	return SNew(SGraphNodeKnot, this);
 }

@@ -119,12 +119,14 @@ public:
 		{}
 		SLATE_ARGUMENT(FSlateBrush, gridBrush)
 		SLATE_ARGUMENT(UMidiFile*, MidiFile)
+		SLATE_ARGUMENT(float, CursorFollowAnchorPosition)
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, gridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00")));
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, accidentalGridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082")));
 		SLATE_ARGUMENT_DEFAULT(FLinearColor, cNoteColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220")));
 		SLATE_ARGUMENT(UDAWSequencerData*, SessionData)
 		SLATE_EVENT(FOnMouseButtonDown, OnMouseButtonDown)
 		SLATE_ATTRIBUTE(float, PianoTabWidth)
+
 		SLATE_EVENT(FOnTransportSeekCommand, OnSeekEvent)
 
 		//SLATE_ARGUMENT(TSharedPtr<UMIDIEditorBase>, parentMidiEditor)
@@ -147,6 +149,8 @@ private:
 
 
 public:
+
+	float CursorFollowAnchorPosition = 0.5f;
 
 	UMidiFile* MidiFile;
 

@@ -120,6 +120,13 @@ public:
 	//set pin type colors
 	FLinearColor GetPinTypeColor(const FEdGraphPinType& PinType) const override
 	{
+		//if wild card and connected to something get the color of that something
+		//if(PinType.PinCategory == "WildCard")
+		//{
+
+		//		return GetPinTypeColor(PinType.PinSubCategory);
+		//}
+		
 		//Tracks are blue
 		if (PinType.PinCategory == "Track-Audio")
 		{
@@ -140,6 +147,9 @@ public:
 
 		return UEdGraphSchema::GetPinTypeColor(PinType);
 	};
+
+
+	virtual void OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const override;
 };
 
 

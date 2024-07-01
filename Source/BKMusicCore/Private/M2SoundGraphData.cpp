@@ -187,6 +187,7 @@ void UDAWSequencerData::SendSeekCommand(float InSeek)
 		{
 			AuditionComponent->SetFloatParameter(FName(TEXT("unDAW.Transport.SeekTarget")), InSeek * 1000.f);
 			AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Seek")));
+			CurrentlyActiveNotes.Empty();
 		}
 }
 

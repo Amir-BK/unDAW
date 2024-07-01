@@ -110,6 +110,7 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/KeyboardMappings/MidiEditorKeyBindings.MidiEditorKeyBindings");
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 
+	CursorFollowAnchorPosition = InArgs._CursorFollowAnchorPosition;
 	OnSeekEvent = InArgs._OnSeekEvent;
 	OnMouseButtonDownDelegate = InArgs._OnMouseButtonDown;
 	//OnMusicTimestamp = InArgs._OnMusicTimestamp;
@@ -261,26 +262,29 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 
-		float MidOfScreen = GetCachedGeometry().GetLocalSize().X * 0.5f - positionOffset.X;
+		float DesiredCursorPosition = (GetCachedGeometry().GetLocalSize().X - PianoTabWidth.Get()) * CursorFollowAnchorPosition - positionOffset.X;
 		float LocalSpacePlayBackPosition = CurrentTimeMiliSeconds * horizontalZoom; //+ positionOffset.X;
 
-		if (LocalSpacePlayBackPosition > MidOfScreen)
-		{
-			float DeltaPos = LocalSpacePlayBackPosition - MidOfScreen;
-			positionOffset.X -= DeltaPos * horizontalZoom;
-		}
+		positionOffset.X = -LocalSpacePlayBackPosition;// + DesiredCursorPosition;
+		//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), DesiredCursorPosition, LocalSpacePlayBackPosition);
+
+		//if (LocalSpacePlayBackPosition > DesiredCursorPosition)
+		//{
+		//	float DeltaPos = LocalSpacePlayBackPosition - DesiredCursorPosition;
+		//	positionOffset.X = CurrentTimelinePosition;
+		//}
 
 		//check if we're ahead of the cursor and lerp to it
 
 		float BeginningOfScreen = -positionOffset.X;
 
 		//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), BeginningOfScreen, LocalSpacePlayBackPosition);
-		if (LocalSpacePlayBackPosition < BeginningOfScreen)
-		{
-			float DeltaPos = LocalSpacePlayBackPosition - BeginningOfScreen;
-			positionOffset.X = CurrentTimeMiliSeconds;
+		//if (LocalSpacePlayBackPosition < BeginningOfScreen)
+		//{
+		//	float DeltaPos = LocalSpacePlayBackPosition - BeginningOfScreen;
+		//	positionOffset.X = CurrentTimeMiliSeconds;
 
-		}
+		//}
 
 	}
 

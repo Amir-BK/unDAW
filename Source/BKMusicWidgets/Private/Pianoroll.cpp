@@ -22,7 +22,8 @@ TSharedRef<SWidget> UPianoroll::RebuildWidget()
 	SAssignNew(PianoRollGraph, SPianoRollGraph)
 		.SessionData(DawSequencerData)
 		.Clipping(EWidgetClipping::ClipToBounds)
-		.PianoTabWidth(PianoTabMargin);
+		.PianoTabWidth(PianoTabMargin)
+		.CursorFollowAnchorPosition(DesiredCursorPositionOnScreen);
 
 	
 	PianoRollGraph->bFollowCursor = true;

@@ -18,6 +18,8 @@
 
 DECLARE_DELEGATE(FOnNodeUpdated);
 
+
+
 UCLASS()
 class BK_EDITORUTILITIES_API UM2SoundEdGraphNode : public UEdGraphNode
 {
@@ -94,6 +96,70 @@ public:
 protected:
 
 	bool bHasChanges = false;
+};
+
+UCLASS(NotBlueprintable, meta = (DisplayName = "Reroute"))
+class BK_EDITORUTILITIES_API UM2SoundRerouteNode final : public UEdGraphNode
+{
+	GENERATED_BODY()
+
+public:
+	UEdGraphPin* GetInputPin() const
+	{
+		return Pins[0];
+	}
+
+	UEdGraphPin* GetOutputPin() const
+	{
+		return Pins[1];
+	}
+
+	void AllocateDefaultPins() override
+	{
+		const FName InputPinName(TEXT("InputPin"));
+		const FName OutputPinName(TEXT("OutputPin"));
+
+		UEdGraphPin* MyInputPin = CreatePin(EGPD_Input, "wildcard", InputPinName);
+		MyInputPin->bDefaultValueIsIgnored = true;
+
+		UEdGraphPin* MyOutputPin = CreatePin(EGPD_Output, "wildcard", OutputPinName);
+	}
+
+	void NodeConnectionListChanged() override
+	{
+		//check if either pin is connected, if not, remove this node, if a pin is connected set category to match connected pin
+		bool bHasConnections = false;
+
+		if (GetInputPin()->HasAnyConnections())
+		{
+			bHasConnections = true;
+			GetInputPin()->PinType.PinCategory = GetInputPin()->LinkedTo[0]->PinType.PinCategory;
+			GetOutputPin()->PinType.PinCategory = GetInputPin()->LinkedTo[0]->PinType.PinCategory;
+		}
+		else if (GetOutputPin()->HasAnyConnections())
+		{
+			bHasConnections = true;
+			GetOutputPin()->PinType.PinCategory = GetOutputPin()->LinkedTo[0]->PinType.PinCategory;
+			GetInputPin()->PinType.PinCategory = GetOutputPin()->LinkedTo[0]->PinType.PinCategory;
+		}
+
+		if (!bHasConnections)
+		{
+			//set back to wildcard
+			GetInputPin()->PinType.PinCategory = "wildcard";
+			GetOutputPin()->PinType.PinCategory = "wildcard";
+		}
+
+
+		
+		
+		UEdGraphNode::NodeConnectionListChanged();
+	}
+
+	virtual bool ShouldDrawNodeAsControlPointOnly(int32& OutInputPinIndex, int32& OutOutputPinIndex) const override { OutInputPinIndex = 0; OutOutputPinIndex = 1; return true; }
+
+	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
+
 };
 
 //The consumer base node is the base class for all nodes that are downstream from the track,

@@ -16,28 +16,43 @@
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
 {
+	
+	
 	if (A->Direction == B->Direction)
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
+	FName ACategory = A->PinType.PinCategory;
+	FName BCategory = B->PinType.PinCategory;
 
-	if (A->PinType.PinCategory == "Track" && B->PinType.PinCategory == "Track")
+	//if wild cards, get real categories of connected pins
+	if (ACategory == "wildcard")
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect To Reroute"));
+	}
+
+	if (BCategory == "wildcard")
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect To Reroute"));
+	}
+
+	if (ACategory == "Track" && BCategory == "Track")
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track Bus"));
 	}
 
 	//deal with pin categories - Track-Audio and Track-Midi
-	if (A->PinType.PinCategory == "Track-Audio" && B->PinType.PinCategory == "Track-Audio")
+	if (ACategory == "Track-Audio" && BCategory == "Track-Audio")
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Audio"));
 	}
 
-	if (A->PinType.PinCategory == "Track-Midi" && B->PinType.PinCategory == "Track-Midi")
+	if (ACategory == "Track-Midi" && BCategory == "Track-Midi")
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Midi"));
 	}
 
 	//if Pin Category == MetasoundLiteral check Pin Subcategory
 
-	if (A->PinType.PinCategory == "MetasoundLiteral" && B->PinType.PinCategory == "MetasoundLiteral")
+	if (ACategory == "MetasoundLiteral" && BCategory == "MetasoundLiteral")
 	{
 		//compare subcategories 
 		if(A->PinType.PinSubCategory == B->PinType.PinSubCategory)
@@ -115,6 +130,35 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			ContextMenuBuilder.AddAction(newAction);
 		}
 	}
+}
+
+void UM2SoundEdGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const
+{
+
+	const FScopedTransaction Transaction(INVTEXT("M2Sound: Create Reroute Node"));
+
+	const FVector2D NodeSpacerSize(42.0f, 24.0f);
+	const FVector2D KnotTopLeft = GraphPosition - (NodeSpacerSize * 0.5f);
+
+	UEdGraph* ParentGraph = PinA->GetOwningNode()->GetGraph();
+
+	FGraphNodeCreator<UM2SoundRerouteNode> NodeCreator(*ParentGraph);
+	UM2SoundRerouteNode* Node = NodeCreator.CreateUserInvokedNode();
+	Node->NodePosX = KnotTopLeft.X;
+	Node->NodePosY = KnotTopLeft.Y;
+	//Node->Name = FName("Output");
+
+	//Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	//Node->GetSequencerData()->AddVertex(Node->Vertex);
+	NodeCreator.Finalize();
+
+	PinA->BreakLinkTo(PinB);
+	PinA->MakeLinkTo((PinA->Direction == EGPD_Output) ? Node->GetInputPin() : Node->GetOutputPin());
+	PinB->MakeLinkTo((PinB->Direction == EGPD_Output) ? Node->GetInputPin() : Node->GetOutputPin());
+
+	//UM2SoundRerouteNode* RerouteNode = FM2SoundGraphAddNodeAction::MakeNode<UM2SoundRerouteNode>(ParentGraph, nullptr);
+
 }
 
 FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder)
