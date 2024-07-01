@@ -322,6 +322,8 @@ public:
 	// Inherited via UM2SoundVertex
 
 	void BuildVertex() override;
+
+	void CollectParamsForAutoConnect() override;
 };
 
 UCLASS()

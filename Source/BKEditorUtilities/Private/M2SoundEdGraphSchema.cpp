@@ -81,7 +81,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	for (const auto& [Name, Output] : SequencerData->CoreNodes.MappedOutputs)
 	{
-		DummyInputs.Add(Name.ToString());
+		//DummyInputs.Add(Name.ToString());
 	}
 
 	if (auto& FromPin = ContextMenuBuilder.FromPin)

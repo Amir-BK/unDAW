@@ -367,7 +367,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
 			newNote.pitch = hoveredPitch;
 			newNote.TrackId = SessionData->SelectedTrackIndex;
-			newNote.ChannelId = TrackMetadata.ChannelIndexInParentMidi;
+			newNote.ChannelId = TrackMetadata.ChannelIndexRaw;
 			newNote.StartTick = ValueAtMouseCursorPostSnapping;
 			newNote.EndTick = ValueAtMouseCursorPostSnapping + NumTicksPerSubdivision;
 			newNote.CalculateDuration(MidiSongMap);

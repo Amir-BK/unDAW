@@ -449,7 +449,7 @@ void UM2SoundAudioOutput::BuildVertex()
 	BuilderResults.Empty();
 
 	EMetaSoundBuilderResult BuildResult;
-	AudioOutput = SequencerData->CoreNodes.GetFreeMasterMixerAudioOutput(BuilderContext);
+	AudioOutput = SequencerData->CoreNodes.GetFreeMasterMixerAudioOutput();
 	BuilderResults.Add(FName(TEXT("Assigned Output")), EMetaSoundBuilderResult::Succeeded);
 	GainParameterName = AudioOutput.OutputName;
 
@@ -528,7 +528,7 @@ void UM2SoundAudioOutput::UpdateConnections()
 void UM2SoundAudioOutput::DestroyVertex()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Destroying Audio Output Vertex"))
-	GetSequencerData()->CoreNodes.ReleaseMasterMixerAudioOutput(GetSequencerData()->BuilderContext, AudioOutput);
+	GetSequencerData()->CoreNodes.ReleaseMasterMixerAudioOutput(AudioOutput);
 
 	GetSequencerData()->RemoveVertex(this);
 }
@@ -542,56 +542,66 @@ void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
 
 void UM2SoundBuilderInputHandleNode::BuildVertex()
 {
-	EMetaSoundBuilderResult BuildResult;
-	BuilderResults.Empty();
-	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	auto& BuilderContext = SequencerData->BuilderContext;
+	//EMetaSoundBuilderResult BuildResult;
+	//BuilderResults.Empty();
+	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+	//auto& BuilderContext = SequencerData->BuilderContext;
 
-	//we should actually only clear the outputs if we're initializing a node, otherwsie we may want to preserve the connections according to the metasound semantics
-	MetasoundOutputs.Empty();
-	auto ChannelFilterNode = BuilderContext->AddNode(SequencerData->CoreNodes.MidiFilterDocument, BuildResult);
-	auto NodeHandle = ChannelFilterNode;
-	BuilderResults.Add(FName(TEXT("Add Midi Filter Metasound Node")), BuildResult);
+	////we should actually only clear the outputs if we're initializing a node, otherwsie we may want to preserve the connections according to the metasound semantics
+	//MetasoundOutputs.Empty();
+	//auto ChannelFilterNode = BuilderContext->AddNode(SequencerData->CoreNodes.MidiFilterDocument, BuildResult);
+	//auto NodeHandle = ChannelFilterNode;
+	//BuilderResults.Add(FName(TEXT("Add Midi Filter Metasound Node")), BuildResult);
 
-	InPins = BuilderContext->FindNodeInputs(ChannelFilterNode, BuildResult);
-	OutPins = BuilderContext->FindNodeOutputs(ChannelFilterNode, BuildResult);
+	//InPins = BuilderContext->FindNodeInputs(ChannelFilterNode, BuildResult);
+	//OutPins = BuilderContext->FindNodeOutputs(ChannelFilterNode, BuildResult);
 
-	//make static connections - need to think again about this
-	auto TrackInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
-	FName MetasoundIntDatatypeName = TEXT("int32");
+	////make static connections - need to think again about this
+	//auto TrackInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
+	//FName MetasoundIntDatatypeName = TEXT("int32");
+	//auto& TrackMetadata = SequencerData->GetTracksDisplayOptions(TrackId);
+	//auto TrackInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("TrackNum")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.TrackIndexInParentMidi, MetasoundIntDatatypeName), BuildResult);
+	//BuilderContext->ConnectNodes(TrackInputNodeOutput, TrackInput, BuildResult);
+
+	//BuilderResults.Add(FName(TEXT("Midi Track Filter Num Assignment")), BuildResult);
+
+	//auto ChannelInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Channel")), BuildResult);
+	//auto ChannelInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("Channel")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexRaw, MetasoundIntDatatypeName), BuildResult);
+	//BuilderContext->ConnectNodes(ChannelInputNodeOutput, ChannelInput, BuildResult);
+
+	//BuilderResults.Add(FName(TEXT("Midi Ch. Filter Num Assignment")), BuildResult);
+
+	////connect to midi player midistream output, this is actually the most important part!
+	//auto MidiInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
+	//BuilderContext->ConnectNodes(SequencerData->CoreNodes.MainMidiStreamOutput, MidiInput, BuildResult);
+
+	//BuilderResults.Add(FName(TEXT("Connect to MIDI Stream")), BuildResult);
+
+	//auto NewNodeMidiStreamOutput = BuilderContext->FindNodeOutputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
+
+	//auto NewMidiStreamGraphOutputInput = BuilderContext->AddGraphOutputNode(FName(TrackPrefix + ("MidiOutput")), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult, false );
+
+	//BuilderContext->ConnectNodes(NewNodeMidiStreamOutput, NewMidiStreamGraphOutputInput, BuildResult);
+
+	//BuilderResults.Add(FName(TEXT("Expose Midi Stream To Graph")), BuildResult);
+
+	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, NewNodeMidiStreamOutput);
+	//BuilderResults.Add(FName(TEXT("Expose Auto Connect Midi Stream MetaPin")), BuildResult);
+
+	//auto NewNodeTrackOutput = BuilderContext->FindNodeOutputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
+	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, NewNodeTrackOutput);
+	//BuilderResults.Add(FName(TEXT("Expose Auto Connect Track MetaPin")), BuildResult);
+
+
+
+}
+
+void UM2SoundBuilderInputHandleNode::CollectParamsForAutoConnect()
+{
+	auto MappedOutput = SequencerData->CoreNodes.MappedOutputs[TrackId];
+
 	auto& TrackMetadata = SequencerData->GetTracksDisplayOptions(TrackId);
-	auto TrackInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("TrackNum")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.TrackIndexInParentMidi, MetasoundIntDatatypeName), BuildResult);
-	BuilderContext->ConnectNodes(TrackInputNodeOutput, TrackInput, BuildResult);
-
-	BuilderResults.Add(FName(TEXT("Midi Track Filter Num Assignment")), BuildResult);
-
-	auto ChannelInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Channel")), BuildResult);
-	auto ChannelInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("Channel")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexRaw, MetasoundIntDatatypeName), BuildResult);
-	BuilderContext->ConnectNodes(ChannelInputNodeOutput, ChannelInput, BuildResult);
-
-	BuilderResults.Add(FName(TEXT("Midi Ch. Filter Num Assignment")), BuildResult);
-
-	//connect to midi player midistream output, this is actually the most important part!
-	auto MidiInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
-	BuilderContext->ConnectNodes(SequencerData->CoreNodes.MainMidiStreamOutput, MidiInput, BuildResult);
-
-	BuilderResults.Add(FName(TEXT("Connect to MIDI Stream")), BuildResult);
-
-	auto NewNodeMidiStreamOutput = BuilderContext->FindNodeOutputByName(ChannelFilterNode, FName(TEXT("MIDI Stream")), BuildResult);
-
-	auto NewMidiStreamGraphOutputInput = BuilderContext->AddGraphOutputNode(FName(TrackPrefix + ("MidiOutput")), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult, false );
-
-	BuilderContext->ConnectNodes(NewNodeMidiStreamOutput, NewMidiStreamGraphOutputInput, BuildResult);
-
-	BuilderResults.Add(FName(TEXT("Expose Midi Stream To Graph")), BuildResult);
-
-	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, NewNodeMidiStreamOutput);
-	BuilderResults.Add(FName(TEXT("Expose Auto Connect Midi Stream MetaPin")), BuildResult);
-
-	auto NewNodeTrackOutput = BuilderContext->FindNodeOutputByName(ChannelFilterNode, FName(TEXT("Track")), BuildResult);
-	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, NewNodeTrackOutput);
-	BuilderResults.Add(FName(TEXT("Expose Auto Connect Track MetaPin")), BuildResult);
-
+	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, MappedOutput.OutputHandle);
 }
 
 void UM2SoundPatch::BuildVertex()

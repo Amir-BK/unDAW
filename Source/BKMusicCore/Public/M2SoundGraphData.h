@@ -343,28 +343,30 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName,EMetaSoundBuilderResult> BuilderResults;
 
-	FAssignableAudioOutput GetFreeMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext);
-	void ReleaseMasterMixerAudioOutput(UMetaSoundSourceBuilder* BuilderContext, FAssignableAudioOutput Output);
+	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
+	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
 
 	//Might be nicer user experience to categorize outputs by data types, for now this will only contain MIDI outputs
 	UPROPERTY()
-	TMap<FName, FMappableBuilderNodeOutput> MappedOutputs;
+	TMap<int32, FMappableBuilderNodeOutput> MappedOutputs;
 
 protected:
 	friend class UDAWSequencerData;
 
-	void InitCoreNodes(UMetaSoundSourceBuilder* BuilderContext, UDAWSequencerData* ParentSession);
+	void InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession);
 
-	void CreateFilterNodeForTrack(UMetaSoundSourceBuilder* BuilderContext, int32 TrackMetadataIndex);
+	UMetaSoundSourceBuilder* BuilderContext;
+
+	FMetaSoundBuilderNodeOutputHandle CreateFilterNodeForTrack(int32 TrackMetadataIndex);
 
 private:
 
 	UPROPERTY();
 	UDAWSequencerData* SessionData;
-	void CreateMidiPlayerAndMainClock(UMetaSoundSourceBuilder* BuilderContext);
-	void CreateMainMixer(UMetaSoundSourceBuilder* BuilderContext);
+	void CreateMidiPlayerAndMainClock();
+	void CreateMainMixer();
 
-	void ResizeOutputMixer(UMetaSoundSourceBuilder* BuilderContext);
+	void ResizeOutputMixer();
 
 };
 
