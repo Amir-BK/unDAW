@@ -49,7 +49,7 @@ namespace unDAWMetasounds::TrackIsolatorOP
 
 			if (IncludeEvent)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Found Note!"));
+				//UE_LOG(LogTemp, Warning, TEXT("Found Note!"));
 				auto NonConst = const_cast<HarmonixMetasound::FMidiStreamEvent&>(Event);
 				NonConst.TrackIndex = 1;
 				OutStream.AddMidiEvent(NonConst);

@@ -566,7 +566,7 @@ void UM2SoundBuilderInputHandleNode::BuildVertex()
 	BuilderResults.Add(FName(TEXT("Midi Track Filter Num Assignment")), BuildResult);
 
 	auto ChannelInput = BuilderContext->FindNodeInputByName(ChannelFilterNode, FName(TEXT("Channel")), BuildResult);
-	auto ChannelInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("Channel")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexInParentMidi, MetasoundIntDatatypeName), BuildResult);
+	auto ChannelInputNodeOutput = BuilderContext->AddGraphInputNode(FName(TrackPrefix + TEXT("Channel")), TEXT("int32"), BuilderSubsystems->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexRaw, MetasoundIntDatatypeName), BuildResult);
 	BuilderContext->ConnectNodes(ChannelInputNodeOutput, ChannelInput, BuildResult);
 
 	BuilderResults.Add(FName(TEXT("Midi Ch. Filter Num Assignment")), BuildResult);
@@ -767,28 +767,28 @@ void UM2SoundPatch::UpdateConnections()
 		break;
 	}
 	
-	auto MidiTrackInput = BuilderContext->FindNodeInputByName(NodeHandle, MidiTrackInName, BuildResult);
-	switch (BuildResult)
-	{
-	case EMetaSoundBuilderResult::Succeeded:
-		UE_LOG(unDAWVertexLogs, Log, TEXT("Found Midi Track Input"))
-			if (MainInput->AutoConnectOutPins.Contains(EVertexAutoConnectionPinCategory::MidiTrackTrackNum))
-			{
-				auto& InputVertexTrackOut = MainInput->AutoConnectOutPins[EVertexAutoConnectionPinCategory::MidiTrackTrackNum];
-				BuilderContext->ConnectNodes(InputVertexTrackOut, MidiTrackInput, BuildResult);
-				BuilderConnectionResults.Add(MidiTrackInName, BuildResult);
-			}
-			else {
-				UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Track Output, yet our node is an instrumenet renderer"))
-			}
+	//auto MidiTrackInput = BuilderContext->FindNodeInputByName(NodeHandle, MidiTrackInName, BuildResult);
+	//switch (BuildResult)
+	//{
+	//case EMetaSoundBuilderResult::Succeeded:
+	//	UE_LOG(unDAWVertexLogs, Log, TEXT("Found Midi Track Input"))
+	//		if (MainInput->AutoConnectOutPins.Contains(EVertexAutoConnectionPinCategory::MidiTrackTrackNum))
+	//		{
+	//			auto& InputVertexTrackOut = MainInput->AutoConnectOutPins[EVertexAutoConnectionPinCategory::MidiTrackTrackNum];
+	//			BuilderContext->ConnectNodes(InputVertexTrackOut, MidiTrackInput, BuildResult);
+	//			BuilderConnectionResults.Add(MidiTrackInName, BuildResult);
+	//		}
+	//		else {
+	//			UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Track Output, yet our node is an instrumenet renderer"))
+	//		}
 
-		break;
+	//	break;
 
-	case EMetaSoundBuilderResult::Failed:
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Failed to find Midi Track Input, we may be an insert"))
-			break;
+	//case EMetaSoundBuilderResult::Failed:
+	//	UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Failed to find Midi Track Input, we may be an insert"))
+	//		break;
 
-	}
+	//}
 
 
 	

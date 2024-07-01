@@ -358,7 +358,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
 
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexRaw)
 
 	// why - 1 ? ffs. 
 	//auto TargetTrackIndex = MidiFileCopy->FindTrackIndexByName(TrackMetaData.trackName);
@@ -370,8 +370,8 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 		return;
 	}
 
-	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, PendingNote.NoteVelocity);
-	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
+	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexRaw, PendingNote.pitch, PendingNote.NoteVelocity);
+	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexRaw, PendingNote.pitch);
 	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
 	auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);
 
@@ -399,7 +399,7 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
 
 	auto& NoteMetadata = M2TrackMetadata[PendingNote.TrackId];
-	PendingNote.ChannelId = NoteMetadata.ChannelIndexInParentMidi;
+	PendingNote.ChannelId = NoteMetadata.ChannelIndexRaw;
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
 	//print pending note data
