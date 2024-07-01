@@ -52,7 +52,7 @@ public:
 	}
 	uint32 GetCategories() override
 	{
-		return EAssetTypeCategories::Media;
+		return EAssetTypeCategories::Sounds;
 	}
 
 	void OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor) override
