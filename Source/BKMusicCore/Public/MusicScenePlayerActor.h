@@ -58,6 +58,9 @@ public:
 	UFUNCTION()
 	void DAWSequencePlayStateChange(EBKPlayState NewState);
 
+	UPROPERTY(EditAnywhere, Category = "unDAW")
+	bool bAutoPlay = false;
+
 
 
 	//To get the accurate timestamp for our MIDI players it's better to read the timestamp on the DAWSequecerData
@@ -75,7 +78,7 @@ public:
 	//UPROPERTY()
 	TSharedPtr<UMetasoundGeneratorHandle> GeneratorHandle;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "unDAW")
 	TEnumAsByte<EBKPlayState> PlayState = EBKPlayState::NotReady;
 
 	UPROPERTY()
@@ -93,7 +96,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void PerformanceMetasoundGeneratorCreated(TSharedPtr<Metasound::FMetasoundGenerator> GeneratorPointer, ESPMode UserPolicy);
+	UFUNCTION()
+	void PerformanceMetasoundGeneratorCreated();
 
 	void PerformanceMetasoundGeneratorDestroyed(uint64 GeneratorPointer);
 

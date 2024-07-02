@@ -26,6 +26,7 @@ class UM2SoundGraphRenderer;
 class UM2SoundVertex;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuilderReady);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexNeedsBuilderUpdates, UM2SoundVertex*, UpdatedVertex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, AddedVertex);
 
@@ -433,6 +434,9 @@ public:
 	
 	TSet<TTuple<int32, int32>> CurrentlyActiveNotes;
 
+	UPROPERTY()
+	FOnBuilderReady OnBuilderReady;
+
 
 public:
 
@@ -501,7 +505,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
 
-	void InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
+	void InitMetadataFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW")
 	FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);

@@ -38,6 +38,8 @@ void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
 			VideoSyncedMidiClock->Pause();
 			break;
 	}
+
+	PlayState = NewState;
 }
 
 
@@ -68,16 +70,22 @@ void AMusicScenePlayerActor::BeginPlay()
 	auto AsWavAsset = Cast<USoundWave>(PrimingSound);
 	
 	auto AudioComponent = UGameplayStatics::CreateSound2D(this, AsWavAsset, 1.0f, 1.0f, 0.0f, nullptr, true, false);
+	GetDAWSequencerData()->OnBuilderReady.AddDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
 	GetDAWSequencerData()->AuditionBuilder(AudioComponent);
 	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
+	//AuditionComponent = AudioComponent
 
 	InitHarmonixComponents();
-	
+	if (bAutoPlay) GetDAWSequencerData()->SendTransportCommand(EBKTransportCommands::Play);
 }
 
-void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated(TSharedPtr<Metasound::FMetasoundGenerator> GeneratorPointer, ESPMode UserPolicy)
+void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated()
 {
-	UE_LOG(LogTemp, Log, TEXT("Yes Hello?"))
+
+	UE_LOG(LogTemp, Warning, TEXT("Hello ?"))
+	
+
+	GetDAWSequencerData()->OnBuilderReady.RemoveDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
 }
 
 void AMusicScenePlayerActor::PerformanceMetasoundGeneratorDestroyed(uint64 GeneratorPointer)

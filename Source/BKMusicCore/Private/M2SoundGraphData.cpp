@@ -130,13 +130,16 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 	bShouldTick = true;
 
 	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
+
+	OnBuilderReady.Broadcast();
+
 }
 
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(PlayState))
 
-		auto CurrentPlaystate = PlayState;
+	auto CurrentPlaystate = PlayState;
 
 	if (AuditionComponent != nullptr)
 	{
@@ -277,13 +280,16 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 	//update builder, in the future we may want to be a little bit more conservative with this
 	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
 	Vertex->SequencerData = this;
+
+	if (!BuilderContext) return;
+
 	Vertex->BuildVertex();
 	Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
 
-inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
+inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
 	auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
 	Vertexes.Empty();
 
@@ -328,7 +334,9 @@ inline void UDAWSequencerData::InitVertexesFromFoundMidiTracks(TArray<TTuple<int
 
 		//AddVertex(NewInput);
 		//TrackInputs.Add(IndexOfNewTrack, NewInput);
-		UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, IndexOfNewTrack);
+		// So we actually need to do the whole vertex init only after corenode creation and metadata discovery is complete...
+		// Disable for now, this is an opportunity to refactor 
+		//UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, IndexOfNewTrack);
 	}
 }
 
@@ -505,7 +513,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	}
 	else {
 		FindOrCreateBuilderForAsset(true);
-		InitVertexesFromFoundMidiTracks(FoundChannels);
+		InitMetadataFromFoundMidiTracks(FoundChannels);
 	}
 
 
