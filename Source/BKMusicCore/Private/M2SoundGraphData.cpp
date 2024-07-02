@@ -238,6 +238,7 @@ void UDAWSequencerData::AddTrack()
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
+	NewTrackMetaData.ChannelIndexRaw = 0;
 	NewTrackMetaData.trackName = GetUniqueNameForTrack(TEXT("New Track"), *MidiFileCopy);
 	NewTrackMetaData.fusionPatch = nullptr;
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
@@ -250,7 +251,8 @@ void UDAWSequencerData::AddTrack()
 
 	//HarmonixMidiFile->SortAllTracks();
 	M2TrackMetadata.Add(NewTrackMetaData);
-	UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
+	CoreNodes.CreateFilterNodeForTrack(M2TrackMetadata.Num() - 1);
+	//UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
 
 	HarmonixMidiFile = MidiFileCopy;
 

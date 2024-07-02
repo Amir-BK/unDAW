@@ -598,7 +598,7 @@ void UM2SoundBuilderInputHandleNode::BuildVertex()
 
 void UM2SoundBuilderInputHandleNode::CollectParamsForAutoConnect()
 {
-	auto MappedOutput = SequencerData->CoreNodes.MappedOutputs[TrackId];
+	auto& MappedOutput = SequencerData->CoreNodes.MappedOutputs[TrackId];
 
 	auto& TrackMetadata = SequencerData->GetTracksDisplayOptions(TrackId);
 	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, MappedOutput.OutputHandle);
