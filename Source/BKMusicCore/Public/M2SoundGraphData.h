@@ -19,6 +19,7 @@
 
 #include "TrackPlaybackAndDisplayOptions.h"
 
+#include <Pins/M2Pins.h>
 #include "M2SoundGraphData.generated.h"
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
@@ -163,7 +164,7 @@ struct FLinkedMidiEvents
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 EndIndex = 0;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	uint8 pitch = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -178,12 +179,12 @@ struct FLinkedMidiEvents
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 ChannelId = INDEX_NONE;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	double Duration = 0.0;
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	double StartTime = 0.0;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	float NoteVelocity = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -206,7 +207,7 @@ struct FLinkedNotesTrack
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
@@ -384,6 +385,41 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
+	template<typename T>
+	bool ConnectPins(T* InInput, T* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("ConnectPins not implemented for this type - UNSPECIALIZED"));
+
+
+		return false;
+	};
+
+	template<>
+	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Literals!!!!"));
+		if (InInput && InOutput)
+		{
+			EMetaSoundBuilderResult Result;
+			BuilderContext->ConnectNodes(InOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+
+			//print all data from the pins so we debug what's going on
+			//print connection result 
+			if(Result == EMetaSoundBuilderResult::Succeeded)
+			{
+				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Succeeded!"));
+			}
+			else
+			{
+				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Failed!"));
+			}
+
+			InInput->ConnectionResult = Result;
+			return Result == EMetaSoundBuilderResult::Succeeded;
+		}
+		return false;
+	}
 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void SaveDebugMidiFileTest();
@@ -579,7 +615,7 @@ public:
 
 	//for now this has to be set, although switching midi files is possible it deletes the entire graph
 	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
-	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", BlueprintReadOnly)
 	UMidiFile* HarmonixMidiFile;
 
 	UPROPERTY()
@@ -597,8 +633,10 @@ public:
 	TMap<float, double> TempoEventsMap;
 
 	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
+	//Adding or removing notes should be done with the provided methods, objects that use this data should also bind to OnMidiDataChanged
+	// (if not passed as ref)
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
 	//UPROPERTY()

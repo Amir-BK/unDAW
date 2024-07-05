@@ -24,18 +24,24 @@ AMusicScenePlayerActor::AMusicScenePlayerActor()
 void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
 {
 	UE_LOG(LogTemp, Log, TEXT("DAW Sequence Play State Changed to %s"), *UEnum::GetValueAsString(NewState));
+
+	if(!bHarmonixInitialized) return;
+
 	switch (NewState)
 	{
 		case EBKPlayState::TransportPlaying:
 			VideoSyncedMidiClock->Start();
+			AudioSyncedMidiClock->Start();
 			break;
 
 		case EBKPlayState::ReadyToPlay:
 			VideoSyncedMidiClock->Stop();
+			AudioSyncedMidiClock->Start();
 			break;
 
 		case EBKPlayState::TransportPaused:
 			VideoSyncedMidiClock->Pause();
+			AudioSyncedMidiClock->Start();
 			break;
 	}
 
@@ -55,6 +61,7 @@ inline UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
 void AMusicScenePlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
+	bHarmonixInitialized = false;
 
 	if(!GetDAWSequencerData())
 	{
@@ -75,15 +82,15 @@ void AMusicScenePlayerActor::BeginPlay()
 	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
 	//AuditionComponent = AudioComponent
 
-	InitHarmonixComponents();
 	if (bAutoPlay) GetDAWSequencerData()->SendTransportCommand(EBKTransportCommands::Play);
+	
 }
 
 void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated()
 {
-
+	// we can't play here cause it's not from the game thread? I think? 
 	UE_LOG(LogTemp, Warning, TEXT("Hello ?"))
-	
+		InitHarmonixComponents();
 
 	GetDAWSequencerData()->OnBuilderReady.RemoveDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
 }
@@ -138,15 +145,31 @@ void AMusicScenePlayerActor::InitHarmonixComponents()
 	}
 
 	VideoSyncedMidiClock = NewObject<UMusicClockComponent>(this);
+	VideoSyncedMidiClock->MetasoundOutputName = TEXT("unDAW.Midi Clock");
 	VideoSyncedMidiClock->RegisterComponent();
-	VideoSyncedMidiClock->ConnectToMetasoundOnAudioComponent(AudioComponent);
+	bool bConnectSuccess = VideoSyncedMidiClock->ConnectToMetasoundOnAudioComponent(AudioComponent);
+
+	if(!bConnectSuccess)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to connect Video Synced Midi Clock to Audio Component"))
+	}
+
 	//VideoSyncedMidiClock->PlayStateEvent.AddUniqueDynamic(this, &AMusicScenePlayerActor::OnMusicClockPlaystate);
 	//VideoSyncedMidiClock->Start();	
+	AudioSyncedMidiClock = NewObject<UMusicClockComponent>(this);
+	AudioSyncedMidiClock->MetasoundOutputName = TEXT("unDAW.Midi Clock");
+	AudioSyncedMidiClock->RegisterComponent();
+	AudioSyncedMidiClock->ConnectToMetasoundOnAudioComponent(AudioComponent);
+	VideoSyncedMidiClock->TimebaseForBarAndBeatEvents = ECalibratedMusicTimebase::ExperiencedTime;
+	AudioSyncedMidiClock->TimebaseForBarAndBeatEvents = ECalibratedMusicTimebase::ExperiencedTime;
+	
 
 	MusicTempometer = NewObject<UMusicTempometerComponent>(this);
 	MusicTempometer->RegisterComponent();
 	MusicTempometer->SetMaterialParameterCollection(MaterialParameterCollection);
 	MusicTempometer->SetClock(VideoSyncedMidiClock);
+
+	bHarmonixInitialized = true;
 	
 }
 

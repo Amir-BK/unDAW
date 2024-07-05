@@ -18,23 +18,23 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 
 
 	//add a note on and off events to track 0, pitch 60, velocity 100, at time 0
-	auto NoteOnMidiMessage = FMidiMsg::CreateNoteOn(1, 60, 100);
-	auto NoteOffMidiMessage = FMidiMsg::CreateNoteOff(1, 60);
+	//auto NoteOnMidiMessage = FMidiMsg::CreateNoteOn(1, 60, 100);
+	//auto NoteOffMidiMessage = FMidiMsg::CreateNoteOff(1, 60);
 
-	auto NoteOnEvent = FMidiEvent(0, NoteOnMidiMessage);
-	auto NoteOffEvent = FMidiEvent(480, NoteOffMidiMessage);
+	//auto NoteOnEvent = FMidiEvent(0, NoteOnMidiMessage);
+	//auto NoteOffEvent = FMidiEvent(480, NoteOffMidiMessage);
 
-	//another note on and off event for testing
-	auto NoteOnMidiMessage2 = FMidiMsg::CreateNoteOn(0, 62, 100);
-	auto NoteOffMidiMessage2 = FMidiMsg::CreateNoteOff(0, 62);
+	////another note on and off event for testing
+	//auto NoteOnMidiMessage2 = FMidiMsg::CreateNoteOn(0, 62, 100);
+	//auto NoteOffMidiMessage2 = FMidiMsg::CreateNoteOff(0, 62);
 
-	auto NoteOnEvent2 = FMidiEvent(0, NoteOnMidiMessage2);
-	auto NoteOffEvent2 = FMidiEvent(480, NoteOffMidiMessage2);
+	//auto NoteOnEvent2 = FMidiEvent(0, NoteOnMidiMessage2);
+	//auto NoteOffEvent2 = FMidiEvent(480, NoteOffMidiMessage2);
 
 
 
 	NewMidiFile->BuildConductorTrack();
-	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(140), 0);
+	NewMidiFile->GetSongMaps()->GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(75), 0);
 	NewMidiFile->GetSongMaps()->GetBarMap().AddTimeSignatureAtBarIncludingCountIn(0, 4, 4, true);
 
 

@@ -22,6 +22,168 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 	UUNDAWSettings::Get()->SaveConfig();
 }
 
+void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles)
+{
+	EMetaSoundBuilderResult BuildResult;
+	UMetaSoundSourceBuilder& BuilderContext = GetBuilderContext();
+	MarkAllPinsStale();
+
+	for(const auto& Handle : InHandles)
+	{
+
+		FName PinName;
+		FName DataType;
+		FName SearchName;
+		BuilderContext.GetNodeInputData(Handle, PinName, DataType, BuildResult);
+		auto LiteralValue = BuilderContext.GetNodeInputClassDefault(Handle, BuildResult);
+
+		UM2Pins* PinObject = nullptr;
+		
+
+		using namespace M2Sound::Pins;
+		{
+
+			if (PinCategoryMap.Contains(PinName))
+			{
+				auto PinCategory = PinCategoryMap[PinName];
+				SearchName = Categories::AudioTrack;
+				if (InputM2SoundPins.Contains(SearchName))
+				{
+					PinObject = InputM2SoundPins[SearchName];
+					PinObject->bIsStale = false;
+				}
+				else
+				{
+					PinObject = CreateAudioTrackInputPin();
+					InputM2SoundPins.Add(SearchName, PinObject);
+				}
+
+				auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(PinObject);
+
+				switch(PinCategory)
+				{
+					case EVertexAutoConnectionPinCategory::AudioStreamL:
+						if (IsValid(AsAudioTrackPin->AudioStreamL))
+						{
+							AsAudioTrackPin->AudioStreamL->SetHandle(Handle);
+						}
+						else
+						{
+							AsAudioTrackPin->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+						}
+						break;
+					case EVertexAutoConnectionPinCategory::AudioStreamR:
+						if (IsValid(AsAudioTrackPin->AudioStreamR))
+						{
+							AsAudioTrackPin->AudioStreamR->SetHandle(Handle);
+						}
+						else
+						{
+							AsAudioTrackPin->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+						}
+
+						break;
+				}
+
+				continue;
+			}
+		
+		}
+
+		if(InputM2SoundPins.Contains(PinName))
+		{
+			PinObject = InputM2SoundPins[PinName];
+			PinObject->SetHandle(Handle);
+			PinObject->bIsStale = false;
+		}
+		else
+		{
+			PinObject = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+			InputM2SoundPins.Add(PinName, PinObject);
+		}
+
+	}
+
+
+	//now the outputs
+
+	for (const auto& Handle : OutHandles)
+	{
+		
+		FName PinName;
+		FName DataType;
+		FName SearchName;
+		BuilderContext.GetNodeOutputData(Handle, PinName, DataType, BuildResult);
+		//auto LiteralValue = BuilderContext.GetNodeOutputClassDefault(Handle, BuildResult);
+
+		UM2Pins* PinObject = nullptr;
+
+		using namespace M2Sound::Pins;
+		{
+			if (PinCategoryMap.Contains(PinName))
+			{
+				auto PinCategory = PinCategoryMap[PinName];
+				SearchName = Categories::AudioTrack;
+				if (OutputM2SoundPins.Contains(SearchName))
+				{
+					PinObject = OutputM2SoundPins[SearchName];
+					PinObject->bIsStale = false;
+				}
+				else
+				{
+					PinObject = CreateAudioTrackOutputPin();
+					OutputM2SoundPins.Add(SearchName, PinObject);
+				}
+
+				auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(PinObject);
+
+				switch (PinCategory)
+				{
+				case EVertexAutoConnectionPinCategory::AudioStreamL:
+					if (IsValid(AsAudioTrackPin->AudioStreamL))
+					{
+						AsAudioTrackPin->AudioStreamL->SetHandle(Handle);
+					}
+					else
+					{
+						AsAudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(Handle);
+					}
+					break;
+				case EVertexAutoConnectionPinCategory::AudioStreamR:
+					if (IsValid(AsAudioTrackPin->AudioStreamR))
+					{
+						AsAudioTrackPin->AudioStreamR->SetHandle(Handle);
+					}
+					else
+					{
+						AsAudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(Handle);
+					}
+
+					break;
+				}
+
+				continue;
+			}
+
+		}
+
+		if (OutputM2SoundPins.Contains(PinName))
+		{
+			PinObject = OutputM2SoundPins[PinName];
+			PinObject->SetHandle(Handle);
+			PinObject->bIsStale = false;
+		}
+		else
+		{
+			PinObject = CreateOutputPin<UM2MetasoundLiteralPin>(Handle);
+			OutputM2SoundPins.Add(PinName, PinObject);
+		}
+	}
+
+
+	RemoveAllStalePins();
+}
+
 void UM2SoundVertex::BreakTrackInputConnection()
 {
 	//for debugging, print vertex name and track id
@@ -36,7 +198,7 @@ void UM2SoundVertex::BreakTrackInputConnection()
 		Output->TrackId = INDEX_NONE;
 	}
 
-	UpdateConnections();
+	//UpdateConnections();
 
 }
 
@@ -62,7 +224,7 @@ void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
 	MainInput = InputVertex;
 	TrackId = InputVertex->TrackId;
 	//VertexNeedsBuilderUpdates();
-	UpdateConnections();
+	//UpdateConnections();
 	MainInput->RegisterOutputVertex(this);
 }
 
@@ -129,12 +291,12 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
 	BuildVertex();
 	CollectParamsForAutoConnect();
-	UpdateConnections();
+	//UpdateConnections();
 
 	//need to inform downstream vertexes to reconnect to our output
 	for (auto Output : Outputs)
 	{
-		Output->UpdateConnections();
+		//Output->UpdateConnections();
 	}
 	OnVertexUpdated.Broadcast();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
@@ -143,7 +305,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 void UM2SoundVertex::VertexConnectionsChanged()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex connections changed!"))
-	UpdateConnections();
+	//UpdateConnections();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -325,71 +487,83 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 	}
 
-	for (const auto& Output : OutPins)
+	using namespace M2Sound::Pins;
 	{
-		FM2SoundPinData PinData = FM2SoundPinData();
-
-		FName& PinName = PinData.PinName;
-		FName& DataType = PinData.DataType;
-		bool IsAutoManaged = false;
-		PinData.OutputHandle = Output;
-		BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
-
-		if (PinName == FName(TEXT("unDAW Instrument.Audio L")))
+		for (const auto& Output : OutPins)
 		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
-			IsAutoManaged = true;
+			FM2SoundPinData PinData = FM2SoundPinData();
+
+			FName& PinName = PinData.PinName;
+			FName& DataType = PinData.DataType;
+			bool IsAutoManaged = false;
+			PinData.OutputHandle = Output;
+			BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
+
+			if (PinCategoryMap.Contains(PinName))
+			{
+				auto Category = PinCategoryMap[PinName];
+				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Pin Category %s"), *UEnum::GetValueAsString(Category))
+				//this means this is a composite audio pin
+			}
+
+				if (PinName == FName(TEXT("unDAW Instrument.Audio L")))
+				{
+					AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
+					IsAutoManaged = true;
+				}
+
+			if (PinName == FName(TEXT("unDAW Instrument.Audio R")))
+			{
+				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
+				IsAutoManaged = true;
+			}
+
+			if (PinName == FName(TEXT("MIDI Stream")))
+			{
+				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Output);
+				IsAutoManaged = true;
+
+
+			}
+
+			if (PinName == FName(TEXT("Track")))
+			{
+				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Output);
+				IsAutoManaged = true;
+
+
+			}
+
+			//insert audio outputs unDAW Insert.Audio L 
+
+			if (PinName == FName(TEXT("unDAW Insert.Audio L")))
+			{
+				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
+				IsAutoManaged = true;
+
+
+			}
+
+			if (PinName == FName(TEXT("unDAW Insert.Audio R")))
+			{
+				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
+				IsAutoManaged = true;
+
+
+			}
+
+			if (IsAutoManaged)
+			{
+				//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
+				PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
+			}
+
+			OutPinsNew.Add(PinName, PinData);
+
 		}
-
-		if (PinName == FName(TEXT("unDAW Instrument.Audio R")))
-		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
-			IsAutoManaged = true;
-		}
-
-		if (PinName == FName(TEXT("MIDI Stream")))
-		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Output);
-			IsAutoManaged = true;
+	}
 
 	
-		}
-
-		if (PinName == FName(TEXT("Track")))
-		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Output);
-			IsAutoManaged = true;
-
-
-		}
-
-		//insert audio outputs unDAW Insert.Audio L 
-
-		if (PinName == FName(TEXT("unDAW Insert.Audio L")))
-		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
-			IsAutoManaged = true;
-
-
-		}
-
-		if (PinName == FName(TEXT("unDAW Insert.Audio R")))
-		{
-			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
-			IsAutoManaged = true;
-
-
-		}
-
-		if (IsAutoManaged)
-		{
-			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
-			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
-		}
-
-		OutPinsNew.Add(PinName, PinData);
-
-	}
 
 	OnVertexUpdated.Broadcast();
 
@@ -592,17 +766,22 @@ void UM2SoundBuilderInputHandleNode::BuildVertex()
 	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, NewNodeTrackOutput);
 	//BuilderResults.Add(FName(TEXT("Expose Auto Connect Track MetaPin")), BuildResult);
 
+	TArray<FMetaSoundBuilderNodeOutputHandle> MappedOutput;
+	MappedOutput.Add(SequencerData->CoreNodes.MappedOutputs[TrackId].OutputHandle);
+
+	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
+	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
+	//OutputM2SoundPins.Empty();
+
+	//UM2MetasoundLiteralPin* NewOutputPin = CreateOutputPin<UM2MetasoundLiteralPin>(SequencerData->CoreNodes.MappedOutputs[TrackId].OutputHandle);
+	//NewOutputPin->SetHandle(MappedOutput.OutputHandle);
+	//FMetaSoundBuilderNodeOutputHandle Handle = NewOutputPin->GetHandle<FMetaSoundBuilderNodeOutputHandle>();
+	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Handle);
 
 
 }
 
-void UM2SoundBuilderInputHandleNode::CollectParamsForAutoConnect()
-{
-	auto& MappedOutput = SequencerData->CoreNodes.MappedOutputs[TrackId];
 
-	auto& TrackMetadata = SequencerData->GetTracksDisplayOptions(TrackId);
-	AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, MappedOutput.OutputHandle);
-}
 
 void UM2SoundPatch::BuildVertex()
 {
@@ -625,8 +804,10 @@ void UM2SoundPatch::BuildVertex()
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
 	//OutBuiltData.NodeHandle = NodeHandle;
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
-	InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
-	OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
+	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
+	//OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
+
+	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 
 	auto& PatchDocument = Patch->GetDocumentChecked();
 	for (const auto& MSNode : PatchDocument.RootGraph.Graph.Nodes)

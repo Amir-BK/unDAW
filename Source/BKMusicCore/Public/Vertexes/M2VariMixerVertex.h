@@ -69,7 +69,7 @@ public:
 			
 			VertexToChannelMap = NewMap;
 
-			UpdateConnections();
+			//UpdateConnections();
 		}
 
 	}
@@ -91,7 +91,7 @@ public:
 
 			VertexToChannelMap.Add(InVertex, Channel);
 			InVertex->RegisterOutputVertex(this);
-			UpdateConnections();
+			//UpdateConnections();
 
 		}
 

@@ -67,6 +67,8 @@ public:
 
 	UM2SoundEdGraphNode* CurrentTrackInput;
 
+	void AllocateDefaultPins() override;
+
 	void UpdateDownstreamTrackAssignment(int NewTrackId) {
 		AssignedTrackId = NewTrackId;
 		for (UEdGraphPin* Pin : Pins)
@@ -219,7 +221,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
 	bool AutoName;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
 
 	void NodeConnectionListChanged() override;
@@ -240,7 +242,7 @@ public:
 
 	UM2SoundAudioOutput* AsOutputVertex = nullptr;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
@@ -280,7 +282,7 @@ public:
 	UPROPERTY()
 	int TrackId = INDEX_NONE;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
@@ -311,7 +313,6 @@ public:
 
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Instrument: %s"), *Name.ToString())); }
 };
@@ -325,7 +326,7 @@ public:
 
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Insert: %s"), *Name.ToString())); }
 };
@@ -354,7 +355,7 @@ public:
 
 	//TSharedPtr<SM2VariMixerNode> MixerWidget;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	void NodeConnectionListChanged() override;
 

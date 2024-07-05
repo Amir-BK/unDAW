@@ -344,7 +344,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 	UM2SoundGraphMidiOutputNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Output");
 
-	//Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
+	Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
 	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	NodeCreator.Finalize();
@@ -354,19 +354,19 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGra
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
 	FGraphNodeCreator<UM2SoundPatchContainerNode> NodeCreator(*ParentGraph);
 	UM2SoundPatchContainerNode* Node = NodeCreator.CreateUserInvokedNode();
-	Node->Name = FName("Instrument");
-	NodeCreator.Finalize();
-
-	//Node->Err
-	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
-
 	auto* NewVertex	= NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
 	NewVertex->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
+	Node->Name = FName("Instrument");
 	Node->Vertex = NewVertex;
+
+	//Node->Err
+
 	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
+	NodeCreator.Finalize();
 	return Node;
 }
 
