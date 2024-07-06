@@ -119,7 +119,7 @@ protected:
 	friend class UM2SoundVertex;
 	friend class UM2SoundEdGraphNode;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	UM2SoundVertex* ParentVertex;
 
 	FGuid NodeID;
