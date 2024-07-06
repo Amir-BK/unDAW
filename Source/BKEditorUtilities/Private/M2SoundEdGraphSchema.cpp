@@ -14,6 +14,21 @@
 #include "Vertexes/M2VariMixerVertex.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
+void UM2SoundEdGraphSchema::SplitPin(UEdGraphPin* Pin, bool bNotify) const
+{
+	if(Pin->GetOwningNode()->CanSplitPin(Pin))
+	{
+		Pin->SafeSetHidden(true);
+		//Pin->bOrphanedPin = true;
+
+		for(auto& childPin : Pin->SubPins)
+		{
+			childPin->SafeSetHidden(false);
+			//childPin->bOrphanedPin = false;
+		}
+	}
+}
+
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
 {
 	
@@ -86,11 +101,18 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
+
+		if (FromPin->SubPins.Num() > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: FromPin has subpins"));
+			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+		}
+		
 		if (FromPin->PinType.PinCategory == "Track-Midi")
 		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
-			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+
 
 			for(auto Input : DummyInputs)
 			{

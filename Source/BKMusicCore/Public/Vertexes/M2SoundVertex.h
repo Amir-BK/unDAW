@@ -421,7 +421,7 @@ public:
 
 	void BuildVertex() override;
 
-	void UpdateConnections() override;
+	//void UpdateConnections() override;
 
 	void DestroyVertex() override;
 

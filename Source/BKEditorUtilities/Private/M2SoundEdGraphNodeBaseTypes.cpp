@@ -8,8 +8,11 @@
 #include "SGraphNode.h"
 #include "SGraphNodeKnot.h"
 #include "Sound/SoundBase.h"
+#include "Framework/Commands/GenericCommands.h"
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
+#include "ToolMenu.h"
+//#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 
 
@@ -177,24 +180,36 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 			//we could probably do this in the graph, but it's probably better if we just break inputs, and let the vertex handle the rest
 			// still not sure how this would work when we have an external (in game) editor... but we'll get there.
 			auto LinkedToPin = Pin->LinkedTo[0];
-			auto LinkedToNode = LinkedToPin->GetOwningNode();
-			while(UM2SoundRerouteNode* AsReroute = Cast<UM2SoundRerouteNode>(LinkedToNode))
-			{
-				LinkedToNode = AsReroute->GetInputPin()->LinkedTo[0]->GetOwningNode();
-			}
-			UM2SoundEdGraphNode* AsM2Node =  Cast<UM2SoundEdGraphNode>(LinkedToNode);
-			auto LinkedToVertex = AsM2Node->Vertex;
+			bool success = MakeConnection(Pin, LinkedToPin);
 
-			//now that we have the two vertexes, find their M2Pins and connect them
-			//LinkedToVertex->OutputM2SoundPins.FindRef(LinkedToPin->GetFName())
-			UM2MetasoundLiteralPin* InLiteralPin = Cast<UM2MetasoundLiteralPin>(Vertex->InputM2SoundPins.FindRef(Pin->GetFName()).Get());
-			UM2MetasoundLiteralPin* OutLiteralPin = Cast<UM2MetasoundLiteralPin>(LinkedToVertex->OutputM2SoundPins.FindRef(LinkedToPin->GetFName()).Get());
-			bool success = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(InLiteralPin, OutLiteralPin);
+
+			//auto LinkedToNode = LinkedToPin->GetOwningNode();
+			//while(UM2SoundRerouteNode* AsReroute = Cast<UM2SoundRerouteNode>(LinkedToNode))
+			//{
+			//	LinkedToNode = AsReroute->GetInputPin()->LinkedTo[0]->GetOwningNode();
+			//}
+			//UM2SoundEdGraphNode* AsM2Node =  Cast<UM2SoundEdGraphNode>(LinkedToNode);
+			//auto LinkedToVertex = AsM2Node->Vertex;
+
+			////now that we have the two vertexes, find their M2Pins and connect them
+			////LinkedToVertex->OutputM2SoundPins.FindRef(LinkedToPin->GetFName())
+			//UM2MetasoundLiteralPin* InLiteralPin = Cast<UM2MetasoundLiteralPin>(Vertex->InputM2SoundPins.FindRef(Pin->GetFName()).Get());
+			//UM2MetasoundLiteralPin* OutLiteralPin = Cast<UM2MetasoundLiteralPin>(LinkedToVertex->OutputM2SoundPins.FindRef(LinkedToPin->GetFName()).Get());
+			//bool success = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(InLiteralPin, OutLiteralPin);
+			if(!success)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *PinName, *PinDirection, PinLinkedTo);
+				Vertex->BuilderConnectionResults.Add(Pin->GetFName(), EMetaSoundBuilderResult::Failed);
+			}
+			else {
+				//clear result
+				if(Vertex->BuilderConnectionResults.Contains(Pin->GetFName()))	Vertex->BuilderConnectionResults.Remove(Pin->GetFName());
+			}
 			//Pin->
 
 
 			//Vertex->MakeTrackInputConnection(LinkedToVertex);
-			AssignedTrackId = AsM2Node->AssignedTrackId;
+			//AssignedTrackId = AsM2Node->AssignedTrackId;
 		}
 
 		
@@ -203,47 +218,68 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 		GetGraph()->NotifyGraphChanged();
 	}
 
-	//continuing with the general strategy of only doing the connections from the side of the input, we check if the category is metasound literal, if it is, we update the vertex
-	if (Pin->Direction == EGPD_Input && Pin->PinType.PinCategory == "MetasoundLiteral")
-	{
-		UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *PinName, *PinDirection, PinLinkedTo);
-		
-		//Vertex->UpdateInputPin(Pin->PinName, Pin->LinkedTo.Num() > 0);
-
-		if (PinLinkedTo == 0)
-		{
-
-		}
-		if (PinLinkedTo > 0)
-		{
-			//if we have a connection, we need to find the node that we're connected to
-			//and then we need to find the vertex that the node is connected to
-			//and then we need to connect our vertex to that vertex
-			//this is a bit of a mess, but it's the only way to do it right now
-			//we could probably do this in the graph, but it's probably better if we just break inputs, and let the vertex handle the rest
-			// still not sure how this would work when we have an external (in game) editor... but we'll get there.
-			auto LinkedToPin = Pin->LinkedTo[0];
-			auto LinkedToNode = LinkedToPin->GetOwningNode();
-			auto AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
-			auto LinkedToVertex = AsM2Node->Vertex;
-
-			const auto& MyPin = Vertex->InputM2SoundPins.Find(Pin->PinName);
-			const auto& OtherPin = AsM2Node->Vertex->OutputM2SoundPins.Find(LinkedToPin->PinName);
-
-			//auto Result = Vertex->TryConnectPinToPin(*MyPin, *OtherPin);
-
-			//print results and name
-			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s"), *MyPin->Get()->Name.ToString(), *OtherPin->Get()->Name.ToString());
-			//Vertex->MakeTrackInputConnection(LinkedToVertex);
-
-			//print this pin name and the linked to pin name
-			//UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *Pin->PinName.ToString(), *LinkedToPin->PinName.ToString(), PinLinkedTo);
-		}
-	}
 
 
 	// it's probably better if we just break inputs, and let the vertex handle the rest
 	// still not sure how this would work when we have an external (in game) editor... but we'll get there.
+}
+
+
+bool UM2SoundEdGraphNode::MakeConnection(UEdGraphPin* A, UEdGraphPin* B) const
+{
+	
+	//first resolve potential reroutes
+	auto LinkedToNode = B->GetOwningNode();
+	UM2SoundEdGraphNode* AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
+	while (UM2SoundRerouteNode* AsReroute = Cast<UM2SoundRerouteNode>(LinkedToNode))
+	{
+		LinkedToNode = AsReroute->GetInputPin()->LinkedTo[0]->GetOwningNode();
+	}
+	//UM2SoundEdGraphNode* AsM2Node = Cast<UM2SoundEdGraphNode>(LinkedToNode);
+
+
+	//if we're a composite pin, connect internal left rights
+	if (A->PinType.PinCategory == "Track-Audio")
+	{
+		//if we don't have subpins we can find the metasound literals and connect them
+		FName AudioTrackName = M2Sound::Pins::Categories::AudioTrack;
+		UM2AudioTrackPin* InAudioTrackPin = Cast<UM2AudioTrackPin>(Vertex->InputM2SoundPins.FindRef(AudioTrackName).Get());
+		UM2AudioTrackPin* OutAudioTrackPin = Cast<UM2AudioTrackPin>(AsM2Node->Vertex->OutputM2SoundPins.FindRef(AudioTrackName).Get());
+		return GetSequencerData()->ConnectPins<UM2AudioTrackPin>(InAudioTrackPin, OutAudioTrackPin);
+	}
+
+	// if we don't have subpins we can find the metasound literals and connect them
+
+
+	auto LinkedToVertex = AsM2Node->Vertex;
+
+	UM2MetasoundLiteralPin* InLiteralPin = Cast<UM2MetasoundLiteralPin>(Vertex->InputM2SoundPins.FindRef(A->GetFName()).Get());
+	UM2MetasoundLiteralPin* OutLiteralPin = Cast<UM2MetasoundLiteralPin>(LinkedToVertex->OutputM2SoundPins.FindRef(B->GetFName()).Get());
+	return GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(InLiteralPin, OutLiteralPin);
+
+
+}
+
+const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
+{
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: SplitPin, %s"), *Pin->GetName());
+
+}
+
+void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const
+{
+	if (Context->Pin)
+	{
+		if (CanSplitPin(Context->Pin))
+		{
+			FToolMenuSection& Section = Menu->AddSection("M2SoundEdGraphNode", FText::FromString("M2SoundEdGraphNode"));
+			FUIAction Action = FUIAction(FExecuteAction::CreateLambda([this, Context]() { SplitPin(Context->Pin); }));
+			const FText Label = INVTEXT("Add Folder");
+			const FText ToolTipText = INVTEXT("Add Folder to the current selected folder");
+			//MenuBuilder.AddMenuEntry(Label, ToolTipText, FSlateIcon(), Action);
+			Section.AddMenuEntry("SplitPin", FText::FromString("Split Pin"), FText::FromString("Split Pin"), FSlateIcon(), Action);
+		}
+	}
 }
 
 bool CheckForErrorMessagesAndReturnIfAny(const UM2SoundEdGraphNode* Node, FString& OutErrorMsg)
@@ -361,9 +397,33 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 	{
 		if (Pin->IsA<UM2AudioTrackPin>())
 		{
-			CreatePin(EGPD_Input, FName(TEXT("Track-Audio")), FName("Track (Audio)"));
-			Pins.Last()->PinToolTip = TEXT("Stereo Audio Channels");
+			
+			UM2AudioTrackPin* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+
+			auto* NewComposite = CreatePin(EGPD_Input, FName(TEXT("Track-Audio")), FName("Track (Audio)"));
+			FString ToolTip;
+			GetGraph()->GetSchema()->ConstructBasicPinTooltip(*NewComposite, INVTEXT("Composite Audio Pin"), ToolTip);
+			NewComposite->PinToolTip = ToolTip;
 			CurrIndexOfAudioTrack = Pins.Num() - 1;
+
+
+			//auto* NewLeft = CreatePin(EGPD_Input, FName(TEXT("MetasoundLiteral")), AsAudioTrackPin->AudioStreamL, PinName);
+			//auto* NewRight = CreatePin(EGPD_Input, FName(TEXT("MetasoundLiteral")), AsAudioTrackPin->AudioStreamR, PinName);
+
+			//NewLeft->ParentPin = NewComposite;
+			//NewRight->ParentPin = NewComposite;
+
+
+			
+
+			//NewComposite->SubPins.Add(NewLeft);
+			//NewComposite->SubPins.Add(NewRight);
+
+			//NewLeft->SafeSetHidden(true);
+			//NewRight->SafeSetHidden(true);
+
+			//NewComposite->
+
 			//Pins.Last()->DefaultValue = "Default
 			continue;
 		}
@@ -389,10 +449,15 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 	{
 		if (Pin->IsA<UM2AudioTrackPin>())
 		{
-			CreatePin(EGPD_Output, FName(TEXT("Track-Audio")), FName("Track (Audio)"));
+			UM2AudioTrackPin* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+			auto* NewComposite = CreatePin(EGPD_Output, FName(TEXT("Track-Audio")), FName("Track (Audio)"));
 			Pins.Last()->PinToolTip = TEXT("Stereo Audio Channels");
 			CurrIndexOfAudioTrack = Pins.Num() - 1;
-			//Pins.Last()->DefaultValue = "Default";
+
+			//auto* NewLeft = CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), AsAudioTrackPin->AudioStreamL, PinName);
+			//auto* NewRight = CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), AsAudioTrackPin->AudioStreamR, PinName);
+
+
 			continue;
 		}
 

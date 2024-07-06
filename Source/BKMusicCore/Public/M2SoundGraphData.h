@@ -406,7 +406,7 @@ public:
 
 			//print all data from the pins so we debug what's going on
 			//print connection result 
-			if(Result == EMetaSoundBuilderResult::Succeeded)
+			if (Result == EMetaSoundBuilderResult::Succeeded)
 			{
 				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Succeeded!"));
 			}
@@ -419,7 +419,23 @@ public:
 			return Result == EMetaSoundBuilderResult::Succeeded;
 		}
 		return false;
-	}
+	};
+
+	template<>
+	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Audio Tracks!!!!"));
+		if (InInput && InOutput)
+		{
+			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);
+			bool bConnectRight = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamR, InOutput->AudioStreamR);
+
+			return bConnectLeft && bConnectRight;
+
+		}
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Failed to connect audio tracks!"));
+		return false;
+	};
 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void SaveDebugMidiFileTest();

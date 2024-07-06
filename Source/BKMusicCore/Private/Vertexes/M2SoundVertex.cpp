@@ -60,6 +60,7 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 
 				auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(PinObject);
 
+
 				switch(PinCategory)
 				{
 					case EVertexAutoConnectionPinCategory::AudioStreamL:
@@ -626,6 +627,12 @@ void UM2SoundAudioOutput::BuildVertex()
 	AudioOutput = SequencerData->CoreNodes.GetFreeMasterMixerAudioOutput();
 	BuilderResults.Add(FName(TEXT("Assigned Output")), EMetaSoundBuilderResult::Succeeded);
 	GainParameterName = AudioOutput.OutputName;
+	
+	auto* InPin = CreateAudioTrackInputPin();
+	InPin->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AudioOutput.AudioLeftOutputInputHandle);
+	InPin->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AudioOutput.AudioRightOutputInputHandle);
+	InputM2SoundPins.Add(M2Sound::Pins::Categories::AudioTrack, InPin);
+	
 
 	FName OutDataType;
 	auto NewGainInput = BuilderContext->AddGraphInputNode(GainParameterName, TEXT("float"), BuilderSubsystems->CreateFloatMetaSoundLiteral(1.f, OutDataType), BuildResult);
@@ -635,69 +642,71 @@ void UM2SoundAudioOutput::BuildVertex()
 
 }
 
-void UM2SoundAudioOutput::UpdateConnections()
-{
-	//if no main input, do nothing
-	BuilderConnectionResults.Empty();
-	if (!MainInput)
-	{
-		//need to disconnect our own inputs
-		//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-		auto& BuilderContext = SequencerData->BuilderContext;
+//void UM2SoundAudioOutput::UpdateConnections()
+//{
+	//return;
+	//
+	////if no main input, do nothing
+	//BuilderConnectionResults.Empty();
+	//if (!MainInput)
+	//{
+	//	//need to disconnect our own inputs
+	//	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+	//	auto& BuilderContext = SequencerData->BuilderContext;
 
-		if(!BuilderContext)
-		{
-			UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
-			return;
-		}
+	//	if(!BuilderContext)
+	//	{
+	//		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
+	//		return;
+	//	}
 
-		EMetaSoundBuilderResult BuildResult;
-		BuilderContext->DisconnectNodeInput(AudioOutput.AudioLeftOutputInputHandle, BuildResult);
-		BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream L")), BuildResult);
-		BuilderContext->DisconnectNodeInput(AudioOutput.AudioRightOutputInputHandle, BuildResult);
-		BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream R")), BuildResult);
-				
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
-		return;
-	}
+	//	EMetaSoundBuilderResult BuildResult;
+	//	BuilderContext->DisconnectNodeInput(AudioOutput.AudioLeftOutputInputHandle, BuildResult);
+	//	BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream L")), BuildResult);
+	//	BuilderContext->DisconnectNodeInput(AudioOutput.AudioRightOutputInputHandle, BuildResult);
+	//	BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream R")), BuildResult);
+	//			
+	//	UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
+	//	return;
+	//}
 
-	//otherwise, well, we have an AssignedOutput, we need to find the audio streams of the upstream vertex, connect them and that's it, show me what you got co-pilot
+	////otherwise, well, we have an AssignedOutput, we need to find the audio streams of the upstream vertex, connect them and that's it, show me what you got co-pilot
 
-	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	auto& BuilderContext = SequencerData->BuilderContext;
-	EMetaSoundBuilderResult BuildResult;
+	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+	//auto& BuilderContext = SequencerData->BuilderContext;
+	//EMetaSoundBuilderResult BuildResult;
 
-	//find the audio stream outputs of the main input using the AutoConnectOutPins
-	auto UpStreamLeftAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamL);
-	auto UpStreamRightAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamR);
+	////find the audio stream outputs of the main input using the AutoConnectOutPins
+	//auto UpStreamLeftAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamL);
+	//auto UpStreamRightAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamR);
 
-	//connect the audio streams to the audio output node
-	bool Success = false;
-	if (UpStreamLeftAudio)
-	{
-		BuilderContext->ConnectNodes(*UpStreamLeftAudio, AudioOutput.AudioLeftOutputInputHandle, BuildResult);
-		BuilderResults.Add(FName(TEXT("Connect Audio Stream L to Audio Output")), BuildResult);
-		Success = ResultToBool(BuildResult);
-	}
+	////connect the audio streams to the audio output node
+	//bool Success = false;
+	//if (UpStreamLeftAudio)
+	//{
+	//	BuilderContext->ConnectNodes(*UpStreamLeftAudio, AudioOutput.AudioLeftOutputInputHandle, BuildResult);
+	//	BuilderResults.Add(FName(TEXT("Connect Audio Stream L to Audio Output")), BuildResult);
+	//	Success = ResultToBool(BuildResult);
+	//}
 
-	if (UpStreamRightAudio)
-	{
-		BuilderContext->ConnectNodes(*UpStreamRightAudio, AudioOutput.AudioRightOutputInputHandle, BuildResult);
-		BuilderResults.Add(FName(TEXT("Connect Audio Stream R to Audio Output")), BuildResult);
-		Success = ResultToBool(BuildResult) && Success;
-	}
+	//if (UpStreamRightAudio)
+	//{
+	//	BuilderContext->ConnectNodes(*UpStreamRightAudio, AudioOutput.AudioRightOutputInputHandle, BuildResult);
+	//	BuilderResults.Add(FName(TEXT("Connect Audio Stream R to Audio Output")), BuildResult);
+	//	Success = ResultToBool(BuildResult) && Success;
+	//}
 
-	if(Success)
-	{
-		BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Success")), EMetaSoundBuilderResult::Succeeded);
-	}
-	else
-	{
-		BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Failed")), EMetaSoundBuilderResult::Failed);
-	}
+	//if(Success)
+	//{
+	//	BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Success")), EMetaSoundBuilderResult::Succeeded);
+	//}
+	//else
+	//{
+	//	BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Failed")), EMetaSoundBuilderResult::Failed);
+	//}
 
-
-}
+//
+//}
 
 void UM2SoundAudioOutput::DestroyVertex()
 {

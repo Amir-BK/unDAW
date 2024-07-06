@@ -10,6 +10,7 @@
 #include "SGraphNode.h"
 #include "EdGraph/EdGraphPin.h"
 #include "Subsystems/AssetEditorSubsystem.h"
+#include "EdGraph/EdGraphSchema.h"
 #include "M2SoundEdGraphSchema.h"
 #include "Vertexes/M2SoundVertex.h"
 
@@ -36,6 +37,13 @@ public:
 	bool IncludeParentNodeContextMenu() const override { return true; }
 	UM2SoundGraph* GetGraph() const { return Cast<UM2SoundGraph>(UEdGraphNode::GetGraph()); }
 	UDAWSequencerData* GetSequencerData() const { return GetGraph()->GetSequencerData(); }
+	virtual bool CanSplitPin(const UEdGraphPin* Pin) const override { return Pin->PinType.PinCategory == TEXT("Track-Audio"); }
+
+	bool MakeConnection(UEdGraphPin* A, UEdGraphPin* B) const;
+
+	const void SplitPin(const UEdGraphPin*  Pin) const;
+
+	void GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const override;
 
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
