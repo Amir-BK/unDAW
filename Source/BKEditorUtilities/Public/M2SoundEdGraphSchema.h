@@ -13,6 +13,7 @@
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Vertexes/M2SoundVertex.h"
 
+#include <unDAWSettings.h>
 #include "M2SoundEdGraphSchema.generated.h"
 
 class UM2SoundEdGraphNode;
@@ -148,6 +149,8 @@ public:
 
 		//		return GetPinTypeColor(PinType.PinSubCategory);
 		//}
+
+	
 		
 		//Tracks are blue
 		if (PinType.PinCategory == "Track-Audio")
@@ -155,16 +158,46 @@ public:
 			return FLinearColor(0.0f, 0.0f, 1.0f);
 		}
 
-		//Audio is purple
-		if (PinType.PinCategory == "Track-Midi")
-		{
-			return FLinearColor(0.5f, 0.0f, 0.5f);
-		}
+
 
 		//metasound literals get the value from the metasound literal schema according to their data type
 		if (PinType.PinCategory == "MetasoundLiteral")
 		{
-			return FLinearColor::Red;
+			UUNDAWSettings* Settings = UUNDAWSettings::Get();
+
+			if(Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
+			{
+				return Settings->CustomPinTypeColors[PinType.PinSubCategory];
+			}
+
+			if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryFloat)
+				{
+				return Settings->FloatPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryInt32)
+			{
+				return Settings->IntPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryBoolean)
+			{
+				return Settings->BooleanPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryString)
+			{
+				return Settings->StringPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryObject)
+			{
+				return Settings->ObjectPinTypeColor;
+			}
+			else
+			{
+				return Settings->DefaultPinTypeColor;
+			}
+			
+
+
+
 		}
 
 		return UEdGraphSchema::GetPinTypeColor(PinType);

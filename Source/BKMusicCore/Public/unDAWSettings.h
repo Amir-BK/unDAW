@@ -24,8 +24,52 @@ public:
 
 	static UUNDAWSettings* Get() { return CastChecked<UUNDAWSettings>(UUNDAWSettings::StaticClass()->GetDefaultObject()); }
 
+	UUNDAWSettings();
 	
 	UPROPERTY(Config, EditAnywhere, Category = "Patch Cache")
 	TMap<FName, FCachedVertexPinInfo> Cache;
+
+	/** Maps Pin Category To Pin Color */
+	TMap<FName, FLinearColor> CustomPinTypeColors;
+
+	/** Default pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor DefaultPinTypeColor;
+
+	/** Audio pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor AudioPinTypeColor;
+
+	/** Boolean pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor BooleanPinTypeColor;
+
+	/** Floating-point pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor FloatPinTypeColor;
+
+	/** Integer pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor IntPinTypeColor;
+
+	/** Object pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor ObjectPinTypeColor;
+
+	/** String pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor StringPinTypeColor;
+
+	/** Time pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor TimePinTypeColor;
+
+	/** Trigger pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor TriggerPinTypeColor;
+
+	/** WaveTable pin type color */
+	UPROPERTY(EditAnywhere, config, Category = PinColors)
+	FLinearColor WaveTablePinTypeColor;
 
 };

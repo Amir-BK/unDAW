@@ -4,6 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "MetasoundBuilderSubsystem.h"
+#include "MetasoundDataReference.h"
+#include "MetasoundLiteral.h"
+#include "MetasoundTrigger.h"
+#include "MetasoundWaveTable.h"
+#include "MetasoundTime.h"
+
+#include "MetasoundAudioBuffer.h"
+#include "MetasoundAssetBase.h"
+#include "MetasoundFrontendDataTypeRegistry.h"
+#include "WaveTable.h"
 #include "M2Pins.generated.h"
 
 
@@ -38,7 +48,22 @@ namespace M2Sound
 			Output
 		};
 
+		namespace PinCategories
+		{
+			using namespace Metasound;
+			const FName PinSubCategoryObject = "object"; // Basket for all UObject proxy types (corresponds to multiple DataTypes)
+			const FName PinSubCategoryBoolean = GetMetasoundDataTypeName<bool>();
+			const FName PinSubCategoryFloat = GetMetasoundDataTypeName<float>();
+			const FName PinSubCategoryInt32 = GetMetasoundDataTypeName<int32>();
+			const FName PinSubCategoryString = GetMetasoundDataTypeName<FString>();
 
+			// Categories corresponding with MetaSound DataTypes with custom visualization
+			//const FName PinCategoryAudio = GetMetasoundDataTypeName<FAudioBuffer>();
+			//const FName PinCategoryTime = GetMetasoundDataTypeName<FTime>();
+			//const FName PinCategoryTimeArray = GetMetasoundDataTypeName<TArray<FTime>>();
+			//const FName PinCategoryTrigger = GetMetasoundDataTypeName<FTrigger>();
+			//const FName PinCategoryWaveTable = GetMetasoundDataTypeName<WaveTable::FWaveTable>();
+		}
 
 		static const TMap<FName, EVertexAutoConnectionPinCategory> PinCategoryMap = {
 			{FName(TEXT("unDAW Instrument.Audio L")), EVertexAutoConnectionPinCategory::AudioStreamL},
@@ -73,6 +98,8 @@ class BKMUSICCORE_API UM2Pins : public UObject
 public:
 
 	UM2Pins() {};
+
+	virtual FLinearColor GetPinColor() const { return FLinearColor::White; }
 
 	UPROPERTY(VisibleAnywhere)
 	UM2Pins* LinkedPin;
@@ -161,6 +188,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName DataType;
+
 
 	UM2MetasoundLiteralPin() 
 	{
