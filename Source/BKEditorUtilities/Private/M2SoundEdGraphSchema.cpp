@@ -330,14 +330,14 @@ void UM2SoundGraph::InitializeGraph()
 
 	}
 
-	for (const auto& [Vertex, Node] : VertexToNodeMap)
-	{
-		if(auto& InputVertex = Vertex->MainInput)
-		{
-			AutoConnectTrackPinsForNodes(*VertexToNodeMap[InputVertex], *Node);
-			
-		}
-	}
+	//for (const auto& [Vertex, Node] : VertexToNodeMap)
+	//{
+	//	if(auto& InputVertex = Vertex->MainInput)
+	//	{
+	//		AutoConnectTrackPinsForNodes(*VertexToNodeMap[InputVertex], *Node);
+	//		
+	//	}
+	//}
 
 
 	PerformVertexToNodeBinding();
@@ -424,11 +424,6 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 		}
 	}
 
-	//print number of vertex outputs as warning
-	if (M2SoundVertex)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: Vertex has %d outputs"), M2SoundVertex->Outputs.Num());
-	}
 
 
 	FGraphNodeCreator<UM2SoundAudioInsertNode> NodeCreator(*ParentGraph);

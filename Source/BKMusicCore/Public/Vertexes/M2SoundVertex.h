@@ -109,12 +109,6 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "M2Sound", meta=(EditFixedSize))
-	TMap<FName, FM2SoundPinData> InPinsNew;
-
-	UPROPERTY(EditAnywhere, Category = "M2Sound", meta = (EditFixedSize))
-	TMap<FName, FM2SoundPinData> OutPinsNew;
-
 
 	void PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles);
 
@@ -122,50 +116,17 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	int TrackId = INDEX_NONE;
 
-	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
-	virtual void BreakTrackInputConnection();
-
-	virtual void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
-
-	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
-
 	void UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue);
 
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;
-
-	void RegisterOutputVertex(UM2SoundVertex* OutputVertex);
-
-	bool UnregisterOutputVertex(UM2SoundVertex* OutputVertex);
-
-	EMetaSoundBuilderResult TryConnectPinToPin(const FM2SoundPinData& MyInputPin, const FM2SoundPinData& OtherOutputPin);
-
-	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
-	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
-	// metasound i/os that are exposed via our metasound parameter interfaces
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	UM2SoundVertex* MainInput;
-
-	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding.
-	//UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	//TArray<UM2SoundVertex*> Inputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TSet<UM2SoundVertex*> Outputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeOutputHandle> AutoConnectOutPins;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeInputHandle> AutoConnectInPins;
-
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+protected:
+	UPROPERTY()
 	TArray<FMetaSoundBuilderNodeOutputHandle> OutPins;
 
 	UPROPERTY()
 	TArray<FMetaSoundBuilderNodeInputHandle> InPins;
-
+public:
 
 	UFUNCTION()
 	UDAWSequencerData* GetSequencerData() const;
@@ -185,12 +146,6 @@ public:
 
 	UPROPERTY()
 	int32 ErrorType = EMessageSeverity::Info;
-
-	UPROPERTY()
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundInputs;
-
-	UPROPERTY()
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundOutputs;
 
 	UFUNCTION()
 	virtual void VertexNeedsBuilderUpdates();

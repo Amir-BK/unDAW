@@ -96,24 +96,24 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData*
 	NewPatch->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 	NewPatch->SequencerData = InSequencerData;
 
-	NewPatch->MakeTrackInputConnection(InputVertex);
-	NewAudioOutput->MakeTrackInputConnection(NewPatch);
+	//NewPatch->MakeTrackInputConnection(InputVertex);
+	//NewAudioOutput->MakeTrackInputConnection(NewPatch);
 
 	//InputVertex->TrackId = Index;
-	InputVertex->Outputs.Add(NewPatch);
+	//InputVertex->Outputs.Add(NewPatch);
 	//NewPatch->Outputs.Add(NewOutput);
 
 	//NewOutput->OutputName = FName(SequencerData->GetTracksDisplayOptions(Index).trackName);
 
-	NewPatch->Outputs.Add(NewAudioOutput);
+	//NewPatch->Outputs.Add(NewAudioOutput);
 	//NewPatch->Inputs.Add(InputVertex);
-	NewPatch->MainInput = InputVertex;
+	//NewPatch->MainInput = InputVertex;
 
 	//NewAudioOutput->Inputs.Add(NewPatch);
-	NewAudioOutput->MainInput = NewPatch;
-	InSequencerData->AddVertex(InputVertex);
-	InSequencerData->AddVertex(NewPatch);
-	InSequencerData->AddVertex(NewAudioOutput);
+	//NewAudioOutput->MainInput = NewPatch;
+	//InSequencerData->AddVertex(InputVertex);
+	//InSequencerData->AddVertex(NewPatch);
+	//InSequencerData->AddVertex(NewAudioOutput);
 
 }
 

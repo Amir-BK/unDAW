@@ -69,6 +69,9 @@ public:
 
 	UM2Pins() {};
 
+	UPROPERTY(VisibleAnywhere)
+	UM2Pins* LinkedPin;
+
 	bool bIsStale = false;
 
 	virtual void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) {};

@@ -408,7 +408,9 @@ public:
 			//print connection result 
 			if (Result == EMetaSoundBuilderResult::Succeeded)
 			{
-				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Succeeded!"));
+				InInput->LinkedPin = InOutput;
+				InOutput->LinkedPin = InInput;
+
 			}
 			else
 			{
@@ -429,8 +431,13 @@ public:
 		{
 			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);
 			bool bConnectRight = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamR, InOutput->AudioStreamR);
+			if (bConnectLeft && bConnectRight)
+			{
+				InInput->LinkedPin = InOutput;
+				InOutput->LinkedPin = InInput;
+				return true;
 
-			return bConnectLeft && bConnectRight;
+			}
 
 		}
 		UE_LOG(unDAWDataLogs, Warning, TEXT("Failed to connect audio tracks!"));

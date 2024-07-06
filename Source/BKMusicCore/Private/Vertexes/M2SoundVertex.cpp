@@ -12,10 +12,10 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 {
 	auto Config = FCachedVertexPinInfo();
 
-	for (const auto& [Name, Pin] : InPinsNew)
-	{
-		Config.PinRanges.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
-	}
+	//for (const auto& [Name, Pin] : InPinsNew)
+	//{
+	//	Config.PinRanges.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
+	//}
 
 	
 	UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), Config);
@@ -185,56 +185,6 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 	RemoveAllStalePins();
 }
 
-void UM2SoundVertex::BreakTrackInputConnection()
-{
-	//for debugging, print vertex name and track id
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("BreakTrackInputConnection %s"), *GetName())
-		MainInput->BreakTrackOutputConnection(this);
-	MainInput = nullptr;
-	TrackId = INDEX_NONE;
-
-	//traverse outputs and update TrackId
-	for (auto Output : Outputs)
-	{
-		Output->TrackId = INDEX_NONE;
-	}
-
-	//UpdateConnections();
-
-}
-
-void UM2SoundVertex::MakeTrackInputConnection(UM2SoundVertex* InputVertex)
-{
-	//for debugging, print vertex name and track id
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("MakeTrackInputConnection %s"), *GetName())
-
-		//if we already have a main input and it's different from the new one break it
-		if (MainInput && MainInput != InputVertex)
-		{
-			BreakTrackInputConnection();
-		}
-
-	//traverse outputs and update TrackId
-	for (auto Output : Outputs)
-	{
-		Output->TrackId = InputVertex->TrackId;
-	}
-
-	//set the new input
-
-	MainInput = InputVertex;
-	TrackId = InputVertex->TrackId;
-	//VertexNeedsBuilderUpdates();
-	//UpdateConnections();
-	MainInput->RegisterOutputVertex(this);
-}
-
-void UM2SoundVertex::BreakTrackOutputConnection(UM2SoundVertex* OutputVertex)
-{
-	//for debugging, print vertex name and track id
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("BreakTrackOutputConnection"))
-	UnregisterOutputVertex(OutputVertex);
-}
 
 void UM2SoundVertex::UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue)
 {
@@ -246,34 +196,6 @@ void UM2SoundVertex::UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendL
 	if(BuildResult == EMetaSoundBuilderResult::Failed)	BuilderConnectionResults.Add(Pin.PinName, BuildResult);
 }
 
-void UM2SoundVertex::RegisterOutputVertex(UM2SoundVertex* OutputVertex)
-{
-	Outputs.Add(OutputVertex);
-
-}
-
-bool UM2SoundVertex::UnregisterOutputVertex(UM2SoundVertex* OutputVertex)
-{
-	if(Outputs.Contains(OutputVertex))
-	{
-		Outputs.Remove(OutputVertex);
-		return true;
-	}
-	
-	return false;
-}
-
-EMetaSoundBuilderResult UM2SoundVertex::TryConnectPinToPin(const FM2SoundPinData& MyInputPin, const FM2SoundPinData& OtherOutputPin)
-{
-	EMetaSoundBuilderResult BuildResult;
-
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Trying to connect pin %s to pin %s"), *MyInputPin.PinName.ToString(), *OtherOutputPin.PinName.ToString())
-	//GetBuilderContext().Connect
-	GetBuilderContext().ConnectNodes(OtherOutputPin.OutputHandle, MyInputPin.InputHandle, BuildResult);
-	BuilderConnectionResults.Add(MyInputPin.PinName, BuildResult);
-	
-	return BuildResult;
-}
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {
@@ -295,10 +217,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 	//UpdateConnections();
 
 	//need to inform downstream vertexes to reconnect to our output
-	for (auto Output : Outputs)
-	{
-		//Output->UpdateConnections();
-	}
+
 	OnVertexUpdated.Broadcast();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
@@ -332,18 +251,18 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 {
 	//called right after the vertex is created, we should collect the parameters that are exposed by the vertex and can be auto connected
 	//to other nodes in the metasound graph
-	AutoConnectInPins.Empty();
-	AutoConnectOutPins.Empty();
+	//AutoConnectInPins.Empty();
+	//AutoConnectOutPins.Empty();
 	//Pins.Empty(); //probably don't want to clear the pins but we're just running a quick test now
 	//make temp copies of the in and out pins
 	//TMap<FName, FM2SoundPinData> InPinsNew;
 	//TMap<FName, FM2SoundPinData> OutPinsNew;
 
-	auto CopyOfInPins = InPinsNew;
+	//auto CopyOfInPins = InPinsNew;
 
 
-	InPinsNew.Empty();
-	OutPinsNew.Empty();
+	//InPinsNew.Empty();
+	//OutPinsNew.Empty();
 
 	
 	EMetaSoundBuilderResult BuildResult;
@@ -355,20 +274,20 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 	//find the inputs and outputs of the node
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
-	for(const auto& Input : InPins)
+	for (const auto& Input : InPins)
 	{
-		
-		
-		
+
+
+
 		FM2SoundPinData PinData;
-				
+
 		FName PinName;
 		FName DataType;
 		PinData.InputHandle = Input;
 		BuilderContext->GetNodeInputData(Input, PinName, DataType, BuildResult);
 		auto LiteralValue = BuilderContext->GetNodeInputClassDefault(Input, BuildResult);
-		
 
+		/*
 		if (CopyOfInPins.Contains(PinName))
 		{
 			PinData = CopyOfInPins[PinName];
@@ -378,7 +297,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		}
 		else
 		{
-			
+
 			//if we're a patchvertex...
 
 			//if we're a patch vertex, we should check the cache for the default values of the pins
@@ -417,8 +336,8 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			PinData = FM2SoundPinData();
 
 			}
-			
-			
+
+
 			PinData.PinName = PinName;
 			PinData.DataType = DataType;
 			if (DataType == FName(TEXT("Float")))
@@ -445,7 +364,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		}
 
 		bool IsAutoManaged = false;
-		
+
 
 
 		if(PinName == FName(TEXT("unDAW Instrument.MidiStream")))
@@ -453,7 +372,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 			IsAutoManaged = true;
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Input);
 		}
-		
+
 		if (PinName == FName(TEXT("unDAW Instrument.MidiTrack")))
 		{
 			AutoConnectInPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Input);
@@ -487,85 +406,86 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		InPinsNew.Add(PinName, PinData);
 
 	}
+	*/
+	//using namespace M2Sound::Pins;
+	//{
+	//	for (const auto& Output : OutPins)
+	//	{
+	//		FM2SoundPinData PinData = FM2SoundPinData();
 
-	using namespace M2Sound::Pins;
-	{
-		for (const auto& Output : OutPins)
-		{
-			FM2SoundPinData PinData = FM2SoundPinData();
+	//		FName& PinName = PinData.PinName;
+	//		FName& DataType = PinData.DataType;
+	//		bool IsAutoManaged = false;
+	//		PinData.OutputHandle = Output;
+	//		BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
 
-			FName& PinName = PinData.PinName;
-			FName& DataType = PinData.DataType;
-			bool IsAutoManaged = false;
-			PinData.OutputHandle = Output;
-			BuilderContext->GetNodeOutputData(Output, PinName, DataType, BuildResult);
+	//		if (PinCategoryMap.Contains(PinName))
+	//		{
+	//			auto Category = PinCategoryMap[PinName];
+	//			UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Pin Category %s"), *UEnum::GetValueAsString(Category))
+	//			//this means this is a composite audio pin
+	//		}
 
-			if (PinCategoryMap.Contains(PinName))
-			{
-				auto Category = PinCategoryMap[PinName];
-				UE_LOG(unDAWVertexLogs, Verbose, TEXT("Found Pin Category %s"), *UEnum::GetValueAsString(Category))
-				//this means this is a composite audio pin
-			}
+	//			if (PinName == FName(TEXT("unDAW Instrument.Audio L")))
+	//			{
+	//				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
+	//				IsAutoManaged = true;
+	//			}
 
-				if (PinName == FName(TEXT("unDAW Instrument.Audio L")))
-				{
-					AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
-					IsAutoManaged = true;
-				}
+	//		if (PinName == FName(TEXT("unDAW Instrument.Audio R")))
+	//		{
+	//			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
+	//			IsAutoManaged = true;
+	//		}
 
-			if (PinName == FName(TEXT("unDAW Instrument.Audio R")))
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
-				IsAutoManaged = true;
-			}
-
-			if (PinName == FName(TEXT("MIDI Stream")))
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Output);
-				IsAutoManaged = true;
-
-
-			}
-
-			if (PinName == FName(TEXT("Track")))
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Output);
-				IsAutoManaged = true;
+	//		if (PinName == FName(TEXT("MIDI Stream")))
+	//		{
+	//			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Output);
+	//			IsAutoManaged = true;
 
 
-			}
+	//		}
 
-			//insert audio outputs unDAW Insert.Audio L 
-
-			if (PinName == FName(TEXT("unDAW Insert.Audio L")))
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
-				IsAutoManaged = true;
+	//		if (PinName == FName(TEXT("Track")))
+	//		{
+	//			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackTrackNum, Output);
+	//			IsAutoManaged = true;
 
 
-			}
+	//		}
 
-			if (PinName == FName(TEXT("unDAW Insert.Audio R")))
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
-				IsAutoManaged = true;
+	//		//insert audio outputs unDAW Insert.Audio L 
+
+	//		if (PinName == FName(TEXT("unDAW Insert.Audio L")))
+	//		{
+	//			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Output);
+	//			IsAutoManaged = true;
 
 
-			}
+	//		}
 
-			if (IsAutoManaged)
-			{
-				//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
-				PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
-			}
+	//		if (PinName == FName(TEXT("unDAW Insert.Audio R")))
+	//		{
+	//			AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Output);
+	//			IsAutoManaged = true;
 
-			OutPinsNew.Add(PinName, PinData);
 
-		}
+	//		}
+
+	//		if (IsAutoManaged)
+	//		{
+	//			//PinData.PinTypeFlags |= EM2SoundPinFlags::IsAutoManaged;
+	//			PinData.PinFlags |= static_cast<uint8>(EM2SoundPinFlags::IsAutoManaged);
+	//		}
+
+	//		OutPinsNew.Add(PinName, PinData);
+
+	//	}
+	//}
+
+
+	//InPins = InPinsNew;
 	}
-
-	
-
 	OnVertexUpdated.Broadcast();
 
 }
@@ -576,10 +496,10 @@ void UM2SoundVertex::DestroyVertexInternal()
 {
 	
 
-	if(MainInput)
-	{
-		MainInput->UnregisterOutputVertex(this);
-	}
+	//if(MainInput)
+	//{
+	//	MainInput->UnregisterOutputVertex(this);
+	//}
 
 	DestroyVertex();
 }
@@ -839,156 +759,6 @@ void UM2SoundPatch::BuildVertex()
 void UM2SoundPatch::UpdateConnections()
 {
 	BuilderConnectionResults.Empty();
-
-
-	BuilderConnectionResults.Empty();
-	if (!MainInput)
-	{
-		//need to disconnect our own inputs
-		//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-		auto& BuilderContext = SequencerData->BuilderContext;
-
-		if (!BuilderContext)
-		{
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
-		return;
-		}
-
-		EMetaSoundBuilderResult BuildResult;
-		for (auto& [key, value] : AutoConnectInPins)
-		{
-			BuilderContext->DisconnectNodeInput(value, BuildResult);
-			FString KeyString = FString::Printf(TEXT("Disconnect %s"), *UEnum::GetValueAsString(key));
-			BuilderConnectionResults.Add(FName(KeyString), BuildResult);
-		}
-
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
-		return;
-	}
-
-	//dilligently we ought to check for our interfaces, but, lazy, we'll actually use the builder context to find the inputs and outputs
-	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	auto& BuilderContext = SequencerData->BuilderContext;
-
-	EMetaSoundBuilderResult BuildResult;
-
-	auto MidiStreamInName = FName(TEXT("unDAW Instrument.MidiStream"));
-	auto MidiTrackInName = FName(TEXT("unDAW Instrument.MidiTrack"));
-
-	for (auto& [Type, Input] : AutoConnectInPins)
-	{
-		switch (Type)
-		{
-			case EVertexAutoConnectionPinCategory::MidiTrackStream:
-			{
-						auto UpStreamConnection = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::MidiTrackStream);
-						if (UpStreamConnection)
-						{
-							BuilderContext->ConnectNodes(*UpStreamConnection, Input, BuildResult);
-							BuilderConnectionResults.Add(MidiStreamInName, BuildResult);
-						}
-						else {
-							UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Stream Output, yet our node is an instrumenet renderer"))
-						}
-
-						break;
-
-			}
-
-			case EVertexAutoConnectionPinCategory::MidiTrackTrackNum:
-			{
-						auto UpStreamConnection = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::MidiTrackTrackNum);
-						if (UpStreamConnection)
-						{
-							BuilderContext->ConnectNodes(*UpStreamConnection, Input, BuildResult);
-							BuilderConnectionResults.Add(MidiTrackInName, BuildResult);
-						}
-						else {
-							UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Track Output, yet our node is an instrumenet renderer"))
-						}
-
-						break;
-			}
-
-			case EVertexAutoConnectionPinCategory::AudioStreamL:
-			{
-						auto UpStreamConnection = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamL);
-						if (UpStreamConnection)
-						{
-							BuilderContext->ConnectNodes(*UpStreamConnection, Input, BuildResult);
-							BuilderConnectionResults.Add(FName(TEXT("Audio In L")), BuildResult);
-						}
-						else {
-							UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Audio Stream L Output, yet our node is an insert"))
-						}
-
-						break;
-			}
-
-			case EVertexAutoConnectionPinCategory::AudioStreamR:
-			{
-						auto UpStreamConnection = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamR);
-						if (UpStreamConnection)
-						{
-							BuilderContext->ConnectNodes(*UpStreamConnection, Input, BuildResult);
-							BuilderConnectionResults.Add(FName(TEXT("Audio In R")), BuildResult);
-						}
-						else {
-							UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Audio Stream R Output, yet our node is an insert"))
-						}
-
-						break;
-			}
-
-		}
-
-	}
-
-
-	auto MidiStreamInput = BuilderContext->FindNodeInputByName(NodeHandle, MidiStreamInName, BuildResult);
-	switch (BuildResult)
-	{
-	case EMetaSoundBuilderResult::Succeeded:
-		UE_LOG(unDAWVertexLogs, Log, TEXT("Found Midi Stream Input"))
-			if (MainInput->AutoConnectOutPins.Contains(EVertexAutoConnectionPinCategory::MidiTrackStream))
-			{
-			auto& InputVertexMidiOut = MainInput->AutoConnectOutPins[EVertexAutoConnectionPinCategory::MidiTrackStream];
-			BuilderContext->ConnectNodes(InputVertexMidiOut, MidiStreamInput, BuildResult);
-			BuilderConnectionResults.Add(MidiStreamInName, BuildResult);
-			}
-			else {
-				UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Stream Output, yet our node is an instrumenet renderer"))
-			}
-
-		break;
-
-	case EMetaSoundBuilderResult::Failed:
-		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Failed to find Midi Stream Input, we may be an insert"))
-		break;
-	}
-	
-	//auto MidiTrackInput = BuilderContext->FindNodeInputByName(NodeHandle, MidiTrackInName, BuildResult);
-	//switch (BuildResult)
-	//{
-	//case EMetaSoundBuilderResult::Succeeded:
-	//	UE_LOG(unDAWVertexLogs, Log, TEXT("Found Midi Track Input"))
-	//		if (MainInput->AutoConnectOutPins.Contains(EVertexAutoConnectionPinCategory::MidiTrackTrackNum))
-	//		{
-	//			auto& InputVertexTrackOut = MainInput->AutoConnectOutPins[EVertexAutoConnectionPinCategory::MidiTrackTrackNum];
-	//			BuilderContext->ConnectNodes(InputVertexTrackOut, MidiTrackInput, BuildResult);
-	//			BuilderConnectionResults.Add(MidiTrackInName, BuildResult);
-	//		}
-	//		else {
-	//			UE_LOG(unDAWVertexLogs, Error, TEXT("Main Input does not have a Midi Track Output, yet our node is an instrumenet renderer"))
-	//		}
-
-	//	break;
-
-	//case EMetaSoundBuilderResult::Failed:
-	//	UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Failed to find Midi Track Input, we may be an insert"))
-	//		break;
-
-	//}
 
 
 	

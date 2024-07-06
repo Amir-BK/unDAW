@@ -74,57 +74,11 @@ public:
 
 	}
 
-	void MakeTrackInputConnection(UM2SoundVertex* InVertex) override
-	{
-		//EMetaSoundBuilderResult BuildResult;
-		UE_LOG(LogTemp, Warning, TEXT("Making Track Input Connection for vari mixer! exciting!"));
-		
-		
-		//const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-		//	, BuildResult);
 
-		//BuilderContext->ConnectNodes(InVertex->OutPins[0], NewMixerNode, BuildResult);
-		if (MixerChannels.Num() > 1)
-		{
-			auto Channel = MixerChannels.Pop();
-
-
-			VertexToChannelMap.Add(InVertex, Channel);
-			InVertex->RegisterOutputVertex(this);
-			//UpdateConnections();
-
-		}
-
-
-
-	}
-
-	void BreakTrackInputConnection() override
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Breaking Track Input Connection for vari mixer! exciting!"));
-	}
 
 	void CollectParamsForAutoConnect() override
 	{
-		AutoConnectOutPins.Empty();
 
-		//we only have two outpins, both audio 
-
-		bool bUsedLeft = false;
-
-		for (auto& Pin : OutPins)
-		{
-			if(bUsedLeft)
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamR, Pin);
-
-			}
-			else
-			{
-				AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::AudioStreamL, Pin);
-				bUsedLeft = true;
-			}
-		}
 	}
 
 	FLinearColor GetChannelColor(uint8 ChannelIndex)
@@ -134,17 +88,17 @@ public:
 
 	void UpdateConnections() override
 	{
-		EMetaSoundBuilderResult BuildResult;
+		//EMetaSoundBuilderResult BuildResult;
 		UE_LOG(LogTemp, Warning, TEXT("Updating Connections for Mixer Vertex"));
 		for (auto& [Vertex, Channel] : VertexToChannelMap)
 		{
-			auto InLeft = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamL];
-			auto InRight = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamR];
+			//auto InLeft = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamL];
+			//auto InRight = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamR];
 
-			BuilderContext->ConnectNodes(InLeft, Channel.AudioLeftOutputInputHandle, BuildResult);
-			BuilderResults.Add("ConnectLeft", BuildResult);
-			BuilderContext->ConnectNodes(InRight, Channel.AudioRightOutputInputHandle, BuildResult);
-			BuilderResults.Add("ConnectRight", BuildResult);
+			//BuilderContext->ConnectNodes(InLeft, Channel.AudioLeftOutputInputHandle, BuildResult);
+			//BuilderResults.Add("ConnectLeft", BuildResult);
+			//BuilderContext->ConnectNodes(InRight, Channel.AudioRightOutputInputHandle, BuildResult);
+			//BuilderResults.Add("ConnectRight", BuildResult);
 		}
 	}
 
