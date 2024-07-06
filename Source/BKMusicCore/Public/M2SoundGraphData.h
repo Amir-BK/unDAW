@@ -387,6 +387,47 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 public:
 
 	template<typename T>
+	bool BreakPinConnection(T* InInput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("BreakPinConnection not implemented for this type - UNSPECIALIZED"));
+		return false;
+	};
+
+	template<>
+	bool BreakPinConnection<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput)
+	{
+		if (InInput)
+		{
+			EMetaSoundBuilderResult Result;
+			auto* LinkedToOutput = Cast<UM2MetasoundLiteralPin>(InInput->LinkedPin);
+			BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+			if (Result == EMetaSoundBuilderResult::Succeeded)
+			{
+				InInput->LinkedPin = nullptr;
+				LinkedToOutput->LinkedPin = nullptr;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	template<>
+	bool BreakPinConnection<UM2AudioTrackPin>(UM2AudioTrackPin* InInput)
+	{
+		if (InInput)
+		{
+			bool bBreakLeft = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamL);
+			bool bBreakRight = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamR);
+			if (bBreakLeft && bBreakRight)
+			{
+				InInput->LinkedPin = nullptr;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	template<typename T>
 	bool ConnectPins(T* InInput, T* InOutput)
 	{
 		UE_LOG(unDAWDataLogs, Warning, TEXT("ConnectPins not implemented for this type - UNSPECIALIZED"));

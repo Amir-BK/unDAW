@@ -7,6 +7,7 @@
 #include "M2SoundGraphData.h"
 #include <EdGraphUtilities.h>
 #include <EdGraph/EdGraphNode.h>
+#include "Components/AudioComponent.h"
 #include "SGraphNode.h"
 #include "EdGraph/EdGraphPin.h"
 #include "Subsystems/AssetEditorSubsystem.h"
@@ -43,6 +44,8 @@ public:
 
 	const void SplitPin(const UEdGraphPin*  Pin) const;
 
+	//void SyncToVertex() const;
+
 	void GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const override;
 
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
@@ -61,6 +64,8 @@ public:
 	UM2SoundVertex* Vertex;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
+
+	void SyncVertexConnections() const;
 
 	UPROPERTY(VisibleAnywhere)
 	int AssignedTrackId = INDEX_NONE;
@@ -261,21 +266,22 @@ public:
 		//UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
 		Gain = NewGain;
 
-		if (!AsOutputVertex)
-		{
-			//try cast vertex
-			AsOutputVertex = Cast<UM2SoundAudioOutput>(Vertex);
-		}
+		GetGraph()->GetSequencerData()->AuditionComponent->SetVolumeMultiplier(Gain);
+		//if (!AsOutputVertex)
+		//{
+		//	//try cast vertex
+		//	AsOutputVertex = Cast<UM2SoundAudioOutput>(Vertex);
+		//}
 
-		if (AsOutputVertex)
-		{
-			AsOutputVertex->Gain = Gain;
-			auto GainParamName = AsOutputVertex->GainParameterName;
-			AsOutputVertex->TransmitAudioParameter(FAudioParameter(GainParamName, Gain));
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("No output vertex found"));
-		}
+		//if (AsOutputVertex)
+		//{
+		//	AsOutputVertex->Gain = Gain;
+		//	auto GainParamName = AsOutputVertex->GainParameterName;
+		//	AsOutputVertex->TransmitAudioParameter(FAudioParameter(GainParamName, Gain));
+		//}
+		//else {
+		//	UE_LOG(LogTemp, Warning, TEXT("No output vertex found"));
+		//}
 	}
 };
 

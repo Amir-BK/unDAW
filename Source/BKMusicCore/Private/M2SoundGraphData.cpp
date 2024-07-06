@@ -30,13 +30,13 @@ void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
 {
 	Vertex->BuildVertex();
 	Vertex->CollectParamsForAutoConnect();
-	//Vertex->UpdateConnections();
+	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
 
 void UDAWSequencerData::UpdateVertexConnections(UM2SoundVertex* Vertex)
 {
-	//Vertex->UpdateConnections();
+	Vertex->UpdateConnections();
 
 }
 
@@ -285,7 +285,7 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 
 	Vertex->BuildVertex();
 	Vertex->CollectParamsForAutoConnect();
-	//Vertex->UpdateConnections();
+	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
 
@@ -691,7 +691,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 
 	for (auto& Vertex : Vertexes)
 	{
-		//Vertex->UpdateConnections();
+		Vertex->UpdateConnections();
 		//to init the graph to the last mix state
 		Vertex->CollectAndTransmitAudioParameters();
 	}

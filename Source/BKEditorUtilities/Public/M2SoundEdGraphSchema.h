@@ -59,6 +59,7 @@ public:
 
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
+		Node->SyncVertexConnections();
 
 		return Node;
 	}
@@ -74,6 +75,7 @@ public:
 	UFUNCTION()
 	void OnVertexAdded(UM2SoundVertex* Vertex) { 
 		
+		
 		//so this is definitely not good enough and indicates some issues
 		// we need to think about the node creation process and how to handle the vertex to node mapping
 
@@ -81,7 +83,25 @@ public:
 		NotifyGraphChanged(); 
 	}
 
+	UFUNCTION()
+	UM2SoundEdGraphNode* GetNodeForVertex(UM2SoundVertex* Vertex) const
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetNodeForVertex VertexToNodeMap Num %d"), VertexToNodeMap.Num());
+		if(VertexToNodeMap.Contains(Vertex))
+			{
+			return VertexToNodeMap[Vertex];
+			}
+		else {
+			return nullptr;
+		}
 
+	}
+
+	UFUNCTION()
+	void MapVertexToNode(UM2SoundVertex* Vertex, UM2SoundEdGraphNode* Node)
+	{
+		VertexToNodeMap.Add(Vertex, Node);
+	}
 
 private:
 

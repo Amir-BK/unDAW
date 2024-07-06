@@ -21,11 +21,14 @@ namespace M2Sound
 {
 	namespace Pins
 	{
-		namespace Categories
+		namespace AutoDiscovery
 		{
 			static const FName Default("Default");
 			static const FName AudioTrack("AudioTrack");
 			static const FName MetasoundLiteral("MetasoundLiteral");
+			//unreal interface outputs, for now stereo only
+			static const FName StereoLeft("UE.OutputFormat.Stereo.Audio:0");
+			static const FName StereoRight("UE.OutputFormat.Stereo.Audio:1");
 		}
 
 		UENUM(BlueprintType)
@@ -43,7 +46,9 @@ namespace M2Sound
 			{FName(TEXT("unDAW Insert.Audio L")), EVertexAutoConnectionPinCategory::AudioStreamL},
 			{FName(TEXT("unDAW Insert.Audio R")), EVertexAutoConnectionPinCategory::AudioStreamR},
 			{FName(TEXT("unDAW Insert.Audio In L")), EVertexAutoConnectionPinCategory::AudioStreamL},
-			{FName(TEXT("unDAW Insert.Audio In R")), EVertexAutoConnectionPinCategory::AudioStreamR}
+			{FName(TEXT("unDAW Insert.Audio In R")), EVertexAutoConnectionPinCategory::AudioStreamR},
+			{AutoDiscovery::StereoLeft, EVertexAutoConnectionPinCategory::AudioStreamL},
+			{AutoDiscovery::StereoRight, EVertexAutoConnectionPinCategory::AudioStreamR}
 		};
 
 		struct FVariWidthAudioOutput
@@ -85,6 +90,7 @@ public:
 protected:
 
 	friend class UM2SoundVertex;
+	friend class UM2SoundEdGraphNode;
 
 	UPROPERTY()
 	UM2SoundVertex* ParentVertex;
@@ -140,7 +146,7 @@ public:
 
 	UM2AudioTrackPin() 
 	{
-		Category = M2Sound::Pins::Categories::AudioTrack;
+		Category = M2Sound::Pins::AutoDiscovery::AudioTrack;
 	};
 
 
@@ -159,7 +165,7 @@ public:
 	UM2MetasoundLiteralPin() 
 	{
 
-		Category = M2Sound::Pins::Categories::MetasoundLiteral;
+		Category = M2Sound::Pins::AutoDiscovery::MetasoundLiteral;
 	};
 
 protected:

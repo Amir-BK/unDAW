@@ -179,7 +179,7 @@ public:
 
 	virtual void BuildVertex() {};
 
-	virtual void UpdateConnections() {};
+	virtual void UpdateConnections();
 
 	virtual void DestroyVertex() {};
 
@@ -256,6 +256,7 @@ public:
 	{
 		UM2AudioTrackPin* NewPin = CreatePin<UM2AudioTrackPin>();
 		NewPin->Direction = M2Sound::Pins::PinDirection::Input;
+		NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
 		//NewPin->CreateCompositePin(GetBuilderContext());
 
 		return NewPin;
@@ -266,6 +267,7 @@ public:
 	{
 		UM2AudioTrackPin* NewPin = CreatePin<UM2AudioTrackPin>();
 		NewPin->Direction = M2Sound::Pins::PinDirection::Output;
+		NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
 		//NewPin->CreateCompositePin(GetBuilderContext());
 
 		return NewPin;
@@ -444,7 +446,7 @@ public:
 
 	void BuildVertex() override;
 
-	void UpdateConnections() override;
+	//void UpdateConnections() override;
 
 	void TryFindVertexDefaultRangesInCache() override;
 

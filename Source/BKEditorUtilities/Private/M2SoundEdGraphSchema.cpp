@@ -214,6 +214,7 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 		Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	}
 	//Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	Node->GetGraph()->MapVertexToNode(Node->Vertex, Node);
 	NewNode->GetGraph()->NotifyGraphChanged();
 
 	return NewNode;
