@@ -246,14 +246,6 @@ public:
 	virtual TSharedPtr<class SGraphNode> CreateNode(UEdGraphNode* InNode) const override;
 };
 
-USTRUCT()
-struct FM2SoundGraphAddNodeAction_NewOutput : public FM2SoundGraphAddNodeAction
-{
-	GENERATED_BODY()
-
-	FM2SoundGraphAddNodeAction_NewOutput() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Output"), INVTEXT("Tooltip"), 0, 0, 0) {}
-	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
-};
 
 USTRUCT()
 struct FM2SoundGraphAddNodeAction_NewInstrument : public FM2SoundGraphAddNodeAction

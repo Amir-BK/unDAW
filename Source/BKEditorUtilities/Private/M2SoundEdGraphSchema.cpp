@@ -138,7 +138,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	if (!ContextMenuBuilder.FromPin)
 	{
-		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
+		//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
@@ -361,19 +361,7 @@ void UM2SoundGraph::PerformVertexToNodeBinding()
 	}
 }
 
-UEdGraphNode* FM2SoundGraphAddNodeAction_NewOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
-{
-	FGraphNodeCreator<UM2SoundGraphMidiOutputNode> NodeCreator(*ParentGraph);
-	UM2SoundGraphMidiOutputNode* Node = NodeCreator.CreateUserInvokedNode();
-	Node->Name = FName("Output");
 
-	Node->Vertex = NewObject<UM2SoundAudioOutput>(Node->GetSequencerData(),NAME_None, RF_Transactional);
-	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
-	Node->GetSequencerData()->AddVertex(Node->Vertex);
-	NodeCreator.Finalize();
-
-	return Node;
-}
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {

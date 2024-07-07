@@ -218,29 +218,6 @@ public:
 	};
 };
 
-//represents a MIDI output that will be listed in the Listener component
-UCLASS()
-class UM2SoundGraphMidiOutputNode : public UM2SoundEdGraphNodeConsumer
-{
-	GENERATED_BODY()
-
-public:
-
-	// This is the name of the output node, which will be used to identify the output to gameplay listener components
-	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
-	FName OutputName;
-
-	// if true, the name will be automatically generated from the name of the connected track
-	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
-	bool AutoName;
-
-	//void AllocateDefaultPins() override;
-	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
-
-	void NodeConnectionListChanged() override;
-
-	//	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("MidiOut: %s"), *Cast<UM2SoundMidiOutput>(Vertex)->OutputName.ToString())); }
-};
 
 //represents an audio output that will be auto connected and managed by the performer component, will also have a fancy knob to control volume
 UCLASS()
@@ -255,7 +232,6 @@ public:
 
 	UM2SoundAudioOutput* AsOutputVertex = nullptr;
 
-	//void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
@@ -263,25 +239,10 @@ public:
 
 	UFUNCTION()
 	void SetOutputGain(float NewGain) {
-		//UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
+
 		Gain = NewGain;
 
 		GetGraph()->GetSequencerData()->AuditionComponent->SetVolumeMultiplier(Gain);
-		//if (!AsOutputVertex)
-		//{
-		//	//try cast vertex
-		//	AsOutputVertex = Cast<UM2SoundAudioOutput>(Vertex);
-		//}
-
-		//if (AsOutputVertex)
-		//{
-		//	AsOutputVertex->Gain = Gain;
-		//	auto GainParamName = AsOutputVertex->GainParameterName;
-		//	AsOutputVertex->TransmitAudioParameter(FAudioParameter(GainParamName, Gain));
-		//}
-		//else {
-		//	UE_LOG(LogTemp, Warning, TEXT("No output vertex found"));
-		//}
 	}
 };
 
@@ -296,7 +257,6 @@ public:
 	UPROPERTY()
 	int TrackId = INDEX_NONE;
 
-	//void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 

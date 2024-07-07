@@ -404,9 +404,9 @@ public:
 			BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
 
 			//turns out the builder always returns 'fail' for disconnections, so we'll have to assume it succeeded...
-				LinkedToOutput->LinkedPin = nullptr;
-				InInput->LinkedPin = nullptr;
-				return true;
+			LinkedToOutput->LinkedPin = nullptr;
+			InInput->LinkedPin = nullptr;
+			return true;
 
 		}
 		return false;
