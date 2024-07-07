@@ -169,6 +169,28 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 		if (PinLinkedTo == 0)
 		{
 			//if pin had a connection and now doesn't, we need to break the connection
+			UM2Pins* UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName());
+				
+			auto* CurrentConnection = UnderlyingPin->LinkedPin;
+			if (CurrentConnection)
+			{
+				//break the connection
+				//CurrentConnection->LinkedPin = nullptr;
+			}
+
+			if(auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(UnderlyingPin))
+			{
+				//if we're an audio track pin, we need to break the connection
+				Vertex->GetSequencerData()->BreakPinConnection<UM2AudioTrackPin>(AsAudioTrackPin);
+			}
+			else
+			{
+				//cast to literal pin and break connection
+				Vertex->GetSequencerData()->BreakPinConnection<UM2MetasoundLiteralPin>(Cast<UM2MetasoundLiteralPin>(UnderlyingPin));
+			}
+
+			
+
 
 		}
 		if (PinLinkedTo > 0)
@@ -179,7 +201,7 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 			if (CurrentConnection)
 			{
 				//break the connection
-				CurrentConnection->LinkedPin = nullptr;
+				//CurrentConnection->LinkedPin = nullptr;
 			}
 			
 
@@ -343,6 +365,9 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 	
 	for(auto Pin : Pins)
 	{
+		// if not input pin contiue;
+		if(Pin->Direction == EGPD_Output) continue;
+		
 		//check if Pin underlying M2Pins has a connection, if so we need to find the node it's connected to and connect it
 		UM2Pins* UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName()).Get();
 		if(!UnderlyingPin) UnderlyingPin = Vertex->OutputM2SoundPins.FindRef(Pin->GetFName()).Get();

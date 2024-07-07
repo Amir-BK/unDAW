@@ -209,10 +209,10 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 	//NewNode->GetDeprecationResponse()->Message = FText::FromString("This node is deprecated and will be removed in a future version of the plugin.");
 	//cast to m2sound node and bind the vertex to the node
 	UM2SoundEdGraphNode* Node = Cast<UM2SoundEdGraphNode>(NewNode);
-	if(IsValid(Node->Vertex))
-	{
-		Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
-	}
+	//if(IsValid(Node->Vertex))
+	//{
+	//	Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+	//}
 	//Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetGraph()->MapVertexToNode(Node->Vertex, Node);
 	NewNode->GetGraph()->NotifyGraphChanged();

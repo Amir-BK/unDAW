@@ -150,12 +150,12 @@ public:
 		//		return GetPinTypeColor(PinType.PinSubCategory);
 		//}
 
-	
+		UUNDAWSettings* Settings = UUNDAWSettings::Get();
 		
 		//Tracks are blue
 		if (PinType.PinCategory == "Track-Audio")
 		{
-			return FLinearColor(0.0f, 0.0f, 1.0f);
+			return Settings->AudioPinTypeColor;
 		}
 
 
@@ -163,7 +163,7 @@ public:
 		//metasound literals get the value from the metasound literal schema according to their data type
 		if (PinType.PinCategory == "MetasoundLiteral")
 		{
-			UUNDAWSettings* Settings = UUNDAWSettings::Get();
+			
 
 			if(Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
 			{

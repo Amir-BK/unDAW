@@ -396,17 +396,18 @@ public:
 	template<>
 	bool BreakPinConnection<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput)
 	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Literals!!!!"))
 		if (InInput)
 		{
 			EMetaSoundBuilderResult Result;
 			auto* LinkedToOutput = Cast<UM2MetasoundLiteralPin>(InInput->LinkedPin);
 			BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
-			if (Result == EMetaSoundBuilderResult::Succeeded)
-			{
-				InInput->LinkedPin = nullptr;
+
+			//turns out the builder always returns 'fail' for disconnections, so we'll have to assume it succeeded...
 				LinkedToOutput->LinkedPin = nullptr;
+				InInput->LinkedPin = nullptr;
 				return true;
-			}
+
 		}
 		return false;
 	};
@@ -414,12 +415,15 @@ public:
 	template<>
 	bool BreakPinConnection<UM2AudioTrackPin>(UM2AudioTrackPin* InInput)
 	{
+		
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Audio Tracks!!!!"))
 		if (InInput)
 		{
 			bool bBreakLeft = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamL);
 			bool bBreakRight = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamR);
 			if (bBreakLeft && bBreakRight)
 			{
+				InInput->LinkedPin->LinkedPin = nullptr;
 				InInput->LinkedPin = nullptr;
 				return true;
 			}
