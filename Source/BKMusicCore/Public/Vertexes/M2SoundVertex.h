@@ -186,7 +186,7 @@ public:
 	//should be private or something, called when the node is destroyed, unregisters the vertex from its input before calling the actual destroy method
 	void DestroyVertexInternal();
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, meta = (ShowInnerProperties))
 	TMap<FName, TObjectPtr<UM2Pins>> InputM2SoundPins;
 
 	UPROPERTY(VisibleAnywhere)

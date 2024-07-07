@@ -13,7 +13,7 @@
  * 
  */
 
-class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands : public TCommands<FDAWEditorToolbarCommands>
+class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands final : public TCommands<FDAWEditorToolbarCommands>
 {
 
 	public:
@@ -27,5 +27,16 @@ class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands : public TCommands<FDAWEd
 
 		virtual void RegisterCommands() override;
 	
+};
+
+class BK_EDITORUTILITIES_API FM2SoundNodeCommands final : public TCommands<FM2SoundNodeCommands>
+{
+public:
+	FM2SoundNodeCommands() : TCommands<FM2SoundNodeCommands>("M2SoundNode", INVTEXT("M2SoundNode"), NAME_None, TEXT("EditorStyle")) {};
+
+	TSharedPtr<FUICommandInfo> SetPinAsColorSource;
+
+	virtual void RegisterCommands() override;
+
 };
 

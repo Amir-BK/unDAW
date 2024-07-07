@@ -51,6 +51,8 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
+	bool IsPinColorSource() const { return true; }
+
 	UPROPERTY()
 	bool bShowAdvanced = false;
 

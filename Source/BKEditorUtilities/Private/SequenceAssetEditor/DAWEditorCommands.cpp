@@ -3,9 +3,9 @@
 
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 
-#define LOCTEXT_NAMESPACE "unDAWEditorCommands"
+#define LOCTEXT_NAMESPACE "BKEditorUtilitiesModule"
 
-inline void FDAWEditorToolbarCommands::RegisterCommands()
+void FDAWEditorToolbarCommands::RegisterCommands()
 {
 	UI_COMMAND(TransportPlay, "Play", "Play", EUserInterfaceActionType::Button, FInputChord(EKeys::SpaceBar));
 	UI_COMMAND(TransportStop, "Stop", "Stop", EUserInterfaceActionType::Button, FInputChord(EKeys::SpaceBar, EModifierKey::Control));
@@ -14,6 +14,11 @@ inline void FDAWEditorToolbarCommands::RegisterCommands()
 	UI_COMMAND(TogglePianoTabView, "Toggle Piano Tab View", "Toggle Piano Tab View", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::P));
 };
 
+
+
+void FM2SoundNodeCommands::RegisterCommands()
+{
+	UI_COMMAND(SetPinAsColorSource, "Set Pin As Color Source", "Set Pin As Color Source", EUserInterfaceActionType::ToggleButton, FInputChord());
+};
+
 #undef LOCTEXT_NAMESPACE
-
-

@@ -105,7 +105,9 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		if (FromPin->SubPins.Num() > 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: FromPin has subpins"));
-			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
+			auto TestAction = MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>();
+			TestAction->UpdateSearchData(FText::FromString("Test"), INVTEXT("Test"), INVTEXT("Test"), INVTEXT("Test"));
+			ContextMenuBuilder.AddAction(TestAction);
 		}
 		
 		if (FromPin->PinType.PinCategory == "Track-Midi")
@@ -304,6 +306,8 @@ void UM2SoundGraph::InitializeGraph()
 {
 	Nodes.Empty();
 	VertexToNodeMap.Empty();
+
+	CommandList = MakeShared<FUICommandList>();
 
 	for (const auto& Vertex : GetSequencerData()->GetVertexes())
 	{

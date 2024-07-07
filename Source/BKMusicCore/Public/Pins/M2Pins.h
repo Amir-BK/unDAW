@@ -90,7 +90,7 @@ namespace M2Sound
  */
 //using namespace M2Sound::Pins;
 
-UCLASS()
+UCLASS(DefaultToInstanced)
 class BKMUSICCORE_API UM2Pins : public UObject
 {
 	GENERATED_BODY()

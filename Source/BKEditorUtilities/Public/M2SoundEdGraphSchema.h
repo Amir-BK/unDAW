@@ -47,6 +47,8 @@ public:
 
 	void InitializeGraph() override;
 
+	TSharedPtr<FUICommandList> CommandList;
+
 	template<class T>
 	T* CreateDefaultNodeForVertex(UM2SoundVertex* Vertex, const int ColumnPosition)
 	{
