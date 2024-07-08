@@ -146,13 +146,28 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
 
-		for (auto Input : DummyInputs)
+		for(const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
 		{
-			auto newAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
-			newAction->UpdateSearchData(FText::FromString(Input),INVTEXT("Midi Track"), INVTEXT("Midi Inputs"), INVTEXT("Midi"));
+			FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
+			FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
+			
 
-			ContextMenuBuilder.AddAction(newAction);
+			auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+			NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
+			
+			
+			ContextMenuBuilder.AddAction(NewAction);
+
 		}
+
+
+		//for (auto Input : DummyInputs)
+		//{
+		//	auto newAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+		//	newAction->UpdateSearchData(FText::FromString(Input),INVTEXT("Midi Track"), INVTEXT("Midi Inputs"), INVTEXT("Midi"));
+
+		//	ContextMenuBuilder.AddAction(newAction);
+		//}
 	}
 }
 
@@ -284,7 +299,7 @@ void UM2SoundGraph::InitializeGraph()
 			CreateDefaultNodeForVertex<UM2SoundGraphAudioOutputNode>(Vertex, FPlacementDefaults::OutputsColumnPosition);
 		}
 
-		if(Vertex->IsA<UM2SoundBuilderInputHandleNode>())
+		if(Vertex->IsA<UM2SoundBuilderInputHandleVertex>())
 		{
 			auto InNode = CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
 			
@@ -400,23 +415,14 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* P
 	const auto& TrackMetadata = SequencerData->M2TrackMetadata;
 	const auto& SearchString = GetMenuDescription().ToString();
 
-	auto MyMetadata = TrackMetadata.IndexOfByPredicate([&SearchString](const FTrackDisplayOptions& Metadata)
-		{
-			return Metadata.trackName == SearchString;
-		});
-
-	if(MyMetadata != INDEX_NONE)
-	{
-		Node->TrackId = MyMetadata;
-		Node->Name = FName(TrackMetadata[MyMetadata].trackName);
-	}
 
 	//auto NewInputVertex = NewObject<UM2SoundMidiInputVertex>(Node->GetSequencerData(), NAME_None, RF_Transactional);
 		
-	auto InVertex 	= FVertexCreator::CreateVertex<UM2SoundMidiInputVertex>(Node->GetSequencerData());
+	auto InVertex 	= FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(Node->GetSequencerData());
 	Node->Vertex = InVertex;
 	Node->Vertex->TrackId = Node->TrackId;
-	InVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata[MyMetadata].TrackIndexInParentMidi, TrackMetadata[MyMetadata].ChannelIndexInParentMidi);
+	InVertex->MemberName = FName(*SearchString);
+	//InVertex->TrackPrefix = FString::Printf(TEXT("Tr%d_Ch%d."), TrackMetadata[MyMetadata].TrackIndexInParentMidi, TrackMetadata[MyMetadata].ChannelIndexInParentMidi);
 	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 

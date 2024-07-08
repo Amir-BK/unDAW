@@ -465,20 +465,20 @@ void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
 }
 
 
-void UM2SoundBuilderInputHandleNode::BuildVertex()
+void UM2SoundBuilderInputHandleVertex::BuildVertex()
 {
 
 
 	TArray<FMetaSoundBuilderNodeOutputHandle> MappedOutput;
-	auto MidiTrackName = SequencerData->GetTracksDisplayOptions(TrackId).trackName + ".MidiStream";
-	MappedOutput.Add(SequencerData->CoreNodes.MemberInputMap[FName(MidiTrackName)].MemberInputOutputHandle);
+	//auto MidiTrackName = SequencerData->GetTracksDisplayOptions(TrackId).trackName + ".MidiStream";
+	MappedOutput.Add(SequencerData->CoreNodes.MemberInputMap[FName(MemberName)].MemberInputOutputHandle);
 
 
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
 	//OutputM2SoundPins.Empty();
 
-	UM2MetasoundLiteralPin* NewOutputPin = CreateOutputPin<UM2MetasoundLiteralPin>(SequencerData->CoreNodes.MemberInputMap[FName(MidiTrackName)].MemberInputOutputHandle);
+	//UM2MetasoundLiteralPin* NewOutputPin = CreateOutputPin<UM2MetasoundLiteralPin>(SequencerData->CoreNodes.MemberInputMap[FName(MidiTrackName)].MemberInputOutputHandle);
 	//NewOutputPin->SetHandle(MappedOutput.OutputHandle);
 	//FMetaSoundBuilderNodeOutputHandle Handle = NewOutputPin->GetHandle<FMetaSoundBuilderNodeOutputHandle>();
 	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Handle);

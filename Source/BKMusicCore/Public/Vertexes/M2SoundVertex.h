@@ -393,13 +393,17 @@ public:
 // by our paradigm we probably don't need to implement 'update connections' for these, but it might be useful for the 'expose to outputs' function. 
 UCLASS()
 
-class BKMUSICCORE_API UM2SoundBuilderInputHandleNode : public UM2SoundVertex
+class BKMUSICCORE_API UM2SoundBuilderInputHandleVertex : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
 	//virtual FString GetUniqueParameterName() = ;
+	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+
 
 public:
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	FName MemberName; 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "M2Sound")
 	bool bOutputToBlueprints = true;
 
@@ -410,10 +414,12 @@ public:
 
 	void BuildVertex() override;
 
+	//anvoid InitFromMemberName(FName InMemberName);
+
 };
 
 UCLASS()
-class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandleNode
+class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandleVertex
 {
 	GENERATED_BODY()
 

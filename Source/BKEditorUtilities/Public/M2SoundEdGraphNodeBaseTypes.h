@@ -262,7 +262,7 @@ public:
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Track In: %s"), *Name.ToString())); }
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(Cast<UM2SoundBuilderInputHandleVertex>(Vertex)->MemberName.ToString()); }
 };
 
 UCLASS()

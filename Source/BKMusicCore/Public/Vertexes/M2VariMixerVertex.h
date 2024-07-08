@@ -54,6 +54,8 @@ public:
 
 		BuilderResults.Add("MixerNodeOutputs", BuildResult);
 
+		PopulatePinsFromMetasoundData(InPins, OutPins);
+
 		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
 		if(VertexToChannelMap.Num() > 0)
