@@ -290,18 +290,42 @@ public:
 
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
-struct FMappableBuilderNodeOutput
+struct FMemberInput
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	FName OutputName;
+	//will also serve as the audio parameter name if you want to use it as such
+	UPROPERTY(VisibleAnywhere)
+	FName Name;
 
+	//the data type of the underlying metasound literal parameter
+	UPROPERTY(VisibleAnywhere)
+	FName DataType;
+
+	//this is the output handle for the graph input vertex, needs to be assigned when the vertex is created
 	UPROPERTY()
-	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+	FMetaSoundBuilderNodeOutputHandle MemberInputOutputHandle;
+
+	//A little confusing but this is the input handle for the graph output vertex, if assigned
+	UPROPERTY()
+	FMetaSoundBuilderNodeInputHandle GraphOutputInputHandle;
 
 	UPROPERTY()
 	bool bGraphOutput = false;
+
+	// when rebuilding the graph all member inputs are marked as stale before rebuilding, if after rebuilding they are still stale, they will be removed
+	UPROPERTY()
+	bool bIsStale = true;
+
+	void SetMemberInputOutputHandle(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName, FName InDataType)
+	{
+		MemberInputOutputHandle = InHandle;
+		Name = InName;
+		DataType = InDataType;
+		bIsStale = false;
+	}
+
+
 };
 
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
@@ -310,6 +334,12 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 {
 	
 	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FMemberInput> MemberInputs;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<FName, FMemberInput> MemberInputMap;
 
 	UPROPERTY()
 	bool bIsLooping = false;
@@ -348,9 +378,15 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
 	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
 
+	void MarkAllMemberInputsStale();
+
+	void RemoveAllStaleInputs();
+
+	void CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName = NAME_None);
+
 	//Might be nicer user experience to categorize outputs by data types, for now this will only contain MIDI outputs
 	UPROPERTY()
-	TMap<int32, FMappableBuilderNodeOutput> MappedOutputs;
+	TMap<int32, FMemberInput> MappedOutputs;
 
 protected:
 	friend class UDAWSequencerData;
@@ -585,7 +621,7 @@ public:
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void ReinitGraph();
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FM2SoundCoreNodesComposite CoreNodes;
 
 	UPROPERTY(BlueprintAssignable, Category = "unDAW")
