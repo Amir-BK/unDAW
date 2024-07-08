@@ -276,7 +276,7 @@ void UDAWSequencerData::ReinitGraph()
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
 	Vertexes.Add(Vertex);
-
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
 	//update builder, in the future we may want to be a little bit more conservative with this
 	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
 	Vertex->SequencerData = this;

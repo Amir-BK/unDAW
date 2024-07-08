@@ -70,12 +70,12 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 	if (!Pin) return;
 	if (!Vertex) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s"), *Pin->GetName());
-
 	auto PinName = Pin->GetName();
 	auto PinLinkedTo = Pin->LinkedTo.Num();
 	auto PinDirection = Pin->Direction == EGPD_Input ? FString(TEXT("Input")) : FString(TEXT("Output"));
-	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged, %s, %s, %d"), *PinName, *PinDirection, PinLinkedTo);
+	FString OwnerName;
+	Pin->GetOwningNode()->GetName(OwnerName);
+	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConnectionListChanged %s, %s, %s, %d"),*OwnerName, *PinName, *PinDirection, PinLinkedTo);
 
 	//if we're either of the track input pins, we need to check if we have a connection
 	if (Pin->Direction == EGPD_Input)
@@ -301,12 +301,44 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 		//if(Pin->Direction == EGPD_Output) continue;
 		EEdGraphPinDirection PinReverseDirection = Pin->Direction == EGPD_Input ? EGPD_Output : EGPD_Input;
 		//check if Pin underlying M2Pins has a connection, if so we need to find the node it's connected to and connect it
-		UM2Pins* UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName()).Get();
-		if(!UnderlyingPin) UnderlyingPin = Vertex->OutputM2SoundPins.FindRef(Pin->GetFName()).Get();
+		UM2Pins* UnderlyingPin;
+			
+		if(Pin->Direction == EGPD_Input)
+		{
+			UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName()).Get();
+		}
+		else
+		{
+			UnderlyingPin = Vertex->OutputM2SoundPins.FindRef(Pin->GetFName()).Get();
+		}
+
 		if(!UnderlyingPin) continue;
+
+		//bool DoDirectionsMatch = [&]() -> bool
+		//	{
+		//		if (Pin->Direction == EGPD_Input)
+		//		{
+		//			return UnderlyingPin->Direction == M2Sound::Pins::PinDirection::Input;
+		//		}
+		//		else
+		//		{
+		//			return UnderlyingPin->Direction == M2Sound::Pins::PinDirection::Output;
+		//		}
+		//	}();
+
+		//if (!DoDirectionsMatch)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("Directions don't match, this means we matched an input pin with an output pin, the bug is because we have two 'audio tracks' %s"), *GetName());
+		//	continue;
+		//}
 
 		if(auto LinkedToM2Pin = UnderlyingPin->LinkedPin)
 		{
+			if (LinkedToM2Pin->ParentVertex == Vertex)
+			{
+				//We are trying to connect to ourselves, first, why? second, this is not allowed, will cause cycle in the graph
+				UE_LOG(LogTemp, Warning, TEXT("Trying to connect to self, %s"), *GetName());
+			}
 			//find the node that the underlying pin is connected to
 			//find the pin that the underlying pin is connected to
 			//connect the pins
