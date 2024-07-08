@@ -476,6 +476,13 @@ public:
 		{
 			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);
 			bool bConnectRight = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamR, InOutput->AudioStreamR);
+
+			if(InInput->ParentVertex == InOutput->ParentVertex)
+			{
+				UE_LOG(unDAWDataLogs, Warning, TEXT("Can't connect audio tracks to the same vertex!"));
+				return false;
+			}
+
 			if (bConnectLeft && bConnectRight)
 			{
 				InInput->LinkedPin = InOutput;

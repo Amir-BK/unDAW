@@ -86,19 +86,19 @@ public:
 
 	void UpdateDownstreamTrackAssignment(int NewTrackId) {
 		AssignedTrackId = NewTrackId;
-		for (UEdGraphPin* Pin : Pins)
-		{
-			if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
-			{
-				for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
-				{
-					if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
-					{
-						LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
-					}
-				}
-			}
-		}
+		//for (UEdGraphPin* Pin : Pins)
+		//{
+		//	if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
+		//	{
+		//		for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
+		//		{
+		//			if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
+		//			{
+		//				LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
+		//			}
+		//		}
+		//	}
+		//}
 
 		//NodeConnectionListChanged();	
 	}
@@ -299,6 +299,8 @@ class BK_EDITORUTILITIES_API UM2SoundAudioInsertNode : public UM2SoundPatchConta
 	GENERATED_BODY()
 
 public:
+
+	UM2SoundAudioInsertNode() { bShowAdvanced = true; }
 
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 

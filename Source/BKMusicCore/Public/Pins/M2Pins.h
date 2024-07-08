@@ -118,6 +118,7 @@ protected:
 
 	friend class UM2SoundVertex;
 	friend class UM2SoundEdGraphNode;
+	friend class UDAWSequencerData;
 
 	UPROPERTY(VisibleAnywhere)
 	UM2SoundVertex* ParentVertex;

@@ -349,6 +349,8 @@ void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChang
 
 void UM2SoundAudioOutput::BuildVertex()
 {
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Building Audio Output Vertex"))
+	
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
 	BuilderResults.Empty();

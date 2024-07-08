@@ -43,8 +43,6 @@ public:
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
 
-	void AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2SoundEdGraphNode& B);
-
 	void InitializeGraph() override;
 
 	TSharedPtr<FUICommandList> CommandList;
@@ -62,7 +60,7 @@ public:
 
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
-		Node->SyncVertexConnections();
+		//Node->SyncVertexConnections();
 
 		return Node;
 	}
@@ -83,7 +81,7 @@ public:
 		// we need to think about the node creation process and how to handle the vertex to node mapping
 
 		UE_LOG(LogTemp, Warning, TEXT("Vertex added"));
-		NotifyGraphChanged(); 
+		//NotifyGraphChanged(); 
 	}
 
 	UFUNCTION()
