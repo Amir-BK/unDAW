@@ -110,20 +110,34 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			ContextMenuBuilder.AddAction(TestAction);
 		}
 		
-		if (FromPin->PinType.PinCategory == "Track-Midi")
+		if (FromPin->PinType.PinSubCategory == "MidiStream")
 		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
-			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 
+		}
 
-			for(auto Input : DummyInputs)
+		if (FromPin->PinType.PinCategory == "MetasoundLiteral")
+		{
+			for (const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
 			{
-				auto newAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
-				newAction->UpdateSearchData(FText::FromString(Input), INVTEXT("Midi Track"), INVTEXT("Midi Inputs"), INVTEXT("Midi"));
-				
-				ContextMenuBuilder.AddAction(newAction);
-			}
+				if(FromPin->PinType.PinSubCategory != Input.DataType)
+				{
+					continue;
+				}
 
+				
+				
+				FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
+				FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
+
+
+				auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+				NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
+
+
+				ContextMenuBuilder.AddAction(NewAction);
+
+			}
 		}
 
 		if (FromPin->PinType.PinCategory == "Track-Audio")

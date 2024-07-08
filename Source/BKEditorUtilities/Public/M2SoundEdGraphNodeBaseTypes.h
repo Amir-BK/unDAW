@@ -20,7 +20,7 @@
 
 DECLARE_DELEGATE(FOnNodeUpdated);
 
-
+#pragma region M2SoundEdGraphNodes
 
 UCLASS()
 class BK_EDITORUTILITIES_API UM2SoundEdGraphNode : public UEdGraphNode
@@ -44,6 +44,9 @@ public:
 
 	const void SplitPin(const UEdGraphPin*  Pin) const;
 
+	
+	void SetPinAsColorSource(UM2Pins* M2Pin);
+
 	//void SyncToVertex() const;
 
 	void GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const override;
@@ -51,7 +54,10 @@ public:
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
 
-	bool IsPinColorSource() const { return true; }
+	UEdGraphPin* ColorSourcePin = nullptr;
+
+	//UFUNCTION()
+	bool IsPinColorSource(const UEdGraphPin* Pin) const { return Pin == ColorSourcePin; }
 
 	UPROPERTY()
 	bool bShowAdvanced = false;
@@ -339,3 +345,26 @@ public:
 
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
 };
+
+#pragma endregion M2SoundEdGraphNodes
+
+#pragma region M2SoundEdGraphNodeActions
+
+
+USTRUCT()
+struct FM2SoundGraphSelectPinAsColorSourceAction : public FEdGraphSchemaAction
+{
+public:
+	GENERATED_BODY()
+
+	//FM2SoundGraphSelectPinAsColorSourceAction() : FEdGraphSchemaAction(INVTEXT(""), INVTEXT("Set as color source"), INVTEXT(""), INVTEXT("M2Data"), 0, 0) {}
+	void PrintTestString() { UE_LOG(LogTemp, Warning, TEXT("Test String")); }
+	//UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
+
+
+};
+
+
+
+
+#pragma endregion M2SoundEdGraphNodeActions

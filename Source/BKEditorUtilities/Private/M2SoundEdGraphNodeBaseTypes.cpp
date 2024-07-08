@@ -197,10 +197,21 @@ const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
 
 }
 
+inline void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin) 
+{
+	auto CurrentColorSourcePin = ColorSourcePin;
+	ColorSourcePin = *Pins.FindByPredicate([M2Pin](UEdGraphPin* Pin) { return Pin->PinType.PinSubCategoryObject == M2Pin; });
+
+	if(CurrentColorSourcePin == ColorSourcePin)
+	{
+		ColorSourcePin = nullptr;
+	}
+}
+
 void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const
 {
 	FM2SoundNodeCommands::Get().SetPinAsColorSource;
-	FUICommandList CommandList;
+	auto CommandList = MakeShared< FUICommandList>();
 	//GetGraph()->
 
 	if (Context->Pin)
@@ -216,15 +227,20 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 			Section.AddMenuEntry("SplitPin", FText::FromString("Split Pin"), FText::FromString("Split Pin"), FSlateIcon(), Action);
 		}
 
-		if(Context->Pin->Direction == EGPD_Input)
+		if(Context->Pin->Direction == EGPD_Input && !IsA<UM2SoundVariMixerNode>())
 		{
 			FToolMenuSection& Section = Menu->AddSection("M2SoundEdGraphNode", FText::FromString("M2SoundEdGraphNode"));
 			//FM2SoundNodeCommands::Get().SetPinAsColorSource.Get()-B
-			CommandList.MapAction(FM2SoundNodeCommands::Get().SetPinAsColorSource, FExecuteAction::CreateLambda([this, Context]() { SplitPin(Context->Pin); })
-			, FCanExecuteAction(), FIsActionChecked::CreateLambda([this, Context]() { return true; }));
-			//FM2SoundNodeCommands::Get().SetPinAsColorSource
-			//MenuBuilder.AddMenuEntry(Label, ToolTipText, FSlateIcon(), Action);
-			Section.AddMenuEntry(FM2SoundNodeCommands::Get().SetPinAsColorSource);
+			auto SetPinAsColorSourceAction = MakeShared<FM2SoundGraphSelectPinAsColorSourceAction>();
+			//SetPinAsColorSourceAction->U
+			//SetPinAsColorSourceAction->
+			CommandList->MapAction(FM2SoundNodeCommands::Get().SetPinAsColorSource, FExecuteAction::CreateLambda([Context, SetPinAsColorSourceAction]() {
+								 Cast<UM2SoundEdGraphNode>(Context->Pin->GetOwningNode())->SetPinAsColorSource(Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject))  ; })
+			, FCanExecuteAction(), FIsActionChecked::CreateLambda([this, Context]() { return IsPinColorSource(Context->Pin); }));
+	
+			//Section.AddMenuEntry(FM2SoundNodeCommands::Get().SetPinAsColorSource);
+			Section.AddMenuEntryWithCommandList(FM2SoundNodeCommands::Get().SetPinAsColorSource, CommandList);
+			//Section.AddMenuEntry(SetPinAsColorSourceAction);
 		}
 	}
 }
@@ -487,3 +503,11 @@ TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
 {
 	return SNew(SGraphNodeKnot, this);
 }
+
+//UEdGraphNode* FM2SoundGraphSelectPinAsColorSourceAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode)
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: Set as color source!!?!"));
+//	
+//	
+//	return nullptr;
+//}

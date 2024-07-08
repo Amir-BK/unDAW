@@ -18,7 +18,7 @@ void FDAWEditorToolbarCommands::RegisterCommands()
 
 void FM2SoundNodeCommands::RegisterCommands()
 {
-	UI_COMMAND(SetPinAsColorSource, "Set Pin As Color Source", "Set Pin As Color Source", EUserInterfaceActionType::ToggleButton, FInputChord());
+	UI_COMMAND(SetPinAsColorSource, "Color Source", "Color Source", EUserInterfaceActionType::ToggleButton, FInputChord());
 };
 
 #undef LOCTEXT_NAMESPACE
