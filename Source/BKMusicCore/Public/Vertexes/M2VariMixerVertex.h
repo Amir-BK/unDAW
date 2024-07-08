@@ -53,8 +53,12 @@ public:
 		OutPins = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
 
 		BuilderResults.Add("MixerNodeOutputs", BuildResult);
+		auto* AudioTrackPin = CreateAudioTrackOutputPin();
+		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
+		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
 
-		PopulatePinsFromMetasoundData(InPins, OutPins);
+		OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
+		//PopulatePinsFromMetasoundData(InPins, OutPins);
 
 		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
