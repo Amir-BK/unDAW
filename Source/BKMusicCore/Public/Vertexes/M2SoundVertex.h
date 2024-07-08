@@ -109,6 +109,7 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	bool bIsRebuilding = false; //we can use this one to know when we also need to update all connected pins rather than just the input as we do when building the graph
 
 	void PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles);
 

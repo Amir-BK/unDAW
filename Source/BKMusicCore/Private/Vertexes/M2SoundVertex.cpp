@@ -213,7 +213,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
 	BuildVertex();
-	CollectParamsForAutoConnect();
+	//CollectParamsForAutoConnect();
 	UpdateConnections();
 
 	//need to inform downstream vertexes to reconnect to our output
@@ -278,7 +278,6 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 }
 
-#if WITH_EDITOR
 
 void UM2SoundVertex::UpdateConnections()
 {
@@ -300,7 +299,30 @@ void UM2SoundVertex::UpdateConnections()
 			
 		}
 	}
+
+	if (!bIsRebuilding) return;
+
+	for (const auto& [Name, Pin] : OutputM2SoundPins)
+	{
+		if (Pin->LinkedPin)
+		{
+			bool result;
+			if (auto* AsAudioTrack = Cast<UM2AudioTrackPin>(Pin))
+			{
+				result = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(Cast<UM2AudioTrackPin>(Pin->LinkedPin), AsAudioTrack);
+			}
+			else {
+				result = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(Cast<UM2MetasoundLiteralPin>(Pin->LinkedPin), Cast<UM2MetasoundLiteralPin>(Pin));
+			}
+
+			Pin->ConnectionResult = result ? EMetaSoundBuilderResult::Succeeded : EMetaSoundBuilderResult::Failed;
+		}
+	}
+
+	bIsRebuilding = false;
+
 }
+
 
 void UM2SoundVertex::DestroyVertexInternal()
 {
@@ -313,6 +335,8 @@ void UM2SoundVertex::DestroyVertexInternal()
 
 	DestroyVertex();
 }
+
+#if WITH_EDITOR
 
 void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -369,93 +393,14 @@ void UM2SoundAudioOutput::BuildVertex()
 	MappedInputs.Add(AudioOutput.AudioRightOutputInputHandle);
 	PopulatePinsFromMetasoundData(MappedInputs, {});
 
-	
-	//auto* InPin = CreateAudioTrackInputPin();
-	//InPin->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AudioOutput.AudioLeftOutputInputHandle);
-	//InPin->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AudioOutput.AudioRightOutputInputHandle);
-	//InputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, InPin);
-	
 
-	//FName OutDataType;
-	//auto NewGainInput = BuilderContext->AddGraphInputNode(GainParameterName, TEXT("float"), BuilderSubsystems->CreateFloatMetaSoundLiteral(1.f, OutDataType), BuildResult);
-	//OutPins.Add(NewGainInput);
-	//BuilderContext->ConnectNodes(NewGainInput, AudioOutput.GainParameterInputHandle, BuildResult);
-	//BuilderResults.Add(FName(TEXT("Assigned Gain Param")), BuildResult);
 
 }
 
-//void UM2SoundAudioOutput::UpdateConnections()
-//{
-	//return;
-	//
-	////if no main input, do nothing
-	//BuilderConnectionResults.Empty();
-	//if (!MainInput)
-	//{
-	//	//need to disconnect our own inputs
-	//	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	//	auto& BuilderContext = SequencerData->BuilderContext;
-
-	//	if(!BuilderContext)
-	//	{
-	//		UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Builder Context is null!"))
-	//		return;
-	//	}
-
-	//	EMetaSoundBuilderResult BuildResult;
-	//	BuilderContext->DisconnectNodeInput(AudioOutput.AudioLeftOutputInputHandle, BuildResult);
-	//	BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream L")), BuildResult);
-	//	BuilderContext->DisconnectNodeInput(AudioOutput.AudioRightOutputInputHandle, BuildResult);
-	//	BuilderConnectionResults.Add(FName(TEXT("Disconnect Audio Stream R")), BuildResult);
-	//			
-	//	UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Main Input is null!"))
-	//	return;
-	//}
-
-	////otherwise, well, we have an AssignedOutput, we need to find the audio streams of the upstream vertex, connect them and that's it, show me what you got co-pilot
-
-	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	//auto& BuilderContext = SequencerData->BuilderContext;
-	//EMetaSoundBuilderResult BuildResult;
-
-	////find the audio stream outputs of the main input using the AutoConnectOutPins
-	//auto UpStreamLeftAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamL);
-	//auto UpStreamRightAudio = MainInput->AutoConnectOutPins.Find(EVertexAutoConnectionPinCategory::AudioStreamR);
-
-	////connect the audio streams to the audio output node
-	//bool Success = false;
-	//if (UpStreamLeftAudio)
-	//{
-	//	BuilderContext->ConnectNodes(*UpStreamLeftAudio, AudioOutput.AudioLeftOutputInputHandle, BuildResult);
-	//	BuilderResults.Add(FName(TEXT("Connect Audio Stream L to Audio Output")), BuildResult);
-	//	Success = ResultToBool(BuildResult);
-	//}
-
-	//if (UpStreamRightAudio)
-	//{
-	//	BuilderContext->ConnectNodes(*UpStreamRightAudio, AudioOutput.AudioRightOutputInputHandle, BuildResult);
-	//	BuilderResults.Add(FName(TEXT("Connect Audio Stream R to Audio Output")), BuildResult);
-	//	Success = ResultToBool(BuildResult) && Success;
-	//}
-
-	//if(Success)
-	//{
-	//	BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Success")), EMetaSoundBuilderResult::Succeeded);
-	//}
-	//else
-	//{
-	//	BuilderConnectionResults.Add(FName(TEXT("Audio Output Connection Failed")), EMetaSoundBuilderResult::Failed);
-	//}
-
-//
-//}
 
 void UM2SoundAudioOutput::DestroyVertex()
 {
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Destroying Audio Output Vertex"))
-	GetSequencerData()->CoreNodes.ReleaseMasterMixerAudioOutput(AudioOutput);
 
-	GetSequencerData()->RemoveVertex(this);
 }
 
 void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
@@ -476,14 +421,6 @@ void UM2SoundBuilderInputHandleVertex::BuildVertex()
 
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
-	//OutputM2SoundPins.Empty();
-
-	//UM2MetasoundLiteralPin* NewOutputPin = CreateOutputPin<UM2MetasoundLiteralPin>(SequencerData->CoreNodes.MemberInputMap[FName(MidiTrackName)].MemberInputOutputHandle);
-	//NewOutputPin->SetHandle(MappedOutput.OutputHandle);
-	//FMetaSoundBuilderNodeOutputHandle Handle = NewOutputPin->GetHandle<FMetaSoundBuilderNodeOutputHandle>();
-	//AutoConnectOutPins.Add(EVertexAutoConnectionPinCategory::MidiTrackStream, Handle);
-
-
 }
 
 
@@ -502,6 +439,7 @@ void UM2SoundPatch::BuildVertex()
 		BuilderContext->RemoveNode(NodeHandle, BuildResult);
 		//BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
 		bIsRebuildingExistingNode = true;
+		bIsRebuilding = true;
 	}
 
 
