@@ -62,6 +62,15 @@ public:
 
 		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
+		int i = 0;
+		for(auto& Channel : MixerChannels)
+		{
+			auto* AutoNewInput = CreateAudioTrackInputPin();
+			AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
+			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
+			InputM2SoundPins.Add(FName(FString::Printf(TEXT("Channel%d"), i++)), AutoNewInput);
+		}
+
 		if(VertexToChannelMap.Num() > 0)
 		{
 			TMap<UM2SoundVertex*, FAssignableAudioOutput> NewMap;
@@ -82,31 +91,12 @@ public:
 
 
 
-	void CollectParamsForAutoConnect() override
-	{
-
-	}
-
 	FLinearColor GetChannelColor(uint8 ChannelIndex)
 	{
 		return GetSequencerData()->GetTracksDisplayOptions(ChannelIndex).trackColor;
 	}
 
-	void UpdateConnections() override
-	{
-		//EMetaSoundBuilderResult BuildResult;
-		UE_LOG(LogTemp, Warning, TEXT("Updating Connections for Mixer Vertex"));
-		for (auto& [Vertex, Channel] : VertexToChannelMap)
-		{
-			//auto InLeft = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamL];
-			//auto InRight = Vertex->AutoConnectOutPins[EVertexAutoConnectionPinCategory::AudioStreamR];
 
-			//BuilderContext->ConnectNodes(InLeft, Channel.AudioLeftOutputInputHandle, BuildResult);
-			//BuilderResults.Add("ConnectLeft", BuildResult);
-			//BuilderContext->ConnectNodes(InRight, Channel.AudioRightOutputInputHandle, BuildResult);
-			//BuilderResults.Add("ConnectRight", BuildResult);
-		}
-	}
 
 	FAssignableAudioOutput CreateChannel()
 	{

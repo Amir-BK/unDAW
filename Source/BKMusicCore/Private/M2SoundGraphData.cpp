@@ -969,6 +969,9 @@ void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()
 
 	auto MainMidiClockOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Clock")), BuildResult);
 	CreateOrUpdateMemberInput(MainMidiClockOutput);
+
+	auto MainTransportOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("Transport")), BuildResult);
+	CreateOrUpdateMemberInput(MainTransportOutput);
 	
 	//MainMidiStreamOutputHandle.OutputHandle = MainMidiStreamOutput;
 	//MainMidiStreamOutputHandle.OutputName = FName(TEXT("Main Midi Stream"));
