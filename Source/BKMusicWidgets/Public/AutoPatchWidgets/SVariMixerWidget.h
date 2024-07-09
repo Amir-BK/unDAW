@@ -34,8 +34,27 @@ class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
 		{
 			return 0.0f;
 		}
-		return MixerVertex->MixerChannels[ChannelIndex].GainValue;
+		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->GainValue;
 	}
+
+	ECheckBoxState GetMuteCheckBoxState() const
+	{
+		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
+		{
+			return ECheckBoxState::Unchecked;
+		}
+		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bMute ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+	};
+
+	ECheckBoxState GetSoloCheckBoxState() const
+	{
+		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
+		{
+			return ECheckBoxState::Unchecked;
+		}
+		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+	};	
+
 
 	TSharedPtr<SCheckBox> MuteCheckBox;
 	TSharedPtr<SCheckBox> SoloCheckBox;

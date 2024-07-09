@@ -165,8 +165,7 @@ class BKMUSICCORE_API UM2AudioTrackPin final : public UM2Pins
 
 public:
 
-	void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) override;
-
+	
 	//convenience parameter for nodes that may accept more than one audio track, such as the vari mixer
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int ChannelIndex = INDEX_NONE;
@@ -175,6 +174,9 @@ public:
 	//perhaps I'll make more generic use of this in the future with crossfade nodes and other smaller mixer nodes
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float GainValue = 1.0f;
+
+	bool bMute = false;
+	bool bSolo = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UM2MetasoundLiteralPin* AudioStreamL;

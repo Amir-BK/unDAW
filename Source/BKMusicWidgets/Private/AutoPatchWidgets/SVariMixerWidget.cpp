@@ -77,7 +77,9 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex
 
 						[
 							SAssignNew(MuteCheckBox, SCheckBox)
-								
+								.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelMuteState(ChannelIndex, NewState); })
+								.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
+								.ToolTipText(FText::FromString("Mute"))
 						]
 					
 						
@@ -95,6 +97,10 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex
 						
 						[
 							SAssignNew(SoloCheckBox, SCheckBox)
+								.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
+								.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
+								.ToolTipText(FText::FromString("Solo"))
+
 						]
 
 
