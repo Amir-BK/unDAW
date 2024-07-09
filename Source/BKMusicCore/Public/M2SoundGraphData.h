@@ -73,6 +73,9 @@ struct FAssignableAudioOutput
 
 	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle GainParameterInputHandle;
+
+	UPROPERTY(VisibleAnywhere)
+	float GainValue = 1.0f;
 };
 
 struct FM2VertexBuilderMessages

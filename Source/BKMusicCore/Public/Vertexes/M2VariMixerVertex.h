@@ -33,6 +33,18 @@ public:
 
 	//TArray<FAssignableAudioOutput*> FreeChannels;
 
+	UFUNCTION()
+	void UpdateGainParameter(int ChannelIndex, float newGain)
+	{
+		FName FloatName;
+		EMetaSoundBuilderResult BuildResult;
+		MixerChannels[ChannelIndex].GainValue = newGain;
+		auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(MixerChannels[ChannelIndex].GainValue, FloatName);
+		BuilderContext->SetNodeInputDefault(MixerChannels[ChannelIndex].GainParameterInputHandle, NewFloatLiteral, BuildResult);
+		//garbage code...
+		Cast<UM2AudioTrackPin>(InputM2SoundPins.FindRef(FName(FString::Printf(TEXT("Channel %d"), ChannelIndex))))->GainValue = newGain;
+	}
+
 	void BuildVertex() override
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
@@ -76,19 +88,26 @@ public:
 		int i = 0;
 		for(auto& Channel : MixerChannels)
 		{
-			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i++));
+			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i));
 			if(InputM2SoundPins.Contains(TrackName) == false)
 			{
 				auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
+				AutoNewInput->ChannelIndex = i;
 				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
 				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
 				InputM2SoundPins.Add(TrackName, AutoNewInput);
 			}
 			else {
 				auto AutoNewInput = Cast<UM2AudioTrackPin>(InputM2SoundPins[TrackName]);
+				AutoNewInput->ChannelIndex = i; // I guess this can help avoid mixups? I don't know
 				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
 				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
+				Channel.GainValue = AutoNewInput->GainValue;
 			}
+
+			UpdateGainParameter(i, Channel.GainValue);
+
+			i++;
 
 		}
 

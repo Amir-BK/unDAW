@@ -167,6 +167,13 @@ public:
 
 	void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) override;
 
+	//convenience parameter for nodes that may accept more than one audio track, such as the vari mixer
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int ChannelIndex = INDEX_NONE;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float GainValue = 1.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UM2MetasoundLiteralPin* AudioStreamL;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

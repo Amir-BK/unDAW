@@ -28,7 +28,14 @@ class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
 	TSharedPtr<SAudioSlider> VolumeSlider;
 
-
+	float GetVolumeSliderValue() const
+	{
+		if(!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
+		{
+			return 0.0f;
+		}
+		return MixerVertex->MixerChannels[ChannelIndex].GainValue;
+	}
 
 	TSharedPtr<SCheckBox> MuteCheckBox;
 	TSharedPtr<SCheckBox> SoloCheckBox;

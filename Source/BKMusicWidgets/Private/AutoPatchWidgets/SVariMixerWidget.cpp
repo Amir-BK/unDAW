@@ -50,7 +50,8 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex
 				SAssignNew(VolumeSlider, SAudioSlider)
 					.SliderBackgroundColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
 					.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
-				//	.Value(this, &SMixerChannelWidget::GetVolumeSliderValue)
+					.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
+					.OnValueChanged_Lambda([this](float NewValue) { MixerVertex->UpdateGainParameter(ChannelIndex, NewValue); })
 			]
 			//+ SVerticalBox::Slot()
 			//[
