@@ -53,11 +53,22 @@ public:
 		OutPins = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
 
 		BuilderResults.Add("MixerNodeOutputs", BuildResult);
-		auto* AudioTrackPin = CreateAudioTrackOutputPin();
-		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
-		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
 
-		OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
+		if (OutputM2SoundPins.IsEmpty())
+		{
+			auto* AudioTrackPin = CreateAudioTrackOutputPin();
+			AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
+			AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
+			OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
+		}
+		else {
+			auto AudioTrackPin = Cast<UM2AudioTrackPin>( OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
+			AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
+			AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
+		}
+
+
+		
 		//PopulatePinsFromMetasoundData(InPins, OutPins);
 
 		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
@@ -66,27 +77,36 @@ public:
 		for(auto& Channel : MixerChannels)
 		{
 			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i++));
-			auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
-			AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
-			InputM2SoundPins.Add(TrackName, AutoNewInput);
-		}
-
-		if(VertexToChannelMap.Num() > 0)
-		{
-			TMap<UM2SoundVertex*, FAssignableAudioOutput> NewMap;
-			for (auto& [Vertex, Channel] : VertexToChannelMap)
+			if(InputM2SoundPins.Contains(TrackName) == false)
 			{
-				if (MixerChannels.Num() > 0)
-				{
-					NewMap.Add(Vertex, MixerChannels.Pop());
-				}
+				auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
+				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
+				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
+				InputM2SoundPins.Add(TrackName, AutoNewInput);
 			}
-			
-			VertexToChannelMap = NewMap;
+			else {
+				auto AutoNewInput = Cast<UM2AudioTrackPin>(InputM2SoundPins[TrackName]);
+				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
+				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
+			}
 
-			//UpdateConnections();
 		}
+
+		//if(VertexToChannelMap.Num() > 0)
+		//{
+		//	TMap<UM2SoundVertex*, FAssignableAudioOutput> NewMap;
+		//	for (auto& [Vertex, Channel] : VertexToChannelMap)
+		//	{
+		//		if (MixerChannels.Num() > 0)
+		//		{
+		//			NewMap.Add(Vertex, MixerChannels.Pop());
+		//		}
+		//	}
+		//	
+		//	VertexToChannelMap = NewMap;
+
+		//	//UpdateConnections();
+		//}
 
 	}
 
