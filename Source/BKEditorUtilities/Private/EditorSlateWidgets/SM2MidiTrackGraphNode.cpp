@@ -18,7 +18,7 @@ void SM2MidiTrackGraphNode::Construct(const FArguments& InArgs, UEdGraphNode* In
 }
 TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 {
-	UM2SoundMidiInputVertex* AsInputVertex = Cast< UM2SoundMidiInputVertex>(InputNode->Vertex);
+	UM2SoundBuilderInputHandleVertex* AsInputVertex = Cast< UM2SoundBuilderInputHandleVertex>(InputNode->Vertex);
 
 	return SNew(SBorder)
 		.BorderImage(FAppStyle::GetBrush("NoBorder"))

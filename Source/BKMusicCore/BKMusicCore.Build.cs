@@ -11,6 +11,12 @@ public class BKMusicCore : ModuleRules
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
 
+        PrivateIncludePaths.AddRange(
+                        new string[] {
+                    Path.Combine(GetModuleDirectory("MetasoundFrontend"), "Private"),
+                          }
+        );
+
         PublicIncludePaths.AddRange(
             new string[] {
 				// ... add public include paths required here ...
@@ -40,7 +46,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
-                "unDAWMetaSounds","MetasoundGenerator",
+                "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
 
                 //probably don't want to depend on music widget, keep the dependency one directional from widgets -> core
 				// ... add other public dependencies that you statically link with here ...

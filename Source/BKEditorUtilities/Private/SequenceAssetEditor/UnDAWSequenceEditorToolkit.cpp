@@ -291,7 +291,7 @@ void FUnDAWSequenceEditorToolkit::TogglePianoTab()
 // still, some 'extensions' probably need to happen here so it's not a complete waste
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
-	FDAWEditorToolbarCommands::Register();
+	
 	const FDAWEditorToolbarCommands& Commands = FDAWEditorToolbarCommands::Get();
 
 	//transport

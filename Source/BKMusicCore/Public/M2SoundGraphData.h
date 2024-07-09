@@ -19,6 +19,7 @@
 
 #include "TrackPlaybackAndDisplayOptions.h"
 
+#include <Pins/M2Pins.h>
 #include "M2SoundGraphData.generated.h"
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
@@ -72,6 +73,9 @@ struct FAssignableAudioOutput
 
 	UPROPERTY(VisibleAnywhere)
 	FMetaSoundBuilderNodeInputHandle GainParameterInputHandle;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UM2AudioTrackPin> AssignedPin;
 };
 
 struct FM2VertexBuilderMessages
@@ -163,7 +167,7 @@ struct FLinkedMidiEvents
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 EndIndex = 0;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	uint8 pitch = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -178,12 +182,12 @@ struct FLinkedMidiEvents
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 ChannelId = INDEX_NONE;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	double Duration = 0.0;
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	double StartTime = 0.0;
 
-	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
 	float NoteVelocity = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
@@ -206,7 +210,7 @@ struct FLinkedNotesTrack
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
@@ -289,18 +293,42 @@ public:
 
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
-struct FMappableBuilderNodeOutput
+struct FMemberInput
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	FName OutputName;
+	//will also serve as the audio parameter name if you want to use it as such
+	UPROPERTY(VisibleAnywhere)
+	FName Name;
 
+	//the data type of the underlying metasound literal parameter
+	UPROPERTY(VisibleAnywhere)
+	FName DataType;
+
+	//this is the output handle for the graph input vertex, needs to be assigned when the vertex is created
 	UPROPERTY()
-	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+	FMetaSoundBuilderNodeOutputHandle MemberInputOutputHandle;
+
+	//A little confusing but this is the input handle for the graph output vertex, if assigned
+	UPROPERTY()
+	FMetaSoundBuilderNodeInputHandle GraphOutputInputHandle;
 
 	UPROPERTY()
 	bool bGraphOutput = false;
+
+	// when rebuilding the graph all member inputs are marked as stale before rebuilding, if after rebuilding they are still stale, they will be removed
+	UPROPERTY()
+	bool bIsStale = true;
+
+	void SetMemberInputOutputHandle(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName, FName InDataType)
+	{
+		MemberInputOutputHandle = InHandle;
+		Name = InName;
+		DataType = InDataType;
+		bIsStale = false;
+	}
+
+
 };
 
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
@@ -309,6 +337,12 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 {
 	
 	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FMemberInput> MemberInputs;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<FName, FMemberInput> MemberInputMap;
 
 	UPROPERTY()
 	bool bIsLooping = false;
@@ -347,9 +381,15 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
 	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
 
+	void MarkAllMemberInputsStale();
+
+	void RemoveAllStaleInputs();
+
+	void CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName = NAME_None);
+
 	//Might be nicer user experience to categorize outputs by data types, for now this will only contain MIDI outputs
 	UPROPERTY()
-	TMap<int32, FMappableBuilderNodeOutput> MappedOutputs;
+	TMap<int32, FMemberInput> MappedOutputs;
 
 protected:
 	friend class UDAWSequencerData;
@@ -384,6 +424,116 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
+	template<typename T>
+	bool BreakPinConnection(T* InInput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("BreakPinConnection not implemented for this type - UNSPECIALIZED"));
+		return false;
+	};
+
+	template<>
+	bool BreakPinConnection<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Literals!!!!"))
+		if (InInput)
+		{
+			EMetaSoundBuilderResult Result;
+			auto* LinkedToOutput = Cast<UM2MetasoundLiteralPin>(InInput->LinkedPin);
+			BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+
+			//turns out the builder always returns 'fail' for disconnections, so we'll have to assume it succeeded...
+			LinkedToOutput->LinkedPin = nullptr;
+			InInput->LinkedPin = nullptr;
+			return true;
+
+		}
+		return false;
+	};
+
+	template<>
+	bool BreakPinConnection<UM2AudioTrackPin>(UM2AudioTrackPin* InInput)
+	{
+		
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Audio Tracks!!!!"))
+		if (InInput)
+		{
+			bool bBreakLeft = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamL);
+			bool bBreakRight = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamR);
+			if (bBreakLeft && bBreakRight)
+			{
+				InInput->LinkedPin->LinkedPin = nullptr;
+				InInput->LinkedPin = nullptr;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	template<typename T>
+	bool ConnectPins(T* InInput, T* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("ConnectPins not implemented for this type - UNSPECIALIZED"));
+
+
+		return false;
+	};
+
+	template<>
+	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Literals!!!!"));
+		if (InInput && InOutput)
+		{
+			EMetaSoundBuilderResult Result;
+			BuilderContext->ConnectNodes(InOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+
+			//print all data from the pins so we debug what's going on
+			//print connection result 
+			if (Result == EMetaSoundBuilderResult::Succeeded)
+			{
+				InInput->LinkedPin = InOutput;
+				InOutput->LinkedPin = InInput;
+
+			}
+			else
+			{
+				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Failed!"));
+			}
+
+			InInput->ConnectionResult = Result;
+			return Result == EMetaSoundBuilderResult::Succeeded;
+		}
+		return false;
+	};
+
+	template<>
+	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
+	{
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Audio Tracks!!!!"));
+		if (InInput && InOutput)
+		{
+			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);
+			bool bConnectRight = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamR, InOutput->AudioStreamR);
+
+			if(InInput->ParentVertex == InOutput->ParentVertex)
+			{
+				UE_LOG(unDAWDataLogs, Warning, TEXT("Can't connect audio tracks to the same vertex!"));
+				return false;
+			}
+
+			if (bConnectLeft && bConnectRight)
+			{
+				InInput->LinkedPin = InOutput;
+				InOutput->LinkedPin = InInput;
+				return true;
+
+			}
+
+		}
+		UE_LOG(unDAWDataLogs, Warning, TEXT("Failed to connect audio tracks!"));
+		return false;
+	};
 
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void SaveDebugMidiFileTest();
@@ -474,7 +624,7 @@ public:
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void ReinitGraph();
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	FM2SoundCoreNodesComposite CoreNodes;
 
 	UPROPERTY(BlueprintAssignable, Category = "unDAW")
@@ -579,7 +729,7 @@ public:
 
 	//for now this has to be set, although switching midi files is possible it deletes the entire graph
 	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
-	UPROPERTY(VisibleAnywhere, Category = "unDAW")
+	UPROPERTY(VisibleAnywhere, Category = "unDAW", BlueprintReadOnly)
 	UMidiFile* HarmonixMidiFile;
 
 	UPROPERTY()
@@ -597,8 +747,10 @@ public:
 	TMap<float, double> TempoEventsMap;
 
 	//this is a map that sorts the midi events by track and links start/end events with each other, needed for the pianoroll and other visualizers
+	//Adding or removing notes should be done with the provided methods, objects that use this data should also bind to OnMidiDataChanged
+	// (if not passed as ref)
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
 
 	//UPROPERTY()

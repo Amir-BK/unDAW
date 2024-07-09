@@ -63,16 +63,14 @@
 
 
             //so this is how we wind up declaring params, at least I don't have to do it 40 times 
-            const FInput GeneratedInputs[2] =
+            const FInput GeneratedInputs[1] =
             {
 
                 DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
                     unDAW Instrument.MidiStream,
                     Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
 
-                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
-                    unDAW Instrument.MidiTrack,
-                    Metasound::GetMetasoundDataTypeName<int>(), 0)
+
 
             };
 
@@ -125,29 +123,23 @@
 
 
             //so this is how we wind up declaring params, at least I don't have to do it 40 times 
-            const FInput GeneratedInputs[2] =
+            const FInput GeneratedInputs[1] =
             {
 
                 DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
                     unDAW Instrument.MidiStream,
                     Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
 
-                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
-                    unDAW Instrument.MidiTrack,
-                    Metasound::GetMetasoundDataTypeName<int>(), 0)
 
             };
 
-            const FOutput GeneratedOutputs[2] =
+            const FOutput GeneratedOutputs[1] =
             {
 
                 DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
                     unDAW Instrument.MidiStream,
                     Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
 
-                DECLARE_BK_PARAM("Track","Midi Track To Render With This Instrument",
-                    unDAW Instrument.MidiTrack,
-                    Metasound::GetMetasoundDataTypeName<int>(), 0)
 
             };
 

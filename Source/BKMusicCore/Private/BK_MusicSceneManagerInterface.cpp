@@ -64,18 +64,15 @@ TArray<FString> IBK_MusicSceneManagerInterface::GetMidiOutputNames()
 {
 	//make dummy array, populate an array of FStrings with musical instrument names for co-pilot
 
+	if(!GetDAWSequencerData()) return TArray<FString>();
+
 	TArray<FString> MidiOutputNames;
-
-	MidiOutputNames.Add("Piano");
-	MidiOutputNames.Add("Guitar");
-	MidiOutputNames.Add("Drums");
-	MidiOutputNames.Add("Bass");
-	MidiOutputNames.Add("Strings");
-	MidiOutputNames.Add("Brass");
-	MidiOutputNames.Add("Woodwinds");
-
+	for (const auto& [Name, Input] : GetDAWSequencerData()->CoreNodes.MemberInputMap)
+	{
+		if(Input.DataType == "MidiStream")
+			MidiOutputNames.Add(Name.ToString());
+	}
 	return MidiOutputNames;
-
 }
 
 

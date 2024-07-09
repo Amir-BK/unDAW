@@ -131,6 +131,7 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 
 	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
 
+
 	OnBuilderReady.Broadcast();
 
 }
@@ -276,7 +277,7 @@ void UDAWSequencerData::ReinitGraph()
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
 	Vertexes.Add(Vertex);
-
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
 	//update builder, in the future we may want to be a little bit more conservative with this
 	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
 	Vertex->SequencerData = this;
@@ -730,10 +731,13 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
+	//AuditionComponent->
 	if (bForceRebuild) FindOrCreateBuilderForAsset(true);
 
 	if (!BuilderContext) FindOrCreateBuilderForAsset(false);
 	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
+	SavedMetaSound->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
+	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
 
 }
 
@@ -836,6 +840,49 @@ void FM2SoundCoreNodesComposite::ReleaseMasterMixerAudioOutput(FAssignableAudioO
 
 }
 
+void FM2SoundCoreNodesComposite::MarkAllMemberInputsStale()
+{
+	for(auto& MemberInput : MemberInputs)
+	{
+		MemberInput.bIsStale = true;
+	}
+}
+
+void FM2SoundCoreNodesComposite::RemoveAllStaleInputs()
+{
+	auto CopyOfMemberInputs = MemberInputs;
+
+	//for(auto& MemberInput : CopyOfMemberInputs)
+	//{
+	//	if(MemberInput.bIsStale)
+	//	{
+	//		MemberInputs.Remove(MemberInput);
+	//	}
+	//}
+}
+
+void FM2SoundCoreNodesComposite::CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName)
+{
+	EMetaSoundBuilderResult BuildResult;
+
+	FMemberInput NewMemberInput;
+	BuilderContext->GetNodeOutputData(InHandle, NewMemberInput.Name, NewMemberInput.DataType, BuildResult);
+	if(InName != NAME_None) NewMemberInput.Name = InName;
+
+	if (MemberInputMap.Contains(NewMemberInput.Name))
+	{
+		auto& ExistingMemberInput = MemberInputMap[NewMemberInput.Name];
+		ExistingMemberInput.SetMemberInputOutputHandle(InHandle, ExistingMemberInput.Name, ExistingMemberInput.DataType);
+		//ExistingMemberInput.bIsStale = false;
+	}
+	else
+	{
+		NewMemberInput.SetMemberInputOutputHandle(InHandle, NewMemberInput.Name, NewMemberInput.DataType);
+		//MemberInputs.Add(NewMemberInput);
+		MemberInputMap.Add(NewMemberInput.Name, NewMemberInput);
+	}
+}
+
 void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession)
 {
 	//populate midi filter document
@@ -869,7 +916,9 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	auto NewNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("unDAW")), FName(TEXT("MidiStreamTrackIsolator"))), BuildResult, 1);
 	auto NewMidiStreamOutput = BuilderContext->FindNodeOutputByName(NewNode, FName(TEXT("MidiStream")), BuildResult);
 	//this guy only has one output, which is the MidiStream grab it and add it to MappedOutputs
-	MappedOutputs.Add(TrackMetadataIndex, FMappableBuilderNodeOutput{ FName(TrackMetadata.trackName), NewMidiStreamOutput});
+
+	//MappedOutputs.Add(TrackMetadataIndex, FMemberInput{ FName(TrackMetadata.trackName), NewMidiStreamOutput});
+	CreateOrUpdateMemberInput(NewMidiStreamOutput, FName(TrackMetadata.trackName + ".MidiStream"));
 
 	//set default values to "Track Index" and "Channel Index"
 	auto TrackInput = BuilderContext->FindNodeInputByName(NewNode, FName(TEXT("Track Index")), BuildResult);
@@ -889,6 +938,9 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	auto MidiStreamInput = BuilderContext->FindNodeInputByName(NewNode, FName(TEXT("MidiStream")), BuildResult);
 	BuilderContext->ConnectNodes(MainMidiStreamOutput, MidiStreamInput, BuildResult);
 
+	//for now also connect to graph output with the same name as the metadata track name
+	auto GraphOutput = BuilderContext->AddGraphOutputNode(FName(TrackMetadata.trackName), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult);
+	BuilderContext->ConnectNodes(NewMidiStreamOutput, GraphOutput, BuildResult);
 
 	return NewMidiStreamOutput;
 
@@ -916,10 +968,18 @@ void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()
 
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = BuilderContext->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
 	MainMidiStreamOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
-	FMappableBuilderNodeOutput MainMidiStreamOutputHandle = FMappableBuilderNodeOutput();
-	MainMidiStreamOutputHandle.OutputHandle = MainMidiStreamOutput;
-	MainMidiStreamOutputHandle.OutputName = FName(TEXT("Main Midi Stream"));
-	MainMidiStreamOutputHandle.bGraphOutput = true;
+	CreateOrUpdateMemberInput(MainMidiStreamOutput);
+	//FMemberInput MainMidiStreamOutputHandle = FMemberInput();
+
+	auto MainMidiClockOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Clock")), BuildResult);
+	CreateOrUpdateMemberInput(MainMidiClockOutput);
+
+	auto MainTransportOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("Transport")), BuildResult);
+	CreateOrUpdateMemberInput(MainTransportOutput);
+	
+	//MainMidiStreamOutputHandle.OutputHandle = MainMidiStreamOutput;
+	//MainMidiStreamOutputHandle.OutputName = FName(TEXT("Main Midi Stream"));
+	//MainMidiStreamOutputHandle.bGraphOutput = true;
 
 	//MappedOutputs.Add(MainMidiStreamOutputHandle.OutputName, MainMidiStreamOutputHandle);
 

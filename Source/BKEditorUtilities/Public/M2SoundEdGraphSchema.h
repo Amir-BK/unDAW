@@ -13,6 +13,7 @@
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Vertexes/M2SoundVertex.h"
 
+#include <unDAWSettings.h>
 #include "M2SoundEdGraphSchema.generated.h"
 
 class UM2SoundEdGraphNode;
@@ -42,9 +43,9 @@ public:
 
 	TArray<UEdGraphPin*> GetSelectedPins(EEdGraphPinDirection Direction) const;
 
-	void AutoConnectTrackPinsForNodes(UM2SoundEdGraphNode& A, UM2SoundEdGraphNode& B);
-
 	void InitializeGraph() override;
+
+	TSharedPtr<FUICommandList> CommandList;
 
 	template<class T>
 	T* CreateDefaultNodeForVertex(UM2SoundVertex* Vertex, const int ColumnPosition)
@@ -59,6 +60,7 @@ public:
 
 		//finally add node to map
 		VertexToNodeMap.Add(Vertex, Node);
+		//Node->SyncVertexConnections();
 
 		return Node;
 	}
@@ -74,14 +76,33 @@ public:
 	UFUNCTION()
 	void OnVertexAdded(UM2SoundVertex* Vertex) { 
 		
+		
 		//so this is definitely not good enough and indicates some issues
 		// we need to think about the node creation process and how to handle the vertex to node mapping
 
 		UE_LOG(LogTemp, Warning, TEXT("Vertex added"));
-		NotifyGraphChanged(); 
+		//NotifyGraphChanged(); 
 	}
 
+	UFUNCTION()
+	UM2SoundEdGraphNode* GetNodeForVertex(UM2SoundVertex* Vertex) const
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetNodeForVertex VertexToNodeMap Num %d"), VertexToNodeMap.Num());
+		if(VertexToNodeMap.Contains(Vertex))
+			{
+			return VertexToNodeMap[Vertex];
+			}
+		else {
+			return nullptr;
+		}
 
+	}
+
+	UFUNCTION()
+	void MapVertexToNode(UM2SoundVertex* Vertex, UM2SoundEdGraphNode* Node)
+	{
+		VertexToNodeMap.Add(Vertex, Node);
+	}
 
 private:
 
@@ -97,6 +118,8 @@ class BK_EDITORUTILITIES_API UM2SoundEdGraphSchema : public UEdGraphSchema
 {
 	GENERATED_BODY()
 public:
+
+	virtual void SplitPin(UEdGraphPin* Pin, bool bNotify = true) const override;
 
 	const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
 
@@ -126,23 +149,55 @@ public:
 
 		//		return GetPinTypeColor(PinType.PinSubCategory);
 		//}
+
+		UUNDAWSettings* Settings = UUNDAWSettings::Get();
 		
 		//Tracks are blue
 		if (PinType.PinCategory == "Track-Audio")
 		{
-			return FLinearColor(0.0f, 0.0f, 1.0f);
+			return Settings->AudioPinTypeColor;
 		}
 
-		//Audio is purple
-		if (PinType.PinCategory == "Track-Midi")
-		{
-			return FLinearColor(0.5f, 0.0f, 0.5f);
-		}
+
 
 		//metasound literals get the value from the metasound literal schema according to their data type
 		if (PinType.PinCategory == "MetasoundLiteral")
 		{
-			return FLinearColor::Red;
+			
+
+			if(Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
+			{
+				return Settings->CustomPinTypeColors[PinType.PinSubCategory];
+			}
+
+			if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryFloat)
+				{
+				return Settings->FloatPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryInt32)
+			{
+				return Settings->IntPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryBoolean)
+			{
+				return Settings->BooleanPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryString)
+			{
+				return Settings->StringPinTypeColor;
+			}
+			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryObject)
+			{
+				return Settings->ObjectPinTypeColor;
+			}
+			else
+			{
+				return Settings->DefaultPinTypeColor;
+			}
+			
+
+
+
 		}
 
 		return UEdGraphSchema::GetPinTypeColor(PinType);
@@ -191,14 +246,6 @@ public:
 	virtual TSharedPtr<class SGraphNode> CreateNode(UEdGraphNode* InNode) const override;
 };
 
-USTRUCT()
-struct FM2SoundGraphAddNodeAction_NewOutput : public FM2SoundGraphAddNodeAction
-{
-	GENERATED_BODY()
-
-	FM2SoundGraphAddNodeAction_NewOutput() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Output"), INVTEXT("Tooltip"), 0, 0, 0) {}
-	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
-};
 
 USTRUCT()
 struct FM2SoundGraphAddNodeAction_NewInstrument : public FM2SoundGraphAddNodeAction

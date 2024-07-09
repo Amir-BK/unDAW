@@ -149,21 +149,15 @@ void SM2VariMixerNode::UpdateGraphNode()
 			//find vertex owning the connection, safe for now
 			if (Pin->HasAnyConnections())
 			{
-				UEdGraphPin* LinkedPin = Pin->LinkedTo[0];
-				UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode());
-				UM2SoundEdGraphNodeConsumer* ConsumerNode = Cast<UM2SoundEdGraphNodeConsumer>(LinkedNode);
-				if (ConsumerNode) {
-					MixerWidget->AddChannelWidget(ConsumerNode->Vertex->TrackId);
-					continue;
-					}
+				//cast pin subcategory object to our audio pin type
+				auto AsM2AudioTrackPin = Cast<UM2AudioTrackPin>(Pin->PinType.PinSubCategoryObject);
+				
+				//UEdGraphPin* LinkedPin = Pin->LinkedTo[0];
 
-				//check if it's a mixer node
-				UM2SoundVariMixerNode* LinkedMixerNode = Cast<UM2SoundVariMixerNode>(LinkedNode);
-				if (LinkedMixerNode) {
-					UM2VariMixerVertex* LinkedMixerVertex = Cast<UM2VariMixerVertex>(LinkedMixerNode->Vertex);
-					MixerWidget->AddChannelWidget(INDEX_NONE);
-					continue;
-				}
+					MixerWidget->AddChannelWidget(AsM2AudioTrackPin->ChannelIndex);
+					//continue;
+
+
 			}
 
 			//MixerWidget->AddChannelWidget(MixerVertex, Pin->PinName);

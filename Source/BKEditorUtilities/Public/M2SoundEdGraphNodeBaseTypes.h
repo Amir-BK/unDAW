@@ -7,9 +7,11 @@
 #include "M2SoundGraphData.h"
 #include <EdGraphUtilities.h>
 #include <EdGraph/EdGraphNode.h>
+#include "Components/AudioComponent.h"
 #include "SGraphNode.h"
 #include "EdGraph/EdGraphPin.h"
 #include "Subsystems/AssetEditorSubsystem.h"
+#include "EdGraph/EdGraphSchema.h"
 #include "M2SoundEdGraphSchema.h"
 #include "Vertexes/M2SoundVertex.h"
 
@@ -18,7 +20,7 @@
 
 DECLARE_DELEGATE(FOnNodeUpdated);
 
-
+#pragma region M2SoundEdGraphNodes
 
 UCLASS()
 class BK_EDITORUTILITIES_API UM2SoundEdGraphNode : public UEdGraphNode
@@ -36,9 +38,26 @@ public:
 	bool IncludeParentNodeContextMenu() const override { return true; }
 	UM2SoundGraph* GetGraph() const { return Cast<UM2SoundGraph>(UEdGraphNode::GetGraph()); }
 	UDAWSequencerData* GetSequencerData() const { return GetGraph()->GetSequencerData(); }
+	virtual bool CanSplitPin(const UEdGraphPin* Pin) const override { return Pin->PinType.PinCategory == TEXT("Track-Audio"); }
+
+	bool MakeConnection(UEdGraphPin* A, UEdGraphPin* B) const;
+
+	const void SplitPin(const UEdGraphPin*  Pin) const;
+
+	
+	void SetPinAsColorSource(UM2Pins* M2Pin);
+
+	//void SyncToVertex() const;
+
+	void GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const override;
 
 	//FLinearColor GetNodeTitleColor() const override { return FColor(23, 23, 23, 23); }
 	FLinearColor GetNodeBodyTintColor() const override { return FColor(220, 220, 220, 220); }
+
+	UEdGraphPin* ColorSourcePin = nullptr;
+
+	//UFUNCTION()
+	bool IsPinColorSource(const UEdGraphPin* Pin) const { return Pin == ColorSourcePin; }
 
 	UPROPERTY()
 	bool bShowAdvanced = false;
@@ -54,6 +73,8 @@ public:
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
 
+	void SyncVertexConnections() const;
+
 	UPROPERTY(VisibleAnywhere)
 	int AssignedTrackId = INDEX_NONE;
 
@@ -67,21 +88,23 @@ public:
 
 	UM2SoundEdGraphNode* CurrentTrackInput;
 
+	void AllocateDefaultPins() override;
+
 	void UpdateDownstreamTrackAssignment(int NewTrackId) {
 		AssignedTrackId = NewTrackId;
-		for (UEdGraphPin* Pin : Pins)
-		{
-			if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
-			{
-				for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
-				{
-					if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
-					{
-						LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
-					}
-				}
-			}
-		}
+		//for (UEdGraphPin* Pin : Pins)
+		//{
+		//	if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
+		//	{
+		//		for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
+		//		{
+		//			if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
+		//			{
+		//				LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
+		//			}
+		//		}
+		//	}
+		//}
 
 		//NodeConnectionListChanged();	
 	}
@@ -203,29 +226,6 @@ public:
 	};
 };
 
-//represents a MIDI output that will be listed in the Listener component
-UCLASS()
-class UM2SoundGraphMidiOutputNode : public UM2SoundEdGraphNodeConsumer
-{
-	GENERATED_BODY()
-
-public:
-
-	// This is the name of the output node, which will be used to identify the output to gameplay listener components
-	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
-	FName OutputName;
-
-	// if true, the name will be automatically generated from the name of the connected track
-	UPROPERTY(EditAnywhere, Category = "M2Sound Node")
-	bool AutoName;
-
-	void AllocateDefaultPins() override;
-	void GetMenuEntries(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
-
-	void NodeConnectionListChanged() override;
-
-	//	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("MidiOut: %s"), *Cast<UM2SoundMidiOutput>(Vertex)->OutputName.ToString())); }
-};
 
 //represents an audio output that will be auto connected and managed by the performer component, will also have a fancy knob to control volume
 UCLASS()
@@ -240,32 +240,19 @@ public:
 
 	UM2SoundAudioOutput* AsOutputVertex = nullptr;
 
-	void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
+	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Master Output"))); }
 
 	UFUNCTION()
 	void SetOutputGain(float NewGain) {
-		//UE_LOG(LogTemp, Warning, TEXT("Setting Gain to %f"), NewGain);
+
 		Gain = NewGain;
-
-		if (!AsOutputVertex)
-		{
-			//try cast vertex
-			AsOutputVertex = Cast<UM2SoundAudioOutput>(Vertex);
-		}
-
-		if (AsOutputVertex)
-		{
-			AsOutputVertex->Gain = Gain;
-			auto GainParamName = AsOutputVertex->GainParameterName;
-			AsOutputVertex->TransmitAudioParameter(FAudioParameter(GainParamName, Gain));
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("No output vertex found"));
-		}
+		GetGraph()->GetSequencerData()->MasterOptions.MasterVolume = Gain;
+		GetGraph()->GetSequencerData()->AuditionComponent->SetVolumeMultiplier(Gain);
 	}
 };
 
@@ -280,11 +267,10 @@ public:
 	UPROPERTY()
 	int TrackId = INDEX_NONE;
 
-	void AllocateDefaultPins() override;
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Track In: %s"), *Name.ToString())); }
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(Cast<UM2SoundBuilderInputHandleVertex>(Vertex)->MemberName.ToString()); }
 };
 
 UCLASS()
@@ -311,7 +297,6 @@ public:
 
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Instrument: %s"), *Name.ToString())); }
 };
@@ -323,9 +308,11 @@ class BK_EDITORUTILITIES_API UM2SoundAudioInsertNode : public UM2SoundPatchConta
 
 public:
 
+	UM2SoundAudioInsertNode() { bShowAdvanced = true; }
+
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Insert: %s"), *Name.ToString())); }
 };
@@ -354,9 +341,32 @@ public:
 
 	//TSharedPtr<SM2VariMixerNode> MixerWidget;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 	void NodeConnectionListChanged() override;
 
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
 };
+
+#pragma endregion M2SoundEdGraphNodes
+
+#pragma region M2SoundEdGraphNodeActions
+
+
+USTRUCT()
+struct FM2SoundGraphSelectPinAsColorSourceAction : public FEdGraphSchemaAction
+{
+public:
+	GENERATED_BODY()
+
+	//FM2SoundGraphSelectPinAsColorSourceAction() : FEdGraphSchemaAction(INVTEXT(""), INVTEXT("Set as color source"), INVTEXT(""), INVTEXT("M2Data"), 0, 0) {}
+	void PrintTestString() { UE_LOG(LogTemp, Warning, TEXT("Test String")); }
+	//UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
+
+
+};
+
+
+
+
+#pragma endregion M2SoundEdGraphNodeActions

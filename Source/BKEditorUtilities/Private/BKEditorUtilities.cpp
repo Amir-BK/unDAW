@@ -5,6 +5,7 @@
 #include "ContentBrowserModule.h"
 
 #include "UObject/UObjectArray.h"
+#include "SequenceAssetEditor/DAWEditorCommands.h"
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -38,7 +39,11 @@ void BKEditorUtilitiesModule::StartupModule()
 	//graph thingies
 	M2SoundGraphPanelNodeFactory = MakeShareable(new FM2SoundGraphPanelNodeFactory());
 	FEdGraphUtilities::RegisterVisualNodeFactory(M2SoundGraphPanelNodeFactory);
-}
+
+	FDAWEditorToolbarCommands::Register();
+	FM2SoundNodeCommands::Register();
+
+};
 
 void BKEditorUtilitiesModule::ShutdownModule()
 {

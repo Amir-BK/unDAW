@@ -187,6 +187,7 @@ private:
 
 		if (PatchVertex)
 		{
+			/*
 			for (auto& [Name, Pin] : PatchVertex->InPinsNew)
 			{
 				float Value = 0.0f;
@@ -240,6 +241,7 @@ private:
 				};
 
 			}
+			*/
 		}
 
 	}

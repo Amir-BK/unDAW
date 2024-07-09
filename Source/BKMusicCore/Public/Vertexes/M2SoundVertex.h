@@ -8,6 +8,7 @@
 #include "MetasoundBuilderSubsystem.h"
 #include "M2SoundGraphData.h"
 
+#include <Pins/M2Pins.h>
 
 
 #include "M2SoundVertex.generated.h"
@@ -38,21 +39,13 @@ public:
 };
 
 
-UENUM()
-enum class EVertexAutoConnectionPinCategory :  uint8
-{
-	MidiTrackStream, //pairs a midistream with a tracknum int - really we wouldn't need the tracknum but the fusion sampler requires it, other custom metasound instruments don't need it as the stream is already filtered for chan/track
-	MidiTrackTrackNum, //pairs a tracknum with a tracknum int - used to filter the midi stream for a specific track
-	AudioStreamL, //right now this is just a convenient wrapper for two audio channels, in the future we'd like to use this to allow multichannel audio
-	AudioStreamR,
-};
 
 UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EM2SoundPinFlags : uint8
 {
 	None = 0 UMETA(Hidden),
 	IsAutoManaged = 1 << 0,
-	IsConnectedToGraphParam = 1 << 1,
+	ExposeAsMetasoundOutput = 1 << 1,
 	//ShowInBoth = ShowInGraph | ShowInDetails,
 };
 ENUM_CLASS_FLAGS(EM2SoundPinFlags)
@@ -96,6 +89,7 @@ struct FM2SoundPinData
 	UPROPERTY(EditAnywhere, meta = (Bitmask, BitmaskEnum = "/Script/BKMusicCore.EM2SoundPinDisplayFlags"))
 	uint8 DisplayFlags;
 
+
 	UPROPERTY()
 	FMetasoundFrontendLiteral LiteralValue;
 
@@ -115,63 +109,25 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "M2Sound", meta=(EditFixedSize))
-	TMap<FName, FM2SoundPinData> InPinsNew;
+	bool bIsRebuilding = false; //we can use this one to know when we also need to update all connected pins rather than just the input as we do when building the graph, only relevant for nodes that expose patches to the user
 
-	UPROPERTY(EditAnywhere, Category = "M2Sound", meta = (EditFixedSize))
-	TMap<FName, FM2SoundPinData> OutPinsNew;
-
-
-	
+	void PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles);
 
 	//for book keeping and tracking the color of the track in the sequencer, can also be used to assosciate groups of vertexes for the MIXER (that is to come)
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
 	int TrackId = INDEX_NONE;
 
-	//as we only allow ony input and multiple outputs, we can use this function to break the connection between the input and the output
-	virtual void BreakTrackInputConnection();
-
-	virtual void MakeTrackInputConnection(UM2SoundVertex* InputVertex);
-
-	void BreakTrackOutputConnection(UM2SoundVertex* OutputVertex);
-
 	void UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue);
 
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexUpdated OnVertexUpdated;
-
-	void RegisterOutputVertex(UM2SoundVertex* OutputVertex);
-
-	bool UnregisterOutputVertex(UM2SoundVertex* OutputVertex);
-
-	EMetaSoundBuilderResult TryConnectPinToPin(const FM2SoundPinData& MyInputPin, const FM2SoundPinData& OtherOutputPin);
-
-	//main input represents the 'track' binding, used to make auto connections to the data from the midi file and allow us to keep
-	// track of the flow of controls and assignments within the actual metasound graph, generally, the 'Track' pins represent
-	// metasound i/os that are exposed via our metasound parameter interfaces
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	UM2SoundVertex* MainInput;
-
-	//Probably should only allow a single input (multi outputs), these are not the proper node i/os but rather the 'track' binding.
-	//UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	//TArray<UM2SoundVertex*> Inputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TSet<UM2SoundVertex*> Outputs;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeOutputHandle> AutoConnectOutPins;
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
-	TMap<EVertexAutoConnectionPinCategory, FMetaSoundBuilderNodeInputHandle> AutoConnectInPins;
-
-
-	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+protected:
+	UPROPERTY()
 	TArray<FMetaSoundBuilderNodeOutputHandle> OutPins;
 
 	UPROPERTY()
 	TArray<FMetaSoundBuilderNodeInputHandle> InPins;
-
+public:
 
 	UFUNCTION()
 	UDAWSequencerData* GetSequencerData() const;
@@ -191,12 +147,6 @@ public:
 
 	UPROPERTY()
 	int32 ErrorType = EMessageSeverity::Info;
-
-	UPROPERTY()
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundInputs;
-
-	UPROPERTY()
-	TArray<FM2SoundMetasoundBuilderPinData> MetasoundOutputs;
 
 	UFUNCTION()
 	virtual void VertexNeedsBuilderUpdates();
@@ -230,12 +180,158 @@ public:
 
 	virtual void BuildVertex() {};
 
-	virtual void UpdateConnections() {};
+	virtual void UpdateConnections();
 
 	virtual void DestroyVertex() {};
 
 	//should be private or something, called when the node is destroyed, unregisters the vertex from its input before calling the actual destroy method
 	void DestroyVertexInternal();
+
+	UPROPERTY(VisibleAnywhere, meta = (ShowInnerProperties))
+	TMap<FName, TObjectPtr<UM2Pins>> InputM2SoundPins;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<FName, TObjectPtr<UM2Pins>>  OutputM2SoundPins;
+
+	void MarkAllPinsStale() {
+
+		for (auto& Pin : InputM2SoundPins)
+		{
+			Pin.Value->bIsStale = true;
+		}
+
+		for (auto& Pin : OutputM2SoundPins)
+		{
+			Pin.Value->bIsStale = true;
+		}
+	}
+
+	void RemoveAllStalePins()
+	{
+		TArray<FName> StalePins;
+
+		for (auto& Pin : InputM2SoundPins)
+		{
+			if (Pin.Value->bIsStale)
+			{
+				StalePins.Add(Pin.Key);
+			}
+		}
+
+		for (auto& Pin : StalePins)
+		{
+			InputM2SoundPins.Remove(Pin);
+		}
+
+		StalePins.Empty();
+
+		for (auto& Pin : OutputM2SoundPins)
+		{
+			if (Pin.Value->bIsStale)
+			{
+				StalePins.Add(Pin.Key);
+			}
+		}
+
+		for (auto& Pin : StalePins)
+		{
+			OutputM2SoundPins.Remove(Pin);
+		}
+
+
+	}
+
+private:
+	template<typename T>
+	T* CreatePin()
+	{
+		T* NewPin = NewObject<T>(this);
+		NewPin->ParentVertex = this;
+		//Pins.Add(NewPin);
+
+		return NewPin;
+	}
+public:
+
+	UM2AudioTrackPin* CreateAudioTrackInputPin(FName PinName = NAME_None)
+	{
+		UM2AudioTrackPin* NewPin = CreatePin<UM2AudioTrackPin>();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Input;
+		if(PinName != NAME_None)
+		{
+			NewPin->Name = PinName;
+		}
+		else
+		{
+			NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
+		}
+	
+		//NewPin->CreateCompositePin(GetBuilderContext());
+
+		return NewPin;
+	
+	}
+
+	UM2AudioTrackPin* CreateAudioTrackOutputPin()
+	{
+		UM2AudioTrackPin* NewPin = CreatePin<UM2AudioTrackPin>();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Output;
+		NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
+		//NewPin->CreateCompositePin(GetBuilderContext());
+
+		return NewPin;
+
+	}
+
+	template<typename T>
+	T* CreateInputPin(FMetaSoundBuilderNodeInputHandle InHandle)
+	{
+		T* NewPin = CreatePin();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Input;
+		NewPin->SetHandle(InHandle);
+		NewPin->CreateCompositePin(GetBuilderContext());
+
+		return NewPin;
+
+	}
+
+	template<typename T>
+	T* CreateOutputPin(FMetaSoundBuilderNodeOutputHandle InHandle)
+	{
+		T* NewPin = CreatePin();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Output;
+
+		NewPin->SetHandle(InHandle);
+		NewPin->CreateCompositePin(GetBuilderContext());
+		return NewPin;
+	}
+
+	template<>
+	UM2MetasoundLiteralPin* CreateOutputPin(FMetaSoundBuilderNodeOutputHandle InHandle)
+	{
+		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Output;
+		GetBuilderContext().GetNodeOutputData(InHandle, NewPin->Name, NewPin->DataType, NewPin->BuildResult);
+		//NewPin->Name = InName;
+
+		NewPin->SetHandle(InHandle);
+
+		return NewPin;
+	}
+
+	template<>
+	UM2MetasoundLiteralPin* CreateInputPin(FMetaSoundBuilderNodeInputHandle InHandle)
+	{
+		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
+		NewPin->Direction = M2Sound::Pins::PinDirection::Input;
+		GetBuilderContext().GetNodeInputData(InHandle, NewPin->Name, NewPin->DataType, NewPin->BuildResult);
+
+		NewPin->SetHandle(InHandle);
+
+		return NewPin;
+
+	}
+
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -291,7 +387,7 @@ public:
 
 	void BuildVertex() override;
 
-	void UpdateConnections() override;
+	//void UpdateConnections() override;
 
 	void DestroyVertex() override;
 
@@ -306,13 +402,17 @@ public:
 // by our paradigm we probably don't need to implement 'update connections' for these, but it might be useful for the 'expose to outputs' function. 
 UCLASS()
 
-class BKMUSICCORE_API UM2SoundBuilderInputHandleNode : public UM2SoundVertex
+class BKMUSICCORE_API UM2SoundBuilderInputHandleVertex : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
 	//virtual FString GetUniqueParameterName() = ;
+	FMetaSoundBuilderNodeOutputHandle OutputHandle;
+
 
 public:
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	FName MemberName; 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "M2Sound")
 	bool bOutputToBlueprints = true;
 
@@ -323,11 +423,12 @@ public:
 
 	void BuildVertex() override;
 
-	void CollectParamsForAutoConnect() override;
+	//anvoid InitFromMemberName(FName InMemberName);
+
 };
 
 UCLASS()
-class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandleNode
+class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandleVertex
 {
 	GENERATED_BODY()
 
@@ -360,7 +461,7 @@ public:
 
 	void BuildVertex() override;
 
-	void UpdateConnections() override;
+	//void UpdateConnections() override;
 
 	void TryFindVertexDefaultRangesInCache() override;
 
