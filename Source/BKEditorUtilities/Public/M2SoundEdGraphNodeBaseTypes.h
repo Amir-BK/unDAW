@@ -243,13 +243,15 @@ public:
 
 	TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
-	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Audio Out"))); }
+	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromString(FString::Printf(TEXT("Master Output"))); }
 
 	UFUNCTION()
 	void SetOutputGain(float NewGain) {
 
 		Gain = NewGain;
-
+		GetGraph()->GetSequencerData()->MasterOptions.MasterVolume = Gain;
 		GetGraph()->GetSequencerData()->AuditionComponent->SetVolumeMultiplier(Gain);
 	}
 };

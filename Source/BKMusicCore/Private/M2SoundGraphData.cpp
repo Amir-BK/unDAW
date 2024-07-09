@@ -131,6 +131,7 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 
 	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
 
+
 	OnBuilderReady.Broadcast();
 
 }
@@ -730,10 +731,13 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
+	//AuditionComponent->
 	if (bForceRebuild) FindOrCreateBuilderForAsset(true);
 
 	if (!BuilderContext) FindOrCreateBuilderForAsset(false);
 	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
+	SavedMetaSound->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
+	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
 
 }
 
