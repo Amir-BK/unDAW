@@ -513,8 +513,8 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		
 	}
 	else {
-		FindOrCreateBuilderForAsset(true);
 		InitMetadataFromFoundMidiTracks(FoundChannels);
+		FindOrCreateBuilderForAsset(true);
 	}
 
 
@@ -861,11 +861,12 @@ void FM2SoundCoreNodesComposite::RemoveAllStaleInputs()
 	//}
 }
 
-void FM2SoundCoreNodesComposite::CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName)
+void FM2SoundCoreNodesComposite::CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName, int MetadataIndex)
 {
 	EMetaSoundBuilderResult BuildResult;
 
 	FMemberInput NewMemberInput;
+	NewMemberInput.MetadataIndex = MetadataIndex;
 	BuilderContext->GetNodeOutputData(InHandle, NewMemberInput.Name, NewMemberInput.DataType, BuildResult);
 	if(InName != NAME_None) NewMemberInput.Name = InName;
 
@@ -918,7 +919,7 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	//this guy only has one output, which is the MidiStream grab it and add it to MappedOutputs
 
 	//MappedOutputs.Add(TrackMetadataIndex, FMemberInput{ FName(TrackMetadata.trackName), NewMidiStreamOutput});
-	CreateOrUpdateMemberInput(NewMidiStreamOutput, FName(TrackMetadata.trackName + ".MidiStream"));
+	CreateOrUpdateMemberInput(NewMidiStreamOutput, FName(TrackMetadata.trackName + ".MidiStream"), TrackMetadataIndex);
 
 	//set default values to "Track Index" and "Channel Index"
 	auto TrackInput = BuilderContext->FindNodeInputByName(NewNode, FName(TEXT("Track Index")), BuildResult);
