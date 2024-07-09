@@ -171,6 +171,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int ChannelIndex = INDEX_NONE;
 
+	//really a convenience, does nothing if not specifically implemented in the node, such as the varimixer
+	//perhaps I'll make more generic use of this in the future with crossfade nodes and other smaller mixer nodes
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float GainValue = 1.0f;
 
