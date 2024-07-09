@@ -253,11 +253,19 @@ private:
 	}
 public:
 
-	UM2AudioTrackPin* CreateAudioTrackInputPin()
+	UM2AudioTrackPin* CreateAudioTrackInputPin(FName PinName = NAME_None)
 	{
 		UM2AudioTrackPin* NewPin = CreatePin<UM2AudioTrackPin>();
 		NewPin->Direction = M2Sound::Pins::PinDirection::Input;
-		NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
+		if(PinName != NAME_None)
+		{
+			NewPin->Name = PinName;
+		}
+		else
+		{
+			NewPin->Name = M2Sound::Pins::AutoDiscovery::AudioTrack;
+		}
+	
 		//NewPin->CreateCompositePin(GetBuilderContext());
 
 		return NewPin;

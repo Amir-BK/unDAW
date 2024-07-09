@@ -65,10 +65,11 @@ public:
 		int i = 0;
 		for(auto& Channel : MixerChannels)
 		{
-			auto* AutoNewInput = CreateAudioTrackInputPin();
+			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i++));
+			auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
 			AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-			InputM2SoundPins.Add(FName(FString::Printf(TEXT("Channel%d"), i++)), AutoNewInput);
+			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
+			InputM2SoundPins.Add(TrackName, AutoNewInput);
 		}
 
 		if(VertexToChannelMap.Num() > 0)

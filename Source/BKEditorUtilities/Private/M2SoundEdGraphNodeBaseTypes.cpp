@@ -409,7 +409,7 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 			
 			UM2AudioTrackPin* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
 
-			auto* NewComposite = CreatePin(EGPD_Input, FName(TEXT("Track-Audio")), M2Sound::Pins::AutoDiscovery::AudioTrack);
+			auto* NewComposite = CreatePin(EGPD_Input, FName(TEXT("Track-Audio")), AsAudioTrackPin->Name);
 			FString ToolTip;
 			GetGraph()->GetSchema()->ConstructBasicPinTooltip(*NewComposite, INVTEXT("Composite Audio Pin"), ToolTip);
 			NewComposite->PinToolTip = ToolTip;
@@ -440,7 +440,7 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 		if (Pin->IsA<UM2AudioTrackPin>())
 		{
 			UM2AudioTrackPin* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
-			auto* NewComposite = CreatePin(EGPD_Output, FName(TEXT("Track-Audio")), M2Sound::Pins::AutoDiscovery::AudioTrack);
+			auto* NewComposite = CreatePin(EGPD_Output, FName(TEXT("Track-Audio")), AsAudioTrackPin->Name);
 			Pins.Last()->PinToolTip = TEXT("Stereo Audio Channels");
 			CurrIndexOfAudioTrack = Pins.Num() - 1;
 
