@@ -173,7 +173,7 @@ public:
 				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
 				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
 				MixerChannels[i].AssignedPin = AutoNewInput;
-				UpdateGainParameter(i, AutoNewInput->GainValue);
+				//UpdateGainParameter(i, AutoNewInput->GainValue);
 				//Channel.GainValue = AutoNewInput->GainValue;
 			}
 
@@ -183,6 +183,8 @@ public:
 
 		}
 
+
+		UpdateMuteAndSoloStates();
 		//if(VertexToChannelMap.Num() > 0)
 		//{
 		//	TMap<UM2SoundVertex*, FAssignableAudioOutput> NewMap;

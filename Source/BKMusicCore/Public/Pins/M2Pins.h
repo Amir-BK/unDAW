@@ -175,7 +175,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float GainValue = 1.0f;
 
+	UPROPERTY()
 	bool bMute = false;
+
+	UPROPERTY()
 	bool bSolo = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
