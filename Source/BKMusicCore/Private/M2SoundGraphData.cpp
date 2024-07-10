@@ -16,6 +16,7 @@
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
 #define AudioPinCast(Pin) Cast<UM2AudioTrackPin>(Pin) 
+#define LiteralCast(Pin) Cast<UM2MetasoundLiteralPin>(Pin)
 
 struct FEventsWithIndex
 {
@@ -54,14 +55,19 @@ void UDAWSequencerData::CreateDefaultVertexes()
 
 			auto NewInstrument = FVertexCreator::CreateVertex<UM2SoundPatch>(this);
 			NewInstrument->Patch = DefaultPatch;
+			NewInstrument->TrackId = Input.MetadataIndex; //really this just affects the default graph creation, doesn't need to be set by default
 			
 			AddVertex(NewInstrument);
 
 			auto InstrumentAudioOutput = AudioPinCast(NewInstrument->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
 			auto MixerInputPin = AudioPinCast(MixerInputPins.Pop());
 
-			ConnectPins<UM2AudioTrackPin>(InstrumentAudioOutput, MixerInputPin);
+			ConnectPins<UM2AudioTrackPin>(MixerInputPin, InstrumentAudioOutput);
 
+			auto InstrumentLiteralMidiInput = LiteralCast(NewInstrument->InputM2SoundPins[FName(TEXT("unDAW Instrument.MidiStream"))]);
+			auto NewInputLiteralMidiOutput = LiteralCast(NewInput->OutputM2SoundPins[FName(TEXT("MidiStream"))]);
+
+			ConnectPins<UM2MetasoundLiteralPin>(InstrumentLiteralMidiInput, NewInputLiteralMidiOutput);
 
 		}
 	}
@@ -1088,3 +1094,4 @@ void FM2SoundCoreNodesComposite::ResizeOutputMixer()
 
 
 #undef AudioPinCast
+#undef LiteralCast
