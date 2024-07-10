@@ -15,6 +15,8 @@
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
+#define AudioPinCast(Pin) Cast<UM2AudioTrackPin>(Pin) 
+
 struct FEventsWithIndex
 {
 	FMidiEvent event;
@@ -23,6 +25,8 @@ struct FEventsWithIndex
 
 void UDAWSequencerData::CreateDefaultVertexes()
 {
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
+	auto DefaultPatch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 	//we need to create an audio output and a vari mixer and connect them, this needs to be done even for empty daw sequencer files.
 	// the output cannot be deleted from the graph, so we can just create it and connect it to the mixer
 	auto NewOutput = FVertexCreator::CreateVertex<UM2SoundAudioOutput>(this);
@@ -30,6 +34,38 @@ void UDAWSequencerData::CreateDefaultVertexes()
 
 	auto NewMixer = FVertexCreator::CreateVertex<UM2VariMixerVertex>(this);
 	AddVertex(NewMixer);
+
+	TArray<TObjectPtr<UM2Pins>> MixerInputPins;
+
+	NewMixer->InputM2SoundPins.GenerateValueArray(MixerInputPins);
+
+	ConnectPins<UM2AudioTrackPin>(AudioPinCast(NewOutput->InputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]),AudioPinCast(NewMixer->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]));
+
+	for (const auto& [Name, Input] : CoreNodes.MemberInputMap)
+	{
+		if (Input.DataType == "MIDIStream" && Input.MetadataIndex != INDEX_NONE)
+		{
+			UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating MIDI Stream Node for %s"), *Name.ToString())
+			auto NewInput = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(this);
+			NewInput->MemberName = Name;
+			NewInput->TrackId = Input.MetadataIndex;
+
+			AddVertex(NewInput);
+
+			auto NewInstrument = FVertexCreator::CreateVertex<UM2SoundPatch>(this);
+			NewInstrument->Patch = DefaultPatch;
+			
+			AddVertex(NewInstrument);
+
+			auto InstrumentAudioOutput = AudioPinCast(NewInstrument->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
+			auto MixerInputPin = AudioPinCast(MixerInputPins.Pop());
+
+			ConnectPins<UM2AudioTrackPin>(InstrumentAudioOutput, MixerInputPin);
+
+
+		}
+	}
+
 
 }
 
@@ -1049,3 +1085,6 @@ void FM2SoundCoreNodesComposite::ResizeOutputMixer()
 
 	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
 }
+
+
+#undef AudioPinCast
