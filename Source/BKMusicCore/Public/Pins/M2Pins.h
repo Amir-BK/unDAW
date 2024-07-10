@@ -106,6 +106,9 @@ public:
 
 	bool bIsStale = false;
 
+	UPROPERTY()
+	bool bIsColorSource = false;
+
 	virtual void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) {};
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

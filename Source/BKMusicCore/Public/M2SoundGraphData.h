@@ -428,6 +428,8 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	void CreateDefaultVertexes();
+
 	template<typename T>
 	bool BreakPinConnection(T* InInput)
 	{

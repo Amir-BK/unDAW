@@ -11,6 +11,7 @@
 #include <EditableMidiFile.h>
 #include <HarmonixMidi/Blueprint/MidiNote.h>
 #include <HarmonixMetasound/DataTypes/MidiEventInfo.h>
+#include <Vertexes/M2VariMixerVertex.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
@@ -19,6 +20,18 @@ struct FEventsWithIndex
 	FMidiEvent event;
 	int32 eventIndex;
 };
+
+void UDAWSequencerData::CreateDefaultVertexes()
+{
+	//we need to create an audio output and a vari mixer and connect them, this needs to be done even for empty daw sequencer files.
+	// the output cannot be deleted from the graph, so we can just create it and connect it to the mixer
+	auto NewOutput = FVertexCreator::CreateVertex<UM2SoundAudioOutput>(this);
+	AddVertex(NewOutput);
+
+	auto NewMixer = FVertexCreator::CreateVertex<UM2VariMixerVertex>(this);
+	AddVertex(NewMixer);
+
+}
 
 void UDAWSequencerData::SaveDebugMidiFileTest()
 {
@@ -292,7 +305,7 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 
 inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks) {
 	auto PianoPatchPath = FSoftObjectPath(TEXT("/Harmonix/Examples/Patches/Piano.Piano"));
-	Vertexes.Empty();
+	//Vertexes.Empty();
 
 	UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
 
@@ -515,6 +528,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	else {
 		InitMetadataFromFoundMidiTracks(FoundChannels);
 		FindOrCreateBuilderForAsset(true);
+		CreateDefaultVertexes();
 	}
 
 

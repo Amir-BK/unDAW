@@ -194,14 +194,6 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 		}
 
-
-		//for (auto Input : DummyInputs)
-		//{
-		//	auto newAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
-		//	newAction->UpdateSearchData(FText::FromString(Input),INVTEXT("Midi Track"), INVTEXT("Midi Inputs"), INVTEXT("Midi"));
-
-		//	ContextMenuBuilder.AddAction(newAction);
-		//}
 	}
 }
 
@@ -340,6 +332,10 @@ void UM2SoundGraph::InitializeGraph()
 			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackName);
 		}
 
+		if(Vertex->IsA<UM2VariMixerVertex>())
+		{
+			CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
+		}
 
 	}
 
