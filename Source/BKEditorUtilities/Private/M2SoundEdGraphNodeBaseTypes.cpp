@@ -200,11 +200,13 @@ const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
 inline void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin) 
 {
 	auto CurrentColorSourcePin = ColorSourcePin;
+	M2Pin->bIsColorSource = true;
 	ColorSourcePin = *Pins.FindByPredicate([M2Pin](UEdGraphPin* Pin) { return Pin->PinType.PinSubCategoryObject == M2Pin; });
 
 	if(CurrentColorSourcePin == ColorSourcePin)
 	{
 		ColorSourcePin = nullptr;
+		M2Pin->bIsColorSource = false;
 	}
 }
 
@@ -387,6 +389,26 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 	}
 }
 
+inline FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const 
+{
+	if(ColorSourcePin)
+	{
+		if(ColorSourcePin->LinkedTo.Num() > 0)
+		{
+			return ColorSourcePin->LinkedTo[0]->GetOwningNode()->GetNodeTitleColor();
+		}	
+	}
+	
+	if(Vertex && Vertex->TrackId != INDEX_NONE)
+	{
+		return GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackColor;
+	}
+	
+	return FLinearColor::Gray; 
+
+
+}
+
 inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 
 	//okay so in theory, we should check if the pins are stale in order to preserve connections, for now let's just empty pins.
@@ -424,6 +446,10 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 
 
 
+		}
+		if(Pin->bIsColorSource)
+		{
+			ColorSourcePin = Pins.Last();
 		}
 
 		Pins.Last()->PinType.PinSubCategoryObject = Pin;

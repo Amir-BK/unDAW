@@ -123,6 +123,8 @@ public:
 
 	const FPinConnectionResponse CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const override;
 
+	void CreateMidiPinContextActions(FGraphContextMenuBuilder& ContextMenuBuilder, const FMemberInput& MidiInput) const;
+
 	void GetGraphContextActions(FGraphContextMenuBuilder& ContextMenuBuilder) const override;
 
 	virtual bool TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const override
@@ -278,6 +280,9 @@ USTRUCT()
 struct FM2SoundGraphAddNodeAction_NewGraphInputNode : public FM2SoundGraphAddNodeAction
 {
 	GENERATED_BODY()
+
+	UPROPERTY()
+	int MetadataIndex = INDEX_NONE;
 
 	FM2SoundGraphAddNodeAction_NewGraphInputNode() : FM2SoundGraphAddNodeAction(INVTEXT("Inputs"), INVTEXT("Midi Track"), INVTEXT("Tooltip"), 0, 0, 0) {}
 	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;

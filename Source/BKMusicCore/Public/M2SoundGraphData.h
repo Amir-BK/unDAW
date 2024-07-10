@@ -320,6 +320,9 @@ struct FMemberInput
 	UPROPERTY()
 	bool bIsStale = true;
 
+	UPROPERTY(VisibleAnywhere)
+	int MetadataIndex = INDEX_NONE;
+
 	void SetMemberInputOutputHandle(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName, FName InDataType)
 	{
 		MemberInputOutputHandle = InHandle;
@@ -385,7 +388,7 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 
 	void RemoveAllStaleInputs();
 
-	void CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName = NAME_None);
+	void CreateOrUpdateMemberInput(FMetaSoundBuilderNodeOutputHandle InHandle, FName InName = NAME_None, int MetadataIndex = INDEX_NONE);
 
 	//Might be nicer user experience to categorize outputs by data types, for now this will only contain MIDI outputs
 	UPROPERTY()
@@ -424,6 +427,8 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
+	void CreateDefaultVertexes();
 
 	template<typename T>
 	bool BreakPinConnection(T* InInput)
