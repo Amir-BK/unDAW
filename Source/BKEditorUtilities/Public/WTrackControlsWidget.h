@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Widget.h"
-
+#include "Widgets/SBoxPanel.h"
 #include "WTrackControlsWidget.generated.h"
 
 

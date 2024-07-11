@@ -11,6 +11,10 @@
 #include "SEnumCombo.h"
 
 #include <AssetToolsModule.h>
+#include "Editor/EditorEngine.h"
+#include "Editor.h"
+#include "Subsystems/ImportSubsystem.h"
+#include "Misc/FileHelper.h"
 
 #include "FK_SFZ_OpCode_Interpreter.h"
 

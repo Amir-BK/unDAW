@@ -10,6 +10,13 @@
 #include "Factories/Factory.h"
 #include "HarmonixDsp/FusionSampler/FusionPatch.h"
 #include "SlateFwd.h"
+#include "Styling/SlateTypes.h"
+#include "Widgets/SCompoundWidget.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SCheckBox.h"
+#include "Widgets/SWindow.h"
+#include "Framework/Application/SlateApplication.h"
 #include "SFZAssetFactory.generated.h"
 
 class USFZAssetFactory;

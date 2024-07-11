@@ -9,6 +9,7 @@
 #include "ListenerComponent/DAWListenerComponent.h"
 #include "MusicScenePlayerActor.h"
 #include "Components/DetailsView.h"
+#include "Widgets/SBoxPanel.h"
 #include "BKListnerComponentConfigWidget.generated.h"
 
 /**

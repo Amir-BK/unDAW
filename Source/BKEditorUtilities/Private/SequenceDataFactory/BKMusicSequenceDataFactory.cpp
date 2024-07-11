@@ -6,7 +6,6 @@
 
 UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Creating new sequence data, calling context %s"), *CallingContext.ToString());
 	auto NewSequence =	NewObject<UDAWSequencerData>(InParent, InClass, InName, Flags);
 	NewSequence->M2SoundGraph = NewObject<UM2SoundGraph>(NewSequence, FName(), RF_Transactional);
 	NewSequence->M2SoundGraph->Schema = UM2SoundEdGraphSchema::StaticClass();

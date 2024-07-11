@@ -2,6 +2,7 @@
 
 
 #include "AutoPatchActorMapper.h"
+#include "Engine/Texture2D.h"
 
 
 // Sets default values

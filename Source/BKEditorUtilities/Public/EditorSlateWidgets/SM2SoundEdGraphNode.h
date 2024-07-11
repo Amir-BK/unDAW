@@ -10,6 +10,8 @@
 #include "SAudioRadialSlider.h"
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "Widgets/Layout/SWrapBox.h"
+#include "Widgets/Input/SComboBox.h"
+#include "ScopedTransaction.h"
 #include "M2SoundEdGraphSchema.h"
 
 /**

@@ -7,6 +7,11 @@
 #include "FileUtilities/ZipArchiveReader.h"
 #include <XmlNode.h>
 #include <AssetToolsModule.h>
+#include "Sound/SoundWave.h"
+#include <Factories/SoundFactory.h>
+#include "Editor/EditorEngine.h"
+#include "Editor.h"
+#include "Subsystems/ImportSubsystem.h"
 //#include "HarmonixDspEditor/Private/FusionPatchImportOptions.h"
 
 

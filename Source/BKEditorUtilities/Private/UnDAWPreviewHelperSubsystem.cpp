@@ -2,7 +2,8 @@
 
 
 #include "UnDAWPreviewHelperSubsystem.h"
-
+#include "Editor.h"
+#include "Components/AudioComponent.h"
 
 
 

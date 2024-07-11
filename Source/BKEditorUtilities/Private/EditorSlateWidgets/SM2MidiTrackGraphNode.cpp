@@ -3,6 +3,7 @@
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
+#include "Widgets/Input/SCheckBox.h"
 
 #include "SAudioRadialSlider.h"
 

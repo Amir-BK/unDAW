@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Vertexes/M2SoundVertex.h"
 #include "M2SoundGraphStatics.h"
+#include "Styling/SlateTypes.h"
 #include "M2VariMixerVertex.generated.h"
 
 /**

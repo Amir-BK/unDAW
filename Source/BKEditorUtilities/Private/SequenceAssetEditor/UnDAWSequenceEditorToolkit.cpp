@@ -19,6 +19,7 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
+#include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
 

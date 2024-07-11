@@ -8,6 +8,8 @@
 #include "SAudioRadialSlider.h"
 #include "SAudioSlider.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Input/SCheckBox.h"
 
 
 

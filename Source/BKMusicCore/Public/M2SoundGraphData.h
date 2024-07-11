@@ -487,7 +487,6 @@ public:
 	template<>
 	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
 	{
-		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Literals!!!!"));
 		if (InInput && InOutput)
 		{
 			EMetaSoundBuilderResult Result;
@@ -515,7 +514,7 @@ public:
 	template<>
 	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
 	{
-		UE_LOG(unDAWDataLogs, Warning, TEXT("Connecting Audio Tracks!!!!"));
+
 		if (InInput && InOutput)
 		{
 			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);

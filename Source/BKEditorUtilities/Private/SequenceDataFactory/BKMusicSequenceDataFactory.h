@@ -11,6 +11,7 @@
 #include "Widgets/SWidget.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Images/SImage.h"
 #include "AssetRegistry/AssetData.h"
 #include <UnDAWPreviewHelperSubsystem.h>
 #include "BKMusicSequenceDataFactory.generated.h"

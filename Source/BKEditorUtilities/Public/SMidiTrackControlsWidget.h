@@ -13,6 +13,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Colors/SColorPicker.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Widgets/Input/SEditableTextBox.h"
 #include "M2SoundGraphData.h"
 #include "M2SoundEdGraphSchema.h"
 #include "SFZ/UnDAWSFZAsset.h"

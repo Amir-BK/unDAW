@@ -3,6 +3,9 @@
 
 #include "AutoPatchWidgets/SVariMixerWidget.h"
 #include "SlateOptMacros.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/SBoxPanel.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex)
