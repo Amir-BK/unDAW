@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "unPatchPinComponent.h"
 
 // Sets default values for this component's properties
@@ -13,16 +12,13 @@ UunPatchPinComponent::UunPatchPinComponent()
 	// ...
 }
 
-
 // Called when the game starts
 void UunPatchPinComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// ...
-	
 }
-
 
 // Called every frame
 void UunPatchPinComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -31,4 +27,3 @@ void UunPatchPinComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 	// ...
 }
-

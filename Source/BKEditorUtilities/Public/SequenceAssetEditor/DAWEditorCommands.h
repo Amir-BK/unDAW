@@ -7,26 +7,22 @@
 #include "Framework/Commands/Commands.h"
 #include "Framework/Commands/UICommandInfo.h"
 
-
-
 /**
- * 
+ *
  */
 
 class BK_EDITORUTILITIES_API FDAWEditorToolbarCommands final : public TCommands<FDAWEditorToolbarCommands>
 {
+public:
+	FDAWEditorToolbarCommands() : TCommands<FDAWEditorToolbarCommands>("unDAW Toolbar", INVTEXT("unDAW Toobar"), NAME_None, TEXT("EditorStyle")) {};
 
-	public:
-		FDAWEditorToolbarCommands() : TCommands<FDAWEditorToolbarCommands>("unDAW Toolbar", INVTEXT("unDAW Toobar"), NAME_None, TEXT("EditorStyle")) {};
+	TSharedPtr<FUICommandInfo> TransportPlay;
+	TSharedPtr<FUICommandInfo> TransportStop;
 
-		TSharedPtr<FUICommandInfo> TransportPlay;
-		TSharedPtr<FUICommandInfo> TransportStop;
+	TSharedPtr<FUICommandInfo> ToggleNotePaintingMode;
+	TSharedPtr<FUICommandInfo> TogglePianoTabView;
 
-		TSharedPtr<FUICommandInfo> ToggleNotePaintingMode;
-		TSharedPtr<FUICommandInfo> TogglePianoTabView;
-
-		virtual void RegisterCommands() override;
-	
+	virtual void RegisterCommands() override;
 };
 
 class BK_EDITORUTILITIES_API FM2SoundNodeCommands final : public TCommands<FM2SoundNodeCommands>
@@ -37,6 +33,4 @@ public:
 	TSharedPtr<FUICommandInfo> SetPinAsColorSource;
 
 	virtual void RegisterCommands() override;
-
 };
-

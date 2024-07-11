@@ -37,10 +37,6 @@ struct FMetaSoundNodeHandle;
 //	}
 //};
 
-
-
-
-
 /**
  * Static and Blueprint functions for M2SoundGraph, hopefully in the future these will also be used for in game representation of the graph (unPatchWork)
  */
@@ -85,10 +81,9 @@ public:
 
 	static UMetaSoundPatch* GetPatchByName(FString Name);
 
-	//Populates an array of assignable outputs from the inputs of a mixer node, 
+	//Populates an array of assignable outputs from the inputs of a mixer node,
 
 	static void PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs);
-
 
 	/**
 	* Get All Metasound Patches that implement the unDAW instrument parameter interface

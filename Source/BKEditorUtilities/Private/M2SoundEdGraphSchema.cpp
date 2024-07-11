@@ -16,12 +16,12 @@
 
 void UM2SoundEdGraphSchema::SplitPin(UEdGraphPin* Pin, bool bNotify) const
 {
-	if(Pin->GetOwningNode()->CanSplitPin(Pin))
+	if (Pin->GetOwningNode()->CanSplitPin(Pin))
 	{
 		Pin->SafeSetHidden(true);
 		//Pin->bOrphanedPin = true;
 
-		for(auto& childPin : Pin->SubPins)
+		for (auto& childPin : Pin->SubPins)
 		{
 			childPin->SafeSetHidden(false);
 			//childPin->bOrphanedPin = false;
@@ -31,8 +31,6 @@ void UM2SoundEdGraphSchema::SplitPin(UEdGraphPin* Pin, bool bNotify) const
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
 {
-	
-	
 	if (A->Direction == B->Direction)
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
 	FName ACategory = A->PinType.PinCategory;
@@ -69,12 +67,11 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 
 	if (ACategory == "MetasoundLiteral" && BCategory == "MetasoundLiteral")
 	{
-		//compare subcategories 
-		if(A->PinType.PinSubCategory == B->PinType.PinSubCategory)
-			{
-				return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
-
-			}
+		//compare subcategories
+		if (A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+		{
+			return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
+		}
 	}
 
 	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
@@ -85,11 +82,9 @@ void UM2SoundEdGraphSchema::CreateMidiPinContextActions(FGraphContextMenuBuilder
 	FText CatergoryName = FText::FromString(MidiInput.DataType.ToString() + (" Inputs"));
 	FText ToolTip = FText::FromString("Input Type: " + MidiInput.DataType.ToString());
 
-
 	auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
 	NewAction->MetadataIndex = MidiInput.MetadataIndex;
 	NewAction->UpdateSearchData(FText::FromName(MidiInput.Name), ToolTip, CatergoryName, FText::FromName(MidiInput.DataType));
-
 
 	ContextMenuBuilder.AddAction(NewAction);
 }
@@ -101,7 +96,6 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 	auto* AsM2SoundGraph = Cast<UM2SoundGraph>(ContextMenuBuilder.CurrentGraph);
 	const auto& SequencerData = AsM2SoundGraph->GetSequencerData();
 
-
 	for (const auto& [Name, Output] : SequencerData->CoreNodes.MappedOutputs)
 	{
 		//DummyInputs.Add(Name.ToString());
@@ -109,7 +103,6 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
-
 		if (FromPin->SubPins.Num() > 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: FromPin has subpins"));
@@ -117,18 +110,17 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			TestAction->UpdateSearchData(FText::FromString("Test"), INVTEXT("Test"), INVTEXT("Test"), INVTEXT("Test"));
 			ContextMenuBuilder.AddAction(TestAction);
 		}
-		
+
 		if (FromPin->PinType.PinSubCategory == "MidiStream")
 		{
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
-
 		}
 
 		if (FromPin->PinType.PinCategory == "MetasoundLiteral")
 		{
 			for (const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
 			{
-				if(FromPin->PinType.PinSubCategory != Input.DataType)
+				if (FromPin->PinType.PinSubCategory != Input.DataType)
 				{
 					continue;
 				}
@@ -139,23 +131,17 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 				//	//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>());
 				//}
 				//else {
-					FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
-					FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
+				FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
+				FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
 
+				auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+				UE_LOG(LogTemp, Warning, TEXT("Metadata Index: %d"), Input.MetadataIndex);
+				NewAction->MetadataIndex = Input.MetadataIndex;
+				NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
 
-					auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
-					UE_LOG(LogTemp, Warning, TEXT("Metadata Index: %d"), Input.MetadataIndex);
-					NewAction->MetadataIndex = Input.MetadataIndex;
-					NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
-
-
-					ContextMenuBuilder.AddAction(NewAction);
+				ContextMenuBuilder.AddAction(NewAction);
 
 				//}
-				
-
-
-
 			}
 		}
 
@@ -164,7 +150,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 
-			if(FromPin->Direction == EGPD_Output)
+			if (FromPin->Direction == EGPD_Output)
 			{
 				ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
 			}
@@ -179,27 +165,22 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
 
-		for(const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
+		for (const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
 		{
 			FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
 			FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
-			
 
 			auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
 			NewAction->MetadataIndex = Input.MetadataIndex;
 			NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
-			
-			
+
 			ContextMenuBuilder.AddAction(NewAction);
-
 		}
-
 	}
 }
 
 void UM2SoundEdGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const
 {
-
 	const FScopedTransaction Transaction(INVTEXT("M2Sound: Create Reroute Node"));
 
 	const FVector2D NodeSpacerSize(42.0f, 24.0f);
@@ -225,7 +206,6 @@ void UM2SoundEdGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGr
 	PinB->MakeLinkTo((PinB->Direction == EGPD_Output) ? Node->GetInputPin() : Node->GetOutputPin());
 
 	//UM2SoundRerouteNode* RerouteNode = FM2SoundGraphAddNodeAction::MakeNode<UM2SoundRerouteNode>(ParentGraph, nullptr);
-
 }
 
 FM2SoundGraphAddNodeAction::FM2SoundGraphAddNodeAction(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder)
@@ -265,7 +245,6 @@ UEdGraphNode* FM2SoundGraphAddNodeAction::PerformAction(UEdGraph* ParentGraph, U
 	return NewNode;
 }
 
-
 FM2SoundGraphToOutputAction::FM2SoundGraphToOutputAction(const TArray<UEdGraphPin*>& InSourcePins) : FEdGraphSchemaAction(INVTEXT("Meta"), INVTEXT("To Output"), INVTEXT("Creates a M2Sound output for each selected output pin."), 0)
 , SourcePins(InSourcePins)
 {}
@@ -274,21 +253,16 @@ void UM2SoundGraph::SaveVertexRangesToCache()
 {
 	//we'll need only the patches
 
-	for(const auto& Vertex : SelectedVertices)
+	for (const auto& Vertex : SelectedVertices)
 	{
-		
-		
-			auto asPatchVertex = Cast<UM2SoundPatch>(Vertex);
+		auto asPatchVertex = Cast<UM2SoundPatch>(Vertex);
 
-			if(asPatchVertex)
-			{
-				//get the patch vertex and get the default ranges
-				//asPatchVertex->GetDefaultRanges();
-				asPatchVertex->SaveDefaultsToVertexCache();
-
-			}
-
-		
+		if (asPatchVertex)
+		{
+			//get the patch vertex and get the default ranges
+			//asPatchVertex->GetDefaultRanges();
+			asPatchVertex->SaveDefaultsToVertexCache();
+		}
 	}
 }
 
@@ -298,8 +272,6 @@ TArray<UEdGraphPin*> UM2SoundGraph::GetSelectedPins(EEdGraphPinDirection Directi
 
 	return MoveTemp(Pins);
 }
-
-
 
 //The initialize graph is not really safe to be called other than through the initialization sequence of the m2sound asset
 void UM2SoundGraph::InitializeGraph()
@@ -311,7 +283,6 @@ void UM2SoundGraph::InitializeGraph()
 
 	for (const auto& Vertex : GetSequencerData()->GetVertexes())
 	{
-
 		//create node in accordance to the vertex class, a little ugly but we have only three cases
 		//for now check for the node class, we're looking for Patch Vertex, Audio Output Vertex and 'Input Handle Node' vertex
 
@@ -320,23 +291,22 @@ void UM2SoundGraph::InitializeGraph()
 			CreateDefaultNodeForVertex<UM2SoundPatchContainerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
 		}
 
-		if(Vertex->IsA<UM2SoundAudioOutput>())
+		if (Vertex->IsA<UM2SoundAudioOutput>())
 		{
 			CreateDefaultNodeForVertex<UM2SoundGraphAudioOutputNode>(Vertex, FPlacementDefaults::OutputsColumnPosition);
 		}
 
-		if(Vertex->IsA<UM2SoundBuilderInputHandleVertex>())
+		if (Vertex->IsA<UM2SoundBuilderInputHandleVertex>())
 		{
 			auto InNode = CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
-			
+
 			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackName);
 		}
 
-		if(Vertex->IsA<UM2VariMixerVertex>())
+		if (Vertex->IsA<UM2VariMixerVertex>())
 		{
 			CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
 		}
-
 	}
 
 	//for (const auto& [Vertex, Node] : VertexToNodeMap)
@@ -344,10 +314,9 @@ void UM2SoundGraph::InitializeGraph()
 	//	if(auto& InputVertex = Vertex->MainInput)
 	//	{
 	//		AutoConnectTrackPinsForNodes(*VertexToNodeMap[InputVertex], *Node);
-	//		
+	//
 	//	}
 	//}
-
 
 	PerformVertexToNodeBinding();
 	GetSequencerData()->OnVertexAdded.AddUniqueDynamic(this, &UM2SoundGraph::OnVertexAdded);
@@ -369,14 +338,12 @@ void UM2SoundGraph::PerformVertexToNodeBinding()
 	}
 }
 
-
-
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
 	FGraphNodeCreator<UM2SoundPatchContainerNode> NodeCreator(*ParentGraph);
 	UM2SoundPatchContainerNode* Node = NodeCreator.CreateUserInvokedNode();
-	auto* NewVertex	= NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
+	auto* NewVertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
 	NewVertex->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 	Node->Name = FName("Instrument");
 	Node->Vertex = NewVertex;
@@ -389,7 +356,6 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* Paren
 	return Node;
 }
 
-
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
 	FGraphNodeCreator<UM2SoundGraphAudioOutputNode> NodeCreator(*ParentGraph);
@@ -400,17 +366,14 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioOutput::MakeNode(UEdGraph* Pare
 	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
-
 	Node->Vertex->SequencerData = Node->GetSequencerData();
 	NodeCreator.Finalize();
 
 	return Node;
 }
 
-
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-
 	FGraphNodeCreator<UM2SoundAudioInsertNode> NodeCreator(*ParentGraph);
 	UM2SoundAudioInsertNode* Node = NodeCreator.CreateUserInvokedNode();
 	Node->Name = FName("Audio Insert");
@@ -419,10 +382,8 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 
 	Node->Vertex = NewPatchVertex;
 
-
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_PassThroughInsert.unDAW_PassThroughInsert'"));
 	NewPatchVertex->Patch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
-
 
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 	//Node->Vertex->OnVertexUpdated.AddDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
@@ -435,20 +396,18 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewAudioInsert::MakeNode(UEdGraph* Pare
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-	
 	FGraphNodeCreator<UM2SoundGraphInputNode> NodeCreator(*ParentGraph);
 
 	UM2SoundGraphInputNode* Node = NodeCreator.CreateUserInvokedNode();
 
-	//acquire track metadata 
+	//acquire track metadata
 	const auto& SequencerData = Cast<UM2SoundGraph>(ParentGraph)->GetSequencerData();
 	const auto& TrackMetadata = SequencerData->M2TrackMetadata;
 	const auto& SearchString = GetMenuDescription().ToString();
 
-
 	//auto NewInputVertex = NewObject<UM2SoundMidiInputVertex>(Node->GetSequencerData(), NAME_None, RF_Transactional);
-		
-	auto InVertex 	= FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(Node->GetSequencerData());
+
+	auto InVertex = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(Node->GetSequencerData());
 	Node->Vertex = InVertex;
 	Node->Vertex->TrackId = MetadataIndex;
 	UE_LOG(LogTemp, Warning, TEXT("Track Id: %d"), MetadataIndex);
@@ -461,17 +420,12 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewGraphInputNode::MakeNode(UEdGraph* P
 
 	ParentGraph->NotifyGraphChanged();
 	//find the track metadata that corresponds to the input
-	
 
-
-
-	
 	return Node;
 }
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-	
 	FGraphNodeCreator<UM2SoundVariMixerNode> NodeCreator(*ParentGraph);
 
 	auto Node = NodeCreator.CreateUserInvokedNode();
@@ -480,6 +434,6 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* Pa
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
 
 	NodeCreator.Finalize();
-	
+
 	return Node;
 }

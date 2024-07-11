@@ -9,16 +9,15 @@
 #include "M2VariMixerVertex.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BKMUSICCORE_API UM2VariMixerVertex : public UM2SoundVertex
 {
 	GENERATED_BODY()
-	
+
 	UMetaSoundBuilderSubsystem* BuilderSubsystem;
 	UMetaSoundSourceBuilder* BuilderContext;
-
 
 public:
 	uint8 numConnectedChannels = 0;
@@ -37,43 +36,10 @@ public:
 
 	//TArray<FAssignableAudioOutput*> FreeChannels;
 
-	void UpdateMuteAndSoloStates()
-	{
-		
-		bSoloActive = MixerChannels.ContainsByPredicate([](const FAssignableAudioOutput& Channel) { return Channel.AssignedPin->bSolo; });
-		
-		for (int i = 0 ; i <  MixerChannels.Num(); i++)
-		{
-			auto& Channel = MixerChannels[i];
-			//Channel.MuteState = ECheckBoxState::Unchecked;
-			//Channel.SoloState = ECheckBoxState::Unchecked;
-			if(Channel.AssignedPin->bMute && !Channel.AssignedPin->bSolo)
-			{
-				//Channel.MuteState = ECheckBoxState::Checked;
-				UpdateGainParam_Internal(i, 0.0f);
-				continue;
-			}
-
-			if(bSoloActive && !Channel.AssignedPin->bSolo)
-			{
-				//Channel.MuteState = ECheckBoxState::Checked;
-				UpdateGainParam_Internal(i, 0.0f);
-				continue;
-			}
-
-			UpdateGainParam_Internal(i, Channel.AssignedPin->GainValue);
-		}
-	}
+	void UpdateMuteAndSoloStates();
 
 private:
-	void UpdateGainParam_Internal(int ChannelIndex, float newGain)
-	{
-		FName FloatName;
-		EMetaSoundBuilderResult BuildResult;
-
-		auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
-		BuilderContext->SetNodeInputDefault(MixerChannels[ChannelIndex].GainParameterInputHandle, NewFloatLiteral, BuildResult);
-	}
+	void UpdateGainParam_Internal(int ChannelIndex, float newGain);
 
 public:
 
@@ -82,50 +48,44 @@ public:
 	{
 		MixerChannels[ChannelIndex].AssignedPin->GainValue = newGain;
 
-		if(bSoloActive && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
+		if (bSoloActive && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
 		{
 			return;
 		}
 
-		if(MixerChannels[ChannelIndex].AssignedPin->bMute && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
+		if (MixerChannels[ChannelIndex].AssignedPin->bMute && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
 		{
 			return;
 		}
 
 		UpdateGainParam_Internal(ChannelIndex, newGain);
-
 	}
 
-	UFUNCTION() 
+	UFUNCTION()
 	void SetChannelMuteState(int ChannelIndex, ECheckBoxState InState)
 	{
-
 		MixerChannels[ChannelIndex].AssignedPin->bMute = InState == ECheckBoxState::Checked;
 
 		UpdateMuteAndSoloStates();
-
 	}
 
 	UFUNCTION()
 	void SetChannelSoloState(int ChannelIndex, ECheckBoxState InState)
 	{
-
 		MixerChannels[ChannelIndex].AssignedPin->bSolo = InState == ECheckBoxState::Checked;
 		UpdateMuteAndSoloStates();
-
 	}
 
 	void BuildVertex() override
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
-		
+
 		BuilderResults.Empty();
 		//VertexToChannelMap.Empty();
 		MixerChannels.Empty();
 		EMetaSoundBuilderResult BuildResult;
 		BuilderSubsystem = SequencerData->MSBuilderSystem;
 		BuilderContext = SequencerData->BuilderContext;
-
 
 		const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
 			, BuildResult);
@@ -144,22 +104,20 @@ public:
 			OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
 		}
 		else {
-			auto AudioTrackPin = Cast<UM2AudioTrackPin>( OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
+			auto AudioTrackPin = Cast<UM2AudioTrackPin>(OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
 			AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
 			AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
 		}
 
-
-		
 		//PopulatePinsFromMetasoundData(InPins, OutPins);
 
 		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
 		int i = 0;
-		for(auto& Channel : MixerChannels)
+		for (auto& Channel : MixerChannels)
 		{
 			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i));
-			if(InputM2SoundPins.Contains(TrackName) == false)
+			if (InputM2SoundPins.Contains(TrackName) == false)
 			{
 				auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
 				AutoNewInput->ChannelIndex = i;
@@ -174,28 +132,18 @@ public:
 				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
 				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
 				MixerChannels[i].AssignedPin = AutoNewInput;
-
 			}
 
-			
-
 			i++;
-
 		}
 
-
 		UpdateMuteAndSoloStates();
-
 	}
-
-
 
 	FLinearColor GetChannelColor(uint8 ChannelIndex)
 	{
 		return GetSequencerData()->GetTracksDisplayOptions(ChannelIndex).trackColor;
 	}
-
-
 
 	FAssignableAudioOutput CreateChannel()
 	{
@@ -217,5 +165,4 @@ public:
 		const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
 			, BuildResult);
 	}
-
 };

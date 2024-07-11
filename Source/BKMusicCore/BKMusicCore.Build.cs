@@ -2,7 +2,6 @@
 
 using System.IO;
 using UnrealBuildTool;
-using UnrealBuildTool.Rules;
 
 public class BKMusicCore : ModuleRules
 {
@@ -45,13 +44,11 @@ public class BKMusicCore : ModuleRules
             bTreatAsEngineModule = true;
         }
 
-
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
                 "Core",
 				//"Json",
-				
 
                 "AudioMixer",
                 "DeveloperSettings",
@@ -60,8 +57,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
                 "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-
-			}
+            }
 
             );
 
@@ -73,10 +69,8 @@ public class BKMusicCore : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
-				"SignalProcessing"
-
-
-			}
+                "SignalProcessing"
+            }
             );
 
         DynamicallyLoadedModuleNames.AddRange(

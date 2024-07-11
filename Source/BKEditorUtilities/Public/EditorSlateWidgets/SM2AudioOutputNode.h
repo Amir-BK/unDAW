@@ -45,10 +45,9 @@ public:
 	}
 };
 
-
 class BK_EDITORUTILITIES_API SM2VariMixerNode : public SGraphNode
 {
-	public:
+public:
 	SLATE_BEGIN_ARGS(SM2VariMixerNode)
 		{	}
 		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
@@ -63,9 +62,7 @@ class BK_EDITORUTILITIES_API SM2VariMixerNode : public SGraphNode
 
 	TSharedPtr<SVariMixerWidget> MixerWidget;
 
-
 	TArray<TSharedPtr<SAudioSlider>> Sliders;
 
 	TSharedPtr<SVerticalBox> MainVerticalBox;
-
 };

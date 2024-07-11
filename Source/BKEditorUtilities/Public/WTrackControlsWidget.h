@@ -7,34 +7,27 @@
 #include "Widgets/SBoxPanel.h"
 #include "WTrackControlsWidget.generated.h"
 
-
 /**
- * 
+ *
  */
 UCLASS(Category = "BK Music|Track Settings")
 class BK_EDITORUTILITIES_API UWTrackControlsWidget : public UWidget
 {
 	GENERATED_BODY()
 
-
-	
-
 	//void SetMidiEditorParentWidget(UMIDIEditorBase* inEditor);
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|Track Settings")
 	void InitFromData();
-	
+
 protected:
 	//~ Begin UWidget Interface
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
-		//~ End UWidget Interface
+	//~ End UWidget Interface
 
 	TSharedPtr<SVerticalBox> tracksVerticalBox;
 
 	//TWeakObjectPtr<UMIDIEditorBase> MidiEditorSharedPtr;
 	//UMIDIEditorBase* ParentMidiEditor;
-
-
-	
 };

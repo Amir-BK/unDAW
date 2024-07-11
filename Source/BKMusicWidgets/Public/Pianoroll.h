@@ -9,16 +9,16 @@
 #include "Pianoroll.generated.h"
 
 /**
- * Trying to use the spianoroll graph in game 
+ * Trying to use the spianoroll graph in game
  */
 UCLASS(BlueprintType, Blueprintable)
 class BKMUSICWIDGETS_API UPianoroll : public UUnDAWWidgetBase
 {
 	GENERATED_BODY()
-	
+
 	UDAWSequencerData* SequencerData;
 
-	public:
+public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Pianoroll")
 	float PianoTabMargin = 50.0f;
@@ -31,5 +31,4 @@ class BKMUSICWIDGETS_API UPianoroll : public UUnDAWWidgetBase
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	TSharedPtr<SPianoRollGraph> PianoRollGraph;
-
 };

@@ -23,7 +23,7 @@
 //	namespace MetasoundSplitSFZRegionNodePrivate
 //	{
 //
-//		
+//
 //		BKMUSICCORE_API FNodeClassMetadata CreateNodeClassMetadata(const FName& InOperatorName, const FText& InDisplayName, const FText& InDescription, const FVertexInterface& InDefaultInterface)
 //		{
 //			FNodeClassMetadata Metadata
@@ -79,7 +79,7 @@
 //
 //		};
 //
-//	
+//
 //		class SampleDataSpecialization: public SFZ_Data_Specialization_Type
 //		{
 //		public:
@@ -94,7 +94,7 @@
 //			static FString GetSpecializationName() {return FString("SFZ Region Envelope Data Break Node");};
 //		};
 //	}
-//	
+//
 //
 //	template<uint32 NumInputs, typename SpecType>
 //	class TSplitRegionDataOperator : public TExecutableOperator<TSplitRegionDataOperator<NumInputs, SpecType>>
@@ -264,7 +264,7 @@
 //	REGISTER_SPLIT_SFZ_REGION_NODE(2, SFZMetaSoundsPrivate::EnvelopeDataSpecialization)
 //	//REGISTER_SPLIT_SFZ_REGION_NODE(2, Envelope)
 //
-//	
+//
 //	/*REGISTER_SPLIT_SFZ_REGION_NODE(4)
 //	REGISTER_SPLIT_SFZ_REGION_NODE(5)
 //	REGISTER_SPLIT_SFZ_REGION_NODE(6)

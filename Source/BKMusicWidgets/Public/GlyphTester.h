@@ -10,7 +10,7 @@
 #include "GlyphTester.generated.h"
 
 /**
- * Abstract widget class to derive blueprint types from. Used to view SMUFL font glyphs and metadata for easier debug of engraving widgets. 
+ * Abstract widget class to derive blueprint types from. Used to view SMUFL font glyphs and metadata for easier debug of engraving widgets.
  */
 UCLASS()
 class BKMUSICWIDGETS_API UGlyphTester : public UUserWidget
@@ -20,7 +20,6 @@ class BKMUSICWIDGETS_API UGlyphTester : public UUserWidget
 public:
 
 	UGlyphTester(const FObjectInitializer&);
-	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Music|Font")
 	FSlateFontInfo EngravingFont;
@@ -63,6 +62,4 @@ private:
 	void NativePreConstruct() override;
 
 	int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
-
-
 };

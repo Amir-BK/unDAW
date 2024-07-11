@@ -17,7 +17,6 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 	//	Config.PinRanges.Add(Name, FFloatRange(Pin.MinValue, Pin.MaxValue));
 	//}
 
-	
 	UUNDAWSettings::Get()->Cache.Add(Patch->GetFName(), Config);
 	UUNDAWSettings::Get()->SaveConfig();
 }
@@ -28,9 +27,8 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 	UMetaSoundSourceBuilder& BuilderContext = GetBuilderContext();
 	MarkAllPinsStale();
 
-	for(const auto& Handle : InHandles)
+	for (const auto& Handle : InHandles)
 	{
-
 		FName PinName;
 		FName DataType;
 		FName SearchName;
@@ -38,11 +36,9 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 		auto LiteralValue = BuilderContext.GetNodeInputClassDefault(Handle, BuildResult);
 
 		UM2Pins* PinObject = nullptr;
-		
 
 		using namespace M2Sound::Pins;
 		{
-
 			if (PinCategoryMap.Contains(PinName))
 			{
 				auto PinCategory = PinCategoryMap[PinName];
@@ -60,38 +56,36 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 
 				auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(PinObject);
 
-
-				switch(PinCategory)
+				switch (PinCategory)
 				{
-					case EVertexAutoConnectionPinCategory::AudioStreamL:
-						if (IsValid(AsAudioTrackPin->AudioStreamL))
-						{
-							AsAudioTrackPin->AudioStreamL->SetHandle(Handle);
-						}
-						else
-						{
-							AsAudioTrackPin->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
-						}
-						break;
-					case EVertexAutoConnectionPinCategory::AudioStreamR:
-						if (IsValid(AsAudioTrackPin->AudioStreamR))
-						{
-							AsAudioTrackPin->AudioStreamR->SetHandle(Handle);
-						}
-						else
-						{
-							AsAudioTrackPin->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
-						}
+				case EVertexAutoConnectionPinCategory::AudioStreamL:
+					if (IsValid(AsAudioTrackPin->AudioStreamL))
+					{
+						AsAudioTrackPin->AudioStreamL->SetHandle(Handle);
+					}
+					else
+					{
+						AsAudioTrackPin->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+					}
+					break;
+				case EVertexAutoConnectionPinCategory::AudioStreamR:
+					if (IsValid(AsAudioTrackPin->AudioStreamR))
+					{
+						AsAudioTrackPin->AudioStreamR->SetHandle(Handle);
+					}
+					else
+					{
+						AsAudioTrackPin->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+					}
 
-						break;
+					break;
 				}
 
 				continue;
 			}
-		
 		}
 
-		if(InputM2SoundPins.Contains(PinName))
+		if (InputM2SoundPins.Contains(PinName))
 		{
 			PinObject = InputM2SoundPins[PinName];
 			PinObject->SetHandle(Handle);
@@ -102,15 +96,12 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 			PinObject = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
 			InputM2SoundPins.Add(PinName, PinObject);
 		}
-
 	}
-
 
 	//now the outputs
 
 	for (const auto& Handle : OutHandles)
 	{
-		
 		FName PinName;
 		FName DataType;
 		FName SearchName;
@@ -165,7 +156,6 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 
 				continue;
 			}
-
 		}
 
 		if (OutputM2SoundPins.Contains(PinName))
@@ -181,21 +171,18 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 		}
 	}
 
-
 	RemoveAllStalePins();
 }
-
 
 void UM2SoundVertex::UpdateValueForPin(FM2SoundPinData& Pin, FMetasoundFrontendLiteral& NewValue)
 {
 	//in theory we should should check whether this pin has a param connected... but we're just going to set the value for now
-	
+
 	EMetaSoundBuilderResult BuildResult;
 	GetSequencerData()->BuilderContext->SetNodeInputDefault(Pin.InputHandle, NewValue, BuildResult);
 
-	if(BuildResult == EMetaSoundBuilderResult::Failed)	BuilderConnectionResults.Add(Pin.PinName, BuildResult);
+	if (BuildResult == EMetaSoundBuilderResult::Failed)	BuilderConnectionResults.Add(Pin.PinName, BuildResult);
 }
-
 
 UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 {
@@ -205,14 +192,14 @@ UDAWSequencerData* UM2SoundVertex::GetSequencerData() const
 UMetaSoundSourceBuilder& UM2SoundVertex::GetBuilderContext() const
 {
 	return *SequencerData->BuilderContext;
-	
+
 	// TODO: insert return statement here
 }
 
 void UM2SoundVertex::VertexNeedsBuilderUpdates()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
-	BuildVertex();
+		BuildVertex();
 	//CollectParamsForAutoConnect();
 	UpdateConnections();
 
@@ -225,7 +212,7 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 void UM2SoundVertex::VertexConnectionsChanged()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex connections changed!"))
-	UpdateConnections();
+		UpdateConnections();
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -249,8 +236,6 @@ inline bool ResultToBool(EMetaSoundBuilderResult& Result)
 
 void UM2SoundVertex::CollectParamsForAutoConnect()
 {
-
-	
 	EMetaSoundBuilderResult BuildResult;
 
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
@@ -262,9 +247,6 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	for (const auto& Input : InPins)
 	{
-
-
-
 		FM2SoundPinData PinData;
 
 		FName PinName;
@@ -272,33 +254,29 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 		PinData.InputHandle = Input;
 		BuilderContext->GetNodeInputData(Input, PinName, DataType, BuildResult);
 		auto LiteralValue = BuilderContext->GetNodeInputClassDefault(Input, BuildResult);
-
 	}
 	OnVertexUpdated.Broadcast();
-
 }
-
 
 void UM2SoundVertex::UpdateConnections()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Updating Connections"))
-	for (const auto& [Name, Pin] : InputM2SoundPins)
-	{
-		if(Pin->LinkedPin)
+		for (const auto& [Name, Pin] : InputM2SoundPins)
 		{
-			bool result;
-			if (auto* AsAudioTrack = Cast<UM2AudioTrackPin>(Pin))
+			if (Pin->LinkedPin)
 			{
-				result = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(AsAudioTrack, Cast<UM2AudioTrackPin>(Pin->LinkedPin));
-			}
-			else {
-				result = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(Cast<UM2MetasoundLiteralPin>(Pin), Cast<UM2MetasoundLiteralPin>(Pin->LinkedPin));
-			}
+				bool result;
+				if (auto* AsAudioTrack = Cast<UM2AudioTrackPin>(Pin))
+				{
+					result = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(AsAudioTrack, Cast<UM2AudioTrackPin>(Pin->LinkedPin));
+				}
+				else {
+					result = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(Cast<UM2MetasoundLiteralPin>(Pin), Cast<UM2MetasoundLiteralPin>(Pin->LinkedPin));
+				}
 
-			Pin->ConnectionResult = result ? EMetaSoundBuilderResult::Succeeded : EMetaSoundBuilderResult::Failed;
-			
+				Pin->ConnectionResult = result ? EMetaSoundBuilderResult::Succeeded : EMetaSoundBuilderResult::Failed;
+			}
 		}
-	}
 
 	if (!bIsRebuilding) return;
 
@@ -320,14 +298,10 @@ void UM2SoundVertex::UpdateConnections()
 	}
 
 	bIsRebuilding = false;
-
 }
-
 
 void UM2SoundVertex::DestroyVertexInternal()
 {
-	
-
 	//if(MainInput)
 	//{
 	//	MainInput->UnregisterOutputVertex(this);
@@ -355,27 +329,24 @@ void UM2SoundVertex::PostEditChangeProperty(FPropertyChangedEvent& PropertyChang
 	if (PropertyName == FName(TEXT("MinValue")))
 	{
 		OnVertexUpdated.Broadcast();
-	}	
-	
+	}
+
 	if (PropertyName == FName(TEXT("MaxValue")))
 	{
 		OnVertexUpdated.Broadcast();
 	}
 	//auto PropertyValue = (uint8*) Property->CallGetter(this);
-
 }
-
 
 #endif
 
 #undef TOFLAG
 
-
 void UM2SoundAudioOutput::BuildVertex()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Building Audio Output Vertex"))
-	
-	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+
+		auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
 	BuilderResults.Empty();
 
@@ -385,22 +356,17 @@ void UM2SoundAudioOutput::BuildVertex()
 	AudioOutput.AudioRightOutputInputHandle = SequencerData->CoreNodes.AudioOuts[1];
 	AudioOutput.OutputName = FName(TEXT("Master Output"));
 
-		//SequencerData->CoreNodes.GetFreeMasterMixerAudioOutput();
+	//SequencerData->CoreNodes.GetFreeMasterMixerAudioOutput();
 	BuilderResults.Add(FName(TEXT("Assigned Output")), EMetaSoundBuilderResult::Succeeded);
 	GainParameterName = AudioOutput.OutputName;
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	MappedInputs.Add(AudioOutput.AudioLeftOutputInputHandle);
 	MappedInputs.Add(AudioOutput.AudioRightOutputInputHandle);
 	PopulatePinsFromMetasoundData(MappedInputs, {});
-
-
-
 }
-
 
 void UM2SoundAudioOutput::DestroyVertex()
 {
-
 }
 
 void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
@@ -409,21 +375,15 @@ void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
 	TransmitAudioParameter(FAudioParameter(AudioOutput.OutputName, Gain));
 }
 
-
 void UM2SoundBuilderInputHandleVertex::BuildVertex()
 {
-
-
 	TArray<FMetaSoundBuilderNodeOutputHandle> MappedOutput;
 	//auto MidiTrackName = SequencerData->GetTracksDisplayOptions(TrackId).trackName + ".MidiStream";
 	MappedOutput.Add(SequencerData->CoreNodes.MemberInputMap[FName(MemberName)].MemberInputOutputHandle);
 
-
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
 }
-
-
 
 void UM2SoundPatch::BuildVertex()
 {
@@ -441,7 +401,6 @@ void UM2SoundPatch::BuildVertex()
 		bIsRebuildingExistingNode = true;
 		bIsRebuilding = true;
 	}
-
 
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
@@ -470,25 +429,22 @@ void UM2SoundPatch::BuildVertex()
 	}
 }
 
-
 void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 {
 	auto& Cache = UUNDAWSettings::Get()->Cache;
 
 	if (Cache.Contains(Patch->GetFName()))
 	{
-
 	}
 	else {
 		BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
 	}
-	
 }
 
 void UM2SoundLiteralNodeVertex::DestroyVertex()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Destroying Literal Node Vertex"))
-	EMetaSoundBuilderResult BuildResult;
+		EMetaSoundBuilderResult BuildResult;
 
 	GetSequencerData()->BuilderContext->RemoveNode(NodeHandle, BuildResult);
 	GetSequencerData()->RemoveVertex(this);

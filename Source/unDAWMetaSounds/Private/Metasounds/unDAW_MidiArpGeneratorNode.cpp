@@ -16,7 +16,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 {
 	const Metasound::FNodeClassName& GetClassName()
 	{
-		static const Metasound::FNodeClassName ClassName { "unDAW", "MidiArpGenerator", "" };
+		static const Metasound::FNodeClassName ClassName{ "unDAW", "MidiArpGenerator", "" };
 		return ClassName;
 	}
 
@@ -33,7 +33,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 		DEFINE_INPUT_METASOUND_PARAM(Offset, "Offset", "Offsets the pulse by a musical time");
 		DEFINE_INPUT_METASOUND_PARAM(OffsetMultiplier, "Offset Multiplier", "Multiplies the offset, 0 for no offset");
 		DEFINE_INPUT_METASOUND_PARAM(MidiTrack, "MidiTrack Number", "Track Number");
-		DEFINE_INPUT_METASOUND_PARAM(MidiChannel, "MidiChannel" , "MidiChannel");
+		DEFINE_INPUT_METASOUND_PARAM(MidiChannel, "MidiChannel", "MidiChannel");
 		DEFINE_INPUT_METASOUND_PARAM(MidiNoteNumber, "Note Number", "The note number to play");
 		DEFINE_INPUT_METASOUND_PARAM(MidiVelocity, "Velocity", "The velocity at which to play the note");
 	}
@@ -49,27 +49,27 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 		static const Metasound::FNodeClassMetadata& GetNodeInfo()
 		{
 			using namespace Metasound;
-			
+
 			auto InitNodeInfo = []() -> FNodeClassMetadata
-			{
-				FNodeClassMetadata Info;
-				Info.ClassName        = GetClassName();
-				Info.MajorVersion     = 0;
-				Info.MinorVersion     = 1;
-				Info.DisplayName      = INVTEXT("MIDI Arp Generator");
-				Info.Description      = METASOUND_LOCTEXT("MidiPulseGeneratorNode_Description", "Outputs a repeated MIDI note at the specified musical time interval");
-				Info.Author           = PluginAuthor;
-				Info.PromptIfMissing  = PluginNodeMissingPrompt;
-				Info.DefaultInterface = GetVertexInterface();
-				Info.CategoryHierarchy = { INVTEXT("unDAW"), NodeCategories::Music};
-				return Info;
-			};
+				{
+					FNodeClassMetadata Info;
+					Info.ClassName = GetClassName();
+					Info.MajorVersion = 0;
+					Info.MinorVersion = 1;
+					Info.DisplayName = INVTEXT("MIDI Arp Generator");
+					Info.Description = METASOUND_LOCTEXT("MidiPulseGeneratorNode_Description", "Outputs a repeated MIDI note at the specified musical time interval");
+					Info.Author = PluginAuthor;
+					Info.PromptIfMissing = PluginNodeMissingPrompt;
+					Info.DefaultInterface = GetVertexInterface();
+					Info.CategoryHierarchy = { INVTEXT("unDAW"), NodeCategories::Music };
+					return Info;
+				};
 
 			static const FNodeClassMetadata Info = InitNodeInfo();
 
 			return Info;
 		}
-		
+
 		static const Metasound::FVertexInterface& GetVertexInterface()
 		{
 			using namespace Metasound;
@@ -124,7 +124,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 		{
 			HarmonixMetasound::FMidiStreamWriteRef MidiStream;
 		};
-		
+
 		static TUniquePtr<IOperator> CreateOperator(const Metasound::FBuildOperatorParams& InParams, Metasound::FBuildResults& OutResults)
 		{
 			FInputs Inputs
@@ -188,7 +188,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 		void Execute()
 		{
 			ApplyParameters();
-			
+
 			PulseGenerator.Process(*Outputs.MidiStream);
 		}
 	private:
@@ -196,7 +196,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 		{
 			int RandomIndex = FMath::RandRange(0, ScaleDegrees.Num() - 1);
 			int32 ArpVal = this->ScaleDegrees[RandomIndex];
-			
+
 			PulseGenerator.Track = *Inputs.Track;
 			PulseGenerator.Channel = *Inputs.Channel;
 			PulseGenerator.NoteNumber = *Inputs.NoteNumber + ArpVal;
@@ -209,7 +209,7 @@ namespace unDAWMetasounds::MidiArpGeneratorNode
 					static_cast<uint16>(*Inputs.OffsetMultiplier)
 				});
 		}
-		
+
 		TArray<int32> ScaleDegrees;
 		int32 OctaveRange;
 		FInputs Inputs;

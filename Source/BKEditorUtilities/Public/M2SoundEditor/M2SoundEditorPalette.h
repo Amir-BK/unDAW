@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 /**
- * 
+ *
  */
 class BK_EDITORUTILITIES_API M2SoundEditorPalette
 {

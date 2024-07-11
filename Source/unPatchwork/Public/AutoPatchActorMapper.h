@@ -19,8 +19,8 @@ UCLASS()
 class UNPATCHWORK_API AAutoPatchActorMapper : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AAutoPatchActorMapper();
 
@@ -32,7 +32,7 @@ public:
 
 # endif
 
-	//probably better to force the scene to be synced to an actor rather than to the session 
+	//probably better to force the scene to be synced to an actor rather than to the session
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoPatch")
 	TObjectPtr<AMusicScenePlayerActor> MusicScenePlayer;
 
@@ -52,10 +52,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	
-	
 };

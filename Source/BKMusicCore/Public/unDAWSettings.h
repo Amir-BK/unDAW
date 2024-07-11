@@ -12,10 +12,9 @@ struct FCachedVertexPinInfo
 
 	UPROPERTY(EditAnywhere)
 	TMap<FName, FFloatRange> PinRanges;
-
 };
 
-UCLASS(config = Game, meta=(DisplayName = "unDAW Settings"))
+UCLASS(config = Game, meta = (DisplayName = "unDAW Settings"))
 class BKMUSICCORE_API UUNDAWSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
@@ -25,7 +24,7 @@ public:
 	static UUNDAWSettings* Get() { return CastChecked<UUNDAWSettings>(UUNDAWSettings::StaticClass()->GetDefaultObject()); }
 
 	UUNDAWSettings();
-	
+
 	// Cache for the ranges of the pins on the m2sound graph nodes,
 	UPROPERTY(Config, EditAnywhere, Category = "Patch Cache")
 	TMap<FName, FCachedVertexPinInfo> Cache;
@@ -72,5 +71,4 @@ public:
 	/** WaveTable pin type color */
 	UPROPERTY(EditAnywhere, config, Category = PinColors)
 	FLinearColor WaveTablePinTypeColor;
-
 };

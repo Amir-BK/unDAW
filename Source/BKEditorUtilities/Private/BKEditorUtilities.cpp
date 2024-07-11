@@ -42,7 +42,6 @@ void BKEditorUtilitiesModule::StartupModule()
 
 	FDAWEditorToolbarCommands::Register();
 	FM2SoundNodeCommands::Register();
-
 };
 
 void BKEditorUtilitiesModule::ShutdownModule()

@@ -29,10 +29,10 @@ namespace unDAWMetasound
 	{
 	public:
 		FTimeStampedTransportWavePlayerControllerOperator(const FOperatorSettings& InSettings,
-									const FBuildOperatorParams& InParams,
-									const HarmonixMetasound::FMusicTransportEventStreamReadRef& InTransport,
-									const HarmonixMetasound::FMidiClockReadRef& InMidiClock,
-									const FMusicTimestampReadRef& InTimestamp ) :
+			const FBuildOperatorParams& InParams,
+			const HarmonixMetasound::FMusicTransportEventStreamReadRef& InTransport,
+			const HarmonixMetasound::FMidiClockReadRef& InMidiClock,
+			const FMusicTimestampReadRef& InTimestamp) :
 			HarmonixMetasound::FMusicTransportControllable(HarmonixMetasound::EMusicPlayerTransportState::Prepared),
 			TransportInPin(InTransport),
 			MidiClockInPin(InMidiClock),
@@ -70,19 +70,19 @@ namespace unDAWMetasound
 		static const FNodeClassMetadata& GetNodeInfo()
 		{
 			auto InitNodeInfo = []() -> FNodeClassMetadata
-			{
-				FNodeClassMetadata Info;
-				Info.ClassName = { TEXT("unDAW"), TEXT("TimeStampedTransportWavePlayerController"), TEXT("")};
-				Info.MajorVersion = 0;
-				Info.MinorVersion = 1;
-				Info.DisplayName = INVTEXT("unDAW TimeStamped Music Transport Wave Player Controller");
-				Info.Description = INVTEXT("An interface between a music transport and a wave player, and a timestamp!");
-				Info.Author = PluginAuthor;
-				Info.PromptIfMissing = PluginNodeMissingPrompt;
-				Info.DefaultInterface = GetVertexInterface();
-				Info.CategoryHierarchy = { INVTEXT("unDAW"), INVTEXT("Music") };
-				return Info;
-			};
+				{
+					FNodeClassMetadata Info;
+					Info.ClassName = { TEXT("unDAW"), TEXT("TimeStampedTransportWavePlayerController"), TEXT("") };
+					Info.MajorVersion = 0;
+					Info.MinorVersion = 1;
+					Info.DisplayName = INVTEXT("unDAW TimeStamped Music Transport Wave Player Controller");
+					Info.Description = INVTEXT("An interface between a music transport and a wave player, and a timestamp!");
+					Info.Author = PluginAuthor;
+					Info.PromptIfMissing = PluginNodeMissingPrompt;
+					Info.DefaultInterface = GetVertexInterface();
+					Info.CategoryHierarchy = { INVTEXT("unDAW"), INVTEXT("Music") };
+					return Info;
+				};
 
 			static const FNodeClassMetadata Info = InitNodeInfo();
 
@@ -107,7 +107,7 @@ namespace unDAWMetasound
 			InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(Outputs::TransportStop), StopOutPin);
 			InVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(OutputStartTime), StartTimeOutPin);
 		}
-		
+
 		virtual FDataReferenceCollection GetInputs() const override
 		{
 			// This should never be called. Bind(...) is called instead. This method
@@ -133,7 +133,7 @@ namespace unDAWMetasound
 			FMusicTransportEventStreamReadRef InTransport = InputData.GetOrConstructDataReadReference<FMusicTransportEventStream>(METASOUND_GET_PARAM_NAME(Inputs::Transport), InParams.OperatorSettings);
 			FMusicTimestampReadRef InTimestamp = InputData.GetOrConstructDataReadReference<FMusicTimestamp>(METASOUND_GET_PARAM_NAME(Inputs::Timestamp), 1, 1.0f);
 			FMidiClockReadRef InMidiClock = InputData.GetOrConstructDataReadReference<FMidiClock>(METASOUND_GET_PARAM_NAME(Inputs::MidiClock), InParams.OperatorSettings);
-			
+
 			return MakeUnique<FTimeStampedTransportWavePlayerControllerOperator>(InParams.OperatorSettings, InParams, InTransport, InMidiClock, InTimestamp);
 		}
 
@@ -148,14 +148,12 @@ namespace unDAWMetasound
 			if (CurrentTimestamp != *TimestampInPin)
 			{
 				CurrentTimestamp = *TimestampInPin;
-		
+
 				CalculateAndInvalidateTriggerTick();
 			}
 			bool isEnabled = true;
 			bool AfterStartTimeStamp = false;
 			int32 timeStampBlockFrameIndex = -1;
-
-	
 
 			if (isEnabled)
 			{
@@ -166,16 +164,15 @@ namespace unDAWMetasound
 						timeStampBlockFrameIndex = Span.BlockFrameIndex;
 						//this means we hit the timestamp, we need to check if we're before it or after it
 						UE_LOG(LogTemp, Log, TEXT("TimeStamp Hit? blockFrameIndex %d"), timeStampBlockFrameIndex)
-						if (CurrentTick < Span.BlockFrameIndex)
-						{
-							AfterStartTimeStamp = false;
-							timeStampBlockFrameIndex = -1;
-							
-						}
-						else {
-							AfterStartTimeStamp = true;
-						}
-						
+							if (CurrentTick < Span.BlockFrameIndex)
+							{
+								AfterStartTimeStamp = false;
+								timeStampBlockFrameIndex = -1;
+							}
+							else {
+								AfterStartTimeStamp = true;
+							}
+
 						break;
 					}
 				}
@@ -185,7 +182,6 @@ namespace unDAWMetasound
 			{
 				//bPlaying = false;
 				timeStampBlockFrameIndex = -1;
-
 			}
 
 			TickSpans.Empty(8);
@@ -193,101 +189,95 @@ namespace unDAWMetasound
 			//UE_LOG(LogTemp, Log, TEXT("trigger tick %d"), TriggerTick)
 
 			TransportSpanProcessor TransportHandler = [this, timeStampBlockFrameIndex](int32 StartFrameIndex, int32 EndFrameIndex, EMusicPlayerTransportState CurrentState)
-			{
-				switch (CurrentState)
 				{
-				case EMusicPlayerTransportState::Invalid:
-				case EMusicPlayerTransportState::Preparing:
-					return EMusicPlayerTransportState::Prepared;
-
-				case EMusicPlayerTransportState::Prepared:
-					return EMusicPlayerTransportState::Prepared;
-
-				case EMusicPlayerTransportState::Starting:
-					if (!ReceivedSeekWhileStopped())
+					switch (CurrentState)
 					{
-						// Play from the beginning if we haven't received a seek call while we were stopped...
-						*StartTimeOutPin = FTime();
-					}
-					if (timeStampBlockFrameIndex >= 0)
-					{
-						PlayOutPin->TriggerFrame(timeStampBlockFrameIndex);
+					case EMusicPlayerTransportState::Invalid:
+					case EMusicPlayerTransportState::Preparing:
+						return EMusicPlayerTransportState::Prepared;
+
+					case EMusicPlayerTransportState::Prepared:
+						return EMusicPlayerTransportState::Prepared;
+
+					case EMusicPlayerTransportState::Starting:
+						if (!ReceivedSeekWhileStopped())
+						{
+							// Play from the beginning if we haven't received a seek call while we were stopped...
+							*StartTimeOutPin = FTime();
+						}
+						if (timeStampBlockFrameIndex >= 0)
+						{
+							PlayOutPin->TriggerFrame(timeStampBlockFrameIndex);
+							bPlaying = true;
+							return EMusicPlayerTransportState::Playing;
+						}
+						return EMusicPlayerTransportState::Starting;
+
+					case EMusicPlayerTransportState::Playing:
+						return EMusicPlayerTransportState::Playing;
+
+					case EMusicPlayerTransportState::Seeking:
+
+						if (ReceivedSeekWhileStopped())
+						{
+							// Assumes the MidiClock is stopped for the remainder of the block.
+							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+							if (CurrentTick < TriggerTick) return EMusicPlayerTransportState::Pausing;
+						}
+						else
+						{
+							StopOutPin->TriggerFrame(StartFrameIndex);
+							int32 PlayFrameIndex = FMath::Min(StartFrameIndex + 1, EndFrameIndex);
+							if (timeStampBlockFrameIndex >= 0 || CurrentTick >= TriggerTick)
+							{
+								const auto startTickTime = MidiClockInPin->GetSongMaps().TickToMs(TriggerTick);
+								float seekTarget = (MidiClockInPin->GetCurrentHiResMs() - startTickTime) * 0.001f - (BlockSizeFrames - PlayFrameIndex) / SampleRate;
+								float unmoddedSeek = (MidiClockInPin->GetCurrentHiResMs()) * 0.001f - (BlockSizeFrames - PlayFrameIndex) / SampleRate;
+								*StartTimeOutPin = FTime(seekTarget);
+								UE_LOG(LogTemp, Log, TEXT("We enter this block, the tick now is %d the tick to seek is %d, offset time %f, original seek %f"), CurrentTick, TriggerTick, seekTarget, unmoddedSeek)
+									PlayOutPin->TriggerFrame(PlayFrameIndex);
+							}
+							else {
+								*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+							}
+							// Assumes the MidiClock is playing for the remainder of the block.
+						}
+						// Here we will return that we want to be in the same state we were in before this request to
+						// seek since we can seek "instantaneously"...
+						return GetTransportState();
+
+					case EMusicPlayerTransportState::Continuing:
+						// Assumes the StartTimeOutPin won't change for the remainder of the block.
+						PlayOutPin->TriggerFrame(StartFrameIndex);
 						bPlaying = true;
 						return EMusicPlayerTransportState::Playing;
-					}
-					return EMusicPlayerTransportState::Starting;
 
-				case EMusicPlayerTransportState::Playing:
-					return EMusicPlayerTransportState::Playing;
-
-				case EMusicPlayerTransportState::Seeking:
-
-
-					if (ReceivedSeekWhileStopped())
-					{
-						// Assumes the MidiClock is stopped for the remainder of the block.
-						*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
-						if (CurrentTick < TriggerTick) return EMusicPlayerTransportState::Pausing;
-					}
-					else
-					{
-						StopOutPin->TriggerFrame(StartFrameIndex);
-						int32 PlayFrameIndex = FMath::Min(StartFrameIndex + 1, EndFrameIndex);
-						if (timeStampBlockFrameIndex >= 0 || CurrentTick >= TriggerTick)
-						{
-							
-							
-							const auto startTickTime = MidiClockInPin->GetSongMaps().TickToMs(TriggerTick);
-							float seekTarget = (MidiClockInPin->GetCurrentHiResMs() - startTickTime) * 0.001f  - (BlockSizeFrames - PlayFrameIndex) / SampleRate  ;
-							float unmoddedSeek = (MidiClockInPin->GetCurrentHiResMs()) * 0.001f - (BlockSizeFrames - PlayFrameIndex) / SampleRate;
-							*StartTimeOutPin = FTime(seekTarget);
-							UE_LOG(LogTemp, Log, TEXT("We enter this block, the tick now is %d the tick to seek is %d, offset time %f, original seek %f"), CurrentTick, TriggerTick, seekTarget, unmoddedSeek)
-							PlayOutPin->TriggerFrame(PlayFrameIndex);
-						}
-						else {
-		
-							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
-				
-						}
-						// Assumes the MidiClock is playing for the remainder of the block.
-
-					}
-					// Here we will return that we want to be in the same state we were in before this request to 
-					// seek since we can seek "instantaneously"...
-					return GetTransportState();
-
-				case EMusicPlayerTransportState::Continuing:
-					// Assumes the StartTimeOutPin won't change for the remainder of the block.
-					PlayOutPin->TriggerFrame(StartFrameIndex);
-					bPlaying = true;
-					return EMusicPlayerTransportState::Playing;
-
-				case EMusicPlayerTransportState::Pausing:
-					bPlaying = false;
-					StopOutPin->TriggerFrame(StartFrameIndex);
-
-					// Assumes the MidiClock is paused for the remainder of the block.
-					*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
-					return EMusicPlayerTransportState::Paused;
-
-				case EMusicPlayerTransportState::Paused:
-					return EMusicPlayerTransportState::Paused;
-
-				case EMusicPlayerTransportState::Stopping:
-				case EMusicPlayerTransportState::Killing:
-					if (bPlaying)
-					{
+					case EMusicPlayerTransportState::Pausing:
 						bPlaying = false;
 						StopOutPin->TriggerFrame(StartFrameIndex);
-					}
-					*StartTimeOutPin = FTime();
-					return EMusicPlayerTransportState::Prepared;
 
-				default:
-					checkNoEntry();
-					return EMusicPlayerTransportState::Invalid;
-				}
-			};
+						// Assumes the MidiClock is paused for the remainder of the block.
+						*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+						return EMusicPlayerTransportState::Paused;
+
+					case EMusicPlayerTransportState::Paused:
+						return EMusicPlayerTransportState::Paused;
+
+					case EMusicPlayerTransportState::Stopping:
+					case EMusicPlayerTransportState::Killing:
+						if (bPlaying)
+						{
+							bPlaying = false;
+							StopOutPin->TriggerFrame(StartFrameIndex);
+						}
+						*StartTimeOutPin = FTime();
+						return EMusicPlayerTransportState::Prepared;
+
+					default:
+						checkNoEntry();
+						return EMusicPlayerTransportState::Invalid;
+					}
+				};
 			ExecuteTransportSpans(TransportInPin, BlockSizeFrames, TransportHandler);
 		}
 
@@ -339,7 +329,6 @@ namespace unDAWMetasound
 
 		bool bPlaying = false;
 
-
 		struct FTickSpan
 		{
 			int32 FromTick;
@@ -353,7 +342,7 @@ namespace unDAWMetasound
 				, bIsSeek(InIsSeek)
 			{}
 		};
-		
+
 		TArray<FTickSpan> TickSpans;
 
 		//** DATA (current state)
@@ -362,10 +351,9 @@ namespace unDAWMetasound
 
 		int32 TriggerTick = 0;
 
-
 		//** BEGIN FMidiPlayCursor
 		virtual void SeekToTick(int32 Tick) override { SeekThruTick(Tick - 1); }
-		virtual void SeekThruTick(int32 Tick) override	{
+		virtual void SeekThruTick(int32 Tick) override {
 			int32 TickProceedingThisAdvance = CurrentTick;
 			FMidiPlayCursor::SeekThruTick(Tick);
 
@@ -377,7 +365,7 @@ namespace unDAWMetasound
 
 			TickSpans.Emplace(TickProceedingThisAdvance, CurrentTick, MidiClockInPin->GetCurrentBlockFrameIndex(), true);
 		}
-	
+
 		virtual void AdvanceThruTick(int32 Tick, bool IsPreRoll) override {
 			int32 TickProceedingThisAdvance = CurrentTick;
 			FMidiPlayCursor::AdvanceThruTick(Tick, IsPreRoll);
@@ -393,13 +381,7 @@ namespace unDAWMetasound
 		// We have to override this to disambiguate the FMidiPlayCursor Reset and the MS operator Reset
 		virtual void Reset(bool ForceNoBroadcast) override { FMidiPlayCursor::Reset(ForceNoBroadcast); }
 		//** END FMidiPlayCursor
-
-
-
-
 	};
-
-
 
 	class FTimeStampedTransportWavePlayerControllerNode : public FNodeFacade
 	{

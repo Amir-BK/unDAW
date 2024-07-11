@@ -12,29 +12,20 @@
 //#include <MIDIEditorBase.h>
 #include "GlyphButton.generated.h"
 
-
-
-
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnButtonClickedEvent, EBKTransportCommands, OutTransportCommand);
 /**
- * Simple button that displays glyps from UI Icons font 
+ * Simple button that displays glyps from UI Icons font
  */
 UCLASS(Category = "BK Music|Transport|UI")
 class BKMUSICWIDGETS_API UTransportGlyphButton : public UWidget
 {
 	GENERATED_BODY()
 
-
-
-
-
 	UFUNCTION(BlueprintCallable, Category = "BK Music|Transport")
 	bool SetParentEditor(UObject* MidiEditor);
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|Grid|Transport")
 	void SetActiveState(bool isActive);
-
 
 public:
 
@@ -48,7 +39,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "BK Music|Transport")
 	FOnButtonClickedEvent TransportButtonClicked;
-	
+
 protected:
 	//~ Begin UWidget Interface
 	virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -59,7 +50,6 @@ protected:
 
 	bool IsActive = false;
 };
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuantizationValueButtonClicked, EMusicTimeSpanOffsetUnits, OutQuantizationValue);
 /**
@@ -89,7 +79,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "BK Music|Grid|Quantization")
 	float FontSize = 24;
-
 
 protected:
 	//~ Begin UWidget Interface

@@ -1,12 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 #include "M2SoundEdGraphSchema.h"
 
 UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
 {
-	auto NewSequence =	NewObject<UDAWSequencerData>(InParent, InClass, InName, Flags);
+	auto NewSequence = NewObject<UDAWSequencerData>(InParent, InClass, InName, Flags);
 	NewSequence->M2SoundGraph = NewObject<UM2SoundGraph>(NewSequence, FName(), RF_Transactional);
 	NewSequence->M2SoundGraph->Schema = UM2SoundEdGraphSchema::StaticClass();
 
@@ -25,7 +24,6 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 		NewSequence->PopulateFromMidiFile(NewMidiFile);
 	}
 
-
 	//NewSequence->M2SoundGraph->InitializeGraph();
 
 	return NewSequence;
@@ -43,16 +41,15 @@ UBKMusicSequenceDataFactory::UBKMusicSequenceDataFactory()
 	bCreateNew = true;
 }
 
-
-// Next time I come edit this shit I gotta remember it gets overriden... 
+// Next time I come edit this shit I gotta remember it gets overriden...
 
 TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetData& InAssetData) const
 {
 	auto OnClickedLambda = [InAssetData]() -> FReply
 		{
 			auto SequenceData = Cast<UDAWSequencerData>(InAssetData.GetAsset());
-			
-			if (SequenceData->PlayState == TransportPlaying )
+
+			if (SequenceData->PlayState == TransportPlaying)
 			{
 				//unDAW::PreviewPlayback::StopSound();
 				SequenceData->SendTransportCommand(EBKTransportCommands::Stop);
@@ -62,7 +59,7 @@ TSharedPtr<SWidget> FDAWSequenceAssetActions::GetThumbnailOverlay(const FAssetDa
 				// Load and play sound
 				auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 				//PreviewHelper->OnDAWPerformerReady
-				
+
 				if (SequenceData->PlayState == ReadyToPlay)
 				{
 					SequenceData->SendTransportCommand(EBKTransportCommands::Play);

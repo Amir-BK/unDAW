@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GlyphButton.h"
 #include "Widgets/Input/SButton.h"
 #include <BKMusicWidgets.h>
@@ -39,28 +38,26 @@ TSharedRef<SButton> UTransportGlyphButton::CreateTransportButton(EBKTransportCom
 
 	return SNew(SButton)
 		.VAlign(EVerticalAlignment::VAlign_Center)
-			.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(STextBlock)
-					.Text(FText::FromString(outString))
-					.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
-					.Justification(ETextJustify::Center)
+		.HAlign(EHorizontalAlignment::HAlign_Center)
+		[
+			SNew(STextBlock)
+				.Text(FText::FromString(outString))
+				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
+				.Justification(ETextJustify::Center)
 
-
-			];
+		];
 }
 
 bool UTransportGlyphButton::SetParentEditor(UObject* MidiEditor)
 {
-	ITimeSyncedPanel* interfaceCast = (ITimeSyncedPanel*) (MidiEditor);
+	ITimeSyncedPanel* interfaceCast = (ITimeSyncedPanel*)(MidiEditor);
 	if (interfaceCast)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Yay?"))
 			//ParentEditorWidgetPointer = interfaceCast;
-		return true;
-			
+			return true;
 	}
-	
+
 	return false;
 }
 
@@ -73,12 +70,12 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 {
 	FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
 	FString outString;
-	
+
 	switch (TransportCommand.GetValue())
 	{
 	case EBKTransportCommands::Play:
 		outString.AppendChar(TCHAR(0xF04B));
-			break;
+		break;
 	case EBKTransportCommands::Pause:
 		outString.AppendChar(TCHAR(0xF04C));
 		break;
@@ -99,7 +96,7 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 		outString = "";
 		break;
 	}
-	
+
 	return SNew(SButton)
 		//.ButtonColorAndOpacity_Lambda(([&]() {
 		//return IsActive ? FLinearColor::Blue : FLinearColor::Gray; }))
@@ -107,22 +104,20 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 		.OnClicked(FOnClicked::CreateLambda([&, data = TransportCommand.GetValue()]() {
 		TransportButtonClicked.Broadcast(TransportCommand.GetValue());
 		//UE_LOG(LogTemp, Log, TEXT("Do we get in here sir?"))
-		 return FReply::Handled(); }))
+		return FReply::Handled(); }))
 		.VAlign(EVerticalAlignment::VAlign_Center)
 		.HAlign(EHorizontalAlignment::HAlign_Center)
 		[
-		SNew(STextBlock)
-			.Text(FText::FromString(outString))
-			.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
-			.Justification(ETextJustify::Center)
+			SNew(STextBlock)
+				.Text(FText::FromString(outString))
+				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
+				.Justification(ETextJustify::Center)
 
-			
 		];
 }
 
 void UTransportGlyphButton::ReleaseSlateResources(bool bReleaseChildren)
 {
-
 }
 
 void UQuantizationValueGlyphButton::SetActiveState(bool isActive)
@@ -132,7 +127,6 @@ void UQuantizationValueGlyphButton::SetActiveState(bool isActive)
 
 TSharedRef<SWidget> UQuantizationValueGlyphButton::RebuildWidget()
 {
-	
 	FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
 	FString outString = "";
 
@@ -206,7 +200,7 @@ TSharedRef<SWidget> UQuantizationValueGlyphButton::RebuildWidget()
 	default:
 		break;
 	}
-	
+
 	return SNew(SButton)
 		.ButtonColorAndOpacity_Lambda(([&]() {
 		return IsActive ? SelectedIconColor : IconColor; }))
@@ -216,16 +210,15 @@ TSharedRef<SWidget> UQuantizationValueGlyphButton::RebuildWidget()
 		return FReply::Handled(); }))
 		.VAlign(EVerticalAlignment::VAlign_Center)
 		.HAlign(EHorizontalAlignment::HAlign_Center)
-			[
-				SNew(STextBlock)
-					.Text(FText::FromString(outString))
-					.Font(FSlateFontInfo(PluginDir / TEXT("/Resources/Petaluma/redist/otf/Petaluma.otf"), FontSize))
-					.Justification(ETextJustify::Center)
+		[
+			SNew(STextBlock)
+				.Text(FText::FromString(outString))
+				.Font(FSlateFontInfo(PluginDir / TEXT("/Resources/Petaluma/redist/otf/Petaluma.otf"), FontSize))
+				.Justification(ETextJustify::Center)
 
-			];
+		];
 }
 
 void UQuantizationValueGlyphButton::ReleaseSlateResources(bool bReleaseChildren)
 {
-
 }

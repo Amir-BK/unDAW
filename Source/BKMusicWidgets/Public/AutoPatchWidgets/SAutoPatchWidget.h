@@ -6,13 +6,13 @@
 #include "Widgets/SCompoundWidget.h"
 
 /**
- * 
+ *
  */
 class BKMUSICWIDGETS_API SAutoPatchWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SAutoPatchWidget)
-	{}
+		{}
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */

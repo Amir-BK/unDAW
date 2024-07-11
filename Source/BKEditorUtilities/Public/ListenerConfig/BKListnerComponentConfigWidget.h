@@ -13,13 +13,12 @@
 #include "BKListnerComponentConfigWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
-
 
 	virtual void OnObjectSlected(UObject* SelectedObject);
 
@@ -27,18 +26,13 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 
 	void InitFromData();
 
-
-
 	UPROPERTY()
 	TObjectPtr<AMusicScenePlayerActor> DefaultSceneManager;
 
 	UPROPERTY()
 	UDAWListenerComponent* ControlledComponent;
 
-
 	TSharedPtr<SVerticalBox> MainViewArea;
-
-
 
 public:
 
@@ -49,21 +43,17 @@ public:
 
 protected:
 
-
 	UFUNCTION(BlueprintImplementableEvent, CallInEditor)
 	void OnListenerComponentSelected(UDAWListenerComponent* SelectedComponent);
 
-
 	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	//class UDetailsView* ComponentDetailsView;
-
 
 	//~ Begin UWidget Interface
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
-	//virtual void NativeConstruct() override; 
+	//virtual void NativeConstruct() override;
 
 	//~ End UWidget Interface
-	
 };

@@ -23,7 +23,7 @@ namespace unDAWMetasounds::TrackIsolatorOP
 
 		/**
 		 * Set the range of tracks to include. Track 0 is reserved as the "conductor" track, which only contains timing information.
-		 * The first track with notes and other messages on it will be track 1. 
+		 * The first track with notes and other messages on it will be track 1.
 		 * @param InMinTrackIdx The first track to include in the range of tracks (inclusive).
 		 * @param InMaxTrackIdx The last track to include in th range of tracks (inclusive).
 		 * @param InIncludeConductorTrack Whether or not to include the conductor track (track 0)
@@ -34,7 +34,7 @@ namespace unDAWMetasounds::TrackIsolatorOP
 		uint16 TrackIdx = 0;
 		uint16 ChannelIdx = 0;
 		bool IncludeConductorTrack = false;
-		
+
 		Harmonix::Midi::Ops::FStuckNoteGuard StuckNoteGuard;
 	};
 }

@@ -4,9 +4,7 @@ using UnrealBuildTool;
 
 public class BK_EditorUtilities : ModuleRules
 {
-
     private bool bStrictIncludesCheck = true;
-
 
     public BK_EditorUtilities(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -54,7 +52,6 @@ public class BK_EditorUtilities : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "ToolMenus"
-               
 
                 // ... add other public dependencies that you statically link with here ...
 			}
@@ -74,7 +71,6 @@ public class BK_EditorUtilities : ModuleRules
                 "Blutility",
                 "InputCore",
                 "HarmonixDspEditor",
-                
 
 				// ... add private dependencies that you statically link with here ...
 			}

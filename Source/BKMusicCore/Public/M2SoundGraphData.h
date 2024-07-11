@@ -33,7 +33,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVertexAdded, UM2SoundVertex*, Add
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAudioParameterFromVertex, FAudioParameter, Parameter);
 
-
 //on timestamp updated dynamic multicast delegate one param please
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeStampUpdated, FMusicTimestamp, NewTimestamp);
 
@@ -50,8 +49,6 @@ struct FMidiExplicitMidiInstrumentTrack
 	UPROPERTY()
 	int32 ChannelId = INDEX_NONE;
 };
-
-
 
 //the output creation logic will generate an array of these structs, each struct will contain the data needed to create an output in the metasound patch
 // once not needed these can be returned to the pool
@@ -138,7 +135,6 @@ struct FM2SoundMetasoundBuilderPinData
 	TObjectPtr<UM2SoundVertex> OutputVertex;
 };
 
-
 USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {
@@ -214,8 +210,6 @@ struct FLinkedNotesTrack
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
 
-
-
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMasterChannelOutputSettings {
 	GENERATED_BODY()
@@ -272,8 +266,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence", meta = (TitleProperty = "trackName"))
 	TArray<FTrackDisplayOptions> TracksMappings;
-
-
 };
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
@@ -290,7 +282,6 @@ public:
 
 	virtual void InitializeGraph() {};
 };
-
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMemberInput
@@ -330,15 +321,12 @@ struct FMemberInput
 		DataType = InDataType;
 		bIsStale = false;
 	}
-
-
 };
 
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
 USTRUCT()
 struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 {
-	
 	GENERATED_BODY()
 
 	UPROPERTY()
@@ -379,7 +367,7 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	//graph build results and metadata
 
 	UPROPERTY(VisibleAnywhere)
-	TMap<FName,EMetaSoundBuilderResult> BuilderResults;
+	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
 
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
 	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
@@ -411,16 +399,12 @@ private:
 	void CreateMainMixer();
 
 	void ResizeOutputMixer();
-
 };
-
 
 class UMappedVertexCache;
 
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
-
-
 
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
 class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject
@@ -441,37 +425,35 @@ public:
 	bool BreakPinConnection<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput)
 	{
 		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Literals!!!!"))
-		if (InInput)
-		{
-			EMetaSoundBuilderResult Result;
-			auto* LinkedToOutput = Cast<UM2MetasoundLiteralPin>(InInput->LinkedPin);
-			BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+			if (InInput)
+			{
+				EMetaSoundBuilderResult Result;
+				auto* LinkedToOutput = Cast<UM2MetasoundLiteralPin>(InInput->LinkedPin);
+				BuilderContext->DisconnectNodes(LinkedToOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
 
-			//turns out the builder always returns 'fail' for disconnections, so we'll have to assume it succeeded...
-			LinkedToOutput->LinkedPin = nullptr;
-			InInput->LinkedPin = nullptr;
-			return true;
-
-		}
+				//turns out the builder always returns 'fail' for disconnections, so we'll have to assume it succeeded...
+				LinkedToOutput->LinkedPin = nullptr;
+				InInput->LinkedPin = nullptr;
+				return true;
+			}
 		return false;
 	};
 
 	template<>
 	bool BreakPinConnection<UM2AudioTrackPin>(UM2AudioTrackPin* InInput)
 	{
-		
 		UE_LOG(unDAWDataLogs, Warning, TEXT("Breaking Audio Tracks!!!!"))
-		if (InInput)
-		{
-			bool bBreakLeft = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamL);
-			bool bBreakRight = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamR);
-			if (bBreakLeft && bBreakRight)
+			if (InInput)
 			{
-				InInput->LinkedPin->LinkedPin = nullptr;
-				InInput->LinkedPin = nullptr;
-				return true;
+				bool bBreakLeft = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamL);
+				bool bBreakRight = BreakPinConnection<UM2MetasoundLiteralPin>(InInput->AudioStreamR);
+				if (bBreakLeft && bBreakRight)
+				{
+					InInput->LinkedPin->LinkedPin = nullptr;
+					InInput->LinkedPin = nullptr;
+					return true;
+				}
 			}
-		}
 		return false;
 	};
 
@@ -479,7 +461,6 @@ public:
 	bool ConnectPins(T* InInput, T* InOutput)
 	{
 		UE_LOG(unDAWDataLogs, Warning, TEXT("ConnectPins not implemented for this type - UNSPECIALIZED"));
-
 
 		return false;
 	};
@@ -493,12 +474,11 @@ public:
 			BuilderContext->ConnectNodes(InOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
 
 			//print all data from the pins so we debug what's going on
-			//print connection result 
+			//print connection result
 			if (Result == EMetaSoundBuilderResult::Succeeded)
 			{
 				InInput->LinkedPin = InOutput;
 				InOutput->LinkedPin = InInput;
-
 			}
 			else
 			{
@@ -514,13 +494,12 @@ public:
 	template<>
 	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
 	{
-
 		if (InInput && InOutput)
 		{
 			bool bConnectLeft = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamL, InOutput->AudioStreamL);
 			bool bConnectRight = ConnectPins<UM2MetasoundLiteralPin>(InInput->AudioStreamR, InOutput->AudioStreamR);
 
-			if(InInput->ParentVertex == InOutput->ParentVertex)
+			if (InInput->ParentVertex == InOutput->ParentVertex)
 			{
 				UE_LOG(unDAWDataLogs, Warning, TEXT("Can't connect audio tracks to the same vertex!"));
 				return false;
@@ -531,9 +510,7 @@ public:
 				InInput->LinkedPin = InOutput;
 				InOutput->LinkedPin = InInput;
 				return true;
-
 			}
-
 		}
 		UE_LOG(unDAWDataLogs, Warning, TEXT("Failed to connect audio tracks!"));
 		return false;
@@ -585,18 +562,15 @@ public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
 	UAudioComponent* AuditionComponent = nullptr;
 
-	
 	TSet<TTuple<int32, int32>> CurrentlyActiveNotes;
 
 	UPROPERTY()
 	FOnBuilderReady OnBuilderReady;
 
-
 public:
 
 	FOnMetasoundOutputValueChangedNative OnMidiStreamOutputReceived;
 	FOnMetasoundOutputValueChangedNative OnMidiClockOutputReceived;
-
 
 	void SetLoopSettings(const bool& InbIsLooping, const int32& BarDuration);
 
@@ -624,7 +598,7 @@ public:
 	UFUNCTION(Category = "unDAW")
 	void AddTrack();
 
-	//Just for development and debug! don't call unless you want to destroy the session! 
+	//Just for development and debug! don't call unless you want to destroy the session!
 	UFUNCTION(CallInEditor, Category = "unDAW")
 	void ReinitGraph();
 
@@ -667,7 +641,6 @@ public:
 	UFUNCTION()
 	void CalculateSequenceDuration();
 
-
 	UPROPERTY()
 	TArray<FLinkedMidiEvents> PendingLinkedMidiNotesMap;
 
@@ -685,8 +658,7 @@ public:
 
 	//this method cleans the pending notes map and populates the main linked notes map with the data from the midi file, which should already contain the pending notes
 	//optionally returns the discovered channels/tracks from the midi file
-	void UpdateNoteDataFromMidiFile(TArray<TTuple<int,int>>& OutDiscoveredChannels);
-
+	void UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& OutDiscoveredChannels);
 
 	UFUNCTION()
 	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);
@@ -713,7 +685,6 @@ public:
 
 	void BeginDestroy() override;
 
-
 	UPROPERTY(VisibleAnywhere, Category = "unDAW")
 	float BeatsPerMinute = 120.0f;
 
@@ -723,10 +694,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW", meta = (ShowInnerProperties = "true", DisplayPriority = "0", ExposeOnSpawn = "true", EditInLine = "true"))
 	FMasterChannelOutputSettings MasterOptions;
 
-
 	TEnumAsByte<EBKPlayState> PlayState;
-
-
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW")
 	void AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
@@ -738,7 +706,6 @@ public:
 
 	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
-
 
 	//should remember time signature can only come on bar start
 	UPROPERTY()
@@ -778,7 +745,6 @@ public:
 
 	UPROPERTY()
 	TArray<FAssignableAudioOutput> AudioOutputs;
-
 
 	//This delegate is listened to by the performer and is fired by the vertexes
 	UPROPERTY()

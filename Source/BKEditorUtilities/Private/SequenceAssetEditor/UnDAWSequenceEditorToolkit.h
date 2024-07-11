@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,97 +14,92 @@
 #include "DetailLayoutBuilder.h"
 #include "GraphEditor.h"
 
-
 class FSequenceAssetDetails : public IDetailCustomization
 {
 public:
-    // This function will be called when the properties are being customized
-    void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
+	// This function will be called when the properties are being customized
+	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
-    ~FSequenceAssetDetails();
+	~FSequenceAssetDetails();
 
-    static TSharedRef<IDetailCustomization> MakeInstance() { return MakeShareable(new FSequenceAssetDetails()); }
+	static TSharedRef<IDetailCustomization> MakeInstance() { return MakeShareable(new FSequenceAssetDetails()); }
 private:
-    UDAWSequencerData* SequenceData = nullptr;
+	UDAWSequencerData* SequenceData = nullptr;
 
-    void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
+	void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
 
-    TSharedPtr<SVerticalBox> MidiInputTracks;
+	TSharedPtr<SVerticalBox> MidiInputTracks;
 
-    void UpdateMidiInputTracks();
+	void UpdateMidiInputTracks();
 
-    // This function will create a new instance of this class as a shared pointer
+	// This function will create a new instance of this class as a shared pointer
 
-    TSharedPtr<IDetailsView> NodeDetailsView;
+	TSharedPtr<IDetailsView> NodeDetailsView;
 };
-
 
 class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {
 public:
-    void InitEditor(const TArray<UObject*>& InObjects);
- 
-    void RegisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
-    void UnregisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
+	void InitEditor(const TArray<UObject*>& InObjects);
 
-    TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
+	void RegisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
+	void UnregisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;
 
-    void OnSelectionChanged(const TSet<UObject*>& SelectedNodes);
+	TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
 
-    void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
- 
-    FName GetToolkitFName() const override { return "unDAWSequenceEditor"; }
-    FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
-    FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
-    FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
+	void OnSelectionChanged(const TSet<UObject*>& SelectedNodes);
 
-    void DeleteSelectedNodes();
+	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
-    void OnNodeDoubleClicked(UEdGraphNode* Node)
-    {
-        if (Node && Node->CanJumpToDefinition())
-        {
-            Node->JumpToDefinition();
-        }
-    }
+	FName GetToolkitFName() const override { return "unDAWSequenceEditor"; }
+	FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
+	FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
+	FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
 
-    void CreateGraphEditorWidget();
+	void DeleteSelectedNodes();
 
-    TSharedPtr<SDockTab> MetasoundGraphEditorBox;
-    TSharedPtr<SGraphEditor> MetasoundGraphEditor;
+	void OnNodeDoubleClicked(UEdGraphNode* Node)
+	{
+		if (Node && Node->CanJumpToDefinition())
+		{
+			Node->JumpToDefinition();
+		}
+	}
 
-    void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
+	void CreateGraphEditorWidget();
 
-    void TogglePaintingMode();
+	TSharedPtr<SDockTab> MetasoundGraphEditorBox;
+	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
 
-    void TogglePianoTab();
+	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
-    void ExtendToolbar();
+	void TogglePaintingMode();
 
-   // ~FUnDAWSequenceEditorToolkit();
+	void TogglePianoTab();
+
+	void ExtendToolbar();
+
+	// ~FUnDAWSequenceEditorToolkit();
 
 protected:
-    //UDAWSequencerData* SequenceData;
-    TSharedPtr<FUICommandList> AdditionalGraphCommands;
-    TSharedPtr<SPianoRollGraph> PianoRollGraph;
+	//UDAWSequencerData* SequenceData;
+	TSharedPtr<FUICommandList> AdditionalGraphCommands;
+	TSharedPtr<SPianoRollGraph> PianoRollGraph;
 
-    TSharedPtr<STextBlock> CurrentPlayStateTextBox;
-    TSharedPtr<IDetailsView> NodeDetailsView;
-    TSharedPtr<IDetailsView> AdditionalDetailsView;
-    TSharedPtr<SHorizontalBox> TransportControls;
+	TSharedPtr<STextBlock> CurrentPlayStateTextBox;
+	TSharedPtr<IDetailsView> NodeDetailsView;
+	TSharedPtr<IDetailsView> AdditionalDetailsView;
+	TSharedPtr<SHorizontalBox> TransportControls;
 
-    void SetupPreviewPerformer();
-    //void PlayAudioComponent();
-    //void StopAudioComponent();
+	void SetupPreviewPerformer();
+	//void PlayAudioComponent();
+	//void StopAudioComponent();
 
-    //UAudioComponent* AudioComponent = nullptr;
-
+	//UAudioComponent* AudioComponent = nullptr;
 
 public:
-    //midi editing - it for the purpose of tracking editor undo operations,
-    //this requires changing SPianoRoll graph so that it exposes mouse and key down events to the asset editor
+	//midi editing - it for the purpose of tracking editor undo operations,
+	//this requires changing SPianoRoll graph so that it exposes mouse and key down events to the asset editor
 
-    FReply OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
-
-
+	FReply OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
 };

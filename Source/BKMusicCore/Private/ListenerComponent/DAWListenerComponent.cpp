@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ListenerComponent/DAWListenerComponent.h"
 
 // Sets default values for this component's properties
@@ -10,10 +9,8 @@ UDAWListenerComponent::UDAWListenerComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-
 	// ...
 }
-
 
 // Called when the game starts
 void UDAWListenerComponent::BeginPlay()
@@ -21,7 +18,6 @@ void UDAWListenerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
 }
 
 void UDAWListenerComponent::PostInitProperties()
@@ -37,15 +33,11 @@ void UDAWListenerComponent::PostInitProperties()
 	}
 }
 
-
-
-
 void UDAWListenerComponent::SetSceneManager(AMusicScenePlayerActor* inSceneManager)
 {
 	SceneManager = inSceneManager;
 
 	InitEvent();
-
 }
 
 // Called every frame
@@ -55,4 +47,3 @@ void UDAWListenerComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 
 	// ...
 }
-

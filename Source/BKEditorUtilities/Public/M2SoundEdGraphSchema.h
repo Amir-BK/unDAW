@@ -18,12 +18,12 @@
 
 class UM2SoundEdGraphNode;
 
- struct FPlacementDefaults
+struct FPlacementDefaults
 {
-	 static const int OffsetBetweenNodes = 200;
-	 static const int OutputsColumnPosition = 1400;
-	 static const int InputsColumnPosition = 300;
-	 static const int InstrumentColumns = 950;
+	static const int OffsetBetweenNodes = 200;
+	static const int OutputsColumnPosition = 1400;
+	static const int InputsColumnPosition = 300;
+	static const int InstrumentColumns = 950;
 };
 
 UCLASS()
@@ -74,28 +74,25 @@ public:
 	TArray<UM2SoundVertex*> SelectedVertices;
 
 	UFUNCTION()
-	void OnVertexAdded(UM2SoundVertex* Vertex) { 
-		
-		
+	void OnVertexAdded(UM2SoundVertex* Vertex) {
 		//so this is definitely not good enough and indicates some issues
 		// we need to think about the node creation process and how to handle the vertex to node mapping
 
 		UE_LOG(LogTemp, Warning, TEXT("Vertex added"));
-		//NotifyGraphChanged(); 
+		//NotifyGraphChanged();
 	}
 
 	UFUNCTION()
 	UM2SoundEdGraphNode* GetNodeForVertex(UM2SoundVertex* Vertex) const
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GetNodeForVertex VertexToNodeMap Num %d"), VertexToNodeMap.Num());
-		if(VertexToNodeMap.Contains(Vertex))
-			{
+		if (VertexToNodeMap.Contains(Vertex))
+		{
 			return VertexToNodeMap[Vertex];
-			}
+		}
 		else {
 			return nullptr;
 		}
-
 	}
 
 	UFUNCTION()
@@ -148,32 +145,27 @@ public:
 		//if wild card and connected to something get the color of that something
 		//if(PinType.PinCategory == "WildCard")
 		//{
-
 		//		return GetPinTypeColor(PinType.PinSubCategory);
 		//}
 
 		UUNDAWSettings* Settings = UUNDAWSettings::Get();
-		
+
 		//Tracks are blue
 		if (PinType.PinCategory == "Track-Audio")
 		{
 			return Settings->AudioPinTypeColor;
 		}
 
-
-
 		//metasound literals get the value from the metasound literal schema according to their data type
 		if (PinType.PinCategory == "MetasoundLiteral")
 		{
-			
-
-			if(Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
+			if (Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
 			{
 				return Settings->CustomPinTypeColors[PinType.PinSubCategory];
 			}
 
 			if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryFloat)
-				{
+			{
 				return Settings->FloatPinTypeColor;
 			}
 			else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryInt32)
@@ -196,19 +188,13 @@ public:
 			{
 				return Settings->DefaultPinTypeColor;
 			}
-			
-
-
-
 		}
 
 		return UEdGraphSchema::GetPinTypeColor(PinType);
 	};
 
-
 	virtual void OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const override;
 };
-
 
 USTRUCT()
 struct FM2SoundGraphAddNodeAction : public FEdGraphSchemaAction
@@ -247,7 +233,6 @@ class FM2SoundGraphPanelNodeFactory : public FGraphPanelNodeFactory
 public:
 	virtual TSharedPtr<class SGraphNode> CreateNode(UEdGraphNode* InNode) const override;
 };
-
 
 USTRUCT()
 struct FM2SoundGraphAddNodeAction_NewInstrument : public FM2SoundGraphAddNodeAction

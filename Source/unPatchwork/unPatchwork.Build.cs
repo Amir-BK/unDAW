@@ -1,8 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-using System.IO;
 using UnrealBuildTool;
-using UnrealBuildTool.Rules;
 
 public class unPatchwork : ModuleRules
 {
@@ -44,7 +42,6 @@ public class unPatchwork : ModuleRules
             {
                 "Core",
 				//"Json",
-				
 
                 "AudioMixer",
                 "DeveloperSettings",

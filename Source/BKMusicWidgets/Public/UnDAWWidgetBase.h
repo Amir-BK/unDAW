@@ -8,37 +8,32 @@
 #include "UnDAWWidgetBase.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BKMUSICWIDGETS_API UUnDAWWidgetBase : public UCommonUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	virtual void SetSceneManager(AMusicScenePlayerActor* InSceneManager)
 	{
-				SceneManager = InSceneManager;
-				
-				if (!SceneManager) return;
-				DawSequencerData = SceneManager->GetDAWSequencerData();
+		SceneManager = InSceneManager;
 
-				Init();
+		if (!SceneManager) return;
+		DawSequencerData = SceneManager->GetDAWSequencerData();
 
+		Init();
 	}
 
 	UFUNCTION()
 	virtual void Init() {};
 
-
-
 protected:
 	//Scene manager reference
-		UPROPERTY()
-		AMusicScenePlayerActor* SceneManager;
+	UPROPERTY()
+	AMusicScenePlayerActor* SceneManager;
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", Meta = (DisplayName = "DAW Sequencer Data"))
-		TObjectPtr<UDAWSequencerData> DawSequencerData;
-	
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", Meta = (DisplayName = "DAW Sequencer Data"))
+	TObjectPtr<UDAWSequencerData> DawSequencerData;
 };

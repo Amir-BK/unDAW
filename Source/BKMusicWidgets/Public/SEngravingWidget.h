@@ -13,16 +13,10 @@
 #include "EngineGlobals.h"
 #include "SEngravingWidget.generated.h"
 
-
-
-
-
-
 TCHAR GlyphEnumToChar(EGlyphsTypes inGlyph);
 
-
 USTRUCT(BlueprintType)
-struct FClefStruct 
+struct FClefStruct
 {
 	GENERATED_BODY()
 
@@ -31,7 +25,6 @@ struct FClefStruct
 	// this pitch will be rendered on the center of the clef, so 67 in gClef - actually should be 71!! the b in the middle
 	int centerPitch;
 
-	
 	FString toString() const {
 		FString str;
 		return str.AppendChar(clefGlyphString);
@@ -42,7 +35,6 @@ struct FClefStruct
 		clefGlyphString = GlyphEnumToChar(EGlyphsTypes::G_Clef);
 		clefOffset = 10;
 		centerPitch = 67;
-		
 	};
 
 	FClefStruct(EClefs clef)
@@ -60,15 +52,10 @@ struct FClefStruct
 			centerPitch = 35;
 			break;
 		}
-		
-		
 	}
-
-
 };
 
-
-// represents a processed glyph, values should be in staff spaces. 
+// represents a processed glyph, values should be in staff spaces.
 
 UCLASS(BlueprintType)
 class UPreparedGlyph : public UObject
@@ -76,7 +63,7 @@ class UPreparedGlyph : public UObject
 public:
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetMainGlyph, meta=(ExposeOnSpawn = "true"), Category = "BK Music|Engraving|Tests")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetMainGlyph, meta = (ExposeOnSpawn = "true"), Category = "BK Music|Engraving|Tests")
 	TEnumAsByte<EGlyphsTypes> mainGlyph = EGlyphsTypes::Black_Notehead;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetAccidentalGlyph, meta = (ExposeOnSpawn = "true"), Category = "BK Music|Engraving|Tests")
@@ -99,11 +86,9 @@ public:
 	UPROPERTY(BluePrintReadOnly, Category = "BK Music|Engraving|Tests")
 	bool drawStem = false;
 
-
 	UPreparedGlyph() {
 		prepareStringRepresentation();
 	}
-
 
 	//string representation for the glyph... it really might be preferable to cache these somewhere...
 	void prepareStringRepresentation()
@@ -129,16 +114,10 @@ public:
 		accidentalGlyph = glyph;
 		prepareStringRepresentation();
 	}
-
-
-
 };
 
-
-
-
 /**
- * 
+ *
  */
 UCLASS(Abstract)
 class BKMUSICWIDGETS_API USEngravingWidget : public UUserWidget
@@ -155,7 +134,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo EngravingFont;
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo DebugFont;
 
@@ -171,7 +150,6 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Music|Grid")
 	int gridMax;
-
 
 	UPROPERTY(BlueprintReadOnly, Category = "Music|Grid")
 	float measuredY;
@@ -197,7 +175,7 @@ public:
 	float staff_spacing;
 
 	//add musical events to this array
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,BluePrintSetter = UpdateArray, Instanced, Category = "Music|Events", meta = (ShowInnerProperties = "true", DisplayPriority = "1"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BluePrintSetter = UpdateArray, Instanced, Category = "Music|Events", meta = (ShowInnerProperties = "true", DisplayPriority = "1"))
 	TArray<UMusicalEvent*> musical_events;
 
 	UPROPERTY(EditAnywhere, BlueprintReadwrite, Category = "Music|Grid")
@@ -231,8 +209,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Music|Defaults")
 	TEnumAsByte<EClefs> E_clef;
 	//EClefs clef = EClefs::gClef;
-	
-
 
 	FClefStruct clef;
 
@@ -249,5 +225,4 @@ private:
 	void NativePreConstruct() override;
 
 	void PrepareGrid();
-
 };

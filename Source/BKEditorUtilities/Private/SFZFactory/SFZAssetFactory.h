@@ -21,10 +21,9 @@
 
 class USFZAssetFactory;
 
-//the actual settings payload, this is used by the factory when creating the fusion patch 
+//the actual settings payload, this is used by the factory when creating the fusion patch
 USTRUCT(Category = "BK Music|SFZ|Import Settings")
 struct FSFZImportSettings {
-
 	GENERATED_BODY()
 
 	bool bUnpitched = false;
@@ -33,28 +32,21 @@ struct FSFZImportSettings {
 	float ampegRelease = 0.03f;
 	float ampegDecay = 0.0f;
 	float ampegHold = 0.0f;
-	
+
 	EKeyzoneSelectMode keyzoneSelectMode = EKeyzoneSelectMode::Layers;
-
-
 };
 
-// widget for the settings dialog 
+// widget for the settings dialog
 class SImportSFZSettingsDialog : public SCompoundWidget {
-
 public:
 	SLATE_BEGIN_ARGS(SImportSFZSettingsDialog)
 		{}
-
 
 	SLATE_END_ARGS();
 
 	void Construct(const FArguments& InArgs);
 
-
-
 	FSFZImportSettings settings = FSFZImportSettings();
-
 
 	const FTextBlockStyle SFZImportInfoStyle = FTextBlockStyle().SetFont(FCoreStyle::GetDefaultFontStyle("Bold", 10)).SetColorAndOpacity(FLinearColor::White);
 	TSharedPtr<STextBlock> SFZFileInfoText;
@@ -62,7 +54,6 @@ public:
 	TSharedPtr<SButton> OkButton;
 	TSharedPtr<SCheckBox> unpitchedCheckbox;
 	TSharedPtr<SCheckBox> velToGainCheckbox;
-
 
 	//TSharedPtr<SNumericEntryBox<float>> AmpegTest;
 
@@ -127,7 +118,6 @@ public:
 	}
 };
 
-
 //@brief helper class to traverse a region and associate opcodes to values through a slow recursive algorithm that seems to work rather robustly given the lack of strict white spacing of sfz files
 UCLASS(Category = "BK Music|SFZ|Internal Classes")
 class USFZOpCodeLineParser : public UObject
@@ -145,11 +135,10 @@ public:
 	USFZOpCodeLineParser* ParentPtr = nullptr;
 
 	/**
-    *@brief this is the main caller function of this class, give it any string of any length and it will break it into opcode key/token values, also substitutes SFZ defines that were declared earlier in the file
-    * @param StringToTraverse the string to be recursively broken into op codes.
-    */
+	*@brief this is the main caller function of this class, give it any string of any length and it will break it into opcode key/token values, also substitutes SFZ defines that were declared earlier in the file
+	* @param StringToTraverse the string to be recursively broken into op codes.
+	*/
 	bool TraverseString(FString StringToTraverse);
-
 
 	void CombineOpCodesWithParents();
 	void PopulateSFZRegion(USFZRegion* Region, UFKSFZAsset* NewAsset, USFZAssetFactory* Factory);
@@ -163,7 +152,7 @@ private:
 };
 
 UCLASS()
-class BK_EDITORUTILITIES_API USFZHierarchialOpcodeContainer: public UObject {
+class BK_EDITORUTILITIES_API USFZHierarchialOpcodeContainer : public UObject {
 	GENERATED_BODY()
 
 	UPROPERTY()
@@ -177,15 +166,14 @@ class BK_EDITORUTILITIES_API USFZHierarchialOpcodeContainer: public UObject {
 	TMap<FString, FString> OpcodesStringMap;
 };
 /**
- * 
+ *
  */
-UCLASS(Config=Editor, Category = "BK Music|SFZ|Factory")
+UCLASS(Config = Editor, Category = "BK Music|SFZ|Factory")
 class BK_EDITORUTILITIES_API USFZAssetFactory : public UFactory
 {
 	GENERATED_BODY()
 
 	USFZAssetFactory();
-
 
 	UFKSFZAsset* newSFZAsset;
 	FString SFZFileName;
@@ -194,7 +182,6 @@ class BK_EDITORUTILITIES_API USFZAssetFactory : public UFactory
 	virtual UObject* FactoryCreateFile(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const FString& Filename, const TCHAR* Parms, FFeedbackContext* Warn, bool& bOutOperationCanceled) override;
 	// End of UFactory interface
 public:
-
 
 	bool createFusionPatch = true;
 	EKeyzoneSelectMode KeyZoneSelectMode;
@@ -212,7 +199,6 @@ public:
 
 	void ShowImportDialog(int32 ImportedAssetIndex)
 	{
-
 		//show the dialog widgets on a window
 		TSharedPtr<SWindow> ParentWindow;
 		SAssignNew(ParentWindow, SWindow)
@@ -240,7 +226,5 @@ public:
 		FSlateApplication::Get().AddModalWindow(ParentWindow.ToSharedRef(), nullptr);
 	}
 
-	//custom widgets 
-
+	//custom widgets
 };
-

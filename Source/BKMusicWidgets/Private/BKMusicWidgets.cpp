@@ -13,12 +13,8 @@
 
 #define LOCTEXT_NAMESPACE "FBKMusicWidgetsModule"
 
-
-
-
 FMeasuredGlyph FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(const int& codepoint)
 {
-	
 	FMeasuredGlyph returnGlyph = FMeasuredGlyph();
 	FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
 	TSharedRef<FSlateFontMeasure> fontMeasureService = (FSlateApplication::Get().GetRenderer()->GetFontMeasureService());
@@ -32,21 +28,18 @@ FMeasuredGlyph FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(const int& codepoi
 	FString outString;
 	FUnicodeChar::CodepointToString(codepoint, outString);
 
-
 	FVector2f fontMeasureRes = fontMeasureService->Measure(outString, FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24));
 
 	returnGlyph.measuredX = fontMeasureRes.X;
 	returnGlyph.measuredY = fontMeasureRes.Y;
 	returnGlyph.glyph = TCHAR(codepoint);
-	
+
 	return returnGlyph;
 }
 
 void FBKMusicWidgetsModule::StartupModule()
 {
-	
 	//GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
-	
 }
 
 void FBKMusicWidgetsModule::ShutdownModule()
@@ -56,5 +49,5 @@ void FBKMusicWidgetsModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FBKMusicWidgetsModule, BKMusicWidgets)

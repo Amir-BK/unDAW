@@ -17,9 +17,7 @@
 #include "Components/ActorComponent.h"
 #include "UnDAWSFZAsset.generated.h"
 
-
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(FK_SFZ_Logs, Verbose, All);
-
 
 class UFK_SFZ_Performer;
 class UFKSFZAsset;
@@ -34,7 +32,6 @@ enum E_SFZ_TRIGGERTYPE {
 UENUM(BlueprintType, Category = "BK Music|SFZ")
 enum E_SFZ_LOOP_MODE
 {
-	
 	No_Loop, One_Shot, Loop_Continuous, Loop_Sustain, NotSet
 };
 
@@ -50,7 +47,6 @@ struct FSFZRegionPerformanceParameters
 	UPROPERTY();
 	float Tune = 0.0f;
 
-	
 	float Loop_Start = 0;
 
 	UPROPERTY();
@@ -58,7 +54,6 @@ struct FSFZRegionPerformanceParameters
 
 	UPROPERTY();
 	float Amplitude = 0;
-
 
 	UPROPERTY();
 	float Offset = 0;
@@ -75,18 +70,13 @@ struct FSFZRegionPerformanceParameters
 
 	UPROPERTY();
 	float Velocity;
-	
-
-
-	
 };
-
 
 // these are the region mapping parameters, used to check conditions and figure out if the region should play
 // these should generally consist of parameters that are of no interest to a 'sample player', they should be used to acquire the sample
 // so, given that we currently have no intention of using this data for finding a region within the metasound,
 // it can be excluded from the struct we create for the proxy. ergo, that information can remain on the object
-// and this struct is superfluous 
+// and this struct is superfluous
 USTRUCT(BlueprintType, Category = "BK Music|SFZ")
 struct FSFZRegionMappingParameters
 {
@@ -105,19 +95,19 @@ UCLASS(Meta = (UsesHierarchy = "true", ShowInnerProperties = "true"), Category =
 class BKMUSICCORE_API USFZRegion : public UObject
 {
 	GENERATED_BODY()
-	
+
 public:
 
-	USFZRegion(): centerNoteValue(60), tune(0)
+	USFZRegion() : centerNoteValue(60), tune(0)
 	{
-	} ;
-	
+	};
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int group = -1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int off_by = -1;
-	
+
 	// the wav file for this region
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	USoundWave* WavAsset = nullptr;
@@ -131,28 +121,28 @@ public:
 
 	UPROPERTY()
 	float Loop_Start = 0;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	float Loop_Start_Time = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
-	float Loop_Duration_Time = 0; 
-	
+	float Loop_Duration_Time = 0;
+
 	UPROPERTY()
 	float Loop_End = -1;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	float Loop_End_Time = -1;
-	
+
 	UPROPERTY()
 	float Offset = 0;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	float Offset_Time = 0;
 
 	UPROPERTY()
 	TArray<int> noteRange;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int loNote = -1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
@@ -160,7 +150,6 @@ public:
 	//I'm going to need to parse the note names into pitch numbers
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int centerNoteValue;
-
 
 	//velocity
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
@@ -180,15 +169,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	TEnumAsByte<E_SFZ_LOOP_MODE> loopMode = E_SFZ_LOOP_MODE::NotSet;
 
-
-	//sequence - roundrobin 
+	//sequence - roundrobin
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int seqPosition = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	int seqLength = 1;
-
-	  
-
 
 	UPROPERTY(VisibleAnywhere, Category = "BK Music|SFZ")
 	TMap<FName, FString> RegionOpCodes;
@@ -209,14 +194,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "BK Music|SFZ")
 	TMap<FName, int> SFZIntParamsArray;
 
-	// these are our undefined opcodes, one we didn't add to any of the other categories and don't deal with in any sepcial way 
+	// these are our undefined opcodes, one we didn't add to any of the other categories and don't deal with in any sepcial way
 	UPROPERTY(VisibleAnywhere, Category = "BK Music|SFZ")
 	TMap<FName, FString> SFZStringParamsArray;
 
-	
-
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
-	 int GetPitchDistanceFromNote(int const Note) const;
+	int GetPitchDistanceFromNote(int const Note) const;
 
 	// Generally this function is meant to transform params to local 'timing' given sample rate, but as this should probably be done when we play back the sample I'm also gonna stick here some init data
 	UFUNCTION()
@@ -225,13 +208,12 @@ public:
 	//
 	TSharedPtr<USoundWave> GetSampleSharedPtr()
 	{
-		if(!SampleSharedPtr.IsValid()) SampleSharedPtr = MakeShareable(WavAsset);
+		if (!SampleSharedPtr.IsValid()) SampleSharedPtr = MakeShareable(WavAsset);
 		return SampleSharedPtr;
 	}
-	
+
 private:
 	TSharedPtr<USoundWave> SampleSharedPtr;
-	
 };
 
 UCLASS()
@@ -239,13 +221,13 @@ class BKMUSICCORE_API UFK_Region_Runtime_Performance_Data : public UObject, publ
 {
 	GENERATED_BODY()
 public:
-	
+
 	UPROPERTY();
 	FSFZRegionPerformanceParameters Region_Performance_Parameters;
 
 	UPROPERTY()
 	USFZRegion* RegionDataPtr;
-private:	
+private:
 
 	friend class UFK_SFZ_Performer;
 	friend class FFK_SFZ_Region_Performance_Proxy;
@@ -255,13 +237,10 @@ private:
 	UPROPERTY()
 	USoundWave* sample;
 
-	
-	
 	TSharedPtr<FSFZRegionPerformanceParameters> PerfStructDataPtr;
 	TSharedPtr<USoundWave> SampleDataPtr;
 public:
 	virtual TSharedPtr<Audio::IProxyData> CreateProxyData(const Audio::FProxyDataInitParams& InitParams) override;
-	
 };
 
 class BKMUSICCORE_API FFK_SFZ_Region_Performance_Proxy : public Audio::TProxyData<FFK_SFZ_Region_Performance_Proxy>
@@ -270,7 +249,7 @@ public:
 	IMPL_AUDIOPROXY_CLASS(FFK_SFZ_Region_Performance_Proxy);
 
 	explicit FFK_SFZ_Region_Performance_Proxy(UFK_Region_Runtime_Performance_Data* InRegion)
-	: Guid(FGuid::NewGuid()), RawPointerToRegion(InRegion->RegionDataPtr), PerfStructDataPtr(InRegion->PerfStructDataPtr), SampleSimplePtr(InRegion->sample) {}
+		: Guid(FGuid::NewGuid()), RawPointerToRegion(InRegion->RegionDataPtr), PerfStructDataPtr(InRegion->PerfStructDataPtr), SampleSimplePtr(InRegion->sample) {}
 	FFK_SFZ_Region_Performance_Proxy(FFK_SFZ_Region_Performance_Proxy& Other) = default;
 
 	FGuid Guid;
@@ -293,12 +272,11 @@ public:
 private:
 
 	USFZRegion* RawPointerToRegion;
-	
+
 	TSharedPtr<FSFZRegionPerformanceParameters> PerfStructDataPtr;
 	TSharedPtr<USFZRegion> RegionDataPtr;
 	TSharedPtr<USoundWave> SampleDataPtr;
 	USoundWave* SampleSimplePtr;
-
 };
 
 UCLASS(BlueprintType, Meta = (UsesHierarchy = "true", ShowInnerProperties = "true"))
@@ -314,8 +292,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|SFZ|Region Data")
 	void GetRegionsForCondition(TArray<USFZRegion*>& InArray, bool& foundRegions, int velocityIn, int rrSeqPosition = 1,
-								int GroupID = -1);
-	
+		int GroupID = -1);
 };
 
 /**
@@ -330,10 +307,8 @@ public:
 
 	UFKSFZAsset();
 
-	
 	UPROPERTY()
 	TArray<USFZRegion*> Regions;
-
 
 	/**
 	 * @brief Spawns a new instance of an FK SFZ Instrument performer, this object is considered the 'manager' class for a single SFZ instrument, it manages region logics for this instrument and generates new audio components using 'performNote' and 'performNoteOff' method, future versions will also manage passing CC parameters to all existing components.
@@ -342,22 +317,20 @@ public:
 	 * @param metasoundToUse the metasound used to perform the SFZ regions in all their complexities, given that only very specifically designed metasounds that receive all the parameters sent by the performers will sound correctly this parameter probably shouldn't be exposed to end users and the specific required metasound should be set in code.
 	 * @return new instance of the performer.
 	 */
-	
-	
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
 	static UFK_SFZ_Performer* CreateSFZPerformerFromSampleBank(UFKSFZAsset* inAsset, UMetaSoundSource* metasoundToUse = nullptr);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
 	static TArray<UFKSFZAsset*> GetAllSFZAssets();
 
-
-	//retrieves all Fusion Patches, probably shouldn't be in the FK SFZ Asset header. 
+	//retrieves all Fusion Patches, probably shouldn't be in the FK SFZ Asset header.
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
 	static TArray<UFusionPatch*> GetAllFusionPatchAssets();
 
 	//can be used to get all assets of certain class
-	template<typename T> 
+	template<typename T>
 	static void GetObjectsOfClass(TArray<T*>& OutArray);
 
 	//gets value of property within struct
@@ -366,37 +339,31 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music|SFZ")
 	USoundWave* GetSoundWaveForNote(const int Note, int seqPosition,
-									bool& bFoundSample, int& PitchDistance);
+		bool& bFoundSample, int& PitchDistance);
 
 	/**
-	 *  @brief blueprint callable function that returns true or false if the key is mapped, returning the full pointer might be excessive                  
+	 *  @brief blueprint callable function that returns true or false if the key is mapped, returning the full pointer might be excessive
 	 * @param bSuccess    was a mapped region found for this note
 	 * @param Note       pitch of the note.
-	 * @return   Region group pointer, TODO: should probably be removed or a different function should be exposed to bp. 
+	 * @return   Region group pointer, TODO: should probably be removed or a different function should be exposed to bp.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "BK Music|SFZ")
 	USFZGroupedRegions* GetRegionGroupForNote(bool& bSuccess, int const Note);
 
-
-
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|SFZ")
 	TMap<FName, FString> ControlOpCodes;
 
-	UPROPERTY(VisibleAnywhere, Category ="BK Music|SFZ")
+	UPROPERTY(VisibleAnywhere, Category = "BK Music|SFZ")
 	TMap<FString, FString> AssetDefines;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category  = "BK Music|SFZ")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|SFZ")
 	TMap<int, FString> ccLabelsMap;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category ="BK Music|SFZ")
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|SFZ")
 	TMap<int, int> ccDefaultValMap;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "BK Music|SFZ")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|SFZ")
 	TMap<int, USFZGroupedRegions*> notesToGroupsMap;
-
-
-
 
 	//TUniquePtr<Audio::IProxyData> CreateNewProxyData(const Audio::FProxyDataInitParams& InitParams) override;
 
@@ -410,8 +377,6 @@ private:
 	 */
 	void MapNotesToRanges();
 	TSharedPtr<TMap<int, USFZGroupedRegions*>> DataPtr;
-
-
 };
 
 class BKMUSICCORE_API F_FK_SFZ_Asset_Proxy : public Audio::TProxyData<F_FK_SFZ_Asset_Proxy>
@@ -427,9 +392,8 @@ public:
 	USFZGroupedRegions* GetRegionGroupForNote(bool& success, int note) const;
 
 private:
-	
-	TSharedPtr<TMap<int, USFZGroupedRegions*>> DataPtr;
 
+	TSharedPtr<TMap<int, USFZGroupedRegions*>> DataPtr;
 };
 
 template<typename T>

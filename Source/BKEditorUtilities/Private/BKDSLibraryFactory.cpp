@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "BKDSLibraryFactory.h"
 #include "BKDPresetToFusionImporter.h"
 #include "GenericPlatform/GenericPlatformFile.h"
@@ -29,7 +28,6 @@ UObject* UBKDSLibraryFactory::FactoryCreateFile(UClass* InClass, UObject* InPare
 	FString ExportPath;
 	//TArray<UFusionPatch*> newPatches;
 	auto SoundWaveFactory = NewObject<UZipSoundFactory>();
-	
 
 	FXmlFile MyXMLfile = FXmlFile();
 
@@ -41,7 +39,7 @@ UObject* UBKDSLibraryFactory::FactoryCreateFile(UClass* InClass, UObject* InPare
 		for (const FString& EmbeddedFileName : Reader.GetFileNames())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Embedded File Name: %s"), *EmbeddedFileName)
-			TArray<uint8> Contents;
+				TArray<uint8> Contents;
 			if (!Reader.TryReadFile(EmbeddedFileName, Contents))
 			{
 				bAllValid = false;
@@ -74,7 +72,7 @@ UObject* UBKDSLibraryFactory::FactoryCreateFile(UClass* InClass, UObject* InPare
 				//UE_LOG(LogTemp,Log, TEXT("No Spaghetti"))
 				TArray <FKeyzoneSettings> KeyZoneArray;
 				FFusionPatchSettings newSettings;
-				
+
 				UFusionPatch* NewFusionPatch = NewObject<UFusionPatch>(InParent, InClass, dumbHack ? *EmbeddedFileName : InName, Flags);
 				newPatches.Add(NewFusionPatch);
 				TArray<FString> fileToImport;
@@ -95,18 +93,10 @@ UObject* UBKDSLibraryFactory::FactoryCreateFile(UClass* InClass, UObject* InPare
 					BroadcastAssetPostImport(this, NewFusionPatch);
 
 				dumbHack = true;
-	
 			}
-
-
 		};
-
-
-		
 	};
 
-
-	
 	AdditionalImportedObjects.Append(newPatches);
 
 	if (!newPatches.IsEmpty()) return newPatches[0];
@@ -114,13 +104,12 @@ UObject* UBKDSLibraryFactory::FactoryCreateFile(UClass* InClass, UObject* InPare
 	return nullptr;
 };
 
-
 UBKDSLibraryFactory::UBKDSLibraryFactory()
 {
 	//Formats.Add(FString(TEXT("sfz;")) + NSLOCTEXT("USFZAssetFactory", "FormatSfz", "SFZ File").ToString());
-	
-	//DISABLED UNTIL I SORT ZIP UNARCHIVING THE SAMPLES 
-	// 
+
+	//DISABLED UNTIL I SORT ZIP UNARCHIVING THE SAMPLES
+	//
 	//Formats.Add(TEXT("dslibrary;Decent Sampler Library Archive"));
 	SupportedClass = UFusionPatch::StaticClass();
 	bCreateNew = false;

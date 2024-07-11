@@ -79,7 +79,7 @@ public:
 	~SM2SoundPatchContainerGraphNode()
 	{
 		UM2SoundPatchContainerNode* AsM2SoundPatchContainerNode = Cast<UM2SoundPatchContainerNode>(GraphNode);
-		if(AsM2SoundPatchContainerNode) AsM2SoundPatchContainerNode->OnNodeUpdated.Unbind();
+		if (AsM2SoundPatchContainerNode) AsM2SoundPatchContainerNode->OnNodeUpdated.Unbind();
 		//GraphNode->OnNodeUpdated.Unbind();
 	}
 
@@ -94,16 +94,14 @@ private:
 
 	TSharedRef<SWidget> CreateNodeContentArea() override
 	{
-		
 		SAssignNew(MainAudioKnobsBox, SWrapBox)
 			.FlowDirectionPreference(EFlowDirectionPreference::LeftToRight)
 			.Orientation(EOrientation::Orient_Horizontal)
 			.UseAllottedSize(true)
 			.PreferredSize(300);
 
-
 		UpdateAudioKnobs();
-		
+
 		// NODE CONTENT AREA
 		return SNew(SBorder)
 			.BorderImage(FAppStyle::GetBrush("NoBorder"))
@@ -158,8 +156,6 @@ private:
 						SAssignNew(RightNodeBox, SVerticalBox)
 					]
 			];
-
-		
 	}
 
 	void OnValueChanges(float& NewValue, FM2SoundPinData& Pin)
@@ -172,20 +168,15 @@ private:
 		NewLiteral.Set(val);
 		Pin.LiteralValue = NewLiteral;
 		PatchVertex->UpdateValueForPin(Pin, Pin.LiteralValue);
-
 	}
 
 	void UpdateAudioKnobs()
 	{
 		auto GraphVariables = PatchVertex->Patch->GetDocumentChecked().RootGraph.Graph.Variables;
 
-		
-		
 		if (!MainAudioKnobsBox.IsValid()) return;
 		//for(auto& [Name, Slider] : AudioSliders) Slider.Reset();
 		//MainAudioKnobsBox->ClearChildren();
-		
-
 
 		if (PatchVertex)
 		{
@@ -196,12 +187,12 @@ private:
 				//normalize value within range
 
 				//FMath::GetMappedRangeValueClamped(Pin.MinValue, Pin.MaxValue, Value);
-				
+
 				Pin.LiteralValue.TryGet(Value);
 				if (Pin.DisplayFlags & static_cast<uint8>(EM2SoundPinDisplayFlags::ShowInGraph) && Pin.DataType == "float")
 				{
 					TSharedPtr<SAudioRadialSlider> NewSlider;
-					
+
 					MainAudioKnobsBox->AddSlot()
 						.Padding(10)
 						[
@@ -213,7 +204,7 @@ private:
 									SNew(STextBlock)
 										.Text(FText::FromString(Name.ToString()))
 										.Justification(ETextJustify::Center)
-										
+
 								]
 								+ SVerticalBox::Slot()
 								.AutoHeight()
@@ -222,11 +213,8 @@ private:
 										//.SliderValue(Pin.NormalizedValue)
 										.ToolTipText(FText::FromString(Name.ToString()))
 										.AccessibleText(FText::FromString(Name.ToString()))
-										
+
 										.OnValueChanged_Lambda([this, &Pin, &NewSlider](float NewValue) {	OnValueChanges(NewValue, Pin); })
-										
-
-
 
 								]
 
@@ -239,13 +227,10 @@ private:
 					NewSlider->SetShowUnitsText(false);
 
 					AudioSliders.Add(Pin.PinName, NewSlider);
-
 				};
-
 			}
 			*/
 		}
-
 	}
 
 protected:
@@ -254,7 +239,6 @@ protected:
 
 	//sliders array
 	TMap<FName, TSharedPtr<SAudioRadialSlider>> AudioSliders;
-
 
 	TArray<TSharedPtr<FString>> PatchOptions;
 	TSharedPtr<FString> SelectedPatch;
@@ -268,7 +252,7 @@ protected:
 
 	void OnPatchSelected(TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
 	{
-		if(InItem == nullptr)
+		if (InItem == nullptr)
 		{
 			return;
 		}

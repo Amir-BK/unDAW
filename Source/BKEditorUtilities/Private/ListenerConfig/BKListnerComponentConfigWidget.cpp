@@ -1,10 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ListenerConfig/BKListnerComponentConfigWidget.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SNumericEntryBox.h"
-
 
 inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedObject)
 {
@@ -15,7 +13,7 @@ inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedOb
 
 		if (AsActor)
 		{
-			ControlledComponent =	AsActor->FindComponentByClass<UDAWListenerComponent>();
+			ControlledComponent = AsActor->FindComponentByClass<UDAWListenerComponent>();
 			if (ControlledComponent)
 			{
 				SelectedObjectName.Append(ControlledComponent->GetName());
@@ -30,7 +28,6 @@ inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedOb
 
 	MainViewArea->ClearChildren();
 	InitFromData();
-
 }
 
 void UBKListnerComponentConfigWidget::OnSelectNone()
@@ -89,11 +86,9 @@ TSharedRef<SWidget> UBKListnerComponentConfigWidget::RebuildWidget()
 {
 	USelection::SelectObjectEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnObjectSlected);
 	USelection::SelectNoneEvent.AddUObject(this, &UBKListnerComponentConfigWidget::OnSelectNone);
-	
+
 	return SAssignNew(MainViewArea, SVerticalBox);
-
 }
-
 
 void UBKListnerComponentConfigWidget::ReleaseSlateResources(bool bReleaseChildren)
 {
