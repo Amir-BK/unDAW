@@ -24,8 +24,9 @@ namespace Metasound
 	{
 	public:
 		// ctor
-		TDAWConsoleMixerNodeOperator(const FBuildOperatorParams& InParams, const TArray<FAudioBufferReadRef>&& InInputBuffers, const TArray<FFloatReadRef>&& InGainValues)
+		TDAWConsoleMixerNodeOperator(const FBuildOperatorParams& InParams, const TArray<FAudioBufferReadRef>&& InInputBuffers, const TArray<FFloatReadRef>&& InGainValues, const TArray<FFloatReadRef>&& InPanValues)
 			: Gains(InGainValues)
+			, Pans(InPanValues)
 			, Inputs (InInputBuffers)
 		{
 			// create write refs
@@ -80,6 +81,20 @@ namespace Metasound
 					TInputDataVertex<float>GainVertexModel(GainInputNames[InputIndex], GainPinMetaData, 1.0f);
 
 					InputInterface.Add(GainVertexModel);
+
+					// pan scalar
+					#if WITH_EDITOR
+					FDataVertexMetadata PanPinMetaData
+					{
+						GetPanInputDescription(InputIndex),
+						GetPanInputDisplayName(InputIndex)
+					};
+#else
+					FDataVertexMetadata PanPinMetaData;
+
+#endif // WITH_EDITOR
+					TInputDataVertex<float> PanVertexModel(PanInputNames[InputIndex], PanPinMetaData, 0.0f);
+					InputInterface.Add(PanVertexModel);
 				}
 
 				// outputs
@@ -151,6 +166,7 @@ namespace Metasound
 			
 			TArray<FAudioBufferReadRef> InputBuffers;
 			TArray<FFloatReadRef> InputGains;
+			TArray<FFloatReadRef> InputPans;
 
 			for (uint32 i = 0; i < NumInputs; ++i)
 			{
@@ -160,9 +176,12 @@ namespace Metasound
 				}
 
 				InputGains.Add(InputData.GetOrCreateDefaultDataReadReference<float>(GainInputNames[i], InParams.OperatorSettings));
+
+				// pan values
+				InputPans.Add(InputData.GetOrCreateDefaultDataReadReference<float>(PanInputNames[i], InParams.OperatorSettings));
 			}
 
-			return MakeUnique<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>(InParams, MoveTemp(InputBuffers), MoveTemp(InputGains));
+			return MakeUnique<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>(InParams, MoveTemp(InputBuffers), MoveTemp(InputGains), MoveTemp(InputPans));
 		}
 
 		virtual void BindInputs(FInputVertexInterfaceData& InOutVertexData) override
@@ -298,6 +317,7 @@ namespace Metasound
 		static TArray<FVertexName> InitializeGainInputNames()
 		{
 			TStringBuilder<32> GainNameStr;
+		
 			TArray<FVertexName> Names;
 			Names.AddUninitialized(NumInputs);
 
@@ -312,6 +332,24 @@ namespace Metasound
 			return Names;
 		}
 
+		static TArray<FVertexName> InitializePanInputNames()
+		{
+			TStringBuilder<32> PanNameStr;
+		
+			TArray<FVertexName> Names;
+			Names.AddUninitialized(NumInputs);
+
+			for (int GainIndex = 0; GainIndex < NumInputs; ++GainIndex)
+			{
+				PanNameStr << "Pan Amount " << GainIndex;
+				Names[GainIndex] = *PanNameStr;
+
+				PanNameStr.Reset();
+			}
+
+			return Names;
+		}
+
 		static const FVertexName& GetAudioInputName(uint32 InputIndex, uint32 ChannelIndex)
 		{
 			return AudioInputNames[InputIndex * NumChannels + ChannelIndex];
@@ -321,8 +359,10 @@ namespace Metasound
 		static inline const TArray<FVertexName> AudioInputNames = InitializeAudioInputNames();
 		static inline const TArray<FVertexName> AudioOutputNames = InitializeAudioOutputNames();
 		static inline const TArray<FVertexName> GainInputNames = InitializeGainInputNames();
+		static inline const TArray<FVertexName> PanInputNames = InitializePanInputNames();
 
 		TArray<FFloatReadRef> Gains;
+		TArray<FFloatReadRef> Pans;
 		TArray<FAudioBufferReadRef> Inputs;
 		TArray<FAudioBufferWriteRef> Outputs;
 
@@ -341,7 +381,7 @@ namespace Metasound
 				PluginNodeMissingPrompt,
 				InDefaultInterface,
 				{ NodeCategories::Mix },
-				{ METASOUND_LOCTEXT("Metasound_AudioMixerKeyword", "Mixer") },
+				{ INVTEXT("unDAW"), METASOUND_LOCTEXT("Metasound_AudioMixerKeyword", "Mixer")},
 				FNodeDisplayStyle{}
 			};
 
@@ -372,7 +412,7 @@ namespace Metasound
 					return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InR", "In {0} R", InputIndex);
 				}
 			}
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInputIn", "In {0}, {0}", InputIndex, ChannelIndex);
+			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInputIn", "In {0}, {1}", InputIndex, ChannelIndex);
 		}
 
 		static const FText GetGainInputDisplayName(uint32 InputIndex)
@@ -383,6 +423,16 @@ namespace Metasound
 		static const FText GetGainInputDescription(uint32 InputIndex)
 		{
 			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDescription", "Gain Input #: {0}", InputIndex);
+		}
+
+		static const FText GetPanInputDisplayName(uint32 InputIndex)
+		{
+			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDisplayName", "Pan {0} (Lin)", InputIndex);
+		}
+
+		static const FText GetPanInputDescription(uint32 InputIndex)
+		{
+			return METASOUND_LOCTEXT_FORMAT("AudioMixerPanInputDescription", "Pan Amount Input #: {0}", InputIndex);
 		}
 
 		static const FText GetAudioOutputDisplayName(uint32 ChannelIndex)
@@ -452,7 +502,7 @@ namespace Metasound
 	//REGISTER_AUDIOMIXER_NODE(8, 2)
 
 	// test
-//	REGISTER_AUDIOMIXER_NODE(8, 6)
+	REGISTER_AUDIOMIXER_NODE(8, 6)
 
 } // namespace Metasound
 
