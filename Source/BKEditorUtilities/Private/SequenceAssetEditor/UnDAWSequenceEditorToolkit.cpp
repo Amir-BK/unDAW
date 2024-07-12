@@ -19,6 +19,8 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
+#include "SAssetDropTarget.h"
+
 #include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
@@ -77,12 +79,25 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 		{
 			auto DockTab = SNew(SDockTab)
 				[
-					SAssignNew(PianoRollGraph, SPianoRollGraph)
-						.SessionData(SequenceData)
-						.Clipping(EWidgetClipping::ClipToBounds)
-						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
-						.OnSeekEvent(OnSeekEvent)
-						// .CurrentTimestamp(CurrentTimestamp)
+					SNew(SOverlay)
+						+SOverlay::Slot()
+						[
+							SNew(SAssetDropTarget)
+								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
+								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
+						]
+
+						+SOverlay::Slot()
+						[
+							SAssignNew(PianoRollGraph, SPianoRollGraph)
+								.SessionData(SequenceData)
+								.Clipping(EWidgetClipping::ClipToBounds)
+								//.CurrentTimestamp(SequenceData->CurrentTimestampData)
+								.OnSeekEvent(OnSeekEvent)
+								// .CurrentTimestamp(CurrentTimestamp)
+						]
+					
+
 				];
 
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
@@ -435,6 +450,13 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	//Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
 
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
+}
+
+bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
+{
+	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
+	
+	return false;
 }
 
 FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)

@@ -58,6 +58,7 @@ public class unDAWMetaSounds : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "MetasoundGenerator",
+                "AudioMixer"
 
 				// ... add other public dependencies that you statically link with here ...
 			}
@@ -67,7 +68,8 @@ public class unDAWMetaSounds : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
-				// ... add private dependencies that you statically link with here ...
+                 "SignalProcessing"
+                // ... add private dependencies that you statically link with here ...
 			}
             );
 

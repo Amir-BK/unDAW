@@ -9,6 +9,7 @@
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
 #include "GlyphButton.h"
+#include "Toolkits/BaseToolkit.h"
 
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
@@ -96,6 +97,8 @@ protected:
 	//void StopAudioComponent();
 
 	//UAudioComponent* AudioComponent = nullptr;
+
+	bool OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const;
 
 public:
 	//midi editing - it for the purpose of tracking editor undo operations,
