@@ -234,6 +234,7 @@ namespace Metasound
 			float PrevPanningAmount = FMath::Clamp(*Pans[0], -1.0f, 1.0f);
 			float NextPanningAmount = FMath::Clamp(PrevPan[0], -1.0f, 1.0f);
 
+			ComputePanGains(*Pans[0], PrevPanLeft[0], PrevPanRight[0]);
 
 			// initialize the output buffers w/ the first set of input buffers 
 			for (uint32 i = 0; i < NumChannels; ++i)
@@ -242,12 +243,30 @@ namespace Metasound
 				TArrayView<float> OutputView = *Outputs[i];
 	
 				check(InputView.Num() == OutputView.Num());
+				if (i == 0)
+				{
+					NextGain *= PrevPanLeft[0];
+				//	UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+					UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), i, 0, PrevPanLeft[0], PrevPanRight[0], *Pans[0], NextGain);
+
+				}
+
+				if (i == 1)
+				{
+					NextGain *= PrevPanRight[0];
+					UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), i, 0, PrevPanLeft[0], PrevPanRight[0], *Pans[0], NextGain);
+				//	UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+
+				}
+
+
 				Audio::ArrayFade(InputView, PrevGain, NextGain, OutputView);
+
 			}
 
 			PrevGains[0] = NextGain;
 
-			// mix in each following input
+			// mix in each following input //start from 1 cause 0 was already mixed in?
 			for (uint32 InputIndex = 1; InputIndex < NumInputs; ++InputIndex)
 			{
 				NextGain = *Gains[InputIndex];
@@ -268,14 +287,14 @@ namespace Metasound
 					if (ChanIndex == 0)
 					{
 						NextGain *= PrevPanLeft[InputIndex];
-						UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+						//UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
 
 					}
 
 					if (ChanIndex == 1)
 					{
 						NextGain *= PrevPanRight[InputIndex];
-						UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+						//UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
 
 					}
 					
@@ -414,7 +433,7 @@ namespace Metasound
 		TArray<float> PrevPanLeft;
 		TArray<float> PrevPanRight;
 
-		bool bEqualPower = true;
+		bool bEqualPower = false;
 
 
 #pragma region PannerMethods
@@ -497,7 +516,7 @@ namespace Metasound
 
 		static const FText GetPanInputDisplayName(uint32 InputIndex)
 		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDisplayName", "Pan {0} (Lin)", InputIndex);
+			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDisplayName", "Pan Amount {0}", InputIndex);
 		}
 
 		static const FText GetPanInputDescription(uint32 InputIndex)
@@ -572,7 +591,7 @@ namespace Metasound
 	//REGISTER_AUDIOMIXER_NODE(8, 2)
 
 	// test
-	REGISTER_AUDIOMIXER_NODE(8, 6)
+	//REGISTER_AUDIOMIXER_NODE(8, 6)
 
 } // namespace Metasound
 

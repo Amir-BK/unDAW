@@ -31,6 +31,18 @@ void UM2SoundEdGraphSchema::SplitPin(UEdGraphPin* Pin, bool bNotify) const
 
 const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UEdGraphPin* A, const UEdGraphPin* B) const
 {
+	
+	//get underlying vertexes and check for cycle
+
+	const auto& AParentVertex = Cast<UM2SoundEdGraphNode>(A->GetOwningNode())->Vertex;
+	const auto& BParentVertex = Cast<UM2SoundEdGraphNode>(B->GetOwningNode())->Vertex;
+
+	bool bWillCauseLoop = AParentVertex->GetSequencerData()->WillConnectionCauseLoop(AParentVertex, BParentVertex);
+	if(bWillCauseLoop)
+	{
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Connection will cause a loop"));
+	}
+	
 	if (A->Direction == B->Direction)
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
 	FName ACategory = A->PinType.PinCategory;

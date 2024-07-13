@@ -72,6 +72,33 @@ void UDAWSequencerData::CreateDefaultVertexes()
 	}
 }
 
+
+bool UDAWSequencerData::TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate)
+{
+	for (const auto& [Name, Pin] : Vertex->OutputM2SoundPins)
+	{
+		if (Predicate(Pin->ParentVertex)) return true;
+
+		if (TraverseOutputPins(Pin->LinkedPin->ParentVertex, Predicate)) return true;
+	}
+	return false;
+}
+
+
+bool UDAWSequencerData::WillConnectionCauseLoop(UM2SoundVertex* InInput, UM2SoundVertex* InOutput)
+{
+	//for (const auto& [Name, Pin] : InOutput->OutputM2SoundPins)
+	//{
+	//	if(Pin->ParentVertex == InInput) return true;
+	//	if (TraverseOutputPins(Pin->ParentVertex, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; })) return true;
+
+	//}
+
+	return TraverseOutputPins(InOutput, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; });
+	
+	//return false;
+}
+
 void UDAWSequencerData::SaveDebugMidiFileTest()
 {
 	auto UniqueID = FGuid::NewGuid().ToString() + TEXT(".mid");

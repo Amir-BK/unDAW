@@ -414,6 +414,10 @@ public:
 
 	void CreateDefaultVertexes();
 
+	bool TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
+
+	bool WillConnectionCauseLoop(UM2SoundVertex* InInput, UM2SoundVertex* InOutput);
+
 	template<typename T>
 	bool BreakPinConnection(T* InInput)
 	{
@@ -486,6 +490,8 @@ public:
 			}
 
 			InInput->ConnectionResult = Result;
+			
+
 			return Result == EMetaSoundBuilderResult::Succeeded;
 		}
 		return false;

@@ -212,7 +212,17 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 void UM2SoundVertex::VertexConnectionsChanged()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex connections changed!"))
-		UpdateConnections();
+	UpdateConnections();
+
+	bool bBuildCyclicalDownstreamTree = true;
+	if (bBuildCyclicalDownstreamTree)
+	{
+		//need to inform downstream vertexes to reconnect to our output
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Building cyclical downstream tree"))
+			//OnVertexUpdated.Broadcast();
+			//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
+		//OnVertexUpdated.Broadcast();
+	}
 	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
 }
 
@@ -237,6 +247,8 @@ inline bool ResultToBool(EMetaSoundBuilderResult& Result)
 void UM2SoundVertex::CollectParamsForAutoConnect()
 {
 	EMetaSoundBuilderResult BuildResult;
+
+	//checkNoEntry();
 
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;
