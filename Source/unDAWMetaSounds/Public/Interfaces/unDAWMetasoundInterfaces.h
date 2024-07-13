@@ -63,19 +63,13 @@ namespace unDAW::Metasounds
 		//so this is how we wind up declaring params, at least I don't have to do it 40 times
 		const FInput GeneratedInputs[1] =
 		{
-			DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
-				unDAW Instrument.MidiStream,
-				Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to rendered with this instrument"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
 		};
 
 		const FOutput GeneratedOutputs[2] =
 		{
-			DECLARE_BK_PARAM_OUT("Audio Out L","Instrument Audio Output",
-				unDAW Instrument.Audio L,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
-		 DECLARE_BK_PARAM_OUT("Audio Out R","Instrument Audio Output",
-				unDAW Instrument.Audio R,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+			{ INVTEXT("Audio Out L"), INVTEXT("Instrument Audio Output"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Instrument.Audio L") } },
+			{ INVTEXT("Audio Out R"), INVTEXT("Instrument Audio Output"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Instrument.Audio R") } },
 		};
 	};
 
@@ -113,16 +107,12 @@ namespace unDAW::Metasounds
 		//so this is how we wind up declaring params, at least I don't have to do it 40 times
 		const FInput GeneratedInputs[1] =
 		{
-			DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
-				unDAW Instrument.MidiStream,
-				Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to rendered with this instrument"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
 		};
 
 		const FOutput GeneratedOutputs[1] =
 		{
-			DECLARE_BK_PARAM_NOINIT("MidiStream","Midi Stream to rendered with this instrument",
-				unDAW Instrument.MidiStream,
-				Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>())
+			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to rendered with this instrument"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
 		};
 	};
 
@@ -160,22 +150,14 @@ namespace unDAW::Metasounds
 		//so this is how we wind up declaring params, at least I don't have to do it 40 times
 		const FInput GeneratedInputs[2] =
 		{
-			DECLARE_BK_PARAM_NOINIT("Audio In L","Insert audio input L",
-				unDAW Insert.Audio In L,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
-		DECLARE_BK_PARAM_NOINIT("Audio In R","Insert audio input R",
-				unDAW Insert.Audio In R,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+			{ INVTEXT("Audio In L"), INVTEXT("Insert audio input L"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ FName("unDAW Insert.Audio In L") } },
+			{ INVTEXT("Audio In R"), INVTEXT("Insert audio input R"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ FName("unDAW Insert.Audio In R") } },
 		};
 
 		const FOutput GeneratedOutputs[2] =
 		{
-			DECLARE_BK_PARAM_OUT("Audio Out L","Insert Audio Output",
-				unDAW Insert.Audio L,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
-			DECLARE_BK_PARAM_OUT("Audio Out R","Insert Audio Output",
-				unDAW Insert.Audio R,
-				Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>())
+			{ INVTEXT("Audio Out L"), INVTEXT("Insert Audio Output"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Insert.Audio L") } },
+			{ INVTEXT("Audio Out R"), INVTEXT("Insert Audio Output"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Insert.Audio R") } },
 		};
 	};
 

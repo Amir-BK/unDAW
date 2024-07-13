@@ -39,6 +39,15 @@ namespace Metasound
 			PrevGains.Reset();
 			PrevGains.AddUninitialized(NumInputs);
 
+			PrevPan.Reset();
+			PrevPan.AddUninitialized(NumInputs);
+
+			PrevPanLeft.Reset();
+			PrevPanLeft.AddUninitialized(NumInputs);
+
+			PrevPanRight.Reset();
+			PrevPanRight.AddUninitialized(NumInputs);
+
 			Reset(InParams);
 		}
 
@@ -194,6 +203,7 @@ namespace Metasound
 				}
 
 				InOutVertexData.BindReadVertex(GainInputNames[i], Gains[i]);
+				InOutVertexData.BindReadVertex(PanInputNames[i], Pans[i]);
 			}
 		}
 
@@ -221,6 +231,9 @@ namespace Metasound
 			// initialize the output using the first set of input channels
 			float NextGain = *Gains[0];
 			float PrevGain = PrevGains[0];
+			float PrevPanningAmount = FMath::Clamp(*Pans[0], -1.0f, 1.0f);
+			float NextPanningAmount = FMath::Clamp(PrevPan[0], -1.0f, 1.0f);
+
 
 			// initialize the output buffers w/ the first set of input buffers 
 			for (uint32 i = 0; i < NumChannels; ++i)
@@ -240,12 +253,40 @@ namespace Metasound
 				NextGain = *Gains[InputIndex];
 				PrevGain = PrevGains[InputIndex];
 
+				ComputePanGains(*Pans[InputIndex], PrevPanLeft[InputIndex], PrevPanRight[InputIndex]);
+				//bool bPanHasChanged = !FMath::IsNearlyEqual(*Pans[InputIndex],PrevPan[InputIndex]);
+
+				//if (!bPanHasChanged)
+				//{
+				//	ComputePanGains(*Pans[InputIndex], PrevPanLeft[InputIndex], PrevPanRight[InputIndex]);
+				//}
+
 				// for each channel of audio
 				for (uint32 ChanIndex = 0; ChanIndex < NumChannels; ++ChanIndex)
 				{
+					
+					if (ChanIndex == 0)
+					{
+						NextGain *= PrevPanLeft[InputIndex];
+						UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+
+					}
+
+					if (ChanIndex == 1)
+					{
+						NextGain *= PrevPanRight[InputIndex];
+						UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
+
+					}
+					
 					// Outputs[Chan] += Gains[i] * Inputs[i][Chan]
 					Audio::ArrayMixIn(*Inputs[InputIndex * NumChannels + ChanIndex], *Outputs[ChanIndex], PrevGain, NextGain);
+
+
+
 				}
+
+
 
 				PrevGains[InputIndex] = NextGain;
 			}
@@ -253,6 +294,7 @@ namespace Metasound
 
 
 	private:
+#pragma region ParamNames
 		static TArray<FVertexName> InitializeAudioInputNames()
 		{
 			TStringBuilder<32> InputNameStr;
@@ -354,6 +396,7 @@ namespace Metasound
 		{
 			return AudioInputNames[InputIndex * NumChannels + ChannelIndex];
 		}
+#pragma endregion ParamNames
 
 
 		static inline const TArray<FVertexName> AudioInputNames = InitializeAudioInputNames();
@@ -367,6 +410,33 @@ namespace Metasound
 		TArray<FAudioBufferWriteRef> Outputs;
 
 		TArray<float> PrevGains;
+		TArray<float> PrevPan;
+		TArray<float> PrevPanLeft;
+		TArray<float> PrevPanRight;
+
+		bool bEqualPower = true;
+
+
+#pragma region PannerMethods
+
+		void ComputePanGains(float InPanningAmmount, float& OutLeftGain, float& OutRightGain) const
+		{
+			// Convert [-1.0, 1.0] to [0.0, 1.0]
+			float Fraction = 0.5f * (InPanningAmmount + 1.0f);
+
+			if (bEqualPower)
+			{
+				// Compute the left and right amount with one math call
+				FMath::SinCos(&OutRightGain, &OutLeftGain, 0.5f * PI * Fraction);
+			}
+			else
+			{
+				OutLeftGain = Fraction;
+				OutRightGain = 1.0f - Fraction;
+			}
+		}
+
+#pragma endregion PannerMethods
 
 		static FNodeClassMetadata CreateNodeClassMetadata(const FName& InOperatorName, const FText& InDisplayName, const FText& InDescription, const FVertexInterface& InDefaultInterface)
 		{
