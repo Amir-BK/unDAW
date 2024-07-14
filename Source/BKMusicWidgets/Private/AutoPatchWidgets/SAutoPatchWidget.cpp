@@ -7,6 +7,8 @@
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "SlateOptMacros.h"
+#include "MetasoundBuilderSubsystem.h"
+#include "M2SoundGraphStatics.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex* InVertex)
@@ -82,10 +84,17 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 	using namespace Metasound::Frontend;
 	FDataTypeRegistryInfo Info;
 
+	LiteralPin = &InLiteralPin;
+
 	Metasound::Frontend::IDataTypeRegistry::Get().GetDataTypeInfo(InLiteralPin.DataType, Info);
 	//MetaSoundDataRegistry.;
 
+	//UMetaSoundBuilderSubsystem* MetaSoundBuilderSubsystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
+	UMetaSoundSourceBuilder* MetaSoundSourceBuilder = InLiteralPin.ParentVertex->GetSequencerData()->BuilderContext;
+
 	FLinearColor Color = FLinearColor::White;
+
+
 
 	// objects will be blue for now
 	if (Info.ProxyGeneratorClass)
@@ -149,7 +158,6 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			for (int i = 0; i < EnumInterface->GetAllEntries().Num(); i++)
 			{
 				EnumOptions.Add(MakeShared<FString>(EnumInterface->ToName(i)->ToString()));
-				UE_LOG(LogTemp, Warning, TEXT("Enum Option: %s"), *EnumInterface->ToName(i)->ToString());
 			}
 
 			MainHorizontalBox->AddSlot()
@@ -174,6 +182,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			MainHorizontalBox->AddSlot()
 				[
 					SNew(SNumericEntryBox<int32>)
+
 					//.Value_Lambda([this, &InLiteralPin]() -> TOptional<int32> { return InLiteralPin.GetIntValue(); })
 					//.OnValueCommitted_Lambda([this, &InLiteralPin](int32 NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetIntValue(NewValue); })
 				];
@@ -184,6 +193,29 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		PinColor = Settings->StringPinTypeColor;
 		break;
 	case ELiteralType::UObjectProxy:
+		Objects = UM2SoundGraphStatics::GetAllObjectsOfClass(Info.ProxyGeneratorClass);
+
+		for (UObject* Object : Objects)
+		{
+			UObjectOptions.Add(MakeShared<FString>(Object->GetName()));
+		}
+
+		MainHorizontalBox->AddSlot()
+			.AutoWidth()
+			[
+				SNew(SComboBox<TSharedPtr<FString>>)
+				.OptionsSource(&UObjectOptions)
+				.InitiallySelectedItem(UObjectOptions.IsEmpty() ? nullptr : UObjectOptions[0])
+				.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
+				[
+					SNew(STextBlock)
+						.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Ah ha")); })
+				]
+				//	.OnSelectionChanged_Lambda([this](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { LiteralObjectValue = Objects[0]; })
+					.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectObject)
+			];
+
+
 		PinColor = Settings->ObjectPinTypeColor;
 		break;
 
@@ -201,6 +233,38 @@ TSharedRef<SWidget> SM2LiteralControllerWidget::CreateValueWidget(const UM2Metas
 TSharedRef<SWidget> SM2LiteralControllerWidget::MakeWidgetForEnumValue(TSharedPtr<FString> InOption)
 {
 	return SNew(STextBlock).Text(FText::FromString(*InOption));
+}
+
+void SM2LiteralControllerWidget::SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue)
+{
+	UMetaSoundSourceBuilder* BuilderContext = LiteralPin->ParentVertex->GetSequencerData()->BuilderContext;
+	EMetaSoundBuilderResult BuildResult;
+
+	BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewValue, BuildResult);
+
+}
+
+void SM2LiteralControllerWidget::OnSelectObject(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+	if (NewSelection == nullptr)
+	{
+		return;
+	}
+	auto SelectedObject = Objects.FindByPredicate([NewSelection](UObject* Object) { return Object->GetName() == *NewSelection; });
+
+	if(SelectedObject)
+	{
+		LiteralObjectValue = *SelectedObject;
+	}
+	else {
+		LiteralObjectValue = nullptr;
+	}
+
+	FMetasoundFrontendLiteral NewLiteral;
+	NewLiteral.Set(LiteralObjectValue);
+
+	SetValueForLiteralPin(NewLiteral);
+
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

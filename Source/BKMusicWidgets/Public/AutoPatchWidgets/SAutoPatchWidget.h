@@ -38,9 +38,34 @@ public:
 
 		FLinearColor PinColor = FLinearColor::White;
 
+		const UM2MetasoundLiteralPin* LiteralPin;
+
+		//possible frontend literal values... probably wasteful, maybe a good shout for templating
+
+		TArray<UObject*> Objects;
+
 		TSharedPtr<SWidget> ValueWidget;
 
 		TArray<TSharedPtr<FString>> EnumOptions;
+
+		TArray<TSharedPtr<FString>> UObjectOptions;
+
+		int32 EnumValue = 0;
+
+
+		float LiteralFloatValue = 0.0f;
+
+		int32 LiteralIntValue = 0;
+
+		FString LiteralStringValue;
+
+		bool bLiteralBoolValue = false;
+
+		UObject* LiteralObjectValue = nullptr;
+
+		void SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue);
+
+		void OnSelectObject(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
 };
 
 /**
@@ -59,6 +84,8 @@ public:
 	void OnVertexUpdated();
 
 	UM2SoundPatch* GetSelectedPatch() const;
+
+
 
 	private:
 		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;

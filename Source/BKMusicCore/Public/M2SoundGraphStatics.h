@@ -73,6 +73,9 @@ public:
 	 * @return An array of all the vertexes in the sequencer data
 	 */
 
+	
+	static TArray<UObject*> GetAllObjectsOfClass(UClass* Class);
+
 	static TArray<UM2SoundVertex*> GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData);
 
 	//can be used to get all assets of certain class
@@ -102,6 +105,22 @@ public:
 
 	static bool DoesPatchImplementInterface(UMetaSoundPatch* Patch, UClass* InterfaceClass);
 };
+
+
+inline TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class)
+{
+	TArray<UObject*> OutArray;
+	
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	TArray<FAssetData> AssetData;
+	AssetRegistryModule.Get().GetAssetsByClass(Class->GetClassPathName(), AssetData);
+	for (int i = 0; i < AssetData.Num(); i++) {
+		UObject* Object = AssetData[i].GetAsset();
+		OutArray.Add(Object);
+	}
+
+	return OutArray;
+}
 
 template<typename T>
 inline void UM2SoundGraphStatics::GetObjectsOfClass(TArray<T*>& OutArray)
