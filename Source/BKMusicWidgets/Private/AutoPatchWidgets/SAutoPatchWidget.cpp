@@ -144,6 +144,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		MainHorizontalBox->AddSlot()
 			[
 				SNew(SNumericEntryBox<float>)
+					.AllowSpin(true)
+					.Value_Lambda([this]() -> TOptional<float> { return LiteralFloatValue; })
 				//.Value_Lambda([this, &InLiteralPin]() -> TOptional<float> { return InLiteralPin.GetFloatValue(); })
 				//.OnValueCommitted_Lambda([this, &InLiteralPin](float NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetFloatValue(NewValue); })
 			];
@@ -182,7 +184,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			MainHorizontalBox->AddSlot()
 				[
 					SNew(SNumericEntryBox<int32>)
-
+						.AllowSpin(true)
+						.Value_Lambda([this]() -> TOptional<int32> { return LiteralIntValue; })
 					//.Value_Lambda([this, &InLiteralPin]() -> TOptional<int32> { return InLiteralPin.GetIntValue(); })
 					//.OnValueCommitted_Lambda([this, &InLiteralPin](int32 NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetIntValue(NewValue); })
 				];
@@ -209,7 +212,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 				.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 				[
 					SNew(STextBlock)
-						.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Ah ha")); })
+						.Text_Lambda([this]() -> FText { return FText::FromString(LiteralObjectValue ? LiteralObjectValue->GetName() : TEXT("None")); })
 				]
 				//	.OnSelectionChanged_Lambda([this](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { LiteralObjectValue = Objects[0]; })
 					.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectObject)
