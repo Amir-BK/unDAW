@@ -37,54 +37,57 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 	const auto& AParentVertex = Cast<UM2SoundEdGraphNode>(A->GetOwningNode())->Vertex;
 	const auto& BParentVertex = Cast<UM2SoundEdGraphNode>(B->GetOwningNode())->Vertex;
 
-	bool bWillCauseLoop = AParentVertex->GetSequencerData()->WillConnectionCauseLoop(AParentVertex, BParentVertex);
-	if(bWillCauseLoop)
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Connection will cause a loop"));
-	}
+
+
+
 	
 	if (A->Direction == B->Direction)
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect output to output or input to input."));
+
 	FName ACategory = A->PinType.PinCategory;
 	FName BCategory = B->PinType.PinCategory;
 
-	//if wild cards, get real categories of connected pins
-	if (ACategory == "wildcard")
+	if(ACategory == BCategory)
 	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect To Reroute"));
-	}
+		bool bWillCauseLoop = AParentVertex->GetSequencerData()->WillConnectionCauseLoop(AParentVertex, BParentVertex);
 
-	if (BCategory == "wildcard")
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect To Reroute"));
-	}
-
-	if (ACategory == "Track" && BCategory == "Track")
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track Bus"));
-	}
-
-	//deal with pin categories - Track-Audio and Track-Midi
-	if (ACategory == "Track-Audio" && BCategory == "Track-Audio")
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Audio"));
-	}
-
-	if (ACategory == "Track-Midi" && BCategory == "Track-Midi")
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track to Midi"));
-	}
-
-	//if Pin Category == MetasoundLiteral check Pin Subcategory
-
-	if (ACategory == "MetasoundLiteral" && BCategory == "MetasoundLiteral")
-	{
-		//compare subcategories
-		if (A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+		if (ACategory == "wildcard")
 		{
-			return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
+			return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect To Reroute"));
+		}
+
+		if (ACategory == "MetasoundLiteral")
+		{
+			if (A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+			{
+				if(!bWillCauseLoop) 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
+			}
+			else
+			{
+				return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Cannot connect Metasound Literals of different types"));
+			}
+		}
+
+		if (ACategory == "Track" && !bWillCauseLoop)
+		{
+			return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track Bus"));
+		}
+
+
+
+		if (bWillCauseLoop)
+		{
+			return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Connection will cause a loop"));
 		}
 	}
+	else {
+		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
+	}
+
+	//if wild cards, get real categories of connected pins
+
+
+
 
 	return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Not implemented by this schema."));
 }

@@ -4,6 +4,28 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Layout/SWrapBox.h"
+#include "Widgets/Input/SComboBox.h"
+#include "Pins/M2Pins.h"
+#include "Vertexes/M2SoundVertex.h"
+
+
+
+/**
+ * the literal controller widget is a wrapper for the various types of audio widgets that can be used to control a literal,
+ * using the bindings on the m2soundvertex and its pins this should point back to a MetasoundBuilderNodeInpput handle 
+ */
+
+class BKMUSICWIDGETS_API SM2LiteralControllerWidget : public SCompoundWidget
+{
+public:
+		SLATE_BEGIN_ARGS(SM2LiteralControllerWidget)
+		{}
+		SLATE_END_ARGS()
+
+
+		void Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin& InLiteralPin);
+};
 
 /**
  *
@@ -16,5 +38,17 @@ public:
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, const UM2SoundVertex* InVertex);
+
+	void OnVertexUpdated();
+
+	UM2SoundPatch* GetSelectedPatch() const;
+
+	private:
+		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;
+		TArray<TSharedPtr<FString>> PatchOptions;
+		TSharedPtr<SVerticalBox> ContentBox;
+		const UM2SoundVertex* Vertex;
+		UM2SoundPatch* SelectedPatch;
+
 };

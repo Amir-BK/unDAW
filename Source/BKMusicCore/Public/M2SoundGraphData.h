@@ -416,6 +416,8 @@ public:
 
 	bool TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
 
+	bool TraverseInputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
+
 	bool WillConnectionCauseLoop(UM2SoundVertex* InInput, UM2SoundVertex* InOutput);
 
 	template<typename T>

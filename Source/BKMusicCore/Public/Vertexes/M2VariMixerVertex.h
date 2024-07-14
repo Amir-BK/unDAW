@@ -20,7 +20,7 @@ class BKMUSICCORE_API UM2VariMixerVertex : public UM2SoundVertex
 	UMetaSoundSourceBuilder* BuilderContext;
 
 public:
-	uint8 numConnectedChannels = 0;
+	uint8 NumConnectedChannels = 0;
 
 	//Need to clear all of these when the vertex is deleted
 	TArray<FMetaSoundNodeHandle> MixerNodes;
@@ -44,125 +44,23 @@ private:
 public:
 
 	UFUNCTION()
-	void UpdateGainParameter(int ChannelIndex, float newGain)
-	{
-		MixerChannels[ChannelIndex].AssignedPin->GainValue = newGain;
+	void UpdateGainParameter(int ChannelIndex, float newGain);
 
-		if (bSoloActive && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
-		{
-			return;
-		}
-
-		if (MixerChannels[ChannelIndex].AssignedPin->bMute && !MixerChannels[ChannelIndex].AssignedPin->bSolo)
-		{
-			return;
-		}
-
-		UpdateGainParam_Internal(ChannelIndex, newGain);
-	}
 
 	UFUNCTION()
-	void SetChannelMuteState(int ChannelIndex, ECheckBoxState InState)
-	{
-		MixerChannels[ChannelIndex].AssignedPin->bMute = InState == ECheckBoxState::Checked;
-
-		UpdateMuteAndSoloStates();
-	}
+	void SetChannelMuteState(int ChannelIndex, ECheckBoxState InState);
 
 	UFUNCTION()
-	void SetChannelSoloState(int ChannelIndex, ECheckBoxState InState)
-	{
-		MixerChannels[ChannelIndex].AssignedPin->bSolo = InState == ECheckBoxState::Checked;
-		UpdateMuteAndSoloStates();
-	}
+	void SetChannelSoloState(int ChannelIndex, ECheckBoxState InState);
 
-	void BuildVertex() override
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
 
-		BuilderResults.Empty();
-		//VertexToChannelMap.Empty();
-		MixerChannels.Empty();
-		EMetaSoundBuilderResult BuildResult;
-		BuilderSubsystem = SequencerData->MSBuilderSystem;
-		BuilderContext = SequencerData->BuilderContext;
+	void BuildVertex() override;
 
-		const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-			, BuildResult);
+	FLinearColor GetChannelColor(uint8 ChannelIndex);
 
-		BuilderResults.Add("MixerNode", BuildResult);
+	FAssignableAudioOutput CreateChannel();
 
-		OutPins = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
+	void ReleaseChannel(FAssignableAudioOutput Channel);
 
-		BuilderResults.Add("MixerNodeOutputs", BuildResult);
-
-		if (OutputM2SoundPins.IsEmpty())
-		{
-			auto* AudioTrackPin = CreateAudioTrackOutputPin();
-			AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
-			AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
-			OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
-		}
-		else {
-			auto AudioTrackPin = Cast<UM2AudioTrackPin>(OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
-			AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
-			AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
-		}
-
-		//PopulatePinsFromMetasoundData(InPins, OutPins);
-
-		UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
-
-		int i = 0;
-		for (auto& Channel : MixerChannels)
-		{
-			auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i));
-			if (InputM2SoundPins.Contains(TrackName) == false)
-			{
-				auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
-				AutoNewInput->ChannelIndex = i;
-				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
-				InputM2SoundPins.Add(TrackName, AutoNewInput);
-				Channel.AssignedPin = AutoNewInput;
-			}
-			else {
-				auto AutoNewInput = Cast<UM2AudioTrackPin>(InputM2SoundPins[TrackName]);
-				AutoNewInput->ChannelIndex = i; // I guess this can help avoid mixups? I don't know
-				AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-				AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
-				MixerChannels[i].AssignedPin = AutoNewInput;
-			}
-
-			i++;
-		}
-
-		UpdateMuteAndSoloStates();
-	}
-
-	FLinearColor GetChannelColor(uint8 ChannelIndex)
-	{
-		return GetSequencerData()->GetTracksDisplayOptions(ChannelIndex).trackColor;
-	}
-
-	FAssignableAudioOutput CreateChannel()
-	{
-		FAssignableAudioOutput NewChannel;
-		//MixerChannels.Add(NewChannel);
-		numConnectedChannels++;
-		return NewChannel;
-	}
-
-	void ReleaseChannel(FAssignableAudioOutput Channel)
-	{
-		//MixerChannels.Remove(Channel);
-		numConnectedChannels--;
-	}
-
-	void ResizeOutputMixer()
-	{
-		EMetaSoundBuilderResult BuildResult;
-		const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-			, BuildResult);
-	}
+	void ResizeOutputMixer();
 };

@@ -79,24 +79,32 @@ bool UDAWSequencerData::TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<boo
 	{
 		if (Predicate(Pin->ParentVertex)) return true;
 
+		if(Pin->LinkedPin == nullptr) continue;
+
 		if (TraverseOutputPins(Pin->LinkedPin->ParentVertex, Predicate)) return true;
 	}
+	return false;
+}
+
+bool UDAWSequencerData::TraverseInputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate)
+{
+	for (const auto& [Name, Pin] : Vertex->InputM2SoundPins)
+	{
+		if (Predicate(Pin->ParentVertex)) return true;
+		
+		if (Pin->LinkedPin == nullptr) continue;
+
+		if (TraverseInputPins(Pin->LinkedPin->ParentVertex, Predicate)) return true;
+	}
+
 	return false;
 }
 
 
 bool UDAWSequencerData::WillConnectionCauseLoop(UM2SoundVertex* InInput, UM2SoundVertex* InOutput)
 {
-	//for (const auto& [Name, Pin] : InOutput->OutputM2SoundPins)
-	//{
-	//	if(Pin->ParentVertex == InInput) return true;
-	//	if (TraverseOutputPins(Pin->ParentVertex, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; })) return true;
-
-	//}
-
-	return TraverseOutputPins(InOutput, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; });
-	
-	//return false;
+	return TraverseInputPins(InInput, [InOutput](UM2SoundVertex* Vertex) { return Vertex == InOutput; });
+	//return TraverseOutputPins(InOutput, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; });
 }
 
 void UDAWSequencerData::SaveDebugMidiFileTest()

@@ -11,6 +11,7 @@
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/Input/SComboBox.h"
+#include "AutoPatchWidgets/SAutoPatchWidget.h"
 #include "ScopedTransaction.h"
 #include "M2SoundEdGraphSchema.h"
 
@@ -102,6 +103,8 @@ private:
 
 		UpdateAudioKnobs();
 
+		SAssignNew(AutoPatchWidget, SAutoPatchWidget, PatchVertex);
+
 		// NODE CONTENT AREA
 		return SNew(SBorder)
 			.BorderImage(FAppStyle::GetBrush("NoBorder"))
@@ -144,7 +147,7 @@ private:
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							[
-								MainAudioKnobsBox.ToSharedRef()
+								AutoPatchWidget.ToSharedRef()
 							]
 					]
 
@@ -236,6 +239,7 @@ private:
 protected:
 	TSharedPtr<SVerticalBox> MainVerticalBox;
 	TSharedPtr<SWrapBox> MainAudioKnobsBox;
+	TSharedPtr<SAutoPatchWidget> AutoPatchWidget;
 
 	//sliders array
 	TMap<FName, TSharedPtr<SAudioRadialSlider>> AudioSliders;

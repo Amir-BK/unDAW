@@ -139,6 +139,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UM2Pins* LinkedPin;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<TObjectPtr<UM2Pins>> LinkedPins;
+
 	bool bIsStale = false;
 
 	UPROPERTY()
@@ -153,6 +156,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName Category;
+
+	//allows user to cofigure which pin will determine the color of the vertex
+	UPROPERTY()
+	bool  bPinIsColorSource;
 };
 
 UCLASS()
