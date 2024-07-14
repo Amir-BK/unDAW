@@ -14,36 +14,33 @@
 #define SFZ_DEF_OPCODE_JERRY_SPRINGER(a,b) SFZ_literal(TEXT(#a), b),
 
 enum ESFZ_Code_Value_Types
-	{
-		SFZInteger,
-		SFZBoolInt,
-		SFZFloat,
-		SFZFloatDecibels,
-		TriggerEnum,
-		LoopEnum,
-		Note,
-		SFZSample,
-		SFZTime,
-		SFZNormalizedTime,
-		SFZ_Undefined,
-		SFZ_LegatoHalfEnum,
-		SFZ_Triggers //we'll pass these as trigger params, improving multi layered workflow
-	};
+{
+	SFZInteger,
+	SFZBoolInt,
+	SFZFloat,
+	SFZFloatDecibels,
+	TriggerEnum,
+	LoopEnum,
+	Note,
+	SFZSample,
+	SFZTime,
+	SFZNormalizedTime,
+	SFZ_Undefined,
+	SFZ_LegatoHalfEnum,
+	SFZ_Triggers //we'll pass these as trigger params, improving multi layered workflow
+};
 
 struct SFZ_literal
+{
+	SFZ_literal(FString String_Literal, ESFZ_Code_Value_Types Value_Type)
+		: String_Literal(String_Literal),
+		Value_Type(Value_Type)
 	{
-		SFZ_literal(FString String_Literal, ESFZ_Code_Value_Types Value_Type)
-			: String_Literal(String_Literal),
-			  Value_Type(Value_Type)
-		{
-		}
+	}
 
 	FString String_Literal;
 	ESFZ_Code_Value_Types Value_Type;
-
-	};
-
-
+};
 
 /**
  * A mostly private class, we really don't need the entire class to be part of the gameplay module, probably only the enum, maybe not even that
@@ -53,17 +50,16 @@ class BK_EDITORUTILITIES_API UFK_SFZ_OpCode_Interpreter : public UObject
 {
 	GENERATED_BODY()
 
-	
 #define REGISTER_INPUT_INTERFACE_PARAMETER(ParamName, LayerID, Description, DataType, Init) \
 	FInput SFZ_##ParamName ## { FText::FromString(#ParamName), FText::FromString(Description), DataType, \
 	{FName(#ParamName), Init}}; SFZ_Inputs.Add(SFZ_##ParamName);
-public:	
+public:
 	//static constexpr TArray<Audio::FParameterInterface::FInput> SFZ_Inputs;
 
 	//REGISTER_INPUT_INTERFACE_PARAMETER(trigger, "LayerID", "OneTwoThree", "DataType", 100);
-	
+
 private:
-	
+
 	//friend class FK_SFZ::Metasounds::FFKSFZAudioParameterInterfaces;
 
 	void static constexpr Add_Literal(char16_t const* String_Literal, ESFZ_Code_Value_Types Value_Type)
@@ -80,8 +76,6 @@ private:
 		SFZ_DEF_OPCODE("trigger", TriggerEnum)
 		SFZ_DEF_OPCODE("loop_mode", LoopEnum)
 
-		
-
 		//this guy can either be an enum or an int, be careful
 		SFZ_DEF_OPCODE("polyphony", SFZ_LegatoHalfEnum)
 
@@ -95,11 +89,9 @@ private:
 		SFZ_DEF_OPCODE("start", SFZTime)
 		SFZ_DEF_OPCODE("delay_samples", SFZTime)
 
-		
-
 		//normalized time paremeters, these comd in SECONDS
 		SFZ_DEF_OPCODE("delay", SFZTime)
-		
+
 		//integers
 		SFZ_DEF_OPCODE("seq_position", SFZInteger)
 		SFZ_DEF_OPCODE("seq_length", SFZInteger)
@@ -118,7 +110,7 @@ private:
 		SFZ_DEF_OPCODE("key", Note)
 		SFZ_DEF_OPCODE("hikey", Note)
 		SFZ_DEF_OPCODE("lokey", Note)
-		
+
 		//Sample (only one!)
 		SFZ_DEF_OPCODE("sample", SFZSample)
 
@@ -144,13 +136,9 @@ private:
 		SFZ_DEF_OPCODE("cutoff2", SFZFloat)
 		SFZ_DEF_OPCODE("amplitude", SFZFloat)
 		SFZ_DEF_OPCODE("pitch_random", SFZFloat)
-		
 
 		//float decibels - we might do something different with these later
 		SFZ_DEF_OPCODE("amp_random", SFZFloatDecibels)
-
-
-
 	};
 
 public:
@@ -160,7 +148,7 @@ public:
 		//here we iterate over the array, look if the value exist, return the enum
 		for (const SFZ_literal Categorized_Literal : Categorized_Literals)
 		{
-			if(KeyToProcess.Contains(Categorized_Literal.String_Literal)) return Categorized_Literal.Value_Type;
+			if (KeyToProcess.Contains(Categorized_Literal.String_Literal)) return Categorized_Literal.Value_Type;
 		}
 		// if the loop returned nothing we're dealing with an undefined opcode, we, will stick it in the map as the original string
 		return SFZ_Undefined;

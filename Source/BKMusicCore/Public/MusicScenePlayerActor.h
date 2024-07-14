@@ -15,33 +15,31 @@
 #include "Delegates/DelegateSettings.h"
 #include "MusicScenePlayerActor.generated.h"
 
-
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggerExecuted, FName, TriggerName);
 
 UCLASS()
-class BKMUSICCORE_API AMusicScenePlayerActor : public AActor , public IBK_MusicSceneManagerInterface
+class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
 {
 	GENERATED_BODY()
 
 public:
 
-
 	UFUNCTION(Exec)
 	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
-	
+
 	//creates a transient music timestamp to trigger node using the metasound builder, connects its output to the graph output, watches the output
 	// via the metasound output subsystem and FINALLY, calls the delegate when the trigger is executed
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta=(AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToTriggerEventOnMusicTimestamp(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta=(AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToTriggerEventOnNextBar(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta=(AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToTriggerEventOnNextBeat(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
 	//we'll need to test to see how this works with very fast tempos
-	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta=(AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToTriggerEventOnNextQuantizationBoundary(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
 	// Sets default values for this actor's properties
@@ -62,7 +60,6 @@ public:
 	bool bAutoPlay = false;
 
 	bool bHarmonixInitialized = false;
-
 
 	//To get the accurate timestamp for our MIDI players it's better to read the timestamp on the DAWSequecerData
 	//The harmonix music clock component exposes a lot of nice functions and writes the tempo data to the MaterialParameterCollection
@@ -113,9 +110,6 @@ public:
 	UFUNCTION()
 	virtual void InitHarmonixComponents();
 
-
-
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
-
 };

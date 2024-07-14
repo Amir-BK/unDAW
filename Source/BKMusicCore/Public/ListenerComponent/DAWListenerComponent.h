@@ -8,15 +8,14 @@
 #include "M2SoundGraphData.h"
 #include "DAWListenerComponent.generated.h"
 
-
 class UBKListnerComponentConfigWidget;
 
-UCLASS( ClassGroup=(unDAW), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable )
+UCLASS(ClassGroup = (unDAW), meta = (BlueprintSpawnableComponent), BlueprintType, Blueprintable)
 class BKMUSICCORE_API UDAWListenerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UDAWListenerComponent();
 
@@ -44,13 +43,12 @@ protected:
 		}
 
 		return TArray<FString>();
-
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", meta = (GetOptions = "GetMidiOutputNames"))
 	FString WatchedOutput;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager, Category="unDAW")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter = SetSceneManager, Category = "unDAW")
 	TObjectPtr<AMusicScenePlayerActor> SceneManager;
 
 	UFUNCTION(BlueprintSetter, Category = "unDAW")
@@ -60,12 +58,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void InitEvent();
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-
-
-
-		
 };

@@ -9,13 +9,11 @@
 #include "M2SoundEdGraphSchema.h"
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 
-
 class BKEditorUtilitiesModule final : public IModuleInterface
 {
 public:
-	
-	FString PluginContentDir;
 
+	FString PluginContentDir;
 
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
@@ -23,9 +21,8 @@ public:
 
 	static void AddPianoRollToMidiAsset(FMenuBuilder& MenuBuilder, const TArray<FAssetData> SelectedAssets);
 
-	static TSharedRef<FExtender> OnExtendMidiAssetSelectionMenu (const TArray<FAssetData>& SelectedAssets);
+	static TSharedRef<FExtender> OnExtendMidiAssetSelectionMenu(const TArray<FAssetData>& SelectedAssets);
 	static void OpenSelectedMidiFileInEditorWidget(FSoftObjectPath MidiFileSoftPath);
-
 
 private:
 	TSharedPtr< FFksfzaSampleBankAssetActions> SFZAssetTypeActions;

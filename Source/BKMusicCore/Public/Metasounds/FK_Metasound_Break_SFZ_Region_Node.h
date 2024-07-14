@@ -8,8 +8,6 @@
 #include "MetasoundWave.h"
 #include "FKSFZAudioParameterInterfaces.h"
 
-
-
 /**
  * second attempt at the SFZ player node
  */

@@ -6,7 +6,7 @@
 #include "AssetTypeActions_Base.h"
 
 /**
- * 
+ *
  */
 class BK_EDITORUTILITIES_API FFksfzaSampleBankAssetActions final : public FAssetTypeActions_Base
 {

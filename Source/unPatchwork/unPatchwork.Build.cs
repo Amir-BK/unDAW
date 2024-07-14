@@ -1,15 +1,25 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-using System.IO;
 using UnrealBuildTool;
-using UnrealBuildTool.Rules;
 
 public class unPatchwork : ModuleRules
 {
+    private bool bStrictIncludesCheck = true;
+
     public unPatchwork(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+
+        // This is to emulate engine installation and verify includes during development
+        // Gives effect similar to BuildPlugin with -StrictIncludes
+        if (bStrictIncludesCheck)
+        {
+            bUseUnity = false;
+            PCHUsage = PCHUsageMode.NoPCHs;
+            // Enable additional checks used for Engine modules
+            bTreatAsEngineModule = true;
+        }
 
         PublicIncludePaths.AddRange(
             new string[] {
@@ -32,7 +42,6 @@ public class unPatchwork : ModuleRules
             {
                 "Core",
 				//"Json",
-				
 
                 "AudioMixer",
                 "DeveloperSettings",

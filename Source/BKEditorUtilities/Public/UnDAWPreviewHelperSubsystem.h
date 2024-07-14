@@ -7,14 +7,11 @@
 #include "M2SoundGraphData.h"
 #include "BK_MusicSceneManagerInterface.h"
 
-
 #include "UnDAWPreviewHelperSubsystem.generated.h"
-
 
 struct FSoftClassPreviewHolder
 {
 	UDAWSequencerData* ActiveSession;
-
 };
 
 /**
@@ -24,17 +21,14 @@ UCLASS()
 class BK_EDITORUTILITIES_API UUnDAWPreviewHelperSubsystem : public UEditorSubsystem
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	FSoftClassPreviewHolder ActivePreviewPerformer;
 
-
 	UFUNCTION()
-	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);	
+	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);
 
-	
 private:
 	bool hasAlreadyPrimed = false;
-
 };

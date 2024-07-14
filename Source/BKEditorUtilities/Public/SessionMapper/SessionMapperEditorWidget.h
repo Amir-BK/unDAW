@@ -7,14 +7,10 @@
 #include "SessionMapperEditorWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BK_EDITORUTILITIES_API USessionMapperEditorWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
-	
-	
-	
-	
 };

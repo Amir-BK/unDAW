@@ -1,15 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Metasounds/FKSFZAudioParameterInterfaces.h"
 #include "IAudioParameterInterfaceRegistry.h"
 #include "MetasoundDataReference.h"
 #include  "SFZ/UnDAWSFZAsset.h"
 
-
 using namespace Metasound;
-
-
 
 Metasound::F_FK_SFZ_Instrument_Asset::F_FK_SFZ_Instrument_Asset(const TSharedPtr<Audio::IProxyData>& InInitData)
 {

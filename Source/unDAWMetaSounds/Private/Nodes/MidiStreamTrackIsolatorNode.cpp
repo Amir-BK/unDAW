@@ -20,7 +20,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 {
 	using namespace Metasound;
 	using namespace HarmonixMetasound;
-	
+
 	const FNodeClassName& GetClassName()
 	{
 		static FNodeClassName ClassName
@@ -50,32 +50,32 @@ namespace unDAWMetasounds::TrackIsolatorNode
 	{
 		DEFINE_OUTPUT_METASOUND_PARAM(MidiStream, "MidiStream", "MidiStream");
 	}
-	
+
 	class FunDAWTrackIsolatorOperator final : public TExecutableOperator<FunDAWTrackIsolatorOperator>
 	{
 	public:
 		static const FNodeClassMetadata& GetNodeInfo()
 		{
 			auto InitNodeInfo = []() -> FNodeClassMetadata
-			{
-				FNodeClassMetadata Info;
-				Info.ClassName        = GetClassName();
-				Info.MajorVersion     = 1;
-				Info.MinorVersion     = 0;
-				Info.DisplayName = INVTEXT("MIDI Stream Track Isolator");
-				Info.Description = INVTEXT("Filters out all but the specified MIDI tracks from the input MIDI stream and sets the output to Track 1");
-				Info.Author           = PluginAuthor;
-				Info.PromptIfMissing  = PluginNodeMissingPrompt;
-				Info.DefaultInterface = GetVertexInterface();
-				Info.CategoryHierarchy = { INVTEXT("unDAW"), NodeCategories::Music };
-				return Info;
-			};
+				{
+					FNodeClassMetadata Info;
+					Info.ClassName = GetClassName();
+					Info.MajorVersion = 1;
+					Info.MinorVersion = 0;
+					Info.DisplayName = INVTEXT("MIDI Stream Track Isolator");
+					Info.Description = INVTEXT("Filters out all but the specified MIDI tracks from the input MIDI stream and sets the output to Track 1");
+					Info.Author = PluginAuthor;
+					Info.PromptIfMissing = PluginNodeMissingPrompt;
+					Info.DefaultInterface = GetVertexInterface();
+					Info.CategoryHierarchy = { INVTEXT("unDAW"), NodeCategories::Music };
+					return Info;
+				};
 
 			static const FNodeClassMetadata Info = InitNodeInfo();
 
 			return Info;
 		}
-		
+
 		static const FVertexInterface& GetVertexInterface()
 		{
 			static const FVertexInterface Interface(
@@ -125,7 +125,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 			{
 				FMidiStreamWriteRef::CreateNew()
 			};
-			
+
 			return MakeUnique<FunDAWTrackIsolatorOperator>(InParams, MoveTemp(Inputs), MoveTemp(Outputs));
 		}
 
@@ -136,7 +136,6 @@ namespace unDAWMetasounds::TrackIsolatorNode
 			Reset(InParams);
 		}
 
-		
 		virtual void BindInputs(FInputVertexInterfaceData& InVertexData) override
 		{
 			InVertexData.BindReadVertex(Inputs::EnableName, Inputs.Enabled);

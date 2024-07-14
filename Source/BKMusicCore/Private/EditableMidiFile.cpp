@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "EditableMidiFile.h"
 
 void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile)
@@ -13,8 +12,8 @@ void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile)
 	TheMidiData = *StaticCastSharedPtr<FMidiFileProxy>(ProxyData)->GetMidiFile();
 	//TheMidiData.SongMaps.Init(TheMidiData.TicksPerQuarterNote);
 
-	//print the track names 
-	
+	//print the track names
+
 	for (auto& Track : TheMidiData.Tracks)
 	{
 		FString TrackName = *Track.GetName();
@@ -27,10 +26,9 @@ void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile)
 
 void UEditableMidiFile::FinishRebuildingMidiFile()
 {
-	
 	//hack for now we set the loop to 4
 	//GetSongMaps()->SetLengthTotalBars(4);
-	// we are now "dirty"... so make sure any new requests for renderable data 
+	// we are now "dirty"... so make sure any new requests for renderable data
 	// get a new copy...
 	RenderableCopyOfMidiFileData = nullptr;
 }

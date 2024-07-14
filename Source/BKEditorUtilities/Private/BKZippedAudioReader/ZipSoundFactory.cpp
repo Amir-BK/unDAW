@@ -43,14 +43,12 @@ FAutoConsoleVariableRef CVarSoundWaveImportLengthLimitInSeconds(
 	TEXT("if the value is < 0.0f, the length will be unlimited"),
 	ECVF_Default);
 
-
 namespace
 {
-
 	bool CanImportSoundWaves()
 	{
 		// disabled via cvar?
-		if(EnableUserSoundwaveImportCvar == 0)
+		if (EnableUserSoundwaveImportCvar == 0)
 		{
 			return false;
 		}
@@ -145,16 +143,16 @@ UZipSoundFactory::UZipSoundFactory(const FObjectInitializer& ObjectInitializer)
 	SupportedClass = USoundWave::StaticClass();
 	Formats.Add(TEXT("wavZip;Wave Audio File From Zip Archive"));
 
-/*
-#if WITH_SNDFILE_IO
-	Formats.Add(TEXT("aif;Audio Interchange File"));
-	Formats.Add(TEXT("aiff;Audio Interchange File Format"));
-	Formats.Add(TEXT("ogg;OGG Vorbis bitstream format "));
-	Formats.Add(TEXT("flac;Free Lossless Audio Codec"));
-	Formats.Add(TEXT("opus;OGG OPUS bitstream format"));
-	Formats.Add(TEXT("mp3;MPEG Layer 3 Audio"));
-#endif // WITH_SNDFILE_IO
-*/
+	/*
+	#if WITH_SNDFILE_IO
+		Formats.Add(TEXT("aif;Audio Interchange File"));
+		Formats.Add(TEXT("aiff;Audio Interchange File Format"));
+		Formats.Add(TEXT("ogg;OGG Vorbis bitstream format "));
+		Formats.Add(TEXT("flac;Free Lossless Audio Codec"));
+		Formats.Add(TEXT("opus;OGG OPUS bitstream format"));
+		Formats.Add(TEXT("mp3;MPEG Layer 3 Audio"));
+	#endif // WITH_SNDFILE_IO
+	*/
 	bCreateNew = false;
 	bAutoCreateCue = false;
 	bIncludeAttenuationNode = false;
@@ -163,20 +161,20 @@ UZipSoundFactory::UZipSoundFactory(const FObjectInitializer& ObjectInitializer)
 	CueVolume = 0.75f;
 	CuePackageSuffix = TEXT("_Cue");
 	bEditorImport = true;
-} 
+}
 
 UObject* UZipSoundFactory::FactoryCreateBinary
 (
-	UClass*				Class,
-	UObject*			InParent,
+	UClass* Class,
+	UObject* InParent,
 	FName				Name,
 	EObjectFlags		Flags,
-	UObject*			Context,
-	const TCHAR*		FileType,
-	const uint8*&		Buffer,
-	const uint8*		BufferEnd,
-	FFeedbackContext*	Warn
-	)
+	UObject* Context,
+	const TCHAR* FileType,
+	const uint8*& Buffer,
+	const uint8* BufferEnd,
+	FFeedbackContext* Warn
+)
 {
 	GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPreImport(this, Class, InParent, Name, FileType);
 
@@ -184,45 +182,45 @@ UObject* UZipSoundFactory::FactoryCreateBinary
 		const uint64 Size = BufferEnd - Buffer;
 		if (!IntFitsIn<int32>(Size))
 		{
-			Warn->Logf(ELogVerbosity::Error, TEXT("File '%s' is too big (%umb), Max=%umb"), *Name.ToString(), Size>>20, TNumericLimits<int32>::Max()>>20);
+			Warn->Logf(ELogVerbosity::Error, TEXT("File '%s' is too big (%umb), Max=%umb"), *Name.ToString(), Size >> 20, TNumericLimits<int32>::Max() >> 20);
 			GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPostImport(this, nullptr);
 			return nullptr;
 		}
 	}
 
 	UObject* SoundObject = nullptr;
-//
-//	// First, see if we support this file type in-engine:
-//	if (FCString::Stricmp(FileType, TEXT("WAV")) == 0)
-//	{
-//		SoundObject = CreateObject(Class, InParent, Name, Flags, Context, FileType, Buffer, BufferEnd, Warn);
-//	}
-////#if WITH_SNDFILE_IO
-//	else
-//	{
-// 
+	//
+	//	// First, see if we support this file type in-engine:
+	//	if (FCString::Stricmp(FileType, TEXT("WAV")) == 0)
+	//	{
+	//		SoundObject = CreateObject(Class, InParent, Name, Flags, Context, FileType, Buffer, BufferEnd, Warn);
+	//	}
+	////#if WITH_SNDFILE_IO
+	//	else
+	//	{
+	//
 	UE_LOG(LogTemp, Log, TEXT("Do we even reach here?"))
-// 
-		// Read raw audio data
+		//
+				// Read raw audio data
 		TArray<uint8> RawAudioData;
-		RawAudioData.Empty(BufferEnd - Buffer);
-		RawAudioData.AddUninitialized(BufferEnd - Buffer);
-		FMemory::Memcpy(RawAudioData.GetData(), Buffer, RawAudioData.Num());
+	RawAudioData.Empty(BufferEnd - Buffer);
+	RawAudioData.AddUninitialized(BufferEnd - Buffer);
+	FMemory::Memcpy(RawAudioData.GetData(), Buffer, RawAudioData.Num());
 
-		// Convert audio data to a wav file in memory
-		TArray<uint8> RawWaveData;
-		if (Audio::SoundFileUtils::ConvertAudioToWav(RawAudioData, RawWaveData))
-		{
-			const uint8* Ptr = &RawWaveData[0];
+	// Convert audio data to a wav file in memory
+	TArray<uint8> RawWaveData;
+	if (Audio::SoundFileUtils::ConvertAudioToWav(RawAudioData, RawWaveData))
+	{
+		const uint8* Ptr = &RawWaveData[0];
 
-			// Perpetuate the setting of the suppression flag to avoid
-			// user notification if we attempt to call CreateObject twice
-			SoundObject = CreateObject(Class, InParent, Name, Flags, Context, TEXT("WAV"), Ptr, Ptr + RawWaveData.Num(), Warn);
+		// Perpetuate the setting of the suppression flag to avoid
+		// user notification if we attempt to call CreateObject twice
+		SoundObject = CreateObject(Class, InParent, Name, Flags, Context, TEXT("WAV"), Ptr, Ptr + RawWaveData.Num(), Warn);
 
-			UE_LOG(LogTemp, Log, TEXT("so that's the error"))
-		}
-//	}
-//#endif
+		UE_LOG(LogTemp, Log, TEXT("so that's the error"))
+	}
+	//	}
+	//#endif
 
 	if (!SoundObject)
 	{
@@ -235,15 +233,15 @@ UObject* UZipSoundFactory::FactoryCreateBinary
 
 UObject* UZipSoundFactory::CreateObject
 (
-	UClass*				Class,
-	UObject*			InParent,
+	UClass* Class,
+	UObject* InParent,
 	FName				Name,
 	EObjectFlags		Flags,
-	UObject*			Context,
-	const TCHAR*		FileType,
-	const uint8*&		Buffer,
-	const uint8*		BufferEnd,
-	FFeedbackContext*	Warn
+	UObject* Context,
+	const TCHAR* FileType,
+	const uint8*& Buffer,
+	const uint8* BufferEnd,
+	FFeedbackContext* Warn
 )
 {
 	if (FCString::Stricmp(FileType, TEXT("WAV")) == 0)
@@ -279,9 +277,8 @@ UObject* UZipSoundFactory::CreateObject
 			return nullptr;
 		}
 
-
 		// if we are creating the cue move it when necessary
-		UPackage* CuePackage = bMoveCue ? CreatePackage( *CuePackageName) : nullptr;
+		UPackage* CuePackage = bMoveCue ? CreatePackage(*CuePackageName) : nullptr;
 
 		// if the sound already exists, remember the user settings
 		USoundWave* ExistingSound = FindObject<USoundWave>(InParent, *Name.ToString());
@@ -328,7 +325,6 @@ UObject* UZipSoundFactory::CreateObject
 
 			switch (OverwriteYesOrNoToAllState)
 			{
-
 			case EAppReturnType::Yes:
 			case EAppReturnType::YesAll:
 			{
@@ -380,7 +376,7 @@ UObject* UZipSoundFactory::CreateObject
 		}
 
 		// If we need to change bit depth, or if the format is not something we know, use libsndfile.
-		if (*WaveInfo.pBitsPerSample != 16 || !WaveInfo.IsFormatSupported()) 
+		if (*WaveInfo.pBitsPerSample != 16 || !WaveInfo.IsFormatSupported())
 		{
 #if WITH_SNDFILE_IO
 			const uint32 OrigNumSamples = Audio::SoundFileUtils::GetNumSamples(RawWaveData);
@@ -388,7 +384,7 @@ UObject* UZipSoundFactory::CreateObject
 			// Attempt to convert to 16 bit audio
 			if (Audio::SoundFileUtils::ConvertAudioToWav(RawWaveData, ConvertedRawWaveData))
 			{
-				WaveInfo = FWaveModInfo();				
+				WaveInfo = FWaveModInfo();
 				if (!WaveInfo.ReadWaveInfo(ConvertedRawWaveData.GetData(), ConvertedRawWaveData.Num(), &ErrorMessage))
 				{
 					Warn->Logf(ELogVerbosity::Error, TEXT("Failed to convert to 16 bit WAV source on import."));
@@ -430,7 +426,7 @@ UObject* UZipSoundFactory::CreateObject
 
 		// If we're a multi-channel file, we're going to spoof the behavior of the SoundSurroundFactory
 		int32 ChannelCount = (int32)*WaveInfo.pChannels;
-		check(ChannelCount >0);
+		check(ChannelCount > 0);
 
 		// These get wiped in PostInitProperties by defaults set from Audio Settings,
 		// so set back to template in this specialized case
@@ -552,7 +548,6 @@ UObject* UZipSoundFactory::CreateObject
 
 			int32 RawDataOffset = 0;
 
-
 			if (bIsAmbiX || bIsFuMa)
 			{
 				check(ChannelCount == 4);
@@ -570,15 +565,15 @@ UObject* UZipSoundFactory::CreateObject
 					FMemory::Memcpy(LockedData + RawDataOffset, RawChannelWaveData[ChannelIndex].GetData(), ChannelSize);
 					RawDataOffset += ChannelSize;
 
-//  TODO: make sure this isn't already being done somewhere else, conversion sounds wrong when gain is applied
-					// scale zeroth channel
-//					if (ChannelIndex == 0)
-//					{
-// 						for (int32 i = 0; i < ChannelSize; ++i)
-// 						{
-// 							LockedData[i] = static_cast<int16>(static_cast<float>(LockedData[i]) * ScalerPlus3dB);
-// 						}
-//					}
+					//  TODO: make sure this isn't already being done somewhere else, conversion sounds wrong when gain is applied
+										// scale zeroth channel
+					//					if (ChannelIndex == 0)
+					//					{
+					// 						for (int32 i = 0; i < ChannelSize; ++i)
+					// 						{
+					// 							LockedData[i] = static_cast<int16>(static_cast<float>(LockedData[i]) * ScalerPlus3dB);
+					// 						}
+					//					}
 				}
 			}
 			else
@@ -602,12 +597,10 @@ UObject* UZipSoundFactory::CreateObject
 				ExistingSound->ChannelSizes.Reset();
 				ExistingSound->bIsAmbisonics = false;
 			}
-			
 
 			// For mono and stereo assets, just copy the data into the buffer
 			// Clone directly as a param so that if anyone MoveToUniques it then its a steal not a copy.
 			Sound->RawData.UpdatePayload(FSharedBuffer::Clone(Buffer, RawWaveDataBufferSize));
-
 		}
 
 		Sound->Duration = (float)NumFrames / *WaveInfo.pSamplesPerSec;
@@ -616,15 +609,15 @@ UObject* UZipSoundFactory::CreateObject
 		Sound->NumChannels = ChannelCount;
 		Sound->TotalSamples = *WaveInfo.pSamplesPerSec * Sound->Duration;
 
-		const bool bLimitingSoundWaveLength = SoundWaveImportLengthLimitInSecondsCVar > 0.0f; 
+		const bool bLimitingSoundWaveLength = SoundWaveImportLengthLimitInSecondsCVar > 0.0f;
 		if (bLimitingSoundWaveLength && Sound->Duration >= SoundWaveImportLengthLimitInSecondsCVar)
 		{
 			FMessageDialog::Open(EAppMsgType::Ok, FText::Format(NSLOCTEXT("SoundFactory", "Soundwave is too long to import"
 				, "{0} is {1} seconds in duration (this is over the limit of {2} seconds) {3}")
 				, FText::FromString(CuePackageName), Sound->Duration, SoundWaveImportLengthLimitInSecondsCVar, Reason));
-				
+
 			GEditor->GetEditorSubsystem<UImportSubsystem>()->BroadcastAssetPostImport(this, nullptr);
-			return nullptr;			
+			return nullptr;
 		}
 
 		// Store the current file path and timestamp for re-import purposes
@@ -656,8 +649,8 @@ UObject* UZipSoundFactory::CreateObject
 			NewCuePoint.FrameLength = (int32)SampleLoop.EndFrame - (int32)SampleLoop.StartFrame;
 			if (SampleLoop.EndFrame <= SampleLoop.StartFrame)
 			{
-				Warn->Logf(ELogVerbosity::Error, 
-					TEXT("Found invalid start and end frames when creating Cue Point from Sample Loop Region! LoopID = %d, StartFrame = %d, EndFrame = %d"), 
+				Warn->Logf(ELogVerbosity::Error,
+					TEXT("Found invalid start and end frames when creating Cue Point from Sample Loop Region! LoopID = %d, StartFrame = %d, EndFrame = %d"),
 					SampleLoop.LoopID, SampleLoop.StartFrame, SampleLoop.EndFrame);
 
 				FoundInvalidSampleLoops = true;
@@ -684,7 +677,7 @@ UObject* UZipSoundFactory::CreateObject
 		{
 			Sound->SetTimecodeInfo(FSoundWaveTimecodeInfo{});
 		}
-				
+
 		// Compressed data is now out of date.
 		const bool bRebuildStreamingChunks = FPlatformCompressionUtilities::IsCurrentPlatformUsingStreamCaching();
 		Sound->InvalidateCompressedData(true /* bFreeResources */, bRebuildStreamingChunks);

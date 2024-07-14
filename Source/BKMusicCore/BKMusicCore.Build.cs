@@ -2,10 +2,11 @@
 
 using System.IO;
 using UnrealBuildTool;
-using UnrealBuildTool.Rules;
 
 public class BKMusicCore : ModuleRules
 {
+    private bool bStrictIncludesCheck = true;
+
     public BKMusicCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -33,12 +34,21 @@ public class BKMusicCore : ModuleRules
 
         //PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "../ThirdParty/Sfizz/"));
 
+        // This is to emulate engine installation and verify includes during development
+        // Gives effect similar to BuildPlugin with -StrictIncludes
+        if (bStrictIncludesCheck)
+        {
+            bUseUnity = false;
+            PCHUsage = PCHUsageMode.NoPCHs;
+            // Enable additional checks used for Engine modules
+            bTreatAsEngineModule = true;
+        }
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
                 "Core",
 				//"Json",
-				
 
                 "AudioMixer",
                 "DeveloperSettings",
@@ -47,10 +57,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
                 "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-
-                //probably don't want to depend on music widget, keep the dependency one directional from widgets -> core
-				// ... add other public dependencies that you statically link with here ...
-			}
+            }
 
             );
 
@@ -62,12 +69,8 @@ public class BKMusicCore : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
-				//"Projects",
-				//"InputCore",
-				"SignalProcessing"
-
-				// ... add private dependencies that you statically link with here ...
-			}
+                "SignalProcessing"
+            }
             );
 
         DynamicallyLoadedModuleNames.AddRange(

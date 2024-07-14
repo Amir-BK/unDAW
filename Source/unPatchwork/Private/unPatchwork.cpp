@@ -5,13 +5,11 @@
 #include "Serialization/JsonSerializer.h"
 //#include "MetasoundUObjectRegistry.h"
 
-
-
 #define LOCTEXT_NAMESPACE "unPatchworkModule"
 
 void unPatchworkModule::StartupModule()
 {
-UE_LOG(LogTemp, Log, TEXT("Hello unPatchwork"))
+	UE_LOG(LogTemp, Log, TEXT("Hello unPatchwork"))
 }
 
 void unPatchworkModule::ShutdownModule()

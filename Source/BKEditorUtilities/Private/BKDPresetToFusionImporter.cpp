@@ -1,25 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "BKDPresetToFusionImporter.h"
 //#include "XmlParser.h"
 #include "XmlFile.h"
 #include "FileUtilities/ZipArchiveReader.h"
 #include <XmlNode.h>
 #include <AssetToolsModule.h>
+#include "Sound/SoundWave.h"
+#include <Factories/SoundFactory.h>
+#include "Editor/EditorEngine.h"
+#include "Editor.h"
+#include "Subsystems/ImportSubsystem.h"
 //#include "HarmonixDspEditor/Private/FusionPatchImportOptions.h"
-
-
 
 UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, const FString& Filename, const TCHAR* Parms, FFeedbackContext* Warn, bool& bOutOperationCanceled)
 {
-	
-	
 	FAssetToolsModule& AssetToolsModule = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools");
 	newSettings = FFusionPatchSettings();
 	FString PathString = FPaths::GetPath(*Filename);
 	UE_LOG(LogTemp, Log, TEXT("Path String:  %s"), *PathString)
-	const FString& path = Filename;
+		const FString& path = Filename;
 	FString UnrealSampleSavePath = TEXT("/Game/Imported/SFZSamples/");
 	FPaths::MakePlatformFilename(UnrealSampleSavePath);
 
@@ -28,7 +28,7 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 	//FName newName = FName(InName.ToString().Append(TEXT("")));
 
 	UFusionPatch* NewFusionPatch = NewObject<UFusionPatch>(InParent, InClass, InName, Flags);
-	
+
 	MyXMLfile.LoadFile(path);
 	//MyXMLfile.
 
@@ -41,15 +41,13 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 	ParseDSPresetRegionsTask.MakeDialog();
 	TArray<FKeyzoneSettings> ToAddArray;
 
-
 	for (auto& keyzone : KeyZoneArray) {
 		ParseDSPresetRegionsTask.EnterProgressFrame();
 		FString sampleToImportPath = keyzone.SamplePath;
 		sampleToImportPath = FPaths::ConvertRelativePathToFull(FPaths::Combine(PathString + "/" + sampleToImportPath));
 		FPaths::MakeStandardFilename(sampleToImportPath);
 		FPaths::NormalizeFilename(sampleToImportPath);
-		
-	
+
 		FString ResultPath = FPaths::Combine(
 			UnrealSampleSavePath + FPaths::MakeValidFileName(keyzone.SamplePath));
 		if (FPaths::FileExists(sampleToImportPath))
@@ -79,7 +77,6 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 			else
 			{
 				NumFilesFailedToImport++;
-				
 			}
 			GEditor->GetEditorSubsystem<UImportSubsystem>()->
 				BroadcastAssetPostImport(this, keyzone.SoundWave);
@@ -87,14 +84,10 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 		else
 		{
 			UE_LOG(LogTemp, Log, TEXT("No sample cause the path looks like this: %s"), *sampleToImportPath)
-			NumFilesFailedToImport++;
+				NumFilesFailedToImport++;
 		}
-
-		
-
-
 	}
-	
+
 	//UFusionPatchCreateOptions::FArgs Args;
 	//bool WasOkayPressed = false;
 
@@ -110,10 +103,8 @@ UObject* UBKDPresetToFusionImporter::FactoryCreateFile(UClass* InClass, UObject*
 	NewFusionPatch->UpdateSettings(newSettings);
 	NewFusionPatch->UpdateKeyzones(ToAddArray);
 
+	//if(MyXMLfile.GetRotNoode())
 
-	//if(MyXMLfile.GetRotNoode()) 
-
-	
 	return NewFusionPatch;
 }
 
@@ -126,7 +117,6 @@ UBKDPresetToFusionImporter::UBKDPresetToFusionImporter()
 	bEditorImport = true;
 	//Octave_Offset = 12;
 }
-
 
 void UBKDPresetToFusionImporter::traverseXML(const FXmlNode* nodeIn, TArray <FKeyzoneSettings>& workingArray, FFusionPatchSettings& workingSettings)
 {
@@ -150,10 +140,8 @@ void UBKDPresetToFusionImporter::traverseXML(const FXmlNode* nodeIn, TArray <FKe
 					}
 					continue;
 				};
-
 			};
 		}
-
 
 		//parse samples
 		if (nodeIn->GetTag().Contains(TEXT("sample")))
@@ -193,10 +181,8 @@ void UBKDPresetToFusionImporter::traverseXML(const FXmlNode* nodeIn, TArray <FKe
 				{
 					newKeyzone.MinVelocity = FCString::Atoi(*attribute.GetValue());
 					continue;
-				};			
-				
-				
-				
+				};
+
 				if (attribute.GetTag().Contains(TEXT("hiVel")))
 				{
 					newKeyzone.MaxVelocity = FCString::Atoi(*attribute.GetValue());
@@ -207,20 +193,16 @@ void UBKDPresetToFusionImporter::traverseXML(const FXmlNode* nodeIn, TArray <FKe
 			}
 
 			workingArray.Add(newKeyzone);
-
 		}
-
 
 		for (auto& node : nodeIn->GetChildrenNodes())
 		{
 			traverseXML(node, workingArray, workingSettings);
 			if (node->GetNextNode()) traverseXML(node->GetNextNode(), workingArray, workingSettings);
-
 		}
 	}
 }
 
 void UBKDPresetToFusionImporter::configureFusionPatchFromDSPresetData(UFusionPatch* inPatch, TArray<FKeyzoneSettings>& workingArray, FFusionPatchSettings& workingSettings)
 {
-
 }

@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 
 #define LOCTEXT_NAMESPACE "BKEditorUtilitiesModule"
@@ -13,8 +12,6 @@ void FDAWEditorToolbarCommands::RegisterCommands()
 	UI_COMMAND(ToggleNotePaintingMode, "Toggle Note Painting Mode", "Toggle Note Painting Mode", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::B));
 	UI_COMMAND(TogglePianoTabView, "Toggle Piano Tab View", "Toggle Piano Tab View", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::P));
 };
-
-
 
 void FM2SoundNodeCommands::RegisterCommands()
 {

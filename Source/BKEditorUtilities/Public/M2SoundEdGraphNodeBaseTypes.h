@@ -12,8 +12,10 @@
 #include "EdGraph/EdGraphPin.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "EdGraph/EdGraphSchema.h"
+#include "Editor.h"
 #include "M2SoundEdGraphSchema.h"
 #include "Vertexes/M2SoundVertex.h"
+#include "Editor.h"
 
 #include "M2SoundEdGraphNodeBaseTypes.generated.h"
 

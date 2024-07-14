@@ -12,8 +12,6 @@
 #include "UnDAWWidgetBase.h"
 #include "SceneManagerTransport.generated.h"
 
-
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSeekValueChangedEvent, float, Value);
 
 //macro to make declaring the transport actions easier
@@ -26,7 +24,7 @@ class BKMUSICWIDGETS_API USceneManagerTransportWidget : public UUnDAWWidgetBase
 {
 	GENERATED_BODY()
 
-public: 
+public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "unDAW|Transport")
 	FOnTransportCommand TransportCalled;
 
@@ -48,18 +46,14 @@ public:
 	void OnTimestampUpdated(FMusicTimestamp NewTimestamp)
 	{
 		auto tick = DawSequencerData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(NewTimestamp, EMidiClockSubdivisionQuantization::None);
-		auto sec = DawSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(tick) * .001f ;
+		auto sec = DawSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(tick) * .001f;
 
 		CurrentSeek = sec;
 		if (PlayPosition) PlayPosition->SetValue(sec);
 		if (CurrentPositionText) CurrentPositionText->SetText(FText::AsNumber(sec));
-
 	}
 
-
 protected:
-
-
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	class USlider* PlayPosition;
@@ -93,7 +87,6 @@ protected:
 
 public:
 
-	
 	void Init() override;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
@@ -110,7 +103,6 @@ public:
 		{
 			if (SceneManager) SceneManager->SendSeekCommand(NewSeek);
 		}
-
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Transport")
@@ -119,9 +111,6 @@ public:
 		TransportPlayState = newPlayState;
 	}
 
-
-
-
 	virtual void NativeConstruct() override
 	{
 		Super::NativeConstruct();
@@ -129,14 +118,14 @@ public:
 		bIsVariable = true;
 
 		TRANSPORTACTION(PauseButton)
-		TRANSPORTACTION(InitButton)
-		TRANSPORTACTION(StopButton)
-		TRANSPORTACTION(KillButton)
-		TRANSPORTACTION(PlayButton)
+			TRANSPORTACTION(InitButton)
+			TRANSPORTACTION(StopButton)
+			TRANSPORTACTION(KillButton)
+			TRANSPORTACTION(PlayButton)
 
-		if (PlayPosition)
+			if (PlayPosition)
 			{
-			PlayPosition->OnValueChanged.AddUniqueDynamic(this, &USceneManagerTransportWidget::SetTransportSeek);
+				PlayPosition->OnValueChanged.AddUniqueDynamic(this, &USceneManagerTransportWidget::SetTransportSeek);
 			}
 	}
 };

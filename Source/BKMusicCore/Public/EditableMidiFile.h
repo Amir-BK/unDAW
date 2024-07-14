@@ -7,23 +7,22 @@
 #include "EditableMidiFile.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BKMUSICCORE_API UEditableMidiFile : public UMidiFile
 {
 	GENERATED_BODY()
-	
 
-	public:
+public:
 
-		UPROPERTY()
-		bool bSimpleLoop = false;
+	UPROPERTY()
+	bool bSimpleLoop = false;
 
-		UPROPERTY()
-		int32 LoopBarDuration = 4;
+	UPROPERTY()
+	int32 LoopBarDuration = 4;
 
-		void LoadFromHarmonixBaseFile(UMidiFile* BaseFile);
+	void LoadFromHarmonixBaseFile(UMidiFile* BaseFile);
 
-		void FinishRebuildingMidiFile();
+	void FinishRebuildingMidiFile();
 };

@@ -20,10 +20,9 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNeedReinit);
 
-
 UENUM(BlueprintType)
 /// <summary>
-/// Helper enum to map keyboard actions to widget actions 
+/// Helper enum to map keyboard actions to widget actions
 /// </summary>
 enum EBKKeyActions : uint8
 {
@@ -44,7 +43,6 @@ enum EBKKeyActions : uint8
 	MuteSelectedTrack,
 	SoloSelectedTrack,
 	ToggleClick
-
 };
 
 //Data asset class used to make key binds customizable for should probably only be invoked by the editor widget...
@@ -57,10 +55,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BK Music|Interface")
 	TMap<FKey, TEnumAsByte<EBKKeyActions>> KeyMap;
-
 };
 
-//TODO: needs major refactoring 
+//TODO: needs major refactoring
 UENUM(BlueprintType)
 enum class EPianoRollEditorMouseMode : uint8
 {
@@ -70,16 +67,14 @@ enum class EPianoRollEditorMouseMode : uint8
 	//zoom,
 	seek,
 	empty
-
 };
 
 // Helper struct used to construct note on note off pairs, I can see how this might evolve to be a unique identifier for each note, later allowing us
 // to directly manipulate the linked events within the source midi file.
 
-// Linked notes logic sorting based on the midifile lib by Craig Stuart Sapp 
+// Linked notes logic sorting based on the midifile lib by Craig Stuart Sapp
 // Filename:      midifile/include/MidiEventList.h
 // Website:       http://midifile.sapp.org
-
 
 //An interface allowing content slate widgets to pass info back to the parent widget which may sync multiple widgets
 UINTERFACE(BlueprintType)
@@ -88,7 +83,6 @@ class BKMUSICWIDGETS_API UTimeSyncedPanel : public UInterface
 	GENERATED_BODY()
 };
 
-
 class BKMUSICWIDGETS_API ITimeSyncedPanel
 {
 	GENERATED_BODY()
@@ -96,7 +90,7 @@ protected:
 	//~ITimeSyncedPanel() = default;
 
 public:
-	
+
 	//UPROPERTY(BlueprintAssignable)
 	//FOnTransportChanged TransportStateChanged;
 
@@ -105,7 +99,6 @@ public:
 
 	//virtual FOnTrackMidiEvent GetMidiEventDelegate() {};
 
-	
 	FTrackDisplayOptions InvalidTrackRef;
 	TArray<FTrackDisplayOptions> TrackDisplayOptions;
 	TMap<int, FTrackDisplayOptions> TrackDisplayOptionsMap;
@@ -114,9 +107,8 @@ public:
 
 	virtual void SetCurrentPosition(float newCursorPosition) {};
 
-	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID) 
+	virtual FTrackDisplayOptions& GetTracksDisplayOptions(int ID)
 	{
-		
 		if (TrackDisplayOptionsMap.Contains(ID))
 		{
 			return TrackDisplayOptionsMap[ID];
@@ -136,10 +128,10 @@ public:
 	virtual void SetInputMode(EPianoRollEditorMouseMode newMode) {};
 	virtual void AddDeltaToTimeLine(float inDelta) {};
 	virtual EPianoRollEditorMouseMode getCurrentInputMode() { return EPianoRollEditorMouseMode::empty; };
-	
+
 	virtual void InitTracksFromFoundArray(TArray<int> InTracks) {
 		TrackDisplayOptionsMap.Empty();
-		for(int i = 0; i < InTracks.Num(); i++)
+		for (int i = 0; i < InTracks.Num(); i++)
 		{
 			FTrackDisplayOptions newTrack;
 			newTrack.ChannelIndexInParentMidi = InTracks[i];
@@ -148,9 +140,6 @@ public:
 		}
 	};
 
-
 	virtual bool getFollowCursor() { return false; };
 	virtual void setFollowCursor(bool inFollowCursor) {};
-
 };
-

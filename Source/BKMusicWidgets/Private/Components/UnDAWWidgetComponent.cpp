@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Components/UnDAWWidgetComponent.h"
 
 UUnDAWWidgetComponent::UUnDAWWidgetComponent()
@@ -15,10 +14,9 @@ void UUnDAWWidgetComponent::InitWidget()
 	if (DAWWidgetInstance)
 	{
 		UE_LOG(LogTemp, Log, TEXT("we have a DAW widget instance"))
-		DAWWidgetInstance->SetSceneManager(SceneManager);
+			DAWWidgetInstance->SetSceneManager(SceneManager);
 	}
 }
-
 
 void UUnDAWWidgetComponent::BeginPlay()
 {
@@ -27,7 +25,6 @@ void UUnDAWWidgetComponent::BeginPlay()
 		//SetWidgetClass(DAWWidgetClass);
 	}
 	Super::BeginPlay();
-
 }
 
 #if WITH_EDITOR

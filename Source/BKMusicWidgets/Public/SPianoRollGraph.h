@@ -44,7 +44,6 @@ public:
 	FLinearColor* lineColor;
 };
 
-
 class BKMUSICWIDGETS_API STrackResizeArea : public SCompoundWidget
 {
 public:
@@ -58,9 +57,6 @@ public:
 	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	int slotInParentID;
 	bool lmbDown = false;
-
-
-
 
 	void Construct(const FArguments& InArgs)
 	{
@@ -102,7 +98,6 @@ public:
 DECLARE_DELEGATE(FOnInitComplete)
 DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
 
-
 class ITimeSliderController;
 
 /**
@@ -114,15 +109,14 @@ class BKMUSICWIDGETS_API SPianoRollGraph : public SLeafWidget
 	SLATE_DECLARE_WIDGET(SPianoRollGraph, SLeafWidget)
 public:
 
-
-	SLATE_BEGIN_ARGS(SPianoRollGraph) 
+	SLATE_BEGIN_ARGS(SPianoRollGraph)
 		{}
 		SLATE_ARGUMENT(FSlateBrush, gridBrush)
 		SLATE_ARGUMENT(UMidiFile*, MidiFile)
 		SLATE_ARGUMENT(float, CursorFollowAnchorPosition)
-		SLATE_ARGUMENT_DEFAULT(FLinearColor, gridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00")));
-		SLATE_ARGUMENT_DEFAULT(FLinearColor, accidentalGridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082")));
-		SLATE_ARGUMENT_DEFAULT(FLinearColor, cNoteColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220")));
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, GridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("8A8A8A00")));
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, AccidentalGridColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("00000082")));
+		SLATE_ARGUMENT_DEFAULT(FLinearColor, CNoteColor) = FLinearColor::FromSRGBColor(FColor::FromHex(TEXT("FF33E220")));
 		SLATE_ARGUMENT(UDAWSequencerData*, SessionData)
 		SLATE_EVENT(FOnMouseButtonDown, OnMouseButtonDown)
 		SLATE_ATTRIBUTE(float, PianoTabWidth)
@@ -142,11 +136,10 @@ public:
 #endif
 
 private:
-	
+
 	TSlateAttribute<float> PianoTabWidth;
 
 	bool bIsAttributeBoundMusicTimestamp = false;
-
 
 public:
 
@@ -160,8 +153,6 @@ public:
 	/** Called when the graph is clicked */
 	FOnMouseButtonDown OnMouseButtonDownDelegate;
 
-
-
 	//FMusicTimestamp CurrentTimestamp;
 
 	FOnTransportSeekCommand OnSeekEvent;
@@ -170,9 +161,9 @@ public:
 
 	TScriptInterface<IBK_MusicSceneManagerInterface> MonitoredSceneManager;
 
-	FLinearColor gridColor = FLinearColor::White;
-	FLinearColor accidentalGridColor = FLinearColor::Gray;
-	FLinearColor cNoteColor = FLinearColor::Blue;
+	FLinearColor GridColor = FLinearColor::White;
+	FLinearColor AccidentalGridColor = FLinearColor::Gray;
+	FLinearColor CNoteColor = FLinearColor::Blue;
 
 	double CurrentTimelinePosition = 0.0;
 
@@ -180,24 +171,22 @@ public:
 
 	UDAWSequencerData* SessionData = nullptr;
 
-	float drawLength = 0;
-	FLinearColor noteColor;
-	FVector2f positionOffset = FVector2f(0, -125);
+	float DrawLength = 0;
+	FLinearColor NoteColor;
+	FVector2f PositionOffset = FVector2f(0, -125);
 	float LastTickTimelinePosition;
-	int32 hoveredPitch;
+	int32 HoveredPitch;
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	//TMultiMap<int32, FLinkedNotes> Displayed
-	TMap<int, bool> availableSamplesMap;
+	TMap<int, bool> AvailableSamplesMap;
 
 	FMeasuredGlyph CursorTest;
 
-	TArray<int32> visibleBeats;
-	TArray<int32> visibleBars;
-	FVector2D ComputeDesiredSize(float) const override {return FVector2D(1000, 1000);};
-
+	TArray<int32> VisibleBeats;
+	TArray<int32> VisibleBars;
+	FVector2D ComputeDesiredSize(float) const override { return FVector2D(1000, 1000); };
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
-
 
 	bool receivingDragUpdates = false;
 
@@ -235,7 +224,6 @@ public:
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo GridFont;
 
-
 	TWeakObjectPtr<UMidiFile> HarmonixMidiFile;
 
 	//tempo and time events
@@ -270,11 +258,9 @@ public:
 
 	void SetInputMode(EPianoRollEditorMouseMode newMode);
 
-
 	void AddHorizontalX(float inputX);
 
 	void UpdateSlotsZOrder();
-
 
 	void RecalcGrid();
 
@@ -291,13 +277,11 @@ protected:
 
 	friend class FUnDAWSequenceEditorToolkit;
 
-
 	bool FollowedCursorLastFrame = false;
 	FText Text = FText::FromString(TEXT("Hello from custom widget"));
 
 	TSharedPtr<SCanvas> RootCanvas;
 	TSharedPtr<SConstraintCanvas> RootConstraintCanvas;
-
 
 	//auto newSlot = RootCanvas->AddSlot();
 
@@ -310,7 +294,6 @@ protected:
 	bool isShiftPressed = false;
 	int32 tickAtMouse = 0;
 
-
 	double pixelsPerSecond = 1000;
 	double rowHeight = 200;
 
@@ -322,11 +305,9 @@ protected:
 	TArray<FVector2f> gridLine;
 	TArray<FVector2f> vertLine;
 
-
 	FSlateBrush gridBrush = FSlateBrush();
 
 	void RecalculateSlotOffsets();
-
 
 	// Begin SWidget overrides.
 	//virtual FVector2D ComputeDesiredSize(float) const override;

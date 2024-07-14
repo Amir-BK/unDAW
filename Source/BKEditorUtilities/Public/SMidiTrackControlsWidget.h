@@ -13,6 +13,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Colors/SColorPicker.h"
 #include "Widgets/Colors/SColorBlock.h"
+#include "Widgets/Input/SEditableTextBox.h"
 #include "M2SoundGraphData.h"
 #include "M2SoundEdGraphSchema.h"
 #include "SFZ/UnDAWSFZAsset.h"
@@ -97,7 +98,7 @@ public:
 		//parentMidiEditor->SelectTrack(slotInParentID);
 		if (SequencerData->SelectedTrackIndex != slotInParentID)
 		{
-		SequencerData->SelectedTrackIndex = slotInParentID;
+			SequencerData->SelectedTrackIndex = slotInParentID;
 		}
 		else
 		{
@@ -176,7 +177,7 @@ public:
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
 		FString FusionPatchName;
-		if(TrackData->fusionPatch != nullptr) FusionPatchName = TrackData->fusionPatch->GetName(); 
+		if (TrackData->fusionPatch != nullptr) FusionPatchName = TrackData->fusionPatch->GetName();
 		else FusionPatchName = TEXT("DEPRECATED");
 		CurrentItem = MakeShareable(new FString(FusionPatchName));
 		//OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
@@ -246,7 +247,7 @@ public:
 									//		]
 									//]
 
-									+ SVerticalBox::Slot()
+									+SVerticalBox::Slot()
 									[
 										SNew(SHorizontalBox)
 											+ SHorizontalBox::Slot()

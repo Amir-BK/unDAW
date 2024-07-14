@@ -22,44 +22,42 @@ class UClass;
 class UObject;
 class USoundWave;
 
-UCLASS(hidecategories=Object)
+UCLASS(hidecategories = Object)
 class BK_EDITORUTILITIES_API UZipSoundFactory : public UFactory
 {
-	
 public:
-	
+
 	GENERATED_UCLASS_BODY()
 
 	/** If enabled, a sound cue will automatically be created for the sound */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="If enabled, a sound cue will automatically be created for the sound"))
-	uint32 bAutoCreateCue:1;
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "If enabled, a sound cue will automatically be created for the sound"))
+	uint32 bAutoCreateCue : 1;
 
 	/** If enabled, the created sound cue will include a attenuation node */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="If enabled, the created sound cue will include a attenuation node"))
-	uint32 bIncludeAttenuationNode:1;
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "If enabled, the created sound cue will include a attenuation node"))
+	uint32 bIncludeAttenuationNode : 1;
 
 	/** If enabled, the created sound cue will include a looping node */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="If enabled, the created sound cue will include a looping node"))
-	uint32 bIncludeLoopingNode:1;
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "If enabled, the created sound cue will include a looping node"))
+	uint32 bIncludeLoopingNode : 1;
 
 	/** If enabled, the created sound cue will include a modulator node */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="If enabled, the created sound cue will include a modulator node"))
-	uint32 bIncludeModulatorNode:1;
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "If enabled, the created sound cue will include a modulator node"))
+	uint32 bIncludeModulatorNode : 1;
 
 	/** The volume of the created sound cue */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="The volume of the created sound cue"))
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "The volume of the created sound cue"))
 	float CueVolume;
 
 	/** If not empty, imported waves will be placed in PackageCuePackageSuffix, but only if bAutoCreateCue is true. */
-	UPROPERTY(EditAnywhere, Category=SoundFactory, meta=(ToolTip="If not empty, generated SoundCues will be placed in PackageCuePackageSuffix, but only if bAutoCreateCue is true"))
+	UPROPERTY(EditAnywhere, Category = SoundFactory, meta = (ToolTip = "If not empty, generated SoundCues will be placed in PackageCuePackageSuffix, but only if bAutoCreateCue is true"))
 	FString CuePackageSuffix;
 
 	//~ Begin UFactory Interface
-	virtual UObject* FactoryCreateBinary( UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, const TCHAR* FileType, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn ) override;
+	virtual UObject* FactoryCreateBinary(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, const TCHAR* FileType, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn) override;
 	//~ End UFactory Interface
 
 	uint8 SuppressImportDialogOptions;
-
 
 	/** Suppresses all dialogs pertaining to importing using factory */
 	void SuppressImportDialogs();
@@ -78,7 +76,6 @@ private:
 	void UpdateTemplate();
 
 	TWeakObjectPtr<USoundWave> TemplateSoundWave;
-
 
 	UObject* CreateObject(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, const TCHAR* FileType, const uint8*& Buffer, const uint8* BufferEnd, FFeedbackContext* Warn);
 };

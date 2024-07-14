@@ -8,17 +8,15 @@
 #include <MusicScenePlayerActor.h>
 #include "UnDAWWidgetComponent.generated.h"
 
-
 /**
- * 
+ *
  */
 UCLASS(ClassGroup = (unDAW), meta = (BlueprintSpawnableComponent), BlueprintType, Blueprintable, HideCategories = "User Interface")
 class BKMUSICWIDGETS_API UUnDAWWidgetComponent : public UWidgetComponent
 {
 	GENERATED_BODY()
-	
-	public:
-	
+
+public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW|Widget")
 	TSubclassOf<UUnDAWWidgetBase> DAWWidgetClass;
@@ -26,12 +24,8 @@ class BKMUSICWIDGETS_API UUnDAWWidgetComponent : public UWidgetComponent
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW|Widget")
 	TObjectPtr<UUnDAWWidgetBase> DAWWidgetInstance;
 
-
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW|Widget")
 	AMusicScenePlayerActor* SceneManager;
-
-
 
 	UUnDAWWidgetComponent();
 	virtual void InitWidget() override; //to cache a reference to the widget instance as an undaw widget
@@ -40,5 +34,4 @@ class BKMUSICWIDGETS_API UUnDAWWidgetComponent : public UWidgetComponent
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
-	
 };

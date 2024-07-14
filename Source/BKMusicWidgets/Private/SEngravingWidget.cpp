@@ -1,11 +1,9 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SEngravingWidget.h"
 //#include <SlateCore.h>
 #include "EngineGlobals.h"
 #include "Fonts/FontMeasure.h"
-
 
 /*
  int USEngravingWidget::GlypthToHexcode(EGlyphsTypes eGlypthType)
@@ -24,22 +22,16 @@
 		return 0xE262;
 	case F_Clef:
 		return 0xE062;
-	
-
 	}
-	
+
 	return 0;
 }
 */
 
 int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	
-	
-
 	//This shit is to convert unicode to string...
-	
-	
+
 	//Test points
 	TArray<FVector2f> StaffPoints;
 
@@ -50,12 +42,10 @@ int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Al
 		staffSpace = staff_spacing;
 	}
 	else {
-
 	}
 
 	if (bShowGrid)
 	{
-
 		for (int i = 0; i < AllottedGeometry.GetLocalSize().Y / (staffSpace / 2); i++)
 		{
 			StaffPoints.Add(FVector2f(0, (staffSpace / 2) * i));
@@ -83,16 +73,14 @@ int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Al
 				EngravingColor);
 
 			StaffPoints.Empty();
-
 		}
 	}
-	
-	
+
 	for (int i = 0; i < 5; i++)
 	{
-		StaffPoints.Add(FVector2f(0, (topMargin * staffSpace) +  staffSpace * i));
+		StaffPoints.Add(FVector2f(0, (topMargin * staffSpace) + staffSpace * i));
 		StaffPoints.Add(FVector2f(AllottedGeometry.GetLocalSize().X, (topMargin * staffSpace) + staffSpace * i));
-		
+
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
 			LayerId,
@@ -103,10 +91,7 @@ int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Al
 			false,
 			4.0f);
 
-	
-
 		StaffPoints.Empty();
-	
 	}
 
 	FSlateDrawElement::MakeBox(
@@ -116,7 +101,6 @@ int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Al
 		&BackgroundBrush,
 		ESlateDrawEffect::None,
 		BackgroundBrush.GetTint(InWidgetStyle));
-
 
 	//draw the parsed glyphs from the prepared glyph array, we should try to minimize the amount of calculations that happen here,
 	//instead store results in the object
@@ -134,16 +118,14 @@ int32 USEngravingWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Al
 		EngravingFont,
 		ESlateDrawEffect::None,
 		EngravingColor);
-	
+
 	return int32();
 }
 
 void USEngravingWidget::prepare_glyphs()
 {
-	
 	prepared_glyph_objects.Empty();
 	auto clefOffset = FBKMusicWidgetsModule::getDiatonicAndAccidental(clef.centerPitch);
-	
 
 	for (auto& event : musical_events)
 	{
@@ -156,8 +138,8 @@ void USEngravingWidget::prepare_glyphs()
 				int tempPitch = asPitchedEvent->pitch;
 				auto notestruct = FBKMusicWidgetsModule::getDiatonicAndAccidental(asPitchedEvent->pitch);
 				glyph->draw_height = (notestruct.X) + (7 * (int)(notestruct.Z)) - (clefOffset.X + 2 + (7 * clefOffset.Z));
-					
-					//(notestruct.X) + (7 * (int)(asPitchedEvent->pitch / 12))- (clefOffset + (7 * clefOffsetOctave));
+
+				//(notestruct.X) + (7 * (int)(asPitchedEvent->pitch / 12))- (clefOffset + (7 * clefOffsetOctave));
 				glyph->mainGlyph = EGlyphsTypes::Black_Notehead;
 				glyph->accidentalGlyph = notestruct.Y == 1 ? EGlyphsTypes::accidentalSharp : EGlyphsTypes::no_glyph;
 				glyph->drawStem = true;
@@ -171,18 +153,15 @@ void USEngravingWidget::prepare_glyphs()
 
 			prepared_glyph_objects.Push(glyph);
 		}
-	
 	}
-
-
 }
 
 int USEngravingWidget::ConvertDrawHeightToPitch(int inDrawHeight)
 {
 	int basePitch = 71; //this is our center line, in g clef... we'll get there.
-	
+
 	TArray<int32> scaleDegrees;
-	scaleDegrees = {0, 1, 3, 5, 6, 8, 10};
+	scaleDegrees = { 0, 1, 3, 5, 6, 8, 10 };
 	int drawOctave = 12 * ((int)((-inDrawHeight) / 7));
 	if (inDrawHeight > 0) {
 		drawOctave -= 12;
@@ -192,11 +171,9 @@ int USEngravingWidget::ConvertDrawHeightToPitch(int inDrawHeight)
 
 	//UE_PRIVATE_LOG(PREPROCESSOR_NOTHING, constexpr, LogTemp, Warning, u"Pitch: %d",basePitch + wrapResult.X);
 	//UE_PRIVATE_LOG(PREPROCESSOR_NOTHING, constexpr, LogTemp, Warning, u"Octave int: %d",12 * wrapResult.Y);
-	
-	
-	//return basePitch + scaleDegrees[(int)abs(inDrawHeight) % 7] + drawOctave; 
-	return basePitch + wrapResult.X + 12 * wrapResult.Y;
 
+	//return basePitch + scaleDegrees[(int)abs(inDrawHeight) % 7] + drawOctave;
+	return basePitch + wrapResult.X + 12 * wrapResult.Y;
 }
 
 FVector2D USEngravingWidget::getGridLocationAtScreenPosition(FVector2f inPosition)
@@ -206,18 +183,15 @@ FVector2D USEngravingWidget::getGridLocationAtScreenPosition(FVector2f inPositio
 	return FVector2D((int)inPosition.X, (int)inPosition.Y / gridSpacing - 2 * (topMargin + 2));
 }
 
-
 void USEngravingWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-
 }
 
 void USEngravingWidget::NativePreConstruct()
 {
-
 	clef = FClefStruct(E_clef);
-	
+
 	//Measure font size and staff spacing, once measured set the bool to true so we don't check it every frame.
 	//TCHAR unichar = TCHAR();
 	const TSharedRef<FSlateFontMeasure> FontMeasureService = (FSlateApplication::Get().GetRenderer()->
@@ -227,17 +201,16 @@ void USEngravingWidget::NativePreConstruct()
 	measuredY = FontMeasureService->Measure(FString(1, TEXT("—")), EngravingFont).X;
 	staff_spacing = measuredY / 4;
 	bActualFontSizeMeasured = true;
-	for (auto& event : musical_events) 
+	for (auto& event : musical_events)
 	{
 		UPitchedMusicalEvent* asPitchedEvent = Cast<UPitchedMusicalEvent>(event);
 		if (IsValid(asPitchedEvent)) {
 			asPitchedEvent->UpdatePitch(asPitchedEvent->pitch);
 		};
 	}
-	
+
 	PrepareGrid();
 	prepare_glyphs();
-
 }
 
 void USEngravingWidget::PrepareGrid()
@@ -245,9 +218,7 @@ void USEngravingWidget::PrepareGrid()
 	gridSpacing = staff_spacing;
 	gridMax = GetCachedGeometry().GetLocalSize().Y / gridSpacing - 2 * (topMargin + 2);
 	gridMin = -2 * (topMargin + 2);
-
 }
-
 
 UMusicalEvent* USEngravingWidget::AddMusicalEvent(UMusicalEvent* newEvent)
 {
@@ -307,7 +278,6 @@ void USEngravingWidget::DrawGlyphElement(UPreparedGlyph* const& glyph, FSlateWin
 			staffSpace * 0.24);
 
 		StaffPoints.Empty();
-
 	}
 
 	//needs serious cleanup! this is the function that draws the extra staff lines
@@ -334,36 +304,30 @@ void USEngravingWidget::DrawGlyphElement(UPreparedGlyph* const& glyph, FSlateWin
 			StaffPoints.Empty();
 		}
 	}
-
 }
 
 void USEngravingWidget::NativeOnInitialized() {
-	
 	/*
 	clef = FClefStruct(E_clef);
 
 	//Measure font size and staff spacing, once measured set the bool to true so we don't check it every frame.
 	TCHAR unichar = TCHAR(FBKMusicWidgetsModule::GlyphToHexTest(EGlyphsTypes::Black_Notehead));
 	TSharedRef<FSlateFontMeasure> fontMeasureService = (FSlateApplication::Get().GetRenderer()->GetFontMeasureService());
-	
+
 	measuredY = fontMeasureService->Measure(FString(1, &unichar), EngravingFont).Y;
 	staff_spacing = measuredY / 16;
 	bActualFontSizeMeasured = true;
 
 	//prepare_glyphs();
 	*/
-
-
 }
 
 TCHAR GlyphEnumToChar(EGlyphsTypes inGlyph) {
-
 	return TCHAR(FBKMusicWidgetsModule::GlyphToHexTest(inGlyph));
 }
 
 void UPitchedMusicalEvent::UpdatePitch(int newPitch)
 {
-
 	pitch = newPitch;
 	auto result = FBKMusicWidgetsModule::getDiatonicAndAccidental(newPitch);
 	FString returnString;

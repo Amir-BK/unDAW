@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SlateOptMacros.h"
 #include "SAudioSlider.h"
@@ -16,7 +15,6 @@ void SM2AudioOutputNode::Construct(const FArguments& InArgs, UEdGraphNode* InGra
 	//bEnabledAttributesUpdate = true;
 
 	UpdateGraphNode();
-
 }
 TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
 {
@@ -51,7 +49,7 @@ TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
 							//make FAudioRadialSliderStyle
 
 							SNew(SAudioRadialSlider)
-								.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor();})
+								.SliderProgressColor_Lambda([&]() {return GetSliderProgressColor(); })
 								.SliderValue(OutputNode->Gain)
 								.OnValueChanged_Lambda([&](float NewValue) {OutputNode->SetOutputGain(NewValue); })
 
@@ -66,8 +64,6 @@ TSharedRef<SWidget> SM2AudioOutputNode::CreateNodeContentArea()
 					SAssignNew(RightNodeBox, SVerticalBox)
 				]
 		];
-
-
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -84,7 +80,7 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 {
 	UM2SoundVariMixerNode* MixerNode = Cast<UM2SoundVariMixerNode>(GraphNode);
 	UM2VariMixerVertex* MixerVertex = Cast<UM2VariMixerVertex>(MixerNode->Vertex);
-	
+
 	return SNew(SBorder)
 		.BorderImage(FAppStyle::GetBrush("NoBorder"))
 		.HAlign(HAlign_Fill)
@@ -116,9 +112,8 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 							//make FAudioRadialSliderStyle
 
 							SAssignNew(MixerWidget, SVariMixerWidget, MixerVertex)
-		
-						]						
 
+						]
 
 				]
 
@@ -130,7 +125,6 @@ TSharedRef<SWidget> SM2VariMixerNode::CreateNodeContentArea()
 					SAssignNew(RightNodeBox, SVerticalBox)
 				]
 		];
-
 }
 
 void SM2VariMixerNode::UpdateGraphNode()
@@ -142,7 +136,7 @@ void SM2VariMixerNode::UpdateGraphNode()
 
 	// add a channel widget for each input pin
 
-	for(const auto& Pin : GraphNode->Pins)
+	for (const auto& Pin : GraphNode->Pins)
 	{
 		if (Pin->Direction == EEdGraphPinDirection::EGPD_Input)
 		{
@@ -151,19 +145,16 @@ void SM2VariMixerNode::UpdateGraphNode()
 			{
 				//cast pin subcategory object to our audio pin type
 				auto AsM2AudioTrackPin = Cast<UM2AudioTrackPin>(Pin->PinType.PinSubCategoryObject);
-				
+
 				//UEdGraphPin* LinkedPin = Pin->LinkedTo[0];
 
-					MixerWidget->AddChannelWidget(AsM2AudioTrackPin->ChannelIndex);
-					//continue;
-
-
+				MixerWidget->AddChannelWidget(AsM2AudioTrackPin->ChannelIndex);
+				//continue;
 			}
 
 			//MixerWidget->AddChannelWidget(MixerVertex, Pin->PinName);
 		}
 	}
-
 
 	//UpdateAudioKnobs();
 }

@@ -4,10 +4,22 @@ using UnrealBuildTool;
 
 public class BK_EditorUtilities : ModuleRules
 {
+    private bool bStrictIncludesCheck = true;
+
     public BK_EditorUtilities(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+
+        // This is to emulate engine installation and verify includes during development
+        // Gives effect similar to BuildPlugin with -StrictIncludes
+        if (bStrictIncludesCheck)
+        {
+            bUseUnity = false;
+            PCHUsage = PCHUsageMode.NoPCHs;
+            // Enable additional checks used for Engine modules
+            bTreatAsEngineModule = true;
+        }
 
         PublicIncludePaths.AddRange(
             new string[] {
@@ -40,7 +52,6 @@ public class BK_EditorUtilities : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "ToolMenus"
-               
 
                 // ... add other public dependencies that you statically link with here ...
 			}
@@ -60,7 +71,6 @@ public class BK_EditorUtilities : ModuleRules
                 "Blutility",
                 "InputCore",
                 "HarmonixDspEditor",
-                
 
 				// ... add private dependencies that you statically link with here ...
 			}

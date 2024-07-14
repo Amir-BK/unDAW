@@ -19,6 +19,9 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
+#include "SAssetDropTarget.h"
+
+#include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
 
@@ -76,23 +79,34 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 		{
 			auto DockTab = SNew(SDockTab)
 				[
-					SAssignNew(PianoRollGraph, SPianoRollGraph)
-						.SessionData(SequenceData)
-						.Clipping(EWidgetClipping::ClipToBounds)
-						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
-						.OnSeekEvent(OnSeekEvent)
-						// .CurrentTimestamp(CurrentTimestamp)
+					SNew(SOverlay)
+						+SOverlay::Slot()
+						[
+							SNew(SAssetDropTarget)
+								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
+								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
+						]
+
+						+SOverlay::Slot()
+						[
+							SAssignNew(PianoRollGraph, SPianoRollGraph)
+								.SessionData(SequenceData)
+								.Clipping(EWidgetClipping::ClipToBounds)
+								//.CurrentTimestamp(SequenceData->CurrentTimestampData)
+								.OnSeekEvent(OnSeekEvent)
+								// .CurrentTimestamp(CurrentTimestamp)
+						]
+					
+
 				];
 
 			//PianoRollGraph->OnSeekEvent.BindLambda([this](float Seek) { OnSeekEvent.ExecuteIfBound(Seek); });
 
-
 			//PianoRollGraph->Init();
-				
+
 			SetupPreviewPerformer();
 			//PianoRollGraph->SetCurrentTimestamp(CurrentTimestamp);
 			PianoRollGraph->OnMouseButtonDownDelegate.BindRaw(this, &FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown);
-
 
 			SequenceData->OnMidiDataChanged.AddLambda([&]()
 				{
@@ -216,9 +230,8 @@ void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
 
 	for (auto& Node : Graph->SelectedNodes)
 	{
-		if(Node->CanUserDeleteNode())	Node->DestroyNode();
+		if (Node->CanUserDeleteNode())	Node->DestroyNode();
 	}
-	
 }
 
 void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
@@ -228,7 +241,6 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	   // auto Metasound = Performer->AuditionComponentRef->GetSound();
 		//FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
 		//check(MetasoundAsset);
-
 
 	//AdditionalGraphCommands = MakeShared<FUICommandList>();
 
@@ -271,7 +283,6 @@ void FUnDAWSequenceEditorToolkit::OnPerformerTimestampUpdated(const FMusicTimest
 
 void FUnDAWSequenceEditorToolkit::TogglePaintingMode()
 {
-
 	bool bPaintingMode = PianoRollGraph->InputMode == EPianoRollEditorMouseMode::drawNotes;
 
 	if (PianoRollGraph) PianoRollGraph->SetInputMode(!bPaintingMode ? EPianoRollEditorMouseMode::drawNotes : EPianoRollEditorMouseMode::Panning);
@@ -282,30 +293,25 @@ void FUnDAWSequenceEditorToolkit::TogglePianoTab()
 	if (PianoRollGraph)
 	{
 		PianoRollGraph->PianoTabWidth.Set(*PianoRollGraph, PianoRollGraph->PianoTabWidth.Get() == 0.0f ? 50.0f : 0.0f);
-
 	}
 }
-
 
 // So, we learned from flow that it's possible to make this a lot simpler by using the style class and the manu builder
 // still, some 'extensions' probably need to happen here so it's not a complete waste
 void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 {
-	
 	const FDAWEditorToolbarCommands& Commands = FDAWEditorToolbarCommands::Get();
 
 	//transport
 	ToolkitCommands->MapAction(Commands.TransportPlay, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Play); }));
 	ToolkitCommands->MapAction(Commands.TransportStop, FExecuteAction::CreateLambda([this]() { SendTransportCommand(Stop); }));
 
-	
-	
 	//map note draw mode toggle
 	ToolkitCommands->MapAction(Commands.ToggleNotePaintingMode, FExecuteAction::CreateLambda([this]() { TogglePaintingMode(); }));
 
 	//map piano tab toggle
 	ToolkitCommands->MapAction(Commands.TogglePianoTabView, FExecuteAction::CreateLambda([this]() { TogglePianoTab(); }));
-	
+
 	TSharedPtr<FExtender> ToolbarExtender = MakeShared<FExtender>();
 	CurrentPlayStateTextBox = SNew(STextBlock).Text_Lambda([this]() { return FText::FromString(UEnum::GetValueAsString(GetCurrentPlaybackState())); })
 		.Justification(ETextJustify::Center);
@@ -346,7 +352,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 								StopButton
 							]
 							+ SHorizontalBox::Slot()
-							
+
 							// loop control check box, monitors the value of CoreNodes.bIsLooping and calls 'SetLoopSettings' on assign value
 							[
 								SNew(SCheckBox)
@@ -434,7 +440,6 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 	AddToolbarExtender(ToolbarExtender);
 }
 
-
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
 	PianoRollGraph->OnSeekEvent.Unbind();
@@ -445,7 +450,13 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	//Performer->OnDeleted.AddLambda([this]() { Performer = nullptr; });
 
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
+}
 
+bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
+{
+	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
+	
+	return false;
 }
 
 FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -488,7 +499,6 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			NodeDetailsView.ToSharedRef()
 
 		];
-
 }
 
 FSequenceAssetDetails::~FSequenceAssetDetails()
@@ -529,7 +539,5 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 					.SequencerData(SequenceData)
 
 			];
-
-
 	}
 }

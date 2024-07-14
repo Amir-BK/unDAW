@@ -16,8 +16,6 @@
 #include "WaveTable.h"
 #include "M2Pins.generated.h"
 
-
-
 UENUM()
 enum class EVertexAutoConnectionPinCategory : uint8
 {
@@ -42,7 +40,7 @@ namespace M2Sound
 		}
 
 		UENUM(BlueprintType)
-		enum PinDirection : uint8
+			enum EPinDirection : uint8
 		{
 			Input,
 			Output
@@ -78,66 +76,33 @@ namespace M2Sound
 
 		struct FVariWidthAudioOutput
 		{
-
-
 			FName PlaceHolderData;
 		};
 	}
-
 }
 /**
- * 
+ *
  */
-//using namespace M2Sound::Pins;
+ //using namespace M2Sound::Pins;
 
 UCLASS(DefaultToInstanced)
 class BKMUSICCORE_API UM2Pins : public UObject
 {
 	GENERATED_BODY()
-	
+
 public:
 
-	UM2Pins() {};
+	UM2Pins() : NodeId(), VertexId(), Name()  {};
 
 	virtual FLinearColor GetPinColor() const { return FLinearColor::White; }
-
-	UPROPERTY(VisibleAnywhere)
-	UM2Pins* LinkedPin;
-
-	bool bIsStale = false;
-
-	UPROPERTY()
-	bool bIsColorSource = false;
-
-	virtual void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) {};
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	EMetaSoundBuilderResult BuildResult;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	EMetaSoundBuilderResult ConnectionResult;
-
-protected:
-
-	friend class UM2SoundVertex;
-	friend class UM2SoundEdGraphNode;
-	friend class UDAWSequencerData;
-
-	UPROPERTY(VisibleAnywhere)
-	UM2SoundVertex* ParentVertex;
-
-	FGuid NodeID;
-	FGuid VertexID;
-
-public:
 
 
 	template <typename T>
 	T GetHandle() const
 	{
 		T Handle = T();
-		Handle.NodeID = NodeID;
-		Handle.VertexID = VertexID;
+		Handle.NodeID = NodeId;
+		Handle.VertexID = VertexId;
 
 		return Handle;
 	}
@@ -145,20 +110,56 @@ public:
 	template <typename T>
 	void SetHandle(T Handle)
 	{
-		NodeID = Handle.NodeID;
-		VertexID = Handle.VertexID;
-
+		NodeId = Handle.NodeID;
+		VertexId = Handle.VertexID;
 	}
+
+	virtual void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) {};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EMetaSoundBuilderResult BuildResult = EMetaSoundBuilderResult::Succeeded;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EMetaSoundBuilderResult ConnectionResult = EMetaSoundBuilderResult::Succeeded;
+
+protected:
+
+	friend class UM2SoundVertex;
+	friend class UM2SoundEdGraphNode;
+	friend class UDAWSequencerData;
+
+
+	FGuid NodeId;
+	FGuid VertexId;
+
+public:
+	UPROPERTY(VisibleAnywhere)
+	UM2SoundVertex* ParentVertex = nullptr;
+
+	UPROPERTY(VisibleAnywhere)
+	UM2Pins* LinkedPin;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<TObjectPtr<UM2Pins>> LinkedPins;
+
+	bool bIsStale = false;
+
+	UPROPERTY()
+	bool bIsColorSource = false;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName Name;
 
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	M2Sound::Pins::PinDirection Direction;
+	M2Sound::Pins::EPinDirection Direction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName Category;
 
+	//allows user to cofigure which pin will determine the color of the vertex
+	UPROPERTY()
+	bool  bPinIsColorSource;
 };
 
 UCLASS()
@@ -168,7 +169,12 @@ class BKMUSICCORE_API UM2AudioTrackPin final : public UM2Pins
 
 public:
 
-	
+
+	UM2AudioTrackPin()
+	{
+		Category = M2Sound::Pins::AutoDiscovery::AudioTrack;
+	};
+
 	//convenience parameter for nodes that may accept more than one audio track, such as the vari mixer
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int ChannelIndex = INDEX_NONE;
@@ -185,16 +191,10 @@ public:
 	bool bSolo = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UM2MetasoundLiteralPin* AudioStreamL;
+	UM2MetasoundLiteralPin* AudioStreamL = nullptr;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UM2MetasoundLiteralPin* AudioStreamR;
-
-	UM2AudioTrackPin() 
-	{
-		Category = M2Sound::Pins::AutoDiscovery::AudioTrack;
-	};
-
-
+	UM2MetasoundLiteralPin* AudioStreamR = nullptr;
 
 };
 
@@ -204,20 +204,12 @@ class BKMUSICCORE_API UM2MetasoundLiteralPin final : public UM2Pins
 	GENERATED_BODY()
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FName DataType;
-
-
-	UM2MetasoundLiteralPin() 
+	UM2MetasoundLiteralPin()
 	{
-
 		Category = M2Sound::Pins::AutoDiscovery::MetasoundLiteral;
 	};
 
-protected:
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FName DataType;
 
 };
-
-
-

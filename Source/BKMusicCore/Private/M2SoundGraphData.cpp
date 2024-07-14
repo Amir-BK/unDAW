@@ -15,13 +15,13 @@
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
 
-#define AudioPinCast(Pin) Cast<UM2AudioTrackPin>(Pin) 
+#define AudioPinCast(Pin) Cast<UM2AudioTrackPin>(Pin)
 #define LiteralCast(Pin) Cast<UM2MetasoundLiteralPin>(Pin)
 
 struct FEventsWithIndex
 {
-	FMidiEvent event;
-	int32 eventIndex;
+	FMidiEvent Event;
+	int32 EventIndex;
 };
 
 void UDAWSequencerData::CreateDefaultVertexes()
@@ -40,14 +40,14 @@ void UDAWSequencerData::CreateDefaultVertexes()
 
 	NewMixer->InputM2SoundPins.GenerateValueArray(MixerInputPins);
 
-	ConnectPins<UM2AudioTrackPin>(AudioPinCast(NewOutput->InputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]),AudioPinCast(NewMixer->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]));
+	ConnectPins<UM2AudioTrackPin>(AudioPinCast(NewOutput->InputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]), AudioPinCast(NewMixer->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]));
 
 	for (const auto& [Name, Input] : CoreNodes.MemberInputMap)
 	{
 		if (Input.DataType == "MIDIStream" && Input.MetadataIndex != INDEX_NONE)
 		{
 			UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating MIDI Stream Node for %s"), *Name.ToString())
-			auto NewInput = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(this);
+				auto NewInput = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(this);
 			NewInput->MemberName = Name;
 			NewInput->TrackId = Input.MetadataIndex;
 
@@ -56,7 +56,7 @@ void UDAWSequencerData::CreateDefaultVertexes()
 			auto NewInstrument = FVertexCreator::CreateVertex<UM2SoundPatch>(this);
 			NewInstrument->Patch = DefaultPatch;
 			NewInstrument->TrackId = Input.MetadataIndex; //really this just affects the default graph creation, doesn't need to be set by default
-			
+
 			AddVertex(NewInstrument);
 
 			auto InstrumentAudioOutput = AudioPinCast(NewInstrument->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
@@ -68,11 +68,43 @@ void UDAWSequencerData::CreateDefaultVertexes()
 			auto NewInputLiteralMidiOutput = LiteralCast(NewInput->OutputM2SoundPins[FName(TEXT("MidiStream"))]);
 
 			ConnectPins<UM2MetasoundLiteralPin>(InstrumentLiteralMidiInput, NewInputLiteralMidiOutput);
-
 		}
 	}
+}
 
 
+bool UDAWSequencerData::TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate)
+{
+	for (const auto& [Name, Pin] : Vertex->OutputM2SoundPins)
+	{
+		if (Predicate(Pin->ParentVertex)) return true;
+
+		if(Pin->LinkedPin == nullptr) continue;
+
+		if (TraverseOutputPins(Pin->LinkedPin->ParentVertex, Predicate)) return true;
+	}
+	return false;
+}
+
+bool UDAWSequencerData::TraverseInputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate)
+{
+	for (const auto& [Name, Pin] : Vertex->InputM2SoundPins)
+	{
+		if (Predicate(Pin->ParentVertex)) return true;
+		
+		if (Pin->LinkedPin == nullptr) continue;
+
+		if (TraverseInputPins(Pin->LinkedPin->ParentVertex, Predicate)) return true;
+	}
+
+	return false;
+}
+
+
+bool UDAWSequencerData::WillConnectionCauseLoop(UM2SoundVertex* InInput, UM2SoundVertex* InOutput)
+{
+	return TraverseInputPins(InInput, [InOutput](UM2SoundVertex* Vertex) { return Vertex == InOutput; });
+	//return TraverseOutputPins(InOutput, [InInput](UM2SoundVertex* Vertex) { return Vertex == InInput; });
 }
 
 void UDAWSequencerData::SaveDebugMidiFileTest()
@@ -92,7 +124,6 @@ void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
 void UDAWSequencerData::UpdateVertexConnections(UM2SoundVertex* Vertex)
 {
 	Vertex->UpdateConnections();
-
 }
 
 void UDAWSequencerData::ReceiveAudioParameter(FAudioParameter Parameter)
@@ -105,7 +136,6 @@ void UDAWSequencerData::Tick(float DeltaTime)
 	if (!AuditionComponent) return;
 
 	GeneratorHandle->UpdateWatchers();
-
 }
 
 bool UDAWSequencerData::IsTickable() const
@@ -123,18 +153,16 @@ void UDAWSequencerData::SetLoopSettings(const bool& InbIsLooping, const int32& B
 	BuilderContext->SetNodeInputDefault(SimpleLoopBoolInput, MSBuilderSystem->CreateBoolMetaSoundLiteral(InbIsLooping, DataTypeName), BuildResult);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Set Simple Loop Input")), BuildResult);
 
-	if(BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Setting Loop Settings %s, %d"), InbIsLooping? TEXT("True") : TEXT("False"), BarDuration)
-
+	if (BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Setting Loop Settings %s, %d"), InbIsLooping ? TEXT("True") : TEXT("False"), BarDuration)
 }
 
 void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
 {
-
 	FMidiEventInfo MidiEvent;
 
 	Value.Get(MidiEvent);
-	
+
 	//find the metadata index for this event
 	auto FoundTrack = M2TrackMetadata.IndexOfByPredicate([MidiEvent](const FTrackDisplayOptions& Track) {
 		return Track.ChannelIndexRaw == MidiEvent.GetChannel() && MidiEvent.TrackIndex == Track.TrackIndexInParentMidi;
@@ -155,8 +183,6 @@ void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const
 		}
 	}
 
-
-
 	//auto ValueType = Value.GetDataTypeName();
 	//UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Midi Stream Output %s, %s"), *OutputName.ToString(), *ValueType.ToString())
 
@@ -166,14 +192,12 @@ void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const
 void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	Value.Get(CurrentTimestampData);
-	
-	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 
+	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 }
 
 void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHandle* Handle)
 {
-	
 	GeneratorHandle = Handle;
 	PlayState = ReadyToPlay;
 
@@ -186,37 +210,34 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 
 	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
 
-
 	OnBuilderReady.Broadcast();
-
 }
 
 void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received transport Command, Current Playback State %s"), *UEnum::GetValueAsString(PlayState))
 
-	auto CurrentPlaystate = PlayState;
+		auto CurrentPlaystate = PlayState;
 
 	if (AuditionComponent != nullptr)
 	{
 		switch (Command)
 		{
-
 		case EBKTransportCommands::Pause:
 		case EBKTransportCommands::Play:
 
 			switch (PlayState)
 			{
-				case EBKPlayState::TransportPlaying:
-					AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Pause")));
-					PlayState = EBKPlayState::TransportPaused;
-					break;
+			case EBKPlayState::TransportPlaying:
+				AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Pause")));
+				PlayState = EBKPlayState::TransportPaused;
+				break;
 
-					case EBKPlayState::ReadyToPlay:
-					case EBKPlayState::TransportPaused:
-						AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Play")));
-						PlayState = EBKPlayState::TransportPlaying;
-						break;
+			case EBKPlayState::ReadyToPlay:
+			case EBKPlayState::TransportPaused:
+				AuditionComponent->SetTriggerParameter(FName(TEXT("unDAW.Transport.Play")));
+				PlayState = EBKPlayState::TransportPlaying;
+				break;
 			}
 
 			break;
@@ -231,12 +252,10 @@ void UDAWSequencerData::SendTransportCommand(EBKTransportCommands Command)
 
 		default:
 			break;
-
-
 		}
 	}
 
-	if(PlayState != CurrentPlaystate) OnPlaybackStateChanged.Broadcast(PlayState);
+	if (PlayState != CurrentPlaystate) OnPlaybackStateChanged.Broadcast(PlayState);
 }
 
 void UDAWSequencerData::SendSeekCommand(float InSeek)
@@ -264,17 +283,17 @@ void UDAWSequencerData::PrintMidiData()
 
 	//tracks in metadata
 	UE_LOG(unDAWDataLogs, Log, TEXT("Tracks in unDAW Metadata"))
-	for (auto& Track : M2TrackMetadata)
-	{
-		UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *Track.trackName)
-	}
+		for (auto& Track : M2TrackMetadata)
+		{
+			UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *Track.trackName)
+		}
 
 	//tracks in midi file
 	UE_LOG(unDAWDataLogs, Log, TEXT("Tracks in midi file"))
-	for (auto& Track : HarmonixMidiFile->GetTracks())
-	{
-		UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *FString(*Track.GetName()))
-	}
+		for (auto& Track : HarmonixMidiFile->GetTracks())
+		{
+			UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *FString(*Track.GetName()))
+		}
 }
 
 FString GetUniqueNameForTrack(const FString& BaseName, const UMidiFile& MidiFile)
@@ -290,10 +309,9 @@ FString GetUniqueNameForTrack(const FString& BaseName, const UMidiFile& MidiFile
 
 void UDAWSequencerData::AddTrack()
 {
-	
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
-	
+
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
@@ -302,9 +320,8 @@ void UDAWSequencerData::AddTrack()
 	NewTrackMetaData.fusionPatch = nullptr;
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
 
-
 	auto NewTrack = MidiFileCopy->AddTrack(NewTrackMetaData.trackName);
-	
+
 	//auto TrackIndexByName = HarmonixMidiFile->FindTrackIndexByName(NewTrackMetaData.trackName);
 	NewTrackMetaData.TrackIndexInParentMidi = MidiFileCopy->GetTracks().Num() - 1;
 
@@ -333,9 +350,9 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 {
 	Vertexes.Add(Vertex);
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
-	//update builder, in the future we may want to be a little bit more conservative with this
-	//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
-	Vertex->SequencerData = this;
+		//update builder, in the future we may want to be a little bit more conservative with this
+		//MSBuilderSystem->RegisterBuilder(BuilderName, BuilderContext);
+		Vertex->SequencerData = this;
 
 	if (!BuilderContext) return;
 
@@ -384,14 +401,12 @@ inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int
 		}
 		M2TrackMetadata[IndexOfNewTrack].trackColor = trackColor;
 
-
 		//So actually here we can create the Midi Stream Core Nodes...
-
 
 		//AddVertex(NewInput);
 		//TrackInputs.Add(IndexOfNewTrack, NewInput);
 		// So we actually need to do the whole vertex init only after corenode creation and metadata discovery is complete...
-		// Disable for now, this is an opportunity to refactor 
+		// Disable for now, this is an opportunity to refactor
 		//UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, IndexOfNewTrack);
 	}
 }
@@ -420,20 +435,20 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 {
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
-	
+
 	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexRaw)
 
-	// why - 1 ? ffs. 
-	//auto TargetTrackIndex = MidiFileCopy->FindTrackIndexByName(TrackMetaData.trackName);
-	auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+		// why - 1 ? ffs.
+		//auto TargetTrackIndex = MidiFileCopy->FindTrackIndexByName(TrackMetaData.trackName);
+		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
 
-	if(!TargetTrack)
+	if (!TargetTrack)
 	{
 		UE_LOG(unDAWDataLogs, Error, TEXT("Target Track not found!"))
-		return;
+			return;
 	}
 
 	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexRaw, PendingNote.pitch, PendingNote.NoteVelocity);
@@ -444,7 +459,6 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	TargetTrack->AddEvent(NewStartNoteMidiEvent);
 	TargetTrack->AddEvent(NewEndNoteMidiEvent);
 
-
 	PendingLinkedMidiNotesMap.Add(PendingNote);
 	MidiFileCopy->SortAllTracks();
 	//auto LastEventTick = MidiFileCopy->GetLastEventTick();
@@ -454,7 +468,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	HarmonixMidiFile = MidiFileCopy;
 	MarkPackageDirty();
 
-	if(AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
+	if (AuditionComponent) AuditionComponent->SetObjectParameter(FName(TEXT("Midi File")), HarmonixMidiFile);
 }
 
 void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
@@ -468,40 +482,34 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	PendingNote.ChannelId = NoteMetadata.ChannelIndexRaw;
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
-	//print pending note data
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pending Note Data: Start %d, End %d, Pitch %d, Channel %d"), PendingNote.StartTick, PendingNote.EndTick, PendingNote.pitch, PendingNote.ChannelId)
-	
+		//print pending note data
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pending Note Data: Start %d, End %d, Pitch %d, Channel %d"), PendingNote.StartTick, PendingNote.EndTick, PendingNote.pitch, PendingNote.ChannelId)
 
-	auto FoundStartEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
-		
+		auto FoundStartEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
 		// print event tick and data
 		if (!Event.GetMsg().IsNoteOn()) return false;
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note on Event Tick %d, Data1 %d, Data2 %d, Channel %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
-		if(Event.GetTick() == PendingNote.StartTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
-		{
-			return true;
-		}
-		return false;
-		});
-
-	//we need to find the real end event, not the one we have in the pending notes map
-
-
-	auto FoundEndEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
-		
-		//if (Event.GetTick() == PendingNote.EndTick) return true;
-
-		if (!Event.GetMsg().IsNoteOff()) return false;
-		
-		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note off Event Tick %d, Data1 %d, Data2 %d, Channel: %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
-			//start with comparing the tick and the channel...
-			if(Event.GetTick() == PendingNote.EndTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+			if (Event.GetTick() == PendingNote.StartTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
 			{
 				return true;
 			}
+		return false;
+			});
 
-		
+	//we need to find the real end event, not the one we have in the pending notes map
+
+	auto FoundEndEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
+		//if (Event.GetTick() == PendingNote.EndTick) return true;
+
+		if (!Event.GetMsg().IsNoteOff()) return false;
+
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note off Event Tick %d, Data1 %d, Data2 %d, Channel: %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
+			//start with comparing the tick and the channel...
+			if (Event.GetTick() == PendingNote.EndTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+			{
+				return true;
+			}
 
 		return false;
 		});
@@ -509,17 +517,16 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	//print indexes
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Found Start Event %d, Found End Event %d"), FoundStartEvent, FoundEndEvent)
 
-	if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
-	{
-		UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
-		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent,1, false);
-		MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent,1, false);
-	}
-	else {
-		UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
-		return;
-	
-	}
+		if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
+		{
+			UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
+				MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent, 1, false);
+			MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent, 1, false);
+		}
+		else {
+			UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
+				return;
+		}
 	MidiFileCopy->SortAllTracks();
 	HarmonixMidiFile = MidiFileCopy;
 
@@ -531,11 +538,9 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 //TODO: I don't like this implementation, the linked notes should be created by demand from the midifile and only stored transiently
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
-	
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
-		
-	
-	TArray<TTuple<int, int>> FoundChannels;
+
+		TArray<TTuple<int, int>> FoundChannels;
 	//LinkedNoteDataMap.Empty();
 	//PendingLinkedMidiNotesMap.Empty();
 	HarmonixMidiFile = inMidiFile;
@@ -551,21 +556,19 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 			AuditionComponent->Stop();
 			//AuditionComponent->DestroyComponent();
 		}
-		
+
 		Vertexes.Empty();
 		FString BuilderString = FString::Printf(TEXT("unDAW-%s"), *GetName());
 		BuilderName = FName(BuilderString);
 	}
 
-
 	//MidiSongMap = HarmonixMidiFile->GetSongMaps();
 
 	CalculateSequenceDuration();
 	//if we're recreating the midi file we don't need to do anything else
-	if (IsRecreatingMidiFile) 
+	if (IsRecreatingMidiFile)
 	{
 		IsRecreatingMidiFile = false;
-		
 	}
 	else {
 		InitMetadataFromFoundMidiTracks(FoundChannels);
@@ -573,31 +576,23 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 		CreateDefaultVertexes();
 	}
 
-
 #if WITH_EDITOR
 	if (M2SoundGraph)
 	{
 		M2SoundGraph->InitializeGraph();
 	}
 #endif
-
-	
 }
 
 void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& OutDiscoveredChannels)
 {
-	
 	LinkedNoteDataMap.Empty();
 	PendingLinkedMidiNotesMap.Empty();
 
-	
-
 	//if midi file is EMPTY we add a track (empty note track) and default tempo and time signature on track 0 (conductor)
 
-
-
 	auto& FoundChannels = OutDiscoveredChannels;
-	
+
 	int numTracks = 0;
 	int numTracksRaw = 0;
 	BeatsPerMinute = HarmonixMidiFile->GetSongMaps()->GetTempoAtTick(0);
@@ -632,11 +627,11 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 					{
 						const int midiChannel = MidiEvent.GetMsg().GetStdChannel();
 
-						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event.GetMsg().GetStdChannel())
+						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].Event.GetMsg().GetStdChannel())
 						{
-							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].event, MidiEvent,
-								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].eventIndex, index);
-								foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
+							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].Event, MidiEvent,
+								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].EventIndex, index);
+							foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
 							foundPair.ChannelId = midiChannel;
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
@@ -682,8 +677,8 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		//CreateBuilderHelper();
 	}
 
-	//hacky... 
-	if(FoundChannels.IsEmpty() && M2TrackMetadata.IsEmpty())
+	//hacky...
+	if (FoundChannels.IsEmpty() && M2TrackMetadata.IsEmpty())
 	{
 		//create default track for now
 		auto NewTrackMetaData = FTrackDisplayOptions();
@@ -693,12 +688,10 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		NewTrackMetaData.trackName = TEXT("Default Track");
 		NewTrackMetaData.fusionPatch = nullptr;
 		NewTrackMetaData.trackColor = FLinearColor::Red;
-//
-
+		//
 
 		M2TrackMetadata.Add(NewTrackMetaData);
 	}
-
 }
 
 void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
@@ -711,37 +704,36 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	//MSBuilderSystem->
 	//log SavedBuilder result
 
-	if(SavedBuilder == nullptr) UE_LOG(unDAWDataLogs, Verbose, TEXT("Builder %s not found"), *BuilderName.ToString())
+	if (SavedBuilder == nullptr) UE_LOG(unDAWDataLogs, Verbose, TEXT("Builder %s not found"), *BuilderName.ToString())
 
-	if (SavedBuilder)
-	{
-		UE_LOG(unDAWDataLogs, Verbose, TEXT("Found Builder %s"), *BuilderName.ToString())
-		
-		if (bResetBuilder)
+		if (SavedBuilder)
 		{
-			UE_LOG(unDAWDataLogs, Verbose, TEXT("Resetting Builder %s"), *BuilderName.ToString())
-			MSBuilderSystem->UnregisterBuilder(BuilderName);
+			UE_LOG(unDAWDataLogs, Verbose, TEXT("Found Builder %s"), *BuilderName.ToString())
+
+				if (bResetBuilder)
+				{
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Resetting Builder %s"), *BuilderName.ToString())
+						MSBuilderSystem->UnregisterBuilder(BuilderName);
+				}
+				else
+				{
+					BuilderContext = Cast<UMetaSoundSourceBuilder>(SavedBuilder);
+					return;
+				}
 		}
-		else
-		{
-			BuilderContext = Cast<UMetaSoundSourceBuilder>(SavedBuilder);
-			return;
-		}
-	}
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Builder %s"), *BuilderName.ToString())
 
-
-	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
+		BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
 	CoreNodes.InitCoreNodes(BuilderContext, this);
 	SetLoopSettings(CoreNodes.bIsLooping, CoreNodes.BarLoopDuration);
 
 	//iterate over vertexes and create the nodes
-	for(auto& Vertex : Vertexes)
+	for (auto& Vertex : Vertexes)
 	{
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Vertex Node, Vertex Name %s"), *Vertex->GetName())
-		Vertex->BuildVertex();
+			Vertex->BuildVertex();
 		Vertex->CollectParamsForAutoConnect();
 		//CoreNodes.BuilderResults.Add(FName(TEXT("Create Vertex Node")), BuildResult);
 	}
@@ -755,7 +747,6 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	//CoreNodes.CreateMidiPlayerAndMainClock(BuilderContext);
 
 	MSBuilderSystem->RegisterSourceBuilder(BuilderName, BuilderContext);
-
 }
 
 void UDAWSequencerData::RemoveVertex(UM2SoundVertex* Vertex)
@@ -769,12 +760,9 @@ void UDAWSequencerData::BeginDestroy()
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Destroying Sequencer Data"))
 
-	bool MarkedDelete = RootPackageHasAnyFlags(RF_MarkAsRootSet);
-
+		bool MarkedDelete = RootPackageHasAnyFlags(RF_MarkAsRootSet);
 
 	Super::BeginDestroy();
-	
-
 }
 
 void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
@@ -782,9 +770,9 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	//if Midi file is empty don't audition
 
 	if (HarmonixMidiFile->IsEmpty()) return;
-	
+
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
-	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
+		FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
 	//AuditionComponent->
@@ -794,7 +782,6 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
 	SavedMetaSound->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
 	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
-
 }
 
 //UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* InAuditionComponent)
@@ -808,7 +795,6 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 //
 //	return SequencerPerformer;
 //}
-
 
 #if WITH_EDITOR
 void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -839,19 +825,17 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 {
 	IsRecreatingMidiFile = true;
 
-
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
 
-
-	for(auto PendingNote : PendingLinkedMidiNotesMap)
+	for (auto PendingNote : PendingLinkedMidiNotesMap)
 	{
 		//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 		auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
-		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+			auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
 		auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
 		auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
 		auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
@@ -859,7 +843,6 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 
 		TargetTrack->AddEvent(NewStartNoteMidiEvent);
 		TargetTrack->AddEvent(NewEndNoteMidiEvent);
-
 	}
 
 	MidiFileCopy->SortAllTracks();
@@ -870,7 +853,6 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 	//MidiFileCopy->operator new
 		//HarmonixMidiFile
 }
-
 
 FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput()
 {
@@ -893,12 +875,11 @@ void FM2SoundCoreNodesComposite::ReleaseMasterMixerAudioOutput(FAssignableAudioO
 
 	BuilderContext->DisconnectNodeInput(Output.AudioLeftOutputInputHandle, BuildResult);
 	BuilderContext->DisconnectNodeInput(Output.AudioRightOutputInputHandle, BuildResult);
-
 }
 
 void FM2SoundCoreNodesComposite::MarkAllMemberInputsStale()
 {
-	for(auto& MemberInput : MemberInputs)
+	for (auto& MemberInput : MemberInputs)
 	{
 		MemberInput.bIsStale = true;
 	}
@@ -924,7 +905,7 @@ void FM2SoundCoreNodesComposite::CreateOrUpdateMemberInput(FMetaSoundBuilderNode
 	FMemberInput NewMemberInput;
 	NewMemberInput.MetadataIndex = MetadataIndex;
 	BuilderContext->GetNodeOutputData(InHandle, NewMemberInput.Name, NewMemberInput.DataType, BuildResult);
-	if(InName != NAME_None) NewMemberInput.Name = InName;
+	if (InName != NAME_None) NewMemberInput.Name = InName;
 
 	if (MemberInputMap.Contains(NewMemberInput.Name))
 	{
@@ -948,14 +929,14 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 	EMetaSoundBuilderResult BuildResult;
 	SessionData = ParentSession;
 	BuilderContext = InBuilderContext;
-	
+
 	MidiFilterDocument = MidiFilterAssetRef.TryLoad();
 	BuilderContext->AddInterface(FName(TEXT("unDAW Session Renderer")), BuildResult);
 	BuilderResults.Add(FName(TEXT("Add unDAW Session Renderer Interface")), BuildResult);
 
 	CreateMidiPlayerAndMainClock();
 
-	for(int32 TrackIndex = 0; TrackIndex < SessionData->M2TrackMetadata.Num(); TrackIndex++)
+	for (int32 TrackIndex = 0; TrackIndex < SessionData->M2TrackMetadata.Num(); TrackIndex++)
 	{
 		CreateFilterNodeForTrack(TrackIndex);
 	}
@@ -966,7 +947,7 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeForTrack(int32 TrackMetadataIndex)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Filter Node for Track %d"), TrackMetadataIndex)
-	EMetaSoundBuilderResult BuildResult;
+		EMetaSoundBuilderResult BuildResult;
 
 	FTrackDisplayOptions& TrackMetadata = SessionData->GetTracksDisplayOptions(TrackMetadataIndex);
 	// ClassName=(Namespace="unDAW",Name="MidiStreamTrackIsolator")
@@ -985,12 +966,10 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	auto TrackIntLiteral = SessionData->MSBuilderSystem->CreateIntMetaSoundLiteral(TrackMetadata.TrackIndexInParentMidi, DataTypeName);
 	auto ChannelIntLiteral = SessionData->MSBuilderSystem->CreateIntMetaSoundLiteral(TrackMetadata.ChannelIndexRaw, DataTypeName);
 
-
-
 	BuilderContext->SetNodeInputDefault(TrackInput, TrackIntLiteral, BuildResult);
 	BuilderContext->SetNodeInputDefault(ChannelInput, ChannelIntLiteral, BuildResult);
 
-	//find midistream input and connect to main midi stream, which was already created 
+	//find midistream input and connect to main midi stream, which was already created
 
 	auto MidiStreamInput = BuilderContext->FindNodeInputByName(NewNode, FName(TEXT("MidiStream")), BuildResult);
 	BuilderContext->ConnectNodes(MainMidiStreamOutput, MidiStreamInput, BuildResult);
@@ -1000,7 +979,6 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	BuilderContext->ConnectNodes(NewMidiStreamOutput, GraphOutput, BuildResult);
 
 	return NewMidiStreamOutput;
-
 }
 
 void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()
@@ -1021,8 +999,6 @@ void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()
 	BuilderContext->ConnectNodeOutputsToMatchingGraphInterfaceOutputs(MidiPlayerNode, BuildResult);
 	BuilderResults.Add(FName(TEXT("Connect Midi Player to unDAW Main Interface Outputs")), BuildResult);
 
-
-
 	FMetaSoundBuilderNodeInputHandle MidiFileInput = BuilderContext->FindNodeInputByName(MidiPlayerNode, FName(TEXT("MIDI File")), BuildResult);
 	MainMidiStreamOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("unDAW.Midi Stream")), BuildResult);
 	CreateOrUpdateMemberInput(MainMidiStreamOutput);
@@ -1033,18 +1009,15 @@ void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()
 
 	auto MainTransportOutput = BuilderContext->FindNodeOutputByName(MidiPlayerNode, FName(TEXT("Transport")), BuildResult);
 	CreateOrUpdateMemberInput(MainTransportOutput);
-	
+
 	//MainMidiStreamOutputHandle.OutputHandle = MainMidiStreamOutput;
 	//MainMidiStreamOutputHandle.OutputName = FName(TEXT("Main Midi Stream"));
 	//MainMidiStreamOutputHandle.bGraphOutput = true;
 
 	//MappedOutputs.Add(MainMidiStreamOutputHandle.OutputName, MainMidiStreamOutputHandle);
 
-
-
 	auto MidiInputPinOutputHandle = BuilderContext->AddGraphInputNode(TEXT("Midi File"), TEXT("MidiAsset"), SessionData->MSBuilderSystem->CreateObjectMetaSoundLiteral(SessionData->HarmonixMidiFile), BuildResult);
 	BuilderContext->ConnectNodes(MidiInputPinOutputHandle, MidiFileInput, BuildResult);
-
 }
 
 void FM2SoundCoreNodesComposite::CreateMainMixer()
@@ -1067,7 +1040,6 @@ void FM2SoundCoreNodesComposite::CreateMainMixer()
 			BuilderContext->ConnectNodes(Output, AudioOuts[usedLeft ? 1 : 0], BuildResult);
 			BuilderResults.Add(FName(FString::Printf(TEXT("Connect Main Mixer to Audio Out %s"), usedLeft ? TEXT("Right") : TEXT("Left"))), BuildResult);
 			usedLeft = true;
-
 		}
 	}
 
@@ -1091,7 +1063,6 @@ void FM2SoundCoreNodesComposite::ResizeOutputMixer()
 
 	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
 }
-
 
 #undef AudioPinCast
 #undef LiteralCast

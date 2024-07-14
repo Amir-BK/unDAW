@@ -11,15 +11,14 @@
 #include "Widgets/SWidget.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Images/SImage.h"
 #include "AssetRegistry/AssetData.h"
 #include <UnDAWPreviewHelperSubsystem.h>
 #include "BKMusicSequenceDataFactory.generated.h"
 
-
 class FDAWSequenceAssetActions : public FAssetTypeActions_Base
 {
 public:
-
 
 	static bool IsSessionPreviewPlaying(const FAssetData& AssetData)
 	{
@@ -46,7 +45,7 @@ public:
 	{
 		return INVTEXT("unDAW Session Data");
 	}
-	FColor GetTypeColor() const override 
+	FColor GetTypeColor() const override
 	{
 		return FColor::Purple;
 	}
@@ -59,7 +58,6 @@ public:
 	{
 		MakeShared<FUnDAWSequenceEditorToolkit>()->InitEditor(InObjects);
 	}
-
 
 	TSharedPtr<SWidget> GetDawSequenceThumbnailOverlay(const FAssetData& InAssetData, TUniqueFunction<FReply()>&& OnClickedLambdaOverride) const
 	{
@@ -99,8 +97,6 @@ public:
 					}
 					PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
 					SequenceData->SendTransportCommand(EBKTransportCommands::Play);
-
-
 				}
 				return FReply::Handled();
 			};
@@ -154,25 +150,19 @@ public:
 	virtual TSharedPtr<SWidget> GetThumbnailOverlay(const FAssetData& InAssetData) const override;
 };
 
-
 /**
- * 
+ *
  */
 UCLASS()
 class BK_EDITORUTILITIES_API UBKMusicSequenceDataFactory : public UFactory
 {
 	GENERATED_BODY()
-	
+
 public:
 	//~ UFactory Interface
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext) override;
 
-
-
 	virtual bool ShouldShowInNewMenu() const override;
 
 	UBKMusicSequenceDataFactory();
-
-	
-
 };

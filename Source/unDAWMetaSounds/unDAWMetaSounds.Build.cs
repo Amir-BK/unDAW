@@ -4,6 +4,8 @@ using UnrealBuildTool;
 
 public class unDAWMetaSounds : ModuleRules
 {
+    private bool bStrictIncludesCheck = true;
+
     public unDAWMetaSounds(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -12,6 +14,16 @@ public class unDAWMetaSounds : ModuleRules
         // This next flag is needed as there are Metasound node derivatives
         // that are implemented in .cpp files only... no header files.
         IWYUSupport = IWYUSupport.None;
+
+        // This is to emulate engine installation and verify includes during development
+        // Gives effect similar to BuildPlugin with -StrictIncludes
+        if (bStrictIncludesCheck)
+        {
+            bUseUnity = false;
+            PCHUsage = PCHUsageMode.NoPCHs;
+            // Enable additional checks used for Engine modules
+            bTreatAsEngineModule = true;
+        }
 
         PublicIncludePaths.AddRange(
             new string[] {
@@ -46,6 +58,7 @@ public class unDAWMetaSounds : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "MetasoundGenerator",
+                "AudioMixer"
 
 				// ... add other public dependencies that you statically link with here ...
 			}
@@ -55,7 +68,8 @@ public class unDAWMetaSounds : ModuleRules
         PrivateDependencyModuleNames.AddRange(
             new string[]
             {
-				// ... add private dependencies that you statically link with here ...
+                 "SignalProcessing"
+                // ... add private dependencies that you statically link with here ...
 			}
             );
 

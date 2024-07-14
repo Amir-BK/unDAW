@@ -8,15 +8,14 @@
 #include "SAudioRadialSlider.h"
 #include "SAudioSlider.h"
 #include "Widgets/SCompoundWidget.h"
-
-
-
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Input/SCheckBox.h"
 
 class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
 {
-	public:
+public:
 	SLATE_BEGIN_ARGS(SMixerChannelWidget)
-	{}
+		{}
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -30,7 +29,7 @@ class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
 
 	float GetVolumeSliderValue() const
 	{
-		if(!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
+		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
 		{
 			return 0.0f;
 		}
@@ -53,25 +52,20 @@ class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
 			return ECheckBoxState::Unchecked;
 		}
 		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-	};	
-
+	};
 
 	TSharedPtr<SCheckBox> MuteCheckBox;
 	TSharedPtr<SCheckBox> SoloCheckBox;
-
 };
 
-
-
-
 /**
- * 
+ *
  */
 class BKMUSICWIDGETS_API SVariMixerWidget : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SVariMixerWidget)
-	{}
+		{}
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -86,11 +80,11 @@ public:
 	void AddChannelWidget(int ChannelIndex)
 	{
 		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
-		
+
 		MainHorizontalBox->AddSlot()
-		[
-			SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
-		];
+			[
+				SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
+			];
 
 		ChannelWidgets.Add(NewChannelWidget);
 	}
