@@ -68,7 +68,7 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 			}
 		}
 
-		if (ACategory == "Track" && !bWillCauseLoop)
+		if (ACategory == "Track-Audio" && !bWillCauseLoop)
 		{
 			return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Track Bus"));
 		}
@@ -111,10 +111,6 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 	auto* AsM2SoundGraph = Cast<UM2SoundGraph>(ContextMenuBuilder.CurrentGraph);
 	const auto& SequencerData = AsM2SoundGraph->GetSequencerData();
 
-	for (const auto& [Name, Output] : SequencerData->CoreNodes.MappedOutputs)
-	{
-		//DummyInputs.Add(Name.ToString());
-	}
 
 	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
@@ -162,7 +158,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 		if (FromPin->PinType.PinCategory == "Track-Audio")
 		{
-			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
+			//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 			ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 
 			if (FromPin->Direction == EGPD_Output)
@@ -176,7 +172,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 	{
 		//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewOutput>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewInstrument>());
-		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
+		//ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioOutput>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>());
 		ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphAddNodeAction_NewVariMixerNode>());
 
@@ -192,6 +188,77 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			ContextMenuBuilder.AddAction(NewAction);
 		}
 	}
+}
+
+inline bool UM2SoundEdGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
+{
+	bool success = UEdGraphSchema::TryCreateConnection(A, B);
+	if (success)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Connection created"));
+		A->GetOwningNode()->NodeConnectionListChanged();
+		B->GetOwningNode()->NodeConnectionListChanged();
+
+		//node B check if is output node and call validate
+	}
+
+	return success;
+}
+
+
+//set pin type colors
+
+inline FLinearColor UM2SoundEdGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
+{
+	//if wild card and connected to something get the color of that something
+	//if(PinType.PinCategory == "WildCard")
+	//{
+	//		return GetPinTypeColor(PinType.PinSubCategory);
+	//}
+
+	UUNDAWSettings* Settings = UUNDAWSettings::Get();
+
+	//Tracks are blue
+	if (PinType.PinCategory == "Track-Audio")
+	{
+		return Settings->AudioPinTypeColor;
+	}
+
+	//metasound literals get the value from the metasound literal schema according to their data type
+	if (PinType.PinCategory == "MetasoundLiteral")
+	{
+		if (Settings->CustomPinTypeColors.Contains(PinType.PinSubCategory))
+		{
+			return Settings->CustomPinTypeColors[PinType.PinSubCategory];
+		}
+
+		if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryFloat)
+		{
+			return Settings->FloatPinTypeColor;
+		}
+		else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryInt32)
+		{
+			return Settings->IntPinTypeColor;
+		}
+		else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryBoolean)
+		{
+			return Settings->BooleanPinTypeColor;
+		}
+		else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryString)
+		{
+			return Settings->StringPinTypeColor;
+		}
+		else if (PinType.PinSubCategory == M2Sound::Pins::PinCategories::PinSubCategoryObject)
+		{
+			return Settings->ObjectPinTypeColor;
+		}
+		else
+		{
+			return Settings->DefaultPinTypeColor;
+		}
+	}
+
+	return UEdGraphSchema::GetPinTypeColor(PinType);
 }
 
 void UM2SoundEdGraphSchema::OnPinConnectionDoubleCicked(UEdGraphPin* PinA, UEdGraphPin* PinB, const FVector2D& GraphPosition) const
