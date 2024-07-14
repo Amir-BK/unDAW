@@ -128,13 +128,13 @@ protected:
 	friend class UM2SoundEdGraphNode;
 	friend class UDAWSequencerData;
 
-	UPROPERTY(VisibleAnywhere)
-	UM2SoundVertex* ParentVertex = nullptr;
 
 	FGuid NodeId;
 	FGuid VertexId;
 
 public:
+	UPROPERTY(VisibleAnywhere)
+	UM2SoundVertex* ParentVertex = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	UM2Pins* LinkedPin;

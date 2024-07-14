@@ -302,9 +302,7 @@ namespace Metasound
 					Audio::ArrayMixIn(*Inputs[InputIndex * NumChannels + ChanIndex], *Outputs[ChanIndex], PrevGain, NextGain);
 
 
-
 				}
-
 
 
 				PrevGains[InputIndex] = NextGain;
@@ -313,6 +311,7 @@ namespace Metasound
 
 
 	private:
+		
 #pragma region ParamNames
 		static TArray<FVertexName> InitializeAudioInputNames()
 		{

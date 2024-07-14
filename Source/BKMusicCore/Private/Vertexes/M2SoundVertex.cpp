@@ -21,6 +21,16 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 	UUNDAWSettings::Get()->SaveConfig();
 }
 
+FLinearColor UM2SoundVertex::GetVertexColor() const
+{
+	// should override in subclasses
+	if(ColorSourcePin && ColorSourcePin->LinkedPin)
+	{
+		return ColorSourcePin->LinkedPin->ParentVertex->GetVertexColor();
+	}
+	return FLinearColor::Blue;
+}
+
 void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles)
 {
 	EMetaSoundBuilderResult BuildResult;
@@ -395,6 +405,11 @@ void UM2SoundBuilderInputHandleVertex::BuildVertex()
 
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
+}
+
+FLinearColor UM2SoundBuilderInputHandleVertex::GetVertexColor() const
+{
+	return SequencerData->GetTracksDisplayOptions(TrackId).trackColor;
 }
 
 void UM2SoundPatch::BuildVertex()

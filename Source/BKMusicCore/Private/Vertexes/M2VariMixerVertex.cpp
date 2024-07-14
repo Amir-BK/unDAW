@@ -135,7 +135,16 @@ inline void UM2VariMixerVertex::BuildVertex()
 
 inline FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
 {
-	return GetSequencerData()->GetTracksDisplayOptions(ChannelIndex).trackColor;
+	if (!MixerChannels.IsValidIndex(ChannelIndex))
+	{
+		return FLinearColor::Gray;
+	}
+	if (MixerChannels[ChannelIndex].AssignedPin->LinkedPin)
+	{
+		return MixerChannels[ChannelIndex].AssignedPin->LinkedPin->ParentVertex->GetVertexColor();
+	}
+
+	return FLinearColor::Gray;
 }
 
 inline FAssignableAudioOutput UM2VariMixerVertex::CreateChannel()

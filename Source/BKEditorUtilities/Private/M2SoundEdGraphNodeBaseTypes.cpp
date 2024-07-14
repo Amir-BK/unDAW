@@ -175,6 +175,10 @@ inline void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin)
 	{
 		ColorSourcePin = nullptr;
 		M2Pin->bIsColorSource = false;
+		Vertex->ColorSourcePin = nullptr;
+	}
+	else {
+		Vertex->ColorSourcePin = M2Pin;
 	}
 }
 

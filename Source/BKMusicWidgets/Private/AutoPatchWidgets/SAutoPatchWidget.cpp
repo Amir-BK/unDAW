@@ -3,6 +3,7 @@
 #include "AutoPatchWidgets/SAutoPatchWidget.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SSpacer.h"
+#include "unDAWSettings.h"
 #include "SlateOptMacros.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -77,30 +78,85 @@ UM2SoundPatch* SAutoPatchWidget::GetSelectedPatch() const
 
 void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin& InLiteralPin)
 {
-	ChildSlot
-	[
-		SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			[
-				SNew(STextBlock)
-					.Text(FText::FromName(InLiteralPin.Name))
-					.ColorAndOpacity(FLinearColor::Blue)
-			]
-			//a spacer
-			+ SHorizontalBox::Slot()
-			[
-				SNew(SSpacer)
-					.Size(FVector2D(10, 0))
-			]
+	using namespace Metasound::Frontend;
+	FDataTypeRegistryInfo Info;
 
-			//the data type please
-			+ SHorizontalBox::Slot()
-			[
-				SNew(STextBlock)
-					.Text(FText::FromName(InLiteralPin.DataType))
-					.ColorAndOpacity(FLinearColor::Green)
-			]
-	];
+	Metasound::Frontend::IDataTypeRegistry::Get().GetDataTypeInfo(InLiteralPin.DataType, Info);
+	//MetaSoundDataRegistry.;
+
+	FLinearColor Color = FLinearColor::White;
+
+
+	// objects will be blue for now
+	if (Info.ProxyGeneratorClass)
+	{
+		//print proxy generator class name
+		UE_LOG(LogTemp, Warning, TEXT("Proxy Generator Class Name: %s"), *Info.ProxyGeneratorClass->GetName());
+	}
+
+	//get undaw settings and use colors from there
+	auto Settings = UUNDAWSettings::Get();
+
+	using namespace Metasound;
+
+	switch(Info.PreferredLiteralType)
+	{
+		case ELiteralType::Boolean:
+		Color = Settings->BooleanPinTypeColor;
+		break;
+	
+		case ELiteralType::Float:
+		Color = Settings->FloatPinTypeColor;
+		break;
+		case ELiteralType::Integer:
+		if(Info.bIsEnum)
+		{
+			Color = Settings->IntPinTypeColor;
+		}
+		else
+		{
+			Color = Settings->IntPinTypeColor;
+		}
+
+		break;
+		case ELiteralType::String:
+		Color = Settings->StringPinTypeColor;
+		break;
+		case ELiteralType::UObjectProxy:
+		Color = Settings->ObjectPinTypeColor;
+		break;
+
+		default:
+			break;
+	}
+
+	ChildSlot
+		[
+			SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+						.Text(FText::FromName(InLiteralPin.Name))
+						.ColorAndOpacity(Color)
+				]
+				//a spacer
+				+ SHorizontalBox::Slot()
+				[
+					SNew(SSpacer)
+						.Size(FVector2D(10, 0))
+				]
+
+				//the data type please
+				+ SHorizontalBox::Slot()
+				[
+					SNew(STextBlock)
+						.Text(FText::FromName(InLiteralPin.DataType))
+						.ColorAndOpacity(Color)
+				]
+		];
+	//make default 
+
+
 }
 
 

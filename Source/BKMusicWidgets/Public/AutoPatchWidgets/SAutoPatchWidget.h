@@ -7,6 +7,8 @@
 #include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Pins/M2Pins.h"
+#include "MetasoundFrontendController.h"
+#include "MetasoundFrontendDataTypeRegistry.h"
 #include "Vertexes/M2SoundVertex.h"
 
 
