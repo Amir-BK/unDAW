@@ -26,7 +26,21 @@ public:
 		SLATE_END_ARGS()
 
 
+		
+
 		void Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin& InLiteralPin);
+
+		TSharedRef<SWidget> CreateValueWidget(const UM2MetasoundLiteralPin& InLiteralPin);
+
+		TSharedRef<SWidget> MakeWidgetForEnumValue(TSharedPtr<FString> InOption);
+
+		TSharedPtr<SHorizontalBox> MainHorizontalBox;
+
+		FLinearColor PinColor = FLinearColor::White;
+
+		TSharedPtr<SWidget> ValueWidget;
+
+		TArray<TSharedPtr<FString>> EnumOptions;
 };
 
 /**

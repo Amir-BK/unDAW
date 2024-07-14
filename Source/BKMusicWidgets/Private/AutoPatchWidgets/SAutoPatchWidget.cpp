@@ -4,26 +4,28 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SSpacer.h"
 #include "unDAWSettings.h"
+#include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 #include "SlateOptMacros.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex* InVertex)
 {
 	Vertex = InVertex;
-	
-	ChildSlot
-	[
-		SAssignNew(ContentBox, SVerticalBox)
-	];
 
-	for(const auto& [Name,Pin] : Vertex->InputM2SoundPins)
+	ChildSlot
+		[
+			SAssignNew(ContentBox, SVerticalBox)
+		];
+
+	for (const auto& [Name, Pin] : Vertex->InputM2SoundPins)
 	{
-	if (Pin->IsA<UM2MetasoundLiteralPin>())
+		if (Pin->IsA<UM2MetasoundLiteralPin>())
 		{
 			ContentBox->AddSlot()
-			[
-				SNew(SM2LiteralControllerWidget, *Cast<UM2MetasoundLiteralPin>(Pin))
-			];
+				[
+					SNew(SM2LiteralControllerWidget, *Cast<UM2MetasoundLiteralPin>(Pin))
+				];
 		}
 		//else if (Pin->IsA<UM2MetasoundWaveTablePin>())
 		//{
@@ -63,13 +65,12 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 		else
 		{
 			ContentBox->AddSlot()
-			[
-				SNew(STextBlock)
-					.Text(FText::FromString(Pin->GetName()))
-			];
+				[
+					SNew(STextBlock)
+						.Text(FText::FromString(Pin->GetName()))
+				];
 		}
 	}
-	
 }
 UM2SoundPatch* SAutoPatchWidget::GetSelectedPatch() const
 {
@@ -86,7 +87,6 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	FLinearColor Color = FLinearColor::White;
 
-
 	// objects will be blue for now
 	if (Info.ProxyGeneratorClass)
 	{
@@ -99,45 +99,14 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	using namespace Metasound;
 
-	switch(Info.PreferredLiteralType)
-	{
-		case ELiteralType::Boolean:
-		Color = Settings->BooleanPinTypeColor;
-		break;
-	
-		case ELiteralType::Float:
-		Color = Settings->FloatPinTypeColor;
-		break;
-		case ELiteralType::Integer:
-		if(Info.bIsEnum)
-		{
-			Color = Settings->IntPinTypeColor;
-		}
-		else
-		{
-			Color = Settings->IntPinTypeColor;
-		}
-
-		break;
-		case ELiteralType::String:
-		Color = Settings->StringPinTypeColor;
-		break;
-		case ELiteralType::UObjectProxy:
-		Color = Settings->ObjectPinTypeColor;
-		break;
-
-		default:
-			break;
-	}
-
 	ChildSlot
 		[
-			SNew(SHorizontalBox)
+			SAssignNew(MainHorizontalBox, SHorizontalBox)
 				+ SHorizontalBox::Slot()
 				[
 					SNew(STextBlock)
 						.Text(FText::FromName(InLiteralPin.Name))
-						.ColorAndOpacity(Color)
+						.ColorAndOpacity_Lambda([this]() -> FSlateColor { return PinColor; })
 				]
 				//a spacer
 				+ SHorizontalBox::Slot()
@@ -146,19 +115,92 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 						.Size(FVector2D(10, 0))
 				]
 
-				//the data type please
-				+ SHorizontalBox::Slot()
-				[
-					SNew(STextBlock)
-						.Text(FText::FromName(InLiteralPin.DataType))
-						.ColorAndOpacity(Color)
-				]
 		];
-	//make default 
+	
 
+	switch (Info.PreferredLiteralType)
+	{
+	case ELiteralType::Boolean:
+		PinColor = Settings->BooleanPinTypeColor;
+		MainHorizontalBox->AddSlot()
+			[
+				SNew(SCheckBox)
+			//	.IsChecked_Lambda([this, &InLiteralPin]() -> ECheckBoxState { return InLiteralPin.GetBoolValue() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+				//.OnCheckStateChanged_Lambda([this, &InLiteralPin](ECheckBoxState NewState) { InLiteralPin.SetBoolValue(NewState == ECheckBoxState::Checked); })
+			];
+		break;
+
+	case ELiteralType::Float:
+		PinColor = Settings->FloatPinTypeColor;
+		MainHorizontalBox->AddSlot()
+			[
+				SNew(SNumericEntryBox<float>)
+				//.Value_Lambda([this, &InLiteralPin]() -> TOptional<float> { return InLiteralPin.GetFloatValue(); })
+				//.OnValueCommitted_Lambda([this, &InLiteralPin](float NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetFloatValue(NewValue); })
+			];
+
+		break;
+	case ELiteralType::Integer:
+		if (Info.bIsEnum)
+		{
+			PinColor = Settings->IntPinTypeColor;
+			auto EnumInterface = Metasound::Frontend::IDataTypeRegistry::Get().GetEnumInterfaceForDataType(InLiteralPin.DataType);
+			//TArray<TSharedPtr<FString>> EnumOptions;
+			for (int i = 0; i < EnumInterface->GetAllEntries().Num(); i++)
+			{
+				EnumOptions.Add(MakeShared<FString>(EnumInterface->ToName(i)->ToString()));
+				UE_LOG(LogTemp, Warning, TEXT("Enum Option: %s"), *EnumInterface->ToName(i)->ToString());
+			}
+
+			MainHorizontalBox->AddSlot()
+				.AutoWidth()
+				[
+					SNew(SComboBox<TSharedPtr<FString>>)
+					.OptionsSource(&EnumOptions)
+					.InitiallySelectedItem(EnumOptions[0])
+					.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
+						[
+						SNew(STextBlock)
+							.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Poop")); })
+						]	
+				
+
+					//.OnSelectionChanged_Lambda([this, &InLiteralPin](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { InLiteralPin.SetIntValue(EnumInterface->FromName(*NewSelection)); })
+				];
+		}
+		else
+		{
+			PinColor = Settings->IntPinTypeColor;
+			MainHorizontalBox->AddSlot()
+				[
+					SNew(SNumericEntryBox<int32>)
+					//.Value_Lambda([this, &InLiteralPin]() -> TOptional<int32> { return InLiteralPin.GetIntValue(); })
+					//.OnValueCommitted_Lambda([this, &InLiteralPin](int32 NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetIntValue(NewValue); })
+				];
+		}
+
+		break;
+	case ELiteralType::String:
+		PinColor = Settings->StringPinTypeColor;
+		break;
+	case ELiteralType::UObjectProxy:
+		PinColor = Settings->ObjectPinTypeColor;
+		break;
+
+	default:
+		break;
+	}
 
 }
 
+TSharedRef<SWidget> SM2LiteralControllerWidget::CreateValueWidget(const UM2MetasoundLiteralPin& InLiteralPin)
+{
+	return SNew(STextBlock).Text(INVTEXT("Test"));
+}
 
+TSharedRef<SWidget> SM2LiteralControllerWidget::MakeWidgetForEnumValue(TSharedPtr<FString> InOption)
+{
+	return SNew(STextBlock).Text(FText::FromString(*InOption));
+}
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
