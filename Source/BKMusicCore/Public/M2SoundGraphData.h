@@ -550,6 +550,9 @@ public:
 	UFUNCTION()
 	void ReceiveAudioParameter(FAudioParameter Parameter);
 
+	UFUNCTION()
+	void ExecuteTriggerParameter(FName ParameterName);
+
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
 	UMetasoundGeneratorHandle* GeneratorHandle;
 

@@ -83,6 +83,8 @@ public:
 
 		void OnLiteralValueChanged(ECheckBoxState NewValue);
 
+		FReply ExecuteTriggerParameter();
+
 
 };
 

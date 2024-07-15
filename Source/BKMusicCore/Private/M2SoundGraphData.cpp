@@ -131,6 +131,11 @@ void UDAWSequencerData::ReceiveAudioParameter(FAudioParameter Parameter)
 	if (AuditionComponent) AuditionComponent->SetParameter(MoveTemp(Parameter));
 }
 
+void UDAWSequencerData::ExecuteTriggerParameter(FName ParameterName)
+{
+	if (AuditionComponent) AuditionComponent->SetTriggerParameter(ParameterName);
+}
+
 void UDAWSequencerData::Tick(float DeltaTime)
 {
 	if (!AuditionComponent) return;

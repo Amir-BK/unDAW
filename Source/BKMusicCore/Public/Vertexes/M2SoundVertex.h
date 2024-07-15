@@ -180,50 +180,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName, TObjectPtr<UM2Pins>>  OutputM2SoundPins;
 
-	void MarkAllPinsStale() {
-		for (auto& Pin : InputM2SoundPins)
-		{
-			Pin.Value->bIsStale = true;
-		}
+	void MarkAllPinsStale();
 
-		for (auto& Pin : OutputM2SoundPins)
-		{
-			Pin.Value->bIsStale = true;
-		}
-	}
-
-	void RemoveAllStalePins()
-	{
-		TArray<FName> StalePins;
-
-		for (auto& Pin : InputM2SoundPins)
-		{
-			if (Pin.Value->bIsStale)
-			{
-				StalePins.Add(Pin.Key);
-			}
-		}
-
-		for (auto& Pin : StalePins)
-		{
-			InputM2SoundPins.Remove(Pin);
-		}
-
-		StalePins.Empty();
-
-		for (auto& Pin : OutputM2SoundPins)
-		{
-			if (Pin.Value->bIsStale)
-			{
-				StalePins.Add(Pin.Key);
-			}
-		}
-
-		for (auto& Pin : StalePins)
-		{
-			OutputM2SoundPins.Remove(Pin);
-		}
-	}
+	void RemoveAllStalePins();
 
 private:
 	template<typename T>
@@ -306,6 +265,7 @@ public:
 		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Input;
 		GetBuilderContext().GetNodeInputData(InHandle, NewPin->Name, NewPin->DataType, NewPin->BuildResult);
+
 
 		NewPin->SetHandle(InHandle);
 
