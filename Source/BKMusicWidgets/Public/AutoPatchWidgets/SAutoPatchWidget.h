@@ -13,6 +13,10 @@
 
 
 
+
+
+
+
 /**
  * the literal controller widget is a wrapper for the various types of audio widgets that can be used to control a literal,
  * using the bindings on the m2soundvertex and its pins this should point back to a MetasoundBuilderNodeInpput handle 
@@ -50,6 +54,8 @@ public:
 
 		TArray<TSharedPtr<FString>> UObjectOptions;
 
+		TSharedPtr<const Metasound::Frontend::IEnumDataTypeInterface> EnumInterface;
+
 		int32 EnumValue = 0;
 
 
@@ -66,6 +72,18 @@ public:
 		void SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue);
 
 		void OnSelectObject(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+
+		void OnSelectEnum(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+
+		void OnLiteralValueChanged(float NewValue);
+
+		void OnLiteralValueChanged(int32 NewValue);
+
+		void OnLiteralValueChanged(const FString& NewValue);
+
+		void OnLiteralValueChanged(ECheckBoxState NewValue);
+
+
 };
 
 /**

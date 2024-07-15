@@ -134,6 +134,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		MainHorizontalBox->AddSlot()
 			[
 				SNew(SCheckBox)
+					.IsChecked_Lambda([this]() -> ECheckBoxState { return bLiteralBoolValue ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					.OnCheckStateChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
 			//	.IsChecked_Lambda([this, &InLiteralPin]() -> ECheckBoxState { return InLiteralPin.GetBoolValue() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 				//.OnCheckStateChanged_Lambda([this, &InLiteralPin](ECheckBoxState NewState) { InLiteralPin.SetBoolValue(NewState == ECheckBoxState::Checked); })
 			];
@@ -145,6 +147,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			[
 				SNew(SNumericEntryBox<float>)
 					.AllowSpin(true)
+					.OnValueChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
 					.Value_Lambda([this]() -> TOptional<float> { return LiteralFloatValue; })
 				//.Value_Lambda([this, &InLiteralPin]() -> TOptional<float> { return InLiteralPin.GetFloatValue(); })
 				//.OnValueCommitted_Lambda([this, &InLiteralPin](float NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetFloatValue(NewValue); })
@@ -155,7 +158,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		if (Info.bIsEnum)
 		{
 			PinColor = Settings->IntPinTypeColor;
-			auto EnumInterface = Metasound::Frontend::IDataTypeRegistry::Get().GetEnumInterfaceForDataType(InLiteralPin.DataType);
+			EnumInterface = Metasound::Frontend::IDataTypeRegistry::Get().GetEnumInterfaceForDataType(InLiteralPin.DataType);
+			auto DefaultEnumOption = EnumInterface->GetDefaultValue();
 			//TArray<TSharedPtr<FString>> EnumOptions;
 			for (int i = 0; i < EnumInterface->GetAllEntries().Num(); i++)
 			{
@@ -171,7 +175,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 						[
 						SNew(STextBlock)
-							.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Poop")); })
+							.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Too early")); })
 						]	
 				
 
@@ -186,6 +190,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					SNew(SNumericEntryBox<int32>)
 						.AllowSpin(true)
 						.Value_Lambda([this]() -> TOptional<int32> { return LiteralIntValue; })
+						.OnValueChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
 					//.Value_Lambda([this, &InLiteralPin]() -> TOptional<int32> { return InLiteralPin.GetIntValue(); })
 					//.OnValueCommitted_Lambda([this, &InLiteralPin](int32 NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetIntValue(NewValue); })
 				];
@@ -268,6 +273,44 @@ void SM2LiteralControllerWidget::OnSelectObject(TSharedPtr<FString> NewSelection
 
 	SetValueForLiteralPin(NewLiteral);
 
+}
+
+void SM2LiteralControllerWidget::OnLiteralValueChanged(float NewValue)
+{
+	FMetasoundFrontendLiteral NewLiteral;
+	LiteralFloatValue = NewValue;
+	NewLiteral.Set(NewValue);
+
+	SetValueForLiteralPin(NewLiteral);
+}
+
+void SM2LiteralControllerWidget::OnLiteralValueChanged(int32 NewValue)
+{
+	FMetasoundFrontendLiteral NewLiteral;
+	LiteralIntValue = NewValue;
+	NewLiteral.Set(NewValue);
+
+	SetValueForLiteralPin(NewLiteral);
+}
+
+void SM2LiteralControllerWidget::OnLiteralValueChanged(const FString& NewValue)
+{
+	FMetasoundFrontendLiteral NewLiteral;
+	LiteralStringValue = NewValue;
+	NewLiteral.Set(NewValue);
+
+	SetValueForLiteralPin(NewLiteral);
+}
+
+void SM2LiteralControllerWidget::OnLiteralValueChanged(ECheckBoxState NewValue)
+{
+	bool bNewValue = NewValue == ECheckBoxState::Checked;
+	
+	FMetasoundFrontendLiteral NewLiteral;
+	bLiteralBoolValue = bNewValue;
+	NewLiteral.Set(bNewValue);
+
+	SetValueForLiteralPin(NewLiteral);
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
