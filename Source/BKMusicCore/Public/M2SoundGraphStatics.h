@@ -113,7 +113,7 @@ inline TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class
 	
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
-	AssetRegistryModule.Get().GetAssetsByClass(Class->GetClassPathName(), AssetData);
+	AssetRegistryModule.Get().GetAssetsByClass(Class->GetClassPathName(), AssetData, true);
 	for (int i = 0; i < AssetData.Num(); i++) {
 		UObject* Object = AssetData[i].GetAsset();
 		OutArray.Add(Object);
