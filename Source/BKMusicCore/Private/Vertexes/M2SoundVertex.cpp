@@ -537,12 +537,14 @@ void UM2SoundPatch::BuildVertex()
 void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 {
 	auto& Cache = UUNDAWSettings::Get()->Cache;
+	BuilderResults.Empty();
+
 
 	if (Cache.Contains(Patch->GetFName()))
 	{
 	}
 	else {
-		BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
+		//BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
 	}
 }
 

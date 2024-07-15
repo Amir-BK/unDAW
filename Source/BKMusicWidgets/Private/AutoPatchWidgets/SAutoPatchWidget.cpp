@@ -194,9 +194,9 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 						[
 						SNew(STextBlock)
-							.Text_Lambda([this]() -> FText { return FText::FromString(TEXT("Too early")); })
+							.Text_Lambda([this]() -> FText { return FText::FromName(EnumInterface->ToName(LiteralIntValue).GetValue()); })
 						]	
-				
+						.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectEnum)
 
 					//.OnSelectionChanged_Lambda([this, &InLiteralPin](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { InLiteralPin.SetIntValue(EnumInterface->FromName(*NewSelection)); })
 				];
