@@ -24,6 +24,21 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+void UDAWSequencerData::CreateNewPatchBuilder()
+{
+	EMetaSoundBuilderResult BuildResult;
+	PatchBuilder = MSBuilderSystem->CreatePatchBuilder(FName(TEXT("Test")), BuildResult);
+
+
+	FMetaSoundBuilderOptions Options;
+	Options.bAddToRegistry = true;
+	Options.bForceUniqueClassName = true;
+	Options.Name = FName(TEXT("Test123"));
+	BuilderPatch = Cast<UMetaSoundPatch>(PatchBuilder->Build(nullptr, Options).GetObject());
+
+
+}
+
 void UDAWSequencerData::CreateDefaultVertexes()
 {
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
