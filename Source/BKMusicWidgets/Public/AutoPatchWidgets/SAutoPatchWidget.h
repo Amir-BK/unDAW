@@ -13,6 +13,10 @@
 
 
 
+
+
+
+
 /**
  * the literal controller widget is a wrapper for the various types of audio widgets that can be used to control a literal,
  * using the bindings on the m2soundvertex and its pins this should point back to a MetasoundBuilderNodeInpput handle 
@@ -38,9 +42,52 @@ public:
 
 		FLinearColor PinColor = FLinearColor::White;
 
+		const UM2MetasoundLiteralPin* LiteralPin;
+
+		//possible frontend literal values... probably wasteful, maybe a good shout for templating
+
+		TArray<UObject*> Objects;
+
 		TSharedPtr<SWidget> ValueWidget;
 
 		TArray<TSharedPtr<FString>> EnumOptions;
+
+		TArray<TSharedPtr<FString>> UObjectOptions;
+
+		TSharedPtr<const Metasound::Frontend::IEnumDataTypeInterface> EnumInterface;
+
+		int32 EnumValue = 0;
+
+
+		float LiteralFloatValue = 0.0f;
+
+		int32 LiteralIntValue = 0;
+
+		FString LiteralStringValue;
+
+		bool bLiteralBoolValue = false;
+
+		UObject* LiteralObjectValue = nullptr;
+
+		void SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue);
+
+		void OnSelectObject(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+
+		void OnSelectEnum(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+
+		void OnLiteralValueChanged(float NewValue);
+
+		void OnLiteralValueChanged(int32 NewValue);
+
+		void OnLiteralValueChanged(const FString& NewValue);
+
+		void OnLiteralValueChanged(ECheckBoxState NewValue);
+
+		FReply ExecuteTriggerParameter();
+
+		bool IsControlEnabled() const;
+
+
 };
 
 /**
@@ -59,6 +106,8 @@ public:
 	void OnVertexUpdated();
 
 	UM2SoundPatch* GetSelectedPatch() const;
+
+
 
 	private:
 		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;

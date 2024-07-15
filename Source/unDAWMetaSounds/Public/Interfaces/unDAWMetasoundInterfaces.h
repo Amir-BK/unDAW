@@ -107,14 +107,94 @@ namespace unDAW::Metasounds
 		//so this is how we wind up declaring params, at least I don't have to do it 40 times
 		const FInput GeneratedInputs[1] =
 		{
-			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to rendered with this instrument"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
+			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to be processed by this insert"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
 		};
 
 		const FOutput GeneratedOutputs[1] =
 		{
-			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream to rendered with this instrument"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
+			{ INVTEXT("MidiStream"), INVTEXT("Midi Stream output after processing"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW Instrument.MidiStream") } },
 		};
 	};
+
+	//graph action patches are patches that can be inserted into the from the game thread, their main purpose is to perform some logic on the audio thread
+	//and fire back a trigger that will be passed back to the registring actor when they are performed
+	class UNDAWMETASOUNDS_API FunDAWMusicalActionInterface : public Audio::FParameterInterface
+	{
+		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
+
+	public:
+		FunDAWMusicalActionInterface() : FParameterInterface("TimeStamped Musical Action", { 0, 1 })
+		{
+			Inputs.Append(GeneratedInputs);
+			Outputs.Append(GeneratedOutputs);
+		}
+
+		static Audio::FParameterInterfacePtr GetInterface()
+		{
+			if (!InstancePointer.IsValid())
+			{
+				InstancePointer = MakeShared<FunDAWMusicalActionInterface>();
+			}
+			return InstancePointer;
+		}
+
+		static void RegisterInterface()
+		{
+			//UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+			Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+			InterfaceRegistry.RegisterInterface(GetInterface());
+		}
+
+		~FunDAWMusicalActionInterface() {};
+
+	private:
+
+		//so this is how we wind up declaring params, at least I don't have to do it 40 times
+		const FInput GeneratedInputs[1] =
+		{
+			{ INVTEXT("PerformAction"), INVTEXT("Trigger Action to be performed"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW Instrument.MidiStream") } },
+		};
+
+		const FOutput GeneratedOutputs[2] =
+		{
+			{ INVTEXT("OnActionPerformed"), INVTEXT("Trigger output when action is performed, is sent back to the calling actor"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW Action.OnPerformed") } },
+			{ INVTEXT("OnActionComplete"), INVTEXT("Trigger output when the action is complete and should be cleaned up"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW Action.OnComplete") } },
+		};
+	};
+
+
+	class UNDAWMETASOUNDS_API FunDAWAudibleActionInterface : public FunDAWMusicalActionInterface
+	{
+
+		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
+
+	public:
+
+		FunDAWAudibleActionInterface() : FunDAWMusicalActionInterface()
+		{
+
+			Outputs.Append(AudioOutputs);
+		}
+
+		const FOutput AudioOutputs[2] =
+		{
+			{ INVTEXT("Audio Out L"), INVTEXT("Audible Action Audio Output L"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Insert.Audio L") } },
+			{ INVTEXT("Audio Out R"), INVTEXT("Audible Action Audio Output R"), Metasound::GetMetasoundDataTypeName<Metasound::FAudioBuffer>(),{ ("unDAW Insert.Audio R") } },
+		};
+
+		static Audio::FParameterInterfacePtr GetInterface()
+		{
+			if (!InstancePointer.IsValid())
+			{
+				InstancePointer = MakeShared<FunDAWAudibleActionInterface>();
+			}
+			return InstancePointer;
+		}
+
+
+
+	};
+
 
 	class UNDAWMETASOUNDS_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
 	{
