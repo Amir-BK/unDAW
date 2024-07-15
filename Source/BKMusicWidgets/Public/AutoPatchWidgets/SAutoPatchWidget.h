@@ -85,6 +85,8 @@ public:
 
 		FReply ExecuteTriggerParameter();
 
+		bool IsControlEnabled() const;
+
 
 };
 
