@@ -143,6 +143,9 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 			break;
 		}
+
+		LiteralPin->LiteralValue.TryGet(bLiteralBoolValue);
+
 		PinColor = Settings->BooleanPinTypeColor;
 		MainHorizontalBox->AddSlot()
 			[
@@ -156,6 +159,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	case ELiteralType::Float:
 		PinColor = Settings->FloatPinTypeColor;
+		LiteralPin->LiteralValue.TryGet(LiteralFloatValue);
+
 		MainHorizontalBox->AddSlot()
 			[
 				SNew(SNumericEntryBox<float>)
@@ -168,6 +173,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		break;
 	case ELiteralType::Integer:
+		LiteralPin->LiteralValue.TryGet(LiteralIntValue);
+
 		if (Info.bIsEnum)
 		{
 			PinColor = Settings->IntPinTypeColor;
@@ -211,9 +218,12 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		break;
 	case ELiteralType::String:
+		LiteralPin->LiteralValue.TryGet(LiteralStringValue);
 		PinColor = Settings->StringPinTypeColor;
 		break;
 	case ELiteralType::UObjectProxy:
+		LiteralPin->LiteralValue.TryGet(LiteralObjectValue);
+
 		Objects = UM2SoundGraphStatics::GetAllObjectsOfClass(Info.ProxyGeneratorClass);
 
 		for (UObject* Object : Objects)
@@ -264,6 +274,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			];
 	}
 
+	//SetValueForLiteralPin(LiteralPin->LiteralValue);
 
 
 }

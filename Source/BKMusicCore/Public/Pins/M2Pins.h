@@ -222,6 +222,9 @@ public:
 		Category = M2Sound::Pins::AutoDiscovery::MetasoundLiteral;
 	};
 
+	UPROPERTY()
+	FMetasoundFrontendLiteral LiteralValue;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName DataType;
 
