@@ -95,15 +95,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	FLinearColor Color = FLinearColor::White;
 
-	UE_LOG(LogTemp, Warning, TEXT("Literal Pin Name: %s"), *Info.DataTypeName.ToString());
 
 
-	// objects will be blue for now
-	if (Info.ProxyGeneratorClass)
-	{
-		//print proxy generator class name
-		UE_LOG(LogTemp, Warning, TEXT("Proxy Generator Class Name: %s"), *Info.ProxyGeneratorClass->GetName());
-	}
 
 	//get undaw settings and use colors from there
 	auto Settings = UUNDAWSettings::Get();
@@ -119,6 +112,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					SNew(STextBlock)
 						.Text(FText::FromName(InLiteralPin.Name))
 						.ColorAndOpacity_Lambda([this]() -> FSlateColor { return PinColor; })
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("%s %s"), *Info.DataTypeDisplayText.ToString(), LiteralPin->IsConstructorPin() ? TEXT(", Construcor Pin") : TEXT(""))))
 				]
 				//a spacer
 				+ SHorizontalBox::Slot()

@@ -45,6 +45,8 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 		BuilderContext.GetNodeInputData(Handle, PinName, DataType, BuildResult);
 		auto LiteralValue = BuilderContext.GetNodeInputClassDefault(Handle, BuildResult);
 
+		bool bIsConstructorPin = BuilderContext.GetNodeInputIsConstructorPin(Handle);
+
 		UM2Pins* PinObject = nullptr;
 
 		using namespace M2Sound::Pins;
@@ -61,6 +63,7 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 				else
 				{
 					PinObject = CreateAudioTrackInputPin();
+					
 					InputM2SoundPins.Add(SearchName, PinObject);
 				}
 
@@ -91,6 +94,12 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 					break;
 				}
 
+
+				if(ColorSourcePin == nullptr)
+				{
+					ColorSourcePin = AsAudioTrackPin;
+				}
+
 				continue;
 			}
 		}
@@ -104,6 +113,11 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 		else
 		{
 			auto PinLiteralObject = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
+			PinLiteralObject->bIsConstructorPin = bIsConstructorPin;
+			if(!ColorSourcePin && DataType == FName("MIDIStream"))
+			{
+				ColorSourcePin = PinLiteralObject;
+			}
 
 			//if Pin is a trigger, we need to create a graph input
 			if (PinLiteralObject->DataType == FName("Trigger"))
@@ -115,6 +129,8 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 
 			InputM2SoundPins.Add(PinName, PinLiteralObject);
 		}
+
+		//PinObject->bIsConstructorPin = bIsConstructorPin;
 	}
 
 	//now the outputs
@@ -516,22 +532,22 @@ void UM2SoundPatch::BuildVertex()
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 
-	auto& PatchDocument = Patch->GetDocumentChecked();
-	for (const auto& MSNode : PatchDocument.RootGraph.Graph.Nodes)
-	{
-		//just print every single bit of information this node exposes for now, go on GPT, I believe in you
+	//auto& PatchDocument = Patch->GetDocumentChecked();
+	//for (const auto& MSNode : PatchDocument.RootGraph.Graph.Nodes)
+	//{
+	//	//just print every single bit of information this node exposes for now, go on GPT, I believe in you
 
-		auto MSName = MSNode.Name;
-		auto InLiterals = MSNode.InputLiterals;
+	//	auto MSName = MSNode.Name;
+	//	auto InLiterals = MSNode.InputLiterals;
 
-		for (const auto& InLiteral : InLiterals)
-		{
-			//FMetasoundFrontendVertexLiteral InLiteral;
-			auto InID = InLiteral.VertexID;
-			auto InValue = InLiteral.Value;
-			//UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Node: %s, Input ID: %d, Value: %f"), *MSName.ToString(), InID, InValue);
-		}
-	}
+	//	for (const auto& InLiteral : InLiterals)
+	//	{
+	//		//FMetasoundFrontendVertexLiteral InLiteral;
+	//		auto InID = InLiteral.VertexID;
+	//		auto InValue = InLiteral.Value;
+	//		//UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Node: %s, Input ID: %d, Value: %f"), *MSName.ToString(), InID, InValue);
+	//	}
+	//}
 }
 
 void UM2SoundPatch::TryFindVertexDefaultRangesInCache()

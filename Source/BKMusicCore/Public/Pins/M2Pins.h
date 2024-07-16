@@ -114,7 +114,18 @@ public:
 		VertexId = Handle.VertexID;
 	}
 
-	virtual void BuildCompositePin(const UMetaSoundSourceBuilder& BuilderContext) {};
+	UFUNCTION()
+	bool IsConnected() const
+	{
+		return LinkedPins.Num() > 0;
+	}
+
+	//constructor pins present a little challenge as they cannot be modified without rebuilding the node
+	UFUNCTION()
+	bool IsConstructorPin() const
+	{
+		return bIsConstructorPin;
+	}
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EMetaSoundBuilderResult BuildResult = EMetaSoundBuilderResult::Succeeded;
@@ -127,6 +138,8 @@ protected:
 	friend class UM2SoundVertex;
 	friend class UM2SoundEdGraphNode;
 	friend class UDAWSequencerData;
+
+	bool bIsConstructorPin = false;
 
 
 	FGuid NodeId;

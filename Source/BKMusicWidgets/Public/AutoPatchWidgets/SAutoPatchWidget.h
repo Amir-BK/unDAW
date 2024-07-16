@@ -87,6 +87,8 @@ public:
 
 		bool IsControlEnabled() const;
 
+		
+
 
 };
 
