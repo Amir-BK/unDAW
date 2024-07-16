@@ -63,7 +63,7 @@ public:
 
 		int32 LiteralIntValue = 0;
 
-		FString LiteralStringValue;
+		FString LiteralStringValue = TEXT("");
 
 		bool bLiteralBoolValue = false;
 
@@ -81,11 +81,17 @@ public:
 
 		void OnLiteralValueChanged(const FString& NewValue);
 
+		void OnLiteralValueChanged(const FText& NewText, ETextCommit::Type CommitInfo);
+
 		void OnLiteralValueChanged(ECheckBoxState NewValue);
+
+		void OnTimeSignatureChanged(int32 bar, float beat);
 
 		FReply ExecuteTriggerParameter();
 
 		bool IsControlEnabled() const;
+
+		void ExtractTimeStampFromLiteral();
 
 		
 
