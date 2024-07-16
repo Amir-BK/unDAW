@@ -312,7 +312,12 @@ void UM2SoundVertex::UpdateConnections()
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Updating Connections"))
 		for (const auto& [Name, Pin] : InputM2SoundPins)
 		{
-
+			auto AsLiteral = Cast<UM2MetasoundLiteralPin>(Pin);
+			if (AsLiteral)
+			{
+				EMetaSoundBuilderResult BuildResult;
+				GetSequencerData()->BuilderContext->SetNodeInputDefault(AsLiteral->GetHandle<FMetaSoundBuilderNodeInputHandle>(), AsLiteral->LiteralValue, BuildResult);
+			}
 			
 			if (Pin->LinkedPin)
 			{
@@ -325,7 +330,7 @@ void UM2SoundVertex::UpdateConnections()
 					result = GetSequencerData()->ConnectPins<UM2MetasoundLiteralPin>(Cast<UM2MetasoundLiteralPin>(Pin), Cast<UM2MetasoundLiteralPin>(Pin->LinkedPin));
 				}
 
-				auto AsLiteral = Cast<UM2MetasoundLiteralPin>(Pin);
+				//auto AsLiteral = Cast<UM2MetasoundLiteralPin>(Pin);
 				if (AsLiteral && AsLiteral->DataType == FName("Trigger"))
 				{
 					EMetaSoundBuilderResult BuildResult;
@@ -337,7 +342,7 @@ void UM2SoundVertex::UpdateConnections()
 			}
 			else {
 				// if pin is a trigger literal and it's not connected to anything for now we will connect it to a graph input
-				auto AsLiteral = Cast<UM2MetasoundLiteralPin>(Pin);
+				
 				if(AsLiteral && AsLiteral->DataType == FName("Trigger"))
 				{
 					EMetaSoundBuilderResult BuildResult;

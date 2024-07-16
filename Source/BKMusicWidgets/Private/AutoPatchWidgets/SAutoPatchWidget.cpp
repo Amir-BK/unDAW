@@ -289,12 +289,12 @@ TSharedRef<SWidget> SM2LiteralControllerWidget::MakeWidgetForEnumValue(TSharedPt
 	return SNew(STextBlock).Text(FText::FromString(*InOption));
 }
 
-void SM2LiteralControllerWidget::SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue)
+void SM2LiteralControllerWidget::UpdateValueForLiteralPin()
 {
 	UMetaSoundSourceBuilder* BuilderContext = LiteralPin->ParentVertex->GetSequencerData()->BuilderContext;
 	EMetaSoundBuilderResult BuildResult;
 
-	BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewValue, BuildResult);
+	BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), LiteralPin->LiteralValue, BuildResult);
 
 }
 
@@ -314,10 +314,10 @@ void SM2LiteralControllerWidget::OnSelectObject(TSharedPtr<FString> NewSelection
 		LiteralObjectValue = nullptr;
 	}
 
-	FMetasoundFrontendLiteral NewLiteral;
-	NewLiteral.Set(LiteralObjectValue);
+		UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+		NonConstLiteralPin->LiteralValue.Set(LiteralObjectValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 
 }
 
@@ -329,49 +329,54 @@ void SM2LiteralControllerWidget::OnSelectEnum(TSharedPtr<FString> NewSelection, 
 	}
 
 	auto NewValue = EnumInterface->FindByName(FName(*NewSelection));
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralIntValue = NewValue.GetValue().Value;
-	NewLiteral.Set(NewValue.GetValue().Value);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralIntValue = NewValue.GetValue().Value;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
+	
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(float NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralFloatValue = NewValue;
-	NewLiteral.Set(NewValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralFloatValue = NewValue;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralFloatValue);
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(int32 NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralIntValue = NewValue;
-	NewLiteral.Set(NewValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralIntValue = NewValue;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
+
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(const FString& NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
 	LiteralStringValue = NewValue;
-	NewLiteral.Set(NewValue);
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralStringValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(ECheckBoxState NewValue)
 {
 	bool bNewValue = NewValue == ECheckBoxState::Checked;
 	
-	FMetasoundFrontendLiteral NewLiteral;
 	bLiteralBoolValue = bNewValue;
-	NewLiteral.Set(bNewValue);
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(bLiteralBoolValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 }
 
 FReply SM2LiteralControllerWidget::ExecuteTriggerParameter()
