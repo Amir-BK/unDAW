@@ -416,6 +416,8 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 		}
 
 		Pins.Last()->PinType.PinSubCategoryObject = Pin;
+
+		if(Pin->bPinIsColorSource) ColorSourcePin = Pins.Last();
 	}
 	if (CurrIndexOfAudioTrack != INDEX_NONE && CurrIndexOfAudioTrack != 0)	Swap(Pins[0], Pins[CurrIndexOfAudioTrack]);
 

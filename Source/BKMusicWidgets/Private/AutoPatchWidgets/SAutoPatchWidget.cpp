@@ -95,15 +95,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	FLinearColor Color = FLinearColor::White;
 
-	UE_LOG(LogTemp, Warning, TEXT("Literal Pin Name: %s"), *Info.DataTypeName.ToString());
 
 
-	// objects will be blue for now
-	if (Info.ProxyGeneratorClass)
-	{
-		//print proxy generator class name
-		UE_LOG(LogTemp, Warning, TEXT("Proxy Generator Class Name: %s"), *Info.ProxyGeneratorClass->GetName());
-	}
 
 	//get undaw settings and use colors from there
 	auto Settings = UUNDAWSettings::Get();
@@ -119,6 +112,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					SNew(STextBlock)
 						.Text(FText::FromName(InLiteralPin.Name))
 						.ColorAndOpacity_Lambda([this]() -> FSlateColor { return PinColor; })
+						.ToolTipText(FText::FromString(FString::Printf(TEXT("%s %s"), *Info.DataTypeDisplayText.ToString(), LiteralPin->IsConstructorPin() ? TEXT(", Construcor Pin") : TEXT(""))))
 				]
 				//a spacer
 				+ SHorizontalBox::Slot()
@@ -149,6 +143,9 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 			break;
 		}
+
+		LiteralPin->LiteralValue.TryGet(bLiteralBoolValue);
+
 		PinColor = Settings->BooleanPinTypeColor;
 		MainHorizontalBox->AddSlot()
 			[
@@ -162,6 +159,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	case ELiteralType::Float:
 		PinColor = Settings->FloatPinTypeColor;
+		LiteralPin->LiteralValue.TryGet(LiteralFloatValue);
+
 		MainHorizontalBox->AddSlot()
 			[
 				SNew(SNumericEntryBox<float>)
@@ -174,6 +173,8 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		break;
 	case ELiteralType::Integer:
+		LiteralPin->LiteralValue.TryGet(LiteralIntValue);
+
 		if (Info.bIsEnum)
 		{
 			PinColor = Settings->IntPinTypeColor;
@@ -217,9 +218,12 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		break;
 	case ELiteralType::String:
+		LiteralPin->LiteralValue.TryGet(LiteralStringValue);
 		PinColor = Settings->StringPinTypeColor;
 		break;
 	case ELiteralType::UObjectProxy:
+		LiteralPin->LiteralValue.TryGet(LiteralObjectValue);
+
 		Objects = UM2SoundGraphStatics::GetAllObjectsOfClass(Info.ProxyGeneratorClass);
 
 		for (UObject* Object : Objects)
@@ -270,6 +274,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			];
 	}
 
+	//SetValueForLiteralPin(LiteralPin->LiteralValue);
 
 
 }
@@ -284,12 +289,12 @@ TSharedRef<SWidget> SM2LiteralControllerWidget::MakeWidgetForEnumValue(TSharedPt
 	return SNew(STextBlock).Text(FText::FromString(*InOption));
 }
 
-void SM2LiteralControllerWidget::SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue)
+void SM2LiteralControllerWidget::UpdateValueForLiteralPin()
 {
 	UMetaSoundSourceBuilder* BuilderContext = LiteralPin->ParentVertex->GetSequencerData()->BuilderContext;
 	EMetaSoundBuilderResult BuildResult;
 
-	BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewValue, BuildResult);
+	BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), LiteralPin->LiteralValue, BuildResult);
 
 }
 
@@ -309,10 +314,10 @@ void SM2LiteralControllerWidget::OnSelectObject(TSharedPtr<FString> NewSelection
 		LiteralObjectValue = nullptr;
 	}
 
-	FMetasoundFrontendLiteral NewLiteral;
-	NewLiteral.Set(LiteralObjectValue);
+		UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+		NonConstLiteralPin->LiteralValue.Set(LiteralObjectValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 
 }
 
@@ -324,49 +329,54 @@ void SM2LiteralControllerWidget::OnSelectEnum(TSharedPtr<FString> NewSelection, 
 	}
 
 	auto NewValue = EnumInterface->FindByName(FName(*NewSelection));
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralIntValue = NewValue.GetValue().Value;
-	NewLiteral.Set(NewValue.GetValue().Value);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralIntValue = NewValue.GetValue().Value;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
+	
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(float NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralFloatValue = NewValue;
-	NewLiteral.Set(NewValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralFloatValue = NewValue;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralFloatValue);
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(int32 NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
-	LiteralIntValue = NewValue;
-	NewLiteral.Set(NewValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	LiteralIntValue = NewValue;
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
+
+
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(const FString& NewValue)
 {
-	FMetasoundFrontendLiteral NewLiteral;
 	LiteralStringValue = NewValue;
-	NewLiteral.Set(NewValue);
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(LiteralStringValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 }
 
 void SM2LiteralControllerWidget::OnLiteralValueChanged(ECheckBoxState NewValue)
 {
 	bool bNewValue = NewValue == ECheckBoxState::Checked;
 	
-	FMetasoundFrontendLiteral NewLiteral;
 	bLiteralBoolValue = bNewValue;
-	NewLiteral.Set(bNewValue);
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	NonConstLiteralPin->LiteralValue.Set(bLiteralBoolValue);
 
-	SetValueForLiteralPin(NewLiteral);
+	UpdateValueForLiteralPin();
 }
 
 FReply SM2LiteralControllerWidget::ExecuteTriggerParameter()

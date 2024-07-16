@@ -69,7 +69,7 @@ public:
 
 		UObject* LiteralObjectValue = nullptr;
 
-		void SetValueForLiteralPin(FMetasoundFrontendLiteral& NewValue);
+		void UpdateValueForLiteralPin();
 
 		void OnSelectObject(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
 
@@ -86,6 +86,8 @@ public:
 		FReply ExecuteTriggerParameter();
 
 		bool IsControlEnabled() const;
+
+		
 
 
 };

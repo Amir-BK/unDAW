@@ -97,6 +97,7 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	UPROPERTY()
 	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
 
 	virtual FLinearColor GetVertexColor() const;

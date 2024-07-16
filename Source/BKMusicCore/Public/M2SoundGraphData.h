@@ -412,6 +412,14 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	UMetaSoundPatchBuilder* PatchBuilder;
+
+	UPROPERTY(VisibleAnywhere)
+	UMetaSoundPatch* BuilderPatch;
+
+	UFUNCTION(CallInEditor)
+	void CreateNewPatchBuilder();
+
 	void CreateDefaultVertexes();
 
 	bool TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
