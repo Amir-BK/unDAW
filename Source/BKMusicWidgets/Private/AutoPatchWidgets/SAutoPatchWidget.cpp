@@ -6,6 +6,8 @@
 #include "unDAWSettings.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+
+#include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SButton.h"
 #include "SlateOptMacros.h"
 #include "MetasoundBuilderSubsystem.h"
@@ -181,23 +183,40 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			EnumInterface = Metasound::Frontend::IDataTypeRegistry::Get().GetEnumInterfaceForDataType(InLiteralPin.DataType);
 			auto DefaultEnumOption = EnumInterface->GetDefaultValue();
 			//TArray<TSharedPtr<FString>> EnumOptions;
+			auto NameSpaceString = EnumInterface->GetNamespace().ToString() + TEXT("::");
 			for (int i = 0; i < EnumInterface->GetAllEntries().Num(); i++)
 			{
-				EnumOptions.Add(MakeShared<FString>(EnumInterface->ToName(i)->ToString()));
+				//auto Entry = EnumInterface->GetAllEntries()[i];
+				auto EntryName = EnumInterface->ToName(i);
+				FString EntryString;
+				if (EntryName.IsSet())
+				{
+				EntryString = EntryName->ToString();
+				EntryString.RemoveFromStart(NameSpaceString);
+				//EnumOptions.Add(MakeShared<FString>(EntryString));
+				}
+				else {
+					EntryString = TEXT("None");
+				}
+
+				EnumOptionToValue.Add(MakeShared<FString>(EntryString), i);
+				
 			}
+
+			EnumOptionToValue.GenerateKeyArray(EnumOptions);
 
 			MainHorizontalBox->AddSlot()
 				.AutoWidth()
 				[
 					SNew(SComboBox<TSharedPtr<FString>>)
 					.OptionsSource(&EnumOptions)
-					.InitiallySelectedItem(EnumOptions[0])
+					.InitiallySelectedItem(MakeShared<FString>(GetEnumValue().ToString()))
 					.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 						[
-						SNew(STextBlock)
-							.Text_Lambda([this]() -> FText { return FText::FromName(EnumInterface->ToName(LiteralIntValue).GetValue()); })
+							SNew(STextBlock)
+								.Text_Lambda([this]() -> FText { return GetEnumValue(); })
 						]	
-						.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectEnum)
+					.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectEnum)
 
 					//.OnSelectionChanged_Lambda([this, &InLiteralPin](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { InLiteralPin.SetIntValue(EnumInterface->FromName(*NewSelection)); })
 				];
@@ -218,8 +237,21 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		break;
 	case ELiteralType::String:
-		LiteralPin->LiteralValue.TryGet(LiteralStringValue);
+		if(!LiteralPin->LiteralValue.TryGet(LiteralStringValue))
+		{
+			LiteralStringValue = TEXT("Couldn't read string value?!?");
+		}
 		PinColor = Settings->StringPinTypeColor;
+		MainHorizontalBox->AddSlot()
+			.AutoWidth()
+			[
+				SNew(SEditableTextBox)
+					.Text_Lambda([this]() -> FText { return FText::FromString(LiteralStringValue); })
+					.OnTextCommitted(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
+					.MinDesiredWidth(300)
+				//.Text_Lambda([this, &InLiteralPin]() -> FText { return FText::FromString(InLiteralPin.GetStringValue()); })
+				//.OnTextCommitted_Lambda([this, &InLiteralPin](const FText& NewText, ETextCommit::Type CommitType) { InLiteralPin.SetStringValue(NewText.ToString()); })
+			];
 		break;
 	case ELiteralType::UObjectProxy:
 		LiteralPin->LiteralValue.TryGet(LiteralObjectValue);
@@ -257,21 +289,23 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 	//won't actually work, we need to construct an FTimeStamp... 
 	if (Info.DataTypeName == FName("MusicTimeStamp"))
 	{
+		ExtractTimeStampFromLiteral();
+		MainHorizontalBox->AddSlot()
+			[
+				SNew(SNumericEntryBox<int32>)
+					.AllowSpin(true)
+					.OnValueChanged_Lambda([this](int32 NewValue) { OnTimestampChanged(NewValue, 0.0f); })
+					.Value_Lambda([this]() -> TOptional<int32> { return LiteralIntValue; })
+			];
+		
 		MainHorizontalBox->AddSlot()
 			[
 				SNew(SNumericEntryBox<float>)
 				.AllowSpin(true)
-				.OnValueChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
+				.OnValueChanged_Lambda([this](float NewValue) { OnTimestampChanged(INDEX_NONE, NewValue); })
 				.Value_Lambda([this]() -> TOptional<float> { return LiteralFloatValue; })
 			];
 
-		MainHorizontalBox->AddSlot()
-			[
-				SNew(SNumericEntryBox<int32>)
-				.AllowSpin(true)
-				.OnValueChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
-				.Value_Lambda([this]() -> TOptional<int32> { return LiteralIntValue; })
-			];
 	}
 
 	//SetValueForLiteralPin(LiteralPin->LiteralValue);
@@ -287,6 +321,20 @@ TSharedRef<SWidget> SM2LiteralControllerWidget::CreateValueWidget(const UM2Metas
 TSharedRef<SWidget> SM2LiteralControllerWidget::MakeWidgetForEnumValue(TSharedPtr<FString> InOption)
 {
 	return SNew(STextBlock).Text(FText::FromString(*InOption));
+}
+
+FText SM2LiteralControllerWidget::GetEnumValue() const
+{
+	auto Key = EnumOptionToValue.FindKey(LiteralIntValue);
+	if(Key != nullptr)
+	{
+		return FText::FromString(*Key->Get());
+	}
+	else {
+		return FText::FromString(TEXT("None"));
+	}
+
+
 }
 
 void SM2LiteralControllerWidget::UpdateValueForLiteralPin()
@@ -327,12 +375,21 @@ void SM2LiteralControllerWidget::OnSelectEnum(TSharedPtr<FString> NewSelection, 
 	{
 		return;
 	}
+	auto NewValueIndex = EnumOptionToValue.Find(NewSelection);
 
-	auto NewValue = EnumInterface->FindByName(FName(*NewSelection));
-
-	LiteralIntValue = NewValue.GetValue().Value;
+	//auto NewValue = EnumInterface->FindByName(FName(*NewSelection));
+	auto NewValue = EnumInterface->FindByValue(*NewValueIndex);
+	LiteralIntValue = *NewValueIndex;
 	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
-	NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
+	if(NewValue.IsSet())
+	{
+		NonConstLiteralPin->LiteralValue.Set(NewValue.GetValue().Value);
+	}
+	else {
+		NonConstLiteralPin->LiteralValue.Set(0);
+	}
+	//auto Value = NewValue.GetValue().Value;
+	//NonConstLiteralPin->LiteralValue.Set(Value);
 	
 
 	UpdateValueForLiteralPin();
@@ -368,6 +425,11 @@ void SM2LiteralControllerWidget::OnLiteralValueChanged(const FString& NewValue)
 	UpdateValueForLiteralPin();
 }
 
+void SM2LiteralControllerWidget::OnLiteralValueChanged(const FText& NewText, ETextCommit::Type CommitInfo)
+{
+	OnLiteralValueChanged(NewText.ToString());
+}
+
 void SM2LiteralControllerWidget::OnLiteralValueChanged(ECheckBoxState NewValue)
 {
 	bool bNewValue = NewValue == ECheckBoxState::Checked;
@@ -378,6 +440,36 @@ void SM2LiteralControllerWidget::OnLiteralValueChanged(ECheckBoxState NewValue)
 
 	UpdateValueForLiteralPin();
 }
+
+void SM2LiteralControllerWidget::OnTimestampChanged(int32 bar, float beat)
+{
+	if(bar != INDEX_NONE)
+	{
+		LiteralIntValue = bar;
+	}
+
+	if(beat != 0.0f)
+	{
+		LiteralFloatValue = beat;
+	}
+
+	auto NewTimeStamp = FMusicTimestamp(LiteralIntValue, LiteralFloatValue);
+	//Metasound::Frontend::
+	//auto TheLiteral = Metasound::FLiteral(NewTimeStamp);
+
+	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
+	//NonConstLiteralPin->LiteralValue.SetFromLiteral(NewTimeStamp);
+	const auto& SequencerData = LiteralPin->ParentVertex->GetSequencerData();
+	NonConstLiteralPin->Timestamp.Bar = LiteralIntValue;
+	NonConstLiteralPin->Timestamp.Beat = LiteralFloatValue;
+
+	//UMetasoundParameterPack* NewPack = NewObject<UMetasoundParameterPack>(SequencerData);
+	SequencerData->StructParametersPack->SetParameter(LiteralPin->AutoGeneratedGraphInputName, FName("MusicTimeStamp"), NewTimeStamp, false);
+	SequencerData->ApplyParameterPack();
+	UE_LOG(LogTemp, Warning, TEXT("Bar: %d, Beat: %f"), LiteralIntValue, LiteralFloatValue);
+}
+
+
 
 FReply SM2LiteralControllerWidget::ExecuteTriggerParameter()
 {
@@ -393,6 +485,18 @@ bool SM2LiteralControllerWidget::IsControlEnabled() const
 	if (LiteralPin->LinkedPin) return false;
 	
 	return true;
+}
+
+void SM2LiteralControllerWidget::ExtractTimeStampFromLiteral()
+{
+	//we'll need a parameter pack
+	auto NewPack = LiteralPin->ParentVertex->GetSequencerData()->StructParametersPack;
+	ESetParamResult Result;
+	FMusicTimestamp NewTimeStamp =	NewPack->GetParameter<FMusicTimestamp>(LiteralPin->AutoGeneratedGraphInputName, FName("MusicTimeStamp"), Result);
+	LiteralIntValue = NewTimeStamp.Bar;
+	LiteralFloatValue = NewTimeStamp.Beat;
+
+	UE_LOG(LogTemp, Warning, TEXT("Extract TimeStamp Bar: %d, Beat: %f"), NewTimeStamp.Bar, NewTimeStamp.Beat);
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

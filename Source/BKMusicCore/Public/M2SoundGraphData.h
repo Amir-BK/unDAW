@@ -412,6 +412,10 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	//as metasounds have rather weird support for structs we also need a Parameter Pack to hold data for struct pins
+	UPROPERTY()
+	TObjectPtr<UMetasoundParameterPack> StructParametersPack;
+
 	UMetaSoundPatchBuilder* PatchBuilder;
 
 	UPROPERTY(VisibleAnywhere)
@@ -685,6 +689,11 @@ public:
 
 	UFUNCTION()
 	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);
+
+	UFUNCTION()
+	void ApplyParameterPack();
+
+	//void ApplyParameterViaParameterPack
 
 	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
 

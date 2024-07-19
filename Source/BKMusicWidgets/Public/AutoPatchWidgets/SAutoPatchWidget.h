@@ -9,6 +9,8 @@
 #include "Pins/M2Pins.h"
 #include "MetasoundFrontendController.h"
 #include "MetasoundFrontendDataTypeRegistry.h"
+#include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
+
 #include "Vertexes/M2SoundVertex.h"
 
 
@@ -38,6 +40,8 @@ public:
 
 		TSharedRef<SWidget> MakeWidgetForEnumValue(TSharedPtr<FString> InOption);
 
+		FText GetEnumValue() const;
+
 		TSharedPtr<SHorizontalBox> MainHorizontalBox;
 
 		FLinearColor PinColor = FLinearColor::White;
@@ -52,6 +56,8 @@ public:
 
 		TArray<TSharedPtr<FString>> EnumOptions;
 
+		TMap<TSharedPtr<FString>, int32> EnumOptionToValue;
+
 		TArray<TSharedPtr<FString>> UObjectOptions;
 
 		TSharedPtr<const Metasound::Frontend::IEnumDataTypeInterface> EnumInterface;
@@ -63,7 +69,7 @@ public:
 
 		int32 LiteralIntValue = 0;
 
-		FString LiteralStringValue;
+		FString LiteralStringValue = TEXT("");
 
 		bool bLiteralBoolValue = false;
 
@@ -81,11 +87,17 @@ public:
 
 		void OnLiteralValueChanged(const FString& NewValue);
 
+		void OnLiteralValueChanged(const FText& NewText, ETextCommit::Type CommitInfo);
+
 		void OnLiteralValueChanged(ECheckBoxState NewValue);
+
+		void OnTimestampChanged(int32 bar, float beat);
 
 		FReply ExecuteTriggerParameter();
 
 		bool IsControlEnabled() const;
+
+		void ExtractTimeStampFromLiteral();
 
 		
 

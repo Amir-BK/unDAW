@@ -229,6 +229,7 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 	bShouldTick = true;
 
 	SavedMetaSound = Cast<UMetaSoundSource>(AuditionComponent->Sound);
+	ApplyParameterPack();	
 
 	OnBuilderReady.Broadcast();
 }
@@ -718,6 +719,8 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 
+	StructParametersPack = NewObject<UMetasoundParameterPack>(this);
+
 	EMetaSoundBuilderResult BuildResult;
 
 	auto SavedBuilder = MSBuilderSystem->FindBuilder(BuilderName);
@@ -767,6 +770,11 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	//CoreNodes.CreateMidiPlayerAndMainClock(BuilderContext);
 
 	MSBuilderSystem->RegisterSourceBuilder(BuilderName, BuilderContext);
+}
+
+void UDAWSequencerData::ApplyParameterPack()
+{
+	if(GeneratorHandle) GeneratorHandle->ApplyParameterPack(StructParametersPack);
 }
 
 void UDAWSequencerData::RemoveVertex(UM2SoundVertex* Vertex)
