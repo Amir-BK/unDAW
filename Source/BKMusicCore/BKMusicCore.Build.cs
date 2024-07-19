@@ -55,7 +55,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundEngine",
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
-                "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi",
+                "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
             }
 

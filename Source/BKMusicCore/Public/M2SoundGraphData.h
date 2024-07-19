@@ -691,7 +691,9 @@ public:
 	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);
 
 	UFUNCTION()
-	void ApplyParameterPack(UMetasoundParameterPack* InPack);
+	void ApplyParameterPack();
+
+	//void ApplyParameterViaParameterPack
 
 	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
 

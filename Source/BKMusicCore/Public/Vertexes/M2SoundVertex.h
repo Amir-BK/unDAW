@@ -266,6 +266,7 @@ public:
 		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Input;
 		GetBuilderContext().GetNodeInputData(InHandle, NewPin->Name, NewPin->DataType, NewPin->BuildResult);
+		NewPin->LiteralValue = GetBuilderContext().GetNodeInputClassDefault(InHandle, NewPin->BuildResult);
 
 
 		NewPin->SetHandle(InHandle);
