@@ -20,6 +20,11 @@ class BKMUSICCORE_API UM2VariMixerVertex : public UM2SoundVertex
 	UMetaSoundSourceBuilder* BuilderContext;
 
 public:
+
+	//Mixer aliases are the connection point for anything we add to the graph in runtime, the vari mixer will create and remove input channels per request
+	UPROPERTY(EditAnywhere, Category = "Mixer")
+	FName MixerAlias = NAME_None;
+
 	uint8 NumConnectedChannels = 0;
 
 	//Need to clear all of these when the vertex is deleted
