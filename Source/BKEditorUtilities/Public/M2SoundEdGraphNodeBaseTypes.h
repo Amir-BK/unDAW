@@ -328,6 +328,8 @@ class UM2SoundVariMixerNode : public UM2SoundGraphConsumer
 	GENERATED_BODY()
 public:
 
+	UM2SoundVariMixerNode() { bCanRenameNode = true; }
+
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
 	//TSharedPtr<SM2VariMixerNode> MixerWidget;
@@ -337,6 +339,10 @@ public:
 	void NodeConnectionListChanged() override;
 
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
+
+	void OnRenameNode(const FString& NewName) override;
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 };
 
 #pragma endregion M2SoundEdGraphNodes

@@ -134,6 +134,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EMetaSoundBuilderResult ConnectionResult = EMetaSoundBuilderResult::Succeeded;
 
+	//when connecting transient vertexes from the game thread we can identify the graph connections via aliases
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName PinAlias;
+
 protected:
 
 	friend class UM2SoundVertex;

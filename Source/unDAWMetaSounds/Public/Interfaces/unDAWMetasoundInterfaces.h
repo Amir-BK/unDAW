@@ -163,14 +163,15 @@ namespace unDAW::Metasounds
 	};
 
 
-	class UNDAWMETASOUNDS_API FunDAWAudibleActionInterface : public FunDAWMusicalActionInterface
+	class UNDAWMETASOUNDS_API FunDAWAudibleActionInterface : public Audio::FParameterInterface
 	{
 
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
 	public:
 
-		FunDAWAudibleActionInterface() : FunDAWMusicalActionInterface()
+		FunDAWAudibleActionInterface() : FParameterInterface("Audible Action", { 0, 1 })
+
 		{
 
 			Outputs.Append(AudioOutputs);
@@ -189,6 +190,13 @@ namespace unDAW::Metasounds
 				InstancePointer = MakeShared<FunDAWAudibleActionInterface>();
 			}
 			return InstancePointer;
+		}
+
+		static void RegisterInterface()
+		{
+			//UE_LOG(FK_SFZ_Logs, Display, TEXT("Registering unDAW SFZ Parameter Interfaces"));
+			Audio::IAudioParameterInterfaceRegistry& InterfaceRegistry = Audio::IAudioParameterInterfaceRegistry::Get();
+			InterfaceRegistry.RegisterInterface(GetInterface());
 		}
 
 

@@ -25,6 +25,7 @@
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
 class UM2SoundGraphRenderer;
 class UM2SoundVertex;
+class UM2VariMixerVertex;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnVertexUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBuilderReady);
@@ -646,6 +647,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW")
 	UMetaSoundSourceBuilder* BuilderContext;
 
+	UPROPERTY(VisibleAnywhere)
+	UCurveFloat* TempoCurve;
+
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
 	UPROPERTY(VisibleAnywhere)
@@ -736,6 +740,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", BlueprintReadOnly)
 	UMidiFile* HarmonixMidiFile;
 
+	//we probably don't need all of these copies... 
 	UPROPERTY()
 	TArray<FMidiEvent> TempoEvents;
 
@@ -770,10 +775,17 @@ private:
 	UPROPERTY()
 	TSet<UM2SoundVertex*> Vertexes;
 
+
+
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
 	// in the future we will add a curvetable to the sequencer data, this will allow us to store the data for the curves in the sequencer, this will be used to create the curves in the performer
 
 public:
+
+	UPROPERTY()
+	TMap<FName, UM2VariMixerVertex*> Mixers;
+
+	//TArray<FName> GetMixerNames();
 
 	UPROPERTY()
 	TArray<FAssignableAudioOutput> AudioOutputs;

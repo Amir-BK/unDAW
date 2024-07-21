@@ -10,8 +10,10 @@
 #include "Sound/SoundBase.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
+#include "PinConfigWidget/SPinConfigWidget.h"
 #include "ToolMenu.h"
 //#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
@@ -216,6 +218,16 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 			Section.AddMenuEntryWithCommandList(FM2SoundNodeCommands::Get().SetPinAsColorSource, CommandList);
 			//Section.AddMenuEntry(SetPinAsColorSourceAction);
 		}
+
+		auto& DynamicSection = Menu->AddSection(FName("Pin Controls"));
+		DynamicSection.AddDynamicEntry("PinControls", FNewToolMenuSectionDelegate::CreateLambda([this, Context](FToolMenuSection& InSection) {
+			InSection.AddEntry(FToolMenuEntry::InitWidget(
+				"ControlSettings",
+				SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject)),
+				FText::GetEmpty()));
+		}));
+
+	
 	}
 }
 
@@ -479,6 +491,17 @@ void UM2SoundVariMixerNode::NodeConnectionListChanged()
 		CreatePin(EGPD_Input, "Track-Audio", FName("Track (Audio)", 0));
 		Pins.Last()->DefaultValue = "Default";
 	}
+}
+
+void UM2SoundVariMixerNode::OnRenameNode(const FString& NewName)
+{
+	Cast<UM2VariMixerVertex>(Vertex)->SetMixerAlias(FName(*NewName));
+}
+
+FText UM2SoundVariMixerNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	return FText::FromString(Cast<UM2VariMixerVertex>(Vertex)->MixerAlias.ToString());
+
 }
 
 TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()

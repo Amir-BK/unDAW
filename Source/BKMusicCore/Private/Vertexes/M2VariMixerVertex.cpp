@@ -2,6 +2,34 @@
 
 #include "Vertexes/M2VariMixerVertex.h"
 
+void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
+{
+	//master mixer cannot be renamed
+	if (MixerAlias == FName("Master"))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Master Mixer cannot be renamed"));
+		return;
+	}
+	
+	//check that mixer alias is unique
+	if (GetSequencerData()->Mixers.Contains(InAlias))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Mixer Alias already exists"));
+		return;
+	}
+
+	//if we have a mixer alias, remove it from the sequencer data
+	if (MixerAlias != NAME_None)
+	{
+		GetSequencerData()->Mixers.Remove(MixerAlias);
+	}
+
+	MixerAlias = InAlias;
+
+	//add the mixer alias to the sequencer data
+	GetSequencerData()->Mixers.Add(MixerAlias, this);
+}
+
 inline void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 {
 	bSoloActive = MixerChannels.ContainsByPredicate([](const FAssignableAudioOutput& Channel) { return Channel.AssignedPin->bSolo; });

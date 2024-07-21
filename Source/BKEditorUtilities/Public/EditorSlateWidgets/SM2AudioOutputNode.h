@@ -60,6 +60,7 @@ public:
 
 	void UpdateGraphNode() override;
 
+	
 	TSharedPtr<SVariMixerWidget> MixerWidget;
 
 	TArray<TSharedPtr<SAudioSlider>> Sliders;

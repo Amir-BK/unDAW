@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "HarmonixMidi/MidiFile.h"
+#include "Runtime/Engine/Classes/Curves/CurveFloat.h"
 #include "EditableMidiFile.generated.h"
 
 /**
@@ -22,7 +23,22 @@ public:
 	UPROPERTY()
 	int32 LoopBarDuration = 4;
 
-	void LoadFromHarmonixBaseFile(UMidiFile* BaseFile);
+	void LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloat* InTempoCurve = nullptr);
+
+	void PopulateTempoCurve();
 
 	void FinishRebuildingMidiFile();
+
+	
+	void OnTempoCurveChanged(UCurveBase* InCurve, EPropertyChangeType::Type Type);
+
+	UPROPERTY(VisibleAnywhere)
+	UCurveFloat* Curve;
+
+	UPROPERTY()
+	TArray<FTempoInfoPoint> TempoInfoPoints;
+
+	UPROPERTY()
+	TArray<FTimeSignaturePoint> TimeSignaturePoints;
+
 };

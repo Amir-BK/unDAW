@@ -41,6 +41,9 @@ public:
 
 	//TArray<FAssignableAudioOutput*> FreeChannels;
 
+	UFUNCTION()
+	void SetMixerAlias(FName InAlias);
+
 	void UpdateMuteAndSoloStates();
 
 private:
