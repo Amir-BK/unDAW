@@ -560,11 +560,15 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
+				//we need to create a new midi file copy, so we don't modify the original
+		auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	MidiFileCopy->LoadFromHarmonixBaseFile(inMidiFile);
+	HarmonixMidiFile = MidiFileCopy;
 
 		TArray<TTuple<int, int>> FoundChannels;
 	//LinkedNoteDataMap.Empty();
 	//PendingLinkedMidiNotesMap.Empty();
-	HarmonixMidiFile = inMidiFile;
+	//HarmonixMidiFile = inMidiFile;
 	UpdateNoteDataFromMidiFile(FoundChannels);
 
 	//Outputs.Empty();
@@ -696,6 +700,50 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		//if (LinkedNoteDataMap.IsEmpty()) continue;
 
 		//CreateBuilderHelper();
+	}
+
+	TempoCurve = NewObject<UCurveFloat>(this);
+
+	//TempoCurve->
+
+	TempoCurve->OnUpdateCurve.AddLambda([this](UCurveBase* Curve, EPropertyChangeType::Type Type) {
+
+		//print enum type just for funsies
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Change Type %d"), (uint32)Type)
+			auto TicksPerQuarterNote = HarmonixMidiFile->GetSongMaps()->GetTicksPerQuarterNote();
+		switch (Type)
+		{
+			case EPropertyChangeType::ValueSet:
+			UE_LOG(unDAWDataLogs, Verbose, TEXT("Value Set"))
+			//can we find the relevant tempo point from the tick?
+			//basically let's try changing the tempo for each point in the midi...
+			HarmonixMidiFile->GetTrack(0)->GetRawEvents().Empty();
+				for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
+				{
+					//HarmonixMidiFile->GetTrack(0)->GetRawEvents().Add(FMidiEvent(CurvePoint.Time, FMidiMsg(Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value))));
+						//GetTempoInfoForTick(CurvePoint.Time)->MidiTempo = Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value);
+				}
+				HarmonixMidiFile->SortAllTracks();
+				//HarmonixMidiFile->GetSongMaps()->Init(TicksPerQuarterNote);
+				HarmonixMidiFile->GetSongMaps()->GetTempoMap().Finalize(HarmonixMidiFile->GetLastEventTick());
+				//HarmonixMidiFile->GetSongMaps()->Set
+				break;
+
+
+		default:
+			break;
+		}
+
+		//for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
+		//{
+		//	//HarmonixMidiFile->GetSongMaps()-> SetTempoAtTick(CurvePoint.Time, Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value));
+		//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Curve Point %f, %f"), CurvePoint.Time, CurvePoint.Value)
+		//}
+		});
+
+	for (const auto& TempoEvent : TempoEvents)
+	{
+		TempoCurve->FloatCurve.AddKey(TempoEvent.GetTick(), Harmonix::Midi::Constants::MidiTempoToBPM(TempoEvent.GetMsg().GetMicrosecPerQuarterNote()));
 	}
 
 	//hacky...

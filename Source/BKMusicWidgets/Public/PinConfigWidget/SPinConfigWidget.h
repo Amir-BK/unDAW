@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Pins/M2Pins.h"
+#include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
@@ -18,4 +19,6 @@ public:
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, const UM2Pins* InPin);
+
+	TSharedPtr<SVerticalBox> MainCotentArea;
 };

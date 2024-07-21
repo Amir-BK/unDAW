@@ -646,6 +646,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW")
 	UMetaSoundSourceBuilder* BuilderContext;
 
+	UPROPERTY(VisibleAnywhere)
+	UCurveFloat* TempoCurve;
+
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
 	UPROPERTY(VisibleAnywhere)

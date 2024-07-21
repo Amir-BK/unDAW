@@ -13,7 +13,7 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
-#include "PinConfigWidget/SSPinConfigWidget.h"
+#include "PinConfigWidget/SPinConfigWidget.h"
 #include "ToolMenu.h"
 //#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
