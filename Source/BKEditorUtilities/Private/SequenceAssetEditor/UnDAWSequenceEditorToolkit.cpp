@@ -25,6 +25,25 @@
 
 #include "Widgets/Layout/SScaleBox.h"
 
+void FUnDAWSequenceEditorToolkit::RenameSelectedNodes()
+{
+}
+
+bool FUnDAWSequenceEditorToolkit::CanRenameSelectedNodes() const
+{
+	//for the moment only rename varimixer nodes
+	UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
+	for (auto& Node : Graph->SelectedNodes)
+		{
+		if (Node->IsA<UM2SoundVariMixerNode>())
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 {
 	SequenceData = Cast<UDAWSequencerData>(InObjects[0]);
@@ -216,9 +235,9 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
 {
 	//const FScopedTransaction Transaction(TEXT(""), INVTEXT("Rename Node"), NodeBeingChanged);
-	//NodeBeingChanged->Modify();
+	NodeBeingChanged->Modify();
 	//ConcordModel->Modify();
-	//NodeBeingChanged->OnRenameNode(NewText.ToString());
+	NodeBeingChanged->OnRenameNode(NewText.ToString());
 	//NodeDetailsView->ForceRefresh();
 	//AdditionalDetailsView->ForceRefresh();
 }
@@ -264,6 +283,7 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AdditionalGraphCommands = MakeShared<FUICommandList>();
 
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete, FExecuteAction::CreateLambda([this]() { DeleteSelectedNodes(); }));
+	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Rename, FExecuteAction::CreateLambda([this]() { UE_LOG(LogTemp, Warning, TEXT("Rename Node")); }));
 
 	SAssignNew(MetasoundGraphEditor, SGraphEditor)
 		//   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
@@ -455,6 +475,18 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
 {
 	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
+
+	//check if asset is wavasset
+	for (auto& Asset : InAssets)
+	{
+		if (Asset.GetClass()->IsChildOf(USoundWave::StaticClass()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Asset is SoundWave %d"), PianoRollGraph->tickAtMouse);
+			//in theory this is where we can create a timestamped wav asset
+			return true;
+			//return true;
+		}
+	}
 	
 	return false;
 }

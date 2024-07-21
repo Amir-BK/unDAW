@@ -41,6 +41,11 @@ private:
 class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {
 public:
+
+	void RenameSelectedNodes();
+
+	bool CanRenameSelectedNodes() const;
+
 	void InitEditor(const TArray<UObject*>& InObjects);
 
 	void RegisterTabSpawners(const TSharedRef<class FTabManager>& TabManager) override;

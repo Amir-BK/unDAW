@@ -495,6 +495,13 @@ void UM2SoundVariMixerNode::NodeConnectionListChanged()
 
 void UM2SoundVariMixerNode::OnRenameNode(const FString& NewName)
 {
+	Cast<UM2VariMixerVertex>(Vertex)->SetMixerAlias(FName(*NewName));
+}
+
+FText UM2SoundVariMixerNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	return FText::FromString(Cast<UM2VariMixerVertex>(Vertex)->MixerAlias.ToString());
+
 }
 
 TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
