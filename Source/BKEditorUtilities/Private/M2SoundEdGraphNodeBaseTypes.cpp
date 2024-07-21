@@ -10,8 +10,10 @@
 #include "Sound/SoundBase.h"
 #include "Framework/Commands/GenericCommands.h"
 #include "EditorSlateWidgets/SM2SoundEdGraphNode.h"
+#include "Widgets/Input/SNumericEntryBox.h"
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
+#include "PinConfigWidget/SSPinConfigWidget.h"
 #include "ToolMenu.h"
 //#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
@@ -216,6 +218,16 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 			Section.AddMenuEntryWithCommandList(FM2SoundNodeCommands::Get().SetPinAsColorSource, CommandList);
 			//Section.AddMenuEntry(SetPinAsColorSourceAction);
 		}
+
+		auto& DynamicSection = Menu->AddSection(FName("Pin Controls"));
+		DynamicSection.AddDynamicEntry("PinControls", FNewToolMenuSectionDelegate::CreateLambda([this, Context](FToolMenuSection& InSection) {
+			InSection.AddEntry(FToolMenuEntry::InitWidget(
+				"ControlSettings",
+				SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject)),
+				FText::GetEmpty()));
+		}));
+
+	
 	}
 }
 
