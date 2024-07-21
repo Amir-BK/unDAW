@@ -39,7 +39,13 @@
 			"Name": "unPatchwork",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "unDAWK2_Nodes",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
 		}
+
 	],
 	"Plugins": [
 		{

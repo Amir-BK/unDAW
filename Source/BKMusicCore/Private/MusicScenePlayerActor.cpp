@@ -2,8 +2,37 @@
 
 #include "MusicScenePlayerActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Metasound.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "MetasoundGeneratorHandle.h"
+
+bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, const FOnTriggerExecuted& InDelegate)
+{
+	//check if the patch implements the unDAW interface
+
+	FMetasoundFrontendVersion ActionInterface;
+	ActionInterface.Name = FName("Audible Action");
+	ActionInterface.Number = { 0, 1 };
+
+	bool bSuccess = false;
+
+	if (Patch->GetConstDocument().Interfaces.Contains(ActionInterface))
+	{
+		bSuccess = true;
+	}
+
+	//check if mixer alias is valid
+	if (MixerAlias.IsNone())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mixer Alias is None"))
+			return false;
+	}
+	else {
+		bSuccess &= GetDAWSequencerData()->Mixers.Contains(MixerAlias);
+	}
+	
+	return bSuccess;
+}
 
 // Sets default values
 AMusicScenePlayerActor::AMusicScenePlayerActor()
