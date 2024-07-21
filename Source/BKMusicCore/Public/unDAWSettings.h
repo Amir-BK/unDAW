@@ -25,6 +25,8 @@ public:
 
 	UUNDAWSettings();
 
+
+
 	// Cache for the ranges of the pins on the m2sound graph nodes,
 	UPROPERTY(Config, EditAnywhere, Category = "Patch Cache")
 	TMap<FName, FCachedVertexPinInfo> Cache;
@@ -71,4 +73,6 @@ public:
 	/** WaveTable pin type color */
 	UPROPERTY(EditAnywhere, config, Category = PinColors)
 	FLinearColor WaveTablePinTypeColor;
+
+
 };

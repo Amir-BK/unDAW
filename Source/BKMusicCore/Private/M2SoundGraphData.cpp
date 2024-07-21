@@ -50,6 +50,7 @@ void UDAWSequencerData::CreateDefaultVertexes()
 
 	auto NewMixer = FVertexCreator::CreateVertex<UM2VariMixerVertex>(this);
 	AddVertex(NewMixer);
+	NewMixer->SetMixerAlias(FName(TEXT("Master")));
 
 	TArray<TObjectPtr<UM2Pins>> MixerInputPins;
 
@@ -795,7 +796,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Builder %s"), *BuilderName.ToString())
 
-		BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
+	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
 	CoreNodes.InitCoreNodes(BuilderContext, this);
 	SetLoopSettings(CoreNodes.bIsLooping, CoreNodes.BarLoopDuration);
@@ -894,6 +895,11 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
+
+//TArray<FName> UDAWSequencerData::GetMixerNames()
+//{
+//	return Mixers.GenerateKeyArray();
+//}
 
 #endif
 

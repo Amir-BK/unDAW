@@ -337,6 +337,8 @@ public:
 	void NodeConnectionListChanged() override;
 
 	FLinearColor GetNodeTitleColor() const override { return FLinearColor::Black; }
+
+	void OnRenameNode(const FString& NewName) override;
 };
 
 #pragma endregion M2SoundEdGraphNodes

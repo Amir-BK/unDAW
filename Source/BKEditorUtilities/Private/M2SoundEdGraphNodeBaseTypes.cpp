@@ -493,6 +493,10 @@ void UM2SoundVariMixerNode::NodeConnectionListChanged()
 	}
 }
 
+void UM2SoundVariMixerNode::OnRenameNode(const FString& NewName)
+{
+}
+
 TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
 {
 	return SNew(SGraphNodeKnot, this);

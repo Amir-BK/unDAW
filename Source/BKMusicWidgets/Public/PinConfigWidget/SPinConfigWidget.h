@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Pins/M2Pins.h"
 #include "Widgets/SBoxPanel.h"
+#include "unDAWSettings.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
@@ -19,6 +20,14 @@ public:
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, const UM2Pins* InPin);
+
+	float MinValue = 0.0f;
+
+	float MaxValue = 1.0f;
+
+	void UpdateMinMax(float InMin, float InMax);
+
+	const UM2Pins* Pin;
 
 	TSharedPtr<SVerticalBox> MainCotentArea;
 };
