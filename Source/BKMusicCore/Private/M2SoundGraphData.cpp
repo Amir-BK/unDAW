@@ -51,6 +51,8 @@ bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundP
 		UM2VariMixerVertex* Mixer = Mixers[InMixerAlias];
 		int Channel = Mixer->AttachM2VertexToMixerInput(NewVertex, InVolume);
 
+		ConnectTransientVertexToMidiClock(NewVertex);
+
 		return Channel != INDEX_NONE;
 	}
 	
@@ -120,6 +122,31 @@ void UDAWSequencerData::CreateDefaultVertexes()
 			ConnectPins<UM2MetasoundLiteralPin>(InstrumentLiteralMidiInput, NewInputLiteralMidiOutput);
 		}
 	}
+}
+
+void UDAWSequencerData::ConnectTransientVertexToMidiClock(UM2SoundVertex* Vertex)
+{
+	// to make it more elegant we should in theory create transient nodes but, fuck is
+	auto MidiClockMember = CoreNodes.MemberInputMap.Find(FName(TEXT("unDAW.Midi Clock")));
+	//MidiClockMember->MemberInputOutputHandle
+	auto VertexMidiClockInput = LiteralCast(Vertex->InputM2SoundPins[FName(TEXT("unDAW.Midi Clock"))]);
+	auto VertexLiteralInputHandle = VertexMidiClockInput->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+
+	EMetaSoundBuilderResult BuildResult;
+
+	BuilderContext->ConnectNodes(MidiClockMember->MemberInputOutputHandle, VertexLiteralInputHandle, BuildResult);
+
+	Vertex->BuilderResults.Add({ FName("Connect to clock"), BuildResult });
+
+	auto VertexTransportInput = LiteralCast(Vertex->InputM2SoundPins[FName(TEXT("unDAW.Transport"))]);
+	auto TransportMember = CoreNodes.MemberInputMap.Find(FName(TEXT("Transport")));
+
+	auto VertexTransportInputLiteral = VertexTransportInput->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+
+	BuilderContext->ConnectNodes(TransportMember->MemberInputOutputHandle, VertexTransportInputLiteral, BuildResult);
+
+	Vertex->BuilderResults.Add({ FName("Connect to transport"), BuildResult });
+
 }
 
 

@@ -17,18 +17,13 @@
 #include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
 #include "MetasoundWave.h"
 
-#define WRAP_TOKEN(token)  #token
-#define DECLARE_BK_PARAM(DisplayName, Description, LayerID, DataType, Init) { \
-    INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID)), Init}},
 
-#define DECLARE_BK_PARAM_NOINIT(DisplayName, Description, LayerID, DataType) { \
-    INVTEXT(DisplayName), INVTEXT(Description), DataType, {FName(WRAP_TOKEN(LayerID)) }},
-
-#define DECLARE_BK_PARAM_OUT(DisplayName, Description, LayerID, DataType) { \
-    INVTEXT(DisplayName), INVTEXT(Description), DataType, {( WRAP_TOKEN(LayerID) )}},
 
 namespace unDAW::Metasounds
+
 {
+
+
 	class UNDAWMETASOUNDS_API FunDAWInstrumentRendererInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
@@ -170,10 +165,14 @@ namespace unDAW::Metasounds
 
 	public:
 
+		//static const FInput MidiClockIn = 
+
+
 		FunDAWAudibleActionInterface() : FParameterInterface("Audible Action", { 0, 1 })
 
 		{
-
+			Inputs.Add({ INVTEXT("MidiClock"), INVTEXT("Midi Clock Input"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiClock>(),{ FName("unDAW.Midi Clock") } });
+			Inputs.Add({ INVTEXT("Transport"), INVTEXT("Transport Input"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMusicTransportEventStream>(),{ FName("unDAW.Transport") } });
 			Outputs.Append(AudioOutputs);
 		}
 

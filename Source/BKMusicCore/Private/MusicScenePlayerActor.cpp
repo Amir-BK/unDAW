@@ -101,7 +101,7 @@ void AMusicScenePlayerActor::BeginPlay()
 
 	auto AudioComponent = UGameplayStatics::CreateSound2D(this, AsWavAsset, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	GetDAWSequencerData()->OnBuilderReady.AddDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
-	GetDAWSequencerData()->AuditionBuilder(AudioComponent);
+	GetDAWSequencerData()->AuditionBuilder(AudioComponent, true);
 	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
 	//AuditionComponent = AudioComponent
 

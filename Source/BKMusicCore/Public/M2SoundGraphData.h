@@ -434,6 +434,8 @@ public:
 
 	void CreateDefaultVertexes();
 
+	void ConnectTransientVertexToMidiClock(UM2SoundVertex* Vertex);
+
 	bool TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
 
 	bool TraverseInputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
