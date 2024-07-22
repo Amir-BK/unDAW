@@ -42,15 +42,16 @@ bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundP
 
 	if(bImplementsActionInterface && bMixerExists)
 	{
-		auto NewVertex = FVertexCreator::CreateVertex<UM2SoundPatch>(this);
+		auto NewVertex = NewObject<UM2SoundPatch>(this, NAME_None, RF_Transient);
+		NewVertex->SequencerData = this;
 		NewVertex->Patch = Patch;
 
-		AddVertex(NewVertex);
+		AddTransientVertex(NewVertex);
 
 		UM2VariMixerVertex* Mixer = Mixers[InMixerAlias];
-		//Mixer->
+		int Channel = Mixer->AttachM2VertexToMixerInput(NewVertex, InVolume);
 
-		return true;
+		return Channel != INDEX_NONE;
 	}
 	
 	
@@ -399,6 +400,17 @@ void UDAWSequencerData::ReinitGraph()
 		M2SoundGraph->InitializeGraph();
 	}
 #endif
+}
+
+void UDAWSequencerData::AddTransientVertex(UM2SoundVertex* Vertex)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
+	TransientVertexes.Add(Vertex);
+	Vertex->SequencerData = this;
+	Vertex->BuildVertex();
+	Vertex->CollectParamsForAutoConnect();
+	Vertex->UpdateConnections();
+	Vertex->OnVertexUpdated.Broadcast();
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)

@@ -97,6 +97,9 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "M2Sound")
+	bool bIsTransient = false;
+
 	UPROPERTY()
 	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
 

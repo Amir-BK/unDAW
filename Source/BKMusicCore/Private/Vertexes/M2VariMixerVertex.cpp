@@ -18,7 +18,7 @@ int UM2VariMixerVertex::AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, flo
 
 			UM2AudioTrackPin* MixerInput = Cast<UM2AudioTrackPin>(MixerChannels[i].AssignedPin);
 
-			bool bConnectionSuccess = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(VertexOutput, MixerInput);
+			bool bConnectionSuccess = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(MixerInput, VertexOutput);
 
 			UE_CLOG(!bConnectionSuccess, LogTemp, Warning, TEXT("Connection failed"));
 

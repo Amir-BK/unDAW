@@ -643,6 +643,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "unDAW")
 	FOnVertexAdded OnVertexAdded;
 
+	void AddTransientVertex(UM2SoundVertex* Vertex);
+
 	void AddVertex(UM2SoundVertex* Vertex);
 
 	FMidiDataChanged OnMidiDataChanged;
@@ -782,6 +784,8 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TSet<UM2SoundVertex*> Vertexes;
 
+	UPROPERTY(Transient)
+	TSet<UM2SoundVertex*> TransientVertexes;
 
 
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
