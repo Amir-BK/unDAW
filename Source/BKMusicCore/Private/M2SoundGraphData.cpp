@@ -24,6 +24,39 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
+{
+	FMetasoundFrontendVersion ActionInterface;
+	ActionInterface.Name = FName("Audible Action");
+	ActionInterface.Number = { 0, 1 };
+
+	bool bImplementsActionInterface = false;
+
+	if (Patch->GetConstDocument().Interfaces.Contains(ActionInterface))
+	{
+		bImplementsActionInterface = true;
+	}
+
+	bool bMixerExists = Mixers.Contains(InMixerAlias);
+
+
+	if(bImplementsActionInterface && bMixerExists)
+	{
+		auto NewVertex = FVertexCreator::CreateVertex<UM2SoundPatch>(this);
+		NewVertex->Patch = Patch;
+
+		AddVertex(NewVertex);
+
+		UM2VariMixerVertex* Mixer = Mixers[InMixerAlias];
+		//Mixer->
+
+		return true;
+	}
+	
+	
+	return false;
+}
+
 void UDAWSequencerData::CreateNewPatchBuilder()
 {
 	EMetaSoundBuilderResult BuildResult;
@@ -1023,7 +1056,7 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 		CreateFilterNodeForTrack(TrackIndex);
 	}
 
-	CreateMainMixer();
+	//CreateMainMixer();
 }
 
 FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeForTrack(int32 TrackMetadataIndex)
@@ -1124,8 +1157,8 @@ void FM2SoundCoreNodesComposite::CreateMainMixer()
 			usedLeft = true;
 		}
 	}
-
-	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
+	MasterOutputs.Empty();
+	//UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
 }
 
 void FM2SoundCoreNodesComposite::ResizeOutputMixer()

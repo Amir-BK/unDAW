@@ -324,6 +324,8 @@ struct FMemberInput
 	}
 };
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggerExecuted, FName, TriggerName);
+
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
 USTRUCT()
 struct BKMUSICCORE_API FM2SoundCoreNodesComposite
@@ -370,6 +372,7 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
 
+
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
 	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
 
@@ -412,6 +415,10 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
+
+	bool AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate);
+
 
 	//as metasounds have rather weird support for structs we also need a Parameter Pack to hold data for struct pins
 	UPROPERTY()
@@ -772,7 +779,7 @@ private:
 
 	FTrackDisplayOptions InvalidTrackRef;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TSet<UM2SoundVertex*> Vertexes;
 
 

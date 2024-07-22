@@ -2,6 +2,36 @@
 
 #include "Vertexes/M2VariMixerVertex.h"
 
+int UM2VariMixerVertex::AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, float InVolume)
+{
+	//find first free channel, so we'll just create one as needed
+	for (int i = 0; i < MixerChannels.Num(); i++)
+	{
+		if (MixerChannels[i].AssignedPin->LinkedPin != nullptr)
+		{
+			UM2AudioTrackPin* VertexOutput = Cast< UM2AudioTrackPin>(InVertex->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
+			if (VertexOutput == nullptr)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Vertex does not have an audio track output pin"));
+				return INDEX_NONE;
+			}
+
+			UM2AudioTrackPin* MixerInput = Cast<UM2AudioTrackPin>(MixerChannels[i].AssignedPin);
+
+			bool bConnectionSuccess = GetSequencerData()->ConnectPins<UM2AudioTrackPin>(VertexOutput, MixerInput);
+
+			UE_CLOG(!bConnectionSuccess, LogTemp, Warning, TEXT("Connection failed"));
+
+			return i;
+
+		}
+	}
+
+	
+	
+	return INDEX_NONE;
+}
+
 void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
 {
 	//master mixer cannot be renamed
