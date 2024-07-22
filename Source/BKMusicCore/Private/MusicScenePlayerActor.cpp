@@ -111,7 +111,7 @@ void AMusicScenePlayerActor::BeginPlay()
 void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated()
 {
 	// we can't play here cause it's not from the game thread? I think?
-	UE_LOG(LogTemp, Warning, TEXT("Hello ?"))
+
 		InitHarmonixComponents();
 
 	GetDAWSequencerData()->OnBuilderReady.RemoveDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);

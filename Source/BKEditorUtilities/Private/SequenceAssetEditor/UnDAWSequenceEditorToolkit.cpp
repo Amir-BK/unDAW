@@ -104,6 +104,8 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 							SNew(SAssetDropTarget)
 								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
+								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
+								
 						]
 
 						+SOverlay::Slot()
@@ -147,7 +149,21 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			return SAssignNew(MetasoundGraphEditorBox, SDockTab)
 				.Content()
 				[
-					MetasoundGraphEditor.ToSharedRef()
+					SNew(SOverlay)
+
+						+SOverlay::Slot()
+						[
+							MetasoundGraphEditor.ToSharedRef()
+						]
+						+SOverlay::Slot()
+						.VAlign(VAlign_Bottom)
+						[
+									SNew(STextBlock)
+										.Text_Lambda([this]() { return FText::FromString(FString::Printf(TEXT("%5.2f %% CPU Core"), 100. * SequenceData->MetasoundCpuUtilization)); })
+										.TextStyle(FAppStyle::Get(), "Graph.ZoomText")
+										.ColorAndOpacity(FLinearColor(1, 1, 1, 0.30f))
+						]
+					//MetasoundGraphEditor.ToSharedRef()
 				];
 		}))
 		.SetDisplayName(INVTEXT("Builder Graph"))
@@ -472,7 +488,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
 }
 
-bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
+void FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const
 {
 	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
 
@@ -483,12 +499,12 @@ bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAs
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Asset is SoundWave %d"), PianoRollGraph->tickAtMouse);
 			//in theory this is where we can create a timestamped wav asset
-			return true;
+			//return true;
 			//return true;
 		}
 	}
 	
-	return false;
+	//return false;
 }
 
 FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)

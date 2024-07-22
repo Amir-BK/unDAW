@@ -96,6 +96,7 @@ protected:
 	TSharedPtr<IDetailsView> NodeDetailsView;
 	TSharedPtr<IDetailsView> AdditionalDetailsView;
 	TSharedPtr<SHorizontalBox> TransportControls;
+	TSharedPtr<STextBlock> CPUCoreUtilizationWidget;
 
 	void SetupPreviewPerformer();
 	//void PlayAudioComponent();
@@ -103,7 +104,8 @@ protected:
 
 	//UAudioComponent* AudioComponent = nullptr;
 
-	bool OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const;
+	UFUNCTION()
+	void OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const;
 
 public:
 	//midi editing - it for the purpose of tracking editor undo operations,

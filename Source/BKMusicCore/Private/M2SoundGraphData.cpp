@@ -218,6 +218,8 @@ void UDAWSequencerData::Tick(float DeltaTime)
 	if (!AuditionComponent) return;
 
 	GeneratorHandle->UpdateWatchers();
+	MetasoundCpuUtilization = GeneratorHandle->GetCPUCoreUtilization();
+
 }
 
 bool UDAWSequencerData::IsTickable() const
@@ -282,7 +284,7 @@ void UDAWSequencerData::OnMetaSoundGeneratorHandleCreated(UMetasoundGeneratorHan
 {
 	GeneratorHandle = Handle;
 	PlayState = ReadyToPlay;
-
+	GeneratorHandle->EnableRuntimeRenderTiming(true);
 	OnMidiClockOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiClockOutput(OutputName, Value); });
 	OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) { ReceiveMetaSoundMidiStreamOutput(OutputName, Value); });
 
