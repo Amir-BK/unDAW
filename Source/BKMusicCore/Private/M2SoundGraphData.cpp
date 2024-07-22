@@ -24,6 +24,42 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
+{
+	FMetasoundFrontendVersion ActionInterface;
+	ActionInterface.Name = FName("Audible Action");
+	ActionInterface.Number = { 0, 1 };
+
+	bool bImplementsActionInterface = false;
+
+	if (Patch->GetConstDocument().Interfaces.Contains(ActionInterface))
+	{
+		bImplementsActionInterface = true;
+	}
+
+	bool bMixerExists = Mixers.Contains(InMixerAlias);
+
+
+	if(bImplementsActionInterface && bMixerExists)
+	{
+		auto NewVertex = NewObject<UM2SoundPatch>(this, NAME_None, RF_Transient);
+		NewVertex->SequencerData = this;
+		NewVertex->Patch = Patch;
+
+		AddTransientVertex(NewVertex);
+
+		UM2VariMixerVertex* Mixer = Mixers[InMixerAlias];
+		int Channel = Mixer->AttachM2VertexToMixerInput(NewVertex, InVolume);
+
+		ConnectTransientVertexToMidiClock(NewVertex);
+
+		return Channel != INDEX_NONE;
+	}
+	
+	
+	return false;
+}
+
 void UDAWSequencerData::CreateNewPatchBuilder()
 {
 	EMetaSoundBuilderResult BuildResult;
@@ -86,6 +122,31 @@ void UDAWSequencerData::CreateDefaultVertexes()
 			ConnectPins<UM2MetasoundLiteralPin>(InstrumentLiteralMidiInput, NewInputLiteralMidiOutput);
 		}
 	}
+}
+
+void UDAWSequencerData::ConnectTransientVertexToMidiClock(UM2SoundVertex* Vertex)
+{
+	// to make it more elegant we should in theory create transient nodes but, fuck is
+	auto MidiClockMember = CoreNodes.MemberInputMap.Find(FName(TEXT("unDAW.Midi Clock")));
+	//MidiClockMember->MemberInputOutputHandle
+	auto VertexMidiClockInput = LiteralCast(Vertex->InputM2SoundPins[FName(TEXT("unDAW.Midi Clock"))]);
+	auto VertexLiteralInputHandle = VertexMidiClockInput->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+
+	EMetaSoundBuilderResult BuildResult;
+
+	BuilderContext->ConnectNodes(MidiClockMember->MemberInputOutputHandle, VertexLiteralInputHandle, BuildResult);
+
+	Vertex->BuilderResults.Add({ FName("Connect to clock"), BuildResult });
+
+	auto VertexTransportInput = LiteralCast(Vertex->InputM2SoundPins[FName(TEXT("unDAW.Transport"))]);
+	auto TransportMember = CoreNodes.MemberInputMap.Find(FName(TEXT("Transport")));
+
+	auto VertexTransportInputLiteral = VertexTransportInput->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+
+	BuilderContext->ConnectNodes(TransportMember->MemberInputOutputHandle, VertexTransportInputLiteral, BuildResult);
+
+	Vertex->BuilderResults.Add({ FName("Connect to transport"), BuildResult });
+
 }
 
 
@@ -366,6 +427,17 @@ void UDAWSequencerData::ReinitGraph()
 		M2SoundGraph->InitializeGraph();
 	}
 #endif
+}
+
+void UDAWSequencerData::AddTransientVertex(UM2SoundVertex* Vertex)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
+	TransientVertexes.Add(Vertex);
+	Vertex->SequencerData = this;
+	Vertex->BuildVertex();
+	Vertex->CollectParamsForAutoConnect();
+	Vertex->UpdateConnections();
+	Vertex->OnVertexUpdated.Broadcast();
 }
 
 void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
@@ -1023,7 +1095,7 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 		CreateFilterNodeForTrack(TrackIndex);
 	}
 
-	CreateMainMixer();
+	//CreateMainMixer();
 }
 
 FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeForTrack(int32 TrackMetadataIndex)
@@ -1124,8 +1196,8 @@ void FM2SoundCoreNodesComposite::CreateMainMixer()
 			usedLeft = true;
 		}
 	}
-
-	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
+	MasterOutputs.Empty();
+	//UM2SoundGraphStatics::PopulateAssignableOutputsArray(MasterOutputs, BuilderContext->FindNodeInputs(MasterMixerNode, BuildResult));
 }
 
 void FM2SoundCoreNodesComposite::ResizeOutputMixer()

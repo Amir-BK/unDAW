@@ -15,7 +15,7 @@
 #include "Delegates/DelegateSettings.h"
 #include "MusicScenePlayerActor.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggerExecuted, FName, TriggerName);
+
 
 UCLASS()
 class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
@@ -43,7 +43,7 @@ public:
 	void SubscribeToTriggerEventOnNextQuantizationBoundary(FName TriggerName, FMusicTimestamp TriggerTime, const FOnTriggerExecuted& InDelegate) {};
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
-	bool AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, const FOnTriggerExecuted& InDelegate);
+	bool AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate);
 
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();

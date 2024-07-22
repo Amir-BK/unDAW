@@ -6,32 +6,33 @@
 #include "Materials/MaterialParameterCollection.h"
 #include "MetasoundGeneratorHandle.h"
 
-bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, const FOnTriggerExecuted& InDelegate)
+bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
 	//check if the patch implements the unDAW interface
 
-	FMetasoundFrontendVersion ActionInterface;
-	ActionInterface.Name = FName("Audible Action");
-	ActionInterface.Number = { 0, 1 };
+	//FMetasoundFrontendVersion ActionInterface;
+	//ActionInterface.Name = FName("Audible Action");
+	//ActionInterface.Number = { 0, 1 };
 
-	bool bSuccess = false;
+	//bool bSuccess = false;
 
-	if (Patch->GetConstDocument().Interfaces.Contains(ActionInterface))
-	{
-		bSuccess = true;
-	}
+	//if (Patch->GetConstDocument().Interfaces.Contains(ActionInterface))
+	//{
+	//	bSuccess = true;
+	//}
 
-	//check if mixer alias is valid
-	if (MixerAlias.IsNone())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mixer Alias is None"))
-			return false;
-	}
-	else {
-		bSuccess &= GetDAWSequencerData()->Mixers.Contains(MixerAlias);
-	}
-	
-	return bSuccess;
+	////check if mixer alias is valid
+	//if (MixerAlias.IsNone())
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("Mixer Alias is None"))
+	//		return false;
+	//}
+	//else {
+	//	bSuccess &= GetDAWSequencerData()->Mixers.Contains(MixerAlias);
+	//}
+	//
+
+	return GetDAWSequencerData()->AttachActionPatchToMixer(MixerAlias, Patch, InVolume, InDelegate);
 }
 
 // Sets default values
@@ -100,7 +101,7 @@ void AMusicScenePlayerActor::BeginPlay()
 
 	auto AudioComponent = UGameplayStatics::CreateSound2D(this, AsWavAsset, 1.0f, 1.0f, 0.0f, nullptr, true, false);
 	GetDAWSequencerData()->OnBuilderReady.AddDynamic(this, &AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated);
-	GetDAWSequencerData()->AuditionBuilder(AudioComponent);
+	GetDAWSequencerData()->AuditionBuilder(AudioComponent, true);
 	GetDAWSequencerData()->OnPlaybackStateChanged.AddDynamic(this, &AMusicScenePlayerActor::DAWSequencePlayStateChange);
 	//AuditionComponent = AudioComponent
 

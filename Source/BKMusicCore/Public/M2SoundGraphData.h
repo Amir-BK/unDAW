@@ -324,6 +324,8 @@ struct FMemberInput
 	}
 };
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnTriggerExecuted, FName, TriggerName);
+
 //for now this will contain handles for some key connections that other nodes may rely on, expected to be populated before the first vertex is being built
 USTRUCT()
 struct BKMUSICCORE_API FM2SoundCoreNodesComposite
@@ -370,6 +372,7 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName, EMetaSoundBuilderResult> BuilderResults;
 
+
 	FAssignableAudioOutput GetFreeMasterMixerAudioOutput();
 	void ReleaseMasterMixerAudioOutput(FAssignableAudioOutput Output);
 
@@ -413,6 +416,10 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+
+	bool AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate);
+
+
 	//as metasounds have rather weird support for structs we also need a Parameter Pack to hold data for struct pins
 	UPROPERTY()
 	TObjectPtr<UMetasoundParameterPack> StructParametersPack;
@@ -426,6 +433,8 @@ public:
 	void CreateNewPatchBuilder();
 
 	void CreateDefaultVertexes();
+
+	void ConnectTransientVertexToMidiClock(UM2SoundVertex* Vertex);
 
 	bool TraverseOutputPins(UM2SoundVertex* Vertex, TFunction<bool(UM2SoundVertex*)> Predicate);
 
@@ -636,6 +645,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "unDAW")
 	FOnVertexAdded OnVertexAdded;
 
+	void AddTransientVertex(UM2SoundVertex* Vertex);
+
 	void AddVertex(UM2SoundVertex* Vertex);
 
 	FMidiDataChanged OnMidiDataChanged;
@@ -772,9 +783,11 @@ private:
 
 	FTrackDisplayOptions InvalidTrackRef;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TSet<UM2SoundVertex*> Vertexes;
 
+	UPROPERTY(Transient)
+	TSet<UM2SoundVertex*> TransientVertexes;
 
 
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer

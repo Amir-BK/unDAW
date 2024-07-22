@@ -41,6 +41,9 @@ public:
 
 	//TArray<FAssignableAudioOutput*> FreeChannels;
 
+	UFUNCTION(BlueprintCallable, Category = "Mixer")
+	int AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, float InVolume);
+
 	UFUNCTION()
 	void SetMixerAlias(FName InAlias);
 

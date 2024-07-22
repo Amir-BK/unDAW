@@ -97,6 +97,9 @@ class BKMUSICCORE_API UM2SoundVertex : public UObject
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "M2Sound")
+	bool bIsTransient = false;
+
 	UPROPERTY()
 	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
 
@@ -175,10 +178,10 @@ public:
 	//should be private or something, called when the node is destroyed, unregisters the vertex from its input before calling the actual destroy method
 	void DestroyVertexInternal();
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TMap<FName, TObjectPtr<UM2Pins>> InputM2SoundPins;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TMap<FName, TObjectPtr<UM2Pins>>  OutputM2SoundPins;
 
 	void MarkAllPinsStale();
