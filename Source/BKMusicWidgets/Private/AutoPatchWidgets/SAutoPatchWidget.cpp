@@ -102,7 +102,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 	//get undaw settings and use colors from there
 	auto Settings = UUNDAWSettings::Get();
-
+	TSharedPtr<FString> CurrentSelection = nullptr;
 	using namespace Metasound;
 
 	ChildSlot
@@ -258,9 +258,19 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		Objects = UM2SoundGraphStatics::GetAllObjectsOfClass(Info.ProxyGeneratorClass);
 
+		//add none
+		UObjectOptions.Add(MakeShared<FString>(TEXT("None")));
+		
+
 		for (UObject* Object : Objects)
 		{
-			UObjectOptions.Add(MakeShared<FString>(Object->GetName()));
+			auto NewOption = MakeShared<FString>(Object->GetName());
+
+			if (Object == LiteralObjectValue)
+			{
+				CurrentSelection = NewOption;
+			}
+			UObjectOptions.Add(NewOption);
 		}
 
 		MainHorizontalBox->AddSlot()
@@ -268,7 +278,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			[
 				SNew(SComboBox<TSharedPtr<FString>>)
 				.OptionsSource(&UObjectOptions)
-				.InitiallySelectedItem(UObjectOptions.IsEmpty() ? nullptr : UObjectOptions[0])
+				.InitiallySelectedItem(CurrentSelection)
 				.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 				[
 					SNew(STextBlock)
