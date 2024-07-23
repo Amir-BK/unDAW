@@ -393,10 +393,10 @@ void SM2LiteralControllerWidget::OnSelectEnum(TSharedPtr<FString> NewSelection, 
 	UM2MetasoundLiteralPin* NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(this->LiteralPin);
 	if(NewValue.IsSet())
 	{
-		NonConstLiteralPin->LiteralValue.Set(NewValue.GetValue().Value);
+		NonConstLiteralPin->LiteralValue.Set(LiteralIntValue);
 	}
 	else {
-		NonConstLiteralPin->LiteralValue.Set(0);
+		NonConstLiteralPin->LiteralValue.Set(EnumInterface->GetDefaultValue());
 	}
 	//auto Value = NewValue.GetValue().Value;
 	//NonConstLiteralPin->LiteralValue.Set(Value);
