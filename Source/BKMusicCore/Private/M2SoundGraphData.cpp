@@ -112,7 +112,8 @@ void UDAWSequencerData::CreateDefaultVertexes()
 			AddVertex(NewInstrument);
 
 			auto InstrumentAudioOutput = AudioPinCast(NewInstrument->OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
-			auto MixerInputPin = AudioPinCast(MixerInputPins.Pop());
+			
+			auto MixerInputPin = NewMixer->CreateMixerInputPin();
 
 			ConnectPins<UM2AudioTrackPin>(MixerInputPin, InstrumentAudioOutput);
 
@@ -193,7 +194,7 @@ void UDAWSequencerData::SaveDebugMidiFileTest()
 void UDAWSequencerData::RebuildVertex(UM2SoundVertex* Vertex)
 {
 	Vertex->BuildVertex();
-	Vertex->CollectParamsForAutoConnect();
+	//Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
@@ -453,7 +454,7 @@ void UDAWSequencerData::AddVertex(UM2SoundVertex* Vertex)
 	if (!BuilderContext) return;
 
 	Vertex->BuildVertex();
-	Vertex->CollectParamsForAutoConnect();
+	//Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
@@ -879,8 +880,8 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	for (auto& Vertex : Vertexes)
 	{
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Vertex Node, Vertex Name %s"), *Vertex->GetName())
-			Vertex->BuildVertex();
-		Vertex->CollectParamsForAutoConnect();
+		Vertex->BuildVertex();
+		//Vertex->CollectParamsForAutoConnect();
 		//CoreNodes.BuilderResults.Add(FName(TEXT("Create Vertex Node")), BuildResult);
 	}
 

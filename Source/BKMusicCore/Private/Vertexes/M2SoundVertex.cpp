@@ -285,7 +285,7 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 {
 	EMetaSoundBuilderResult BuildResult;
 
-	//checkNoEntry();
+	checkNoEntry();
 
 	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	auto& BuilderContext = SequencerData->BuilderContext;

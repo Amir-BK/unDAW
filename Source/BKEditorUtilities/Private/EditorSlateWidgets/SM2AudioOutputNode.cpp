@@ -148,7 +148,8 @@ void SM2VariMixerNode::UpdateGraphNode()
 
 				//UEdGraphPin* LinkedPin = Pin->LinkedTo[0];
 
-				MixerWidget->AddChannelWidget(AsM2AudioTrackPin->ChannelIndex);
+				//MixerWidget->AddChannelWidget(AsM2AudioTrackPin->ChannelIndex);
+				MixerWidget->AddChannelWidget(AsM2AudioTrackPin);
 				//continue;
 			}
 

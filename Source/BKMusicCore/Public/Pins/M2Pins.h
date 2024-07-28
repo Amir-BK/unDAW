@@ -146,8 +146,9 @@ protected:
 
 	bool bIsConstructorPin = false;
 
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FGuid NodeId;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FGuid VertexId;
 
 public:

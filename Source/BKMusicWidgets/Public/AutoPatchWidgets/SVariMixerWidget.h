@@ -21,7 +21,10 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex);
 
+	void Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin);
+
 	UM2VariMixerVertex* MixerVertex;
+	UM2AudioTrackPin* Pin;
 	uint8 ChannelIndex;
 
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
@@ -84,6 +87,20 @@ public:
 		MainHorizontalBox->AddSlot()
 			[
 				SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
+			];
+
+		ChannelWidgets.Add(NewChannelWidget);
+	}
+
+	void AddChannelWidget(UM2AudioTrackPin* InPin)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Adding channel widget"));
+
+		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
+
+		MainHorizontalBox->AddSlot()
+			[
+				SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
 			];
 
 		ChannelWidgets.Add(NewChannelWidget);

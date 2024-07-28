@@ -474,9 +474,34 @@ TSharedPtr<SGraphNode> UM2SoundVariMixerNode::CreateVisualWidget()
 	return SNew(SM2VariMixerNode, this);
 }
 
+//void UM2SoundVariMixerNode::AllocateDefaultPins()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: AllocateDefaultPins, %s"), *GetName());
+//	for (auto& [PinName, Pin] : Vertex->OutputM2SoundPins)
+//	{
+//		if (Pin->IsA<UM2AudioTrackPin>())
+//		{
+//			UM2AudioTrackPin* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+//			auto* NewComposite = CreatePin(EGPD_Output, FName(TEXT("Track-Audio")), AsAudioTrackPin->Name);
+//			Pins.Last()->PinToolTip = TEXT("Stereo Audio Channels");
+//		}
+//
+//		if (Pin->IsA<UM2MetasoundLiteralPin>())
+//		{
+//			CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), Cast<UM2MetasoundLiteralPin>(Pin)->DataType, PinName);
+//			Pins.Last()->PinToolTip = Cast<UM2MetasoundLiteralPin>(Pin)->DataType.ToString();
+//		}
+//
+//		Pins.Last()->PinType.PinSubCategoryObject = Pin;
+//	};
+//	//NodeConnectionListChanged();
+//}
+
 void UM2SoundVariMixerNode::NodeConnectionListChanged()
 {
 	//if we don't have any free inputs, create another pin
+	UE_LOG(LogTemp, Warning, TEXT("VariMixerNode: NodeConnectionListChanged, %s"), *GetName());
+	
 	int NumFreeInputs = 0;
 	for (auto Pin : Pins)
 	{
@@ -488,8 +513,9 @@ void UM2SoundVariMixerNode::NodeConnectionListChanged()
 
 	if (NumFreeInputs == 0)
 	{
-		CreatePin(EGPD_Input, "Track-Audio", FName("Track (Audio)", 0));
+		auto* Pin = CreatePin(EGPD_Input, "Track-Audio", FName("Track (Audio)", 0));
 		Pins.Last()->DefaultValue = "Default";
+		Pin->PinType.PinSubCategoryObject = Cast<UM2VariMixerVertex>(Vertex)->CreateMixerInputPin();
 	}
 }
 

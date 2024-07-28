@@ -96,6 +96,35 @@ inline void UM2VariMixerVertex::UpdateGainParam_Internal(int ChannelIndex, float
 	BuilderContext->SetNodeInputDefault(MixerChannels[ChannelIndex].GainParameterInputHandle, NewFloatLiteral, BuildResult);
 }
 
+UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
+{
+	if(MixerChannels.Num() == 1)
+	{
+		//FAssignableAudioOutput NewChannel;
+		//MixerChannels.Add(NewChannel);
+		ResizeOutputMixer();
+	}
+
+	auto AvailableOutput = MixerChannels.Pop();
+
+	auto TrackName = FName(FString::Printf(TEXT("Channel %d"), NumConnectedChannels++));
+	if (InputM2SoundPins.Contains(TrackName) == false)
+	{
+		auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
+		AutoNewInput->ChannelIndex = NumConnectedChannels;
+		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
+		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
+		InputM2SoundPins.Add(TrackName, AutoNewInput);
+		AvailableOutput.AssignedPin = AutoNewInput;
+
+		return AutoNewInput;
+	}
+
+
+	return nullptr;
+
+}
+
 void UM2VariMixerVertex::UpdateGainParameter(int ChannelIndex, float newGain)
 {
 	MixerChannels[ChannelIndex].AssignedPin->GainValue = newGain;
@@ -143,27 +172,59 @@ inline void UM2VariMixerVertex::BuildVertex()
 
 	BuilderResults.Add("MixerNode", BuildResult);
 
-	OutPins = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
+	auto MixerOutPins = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
 
 	BuilderResults.Add("MixerNodeOutputs", BuildResult);
 
 	if (OutputM2SoundPins.IsEmpty())
 	{
 		auto* AudioTrackPin = CreateAudioTrackOutputPin();
-		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
-		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
+		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(MixerOutPins[0]);
+		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(MixerOutPins[1]);
 		OutputM2SoundPins.Add(M2Sound::Pins::AutoDiscovery::AudioTrack, AudioTrackPin);
 	}
 	else {
 		auto AudioTrackPin = Cast<UM2AudioTrackPin>(OutputM2SoundPins[M2Sound::Pins::AutoDiscovery::AudioTrack]);
-		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[0]);
-		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(OutPins[1]);
+		AudioTrackPin->AudioStreamL = CreateOutputPin<UM2MetasoundLiteralPin>(MixerOutPins[0]);
+		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(MixerOutPins[1]);
 	}
 
 	//PopulatePinsFromMetasoundData(InPins, OutPins);
 
 	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
+	//create one input channel
+	//CreateChannel();
+
+	// if input pins are empty this means this is a new vertex, create initial pin,
+	// otherwise we are updating an existing vertex, so we need to update the pins
+
+	if (InputM2SoundPins.IsEmpty())
+	{
+		CreateMixerInputPin();
+		return;
+	}
+
+	for (auto& InputPin : InputM2SoundPins)
+	{
+		if (MixerChannels.Num() == 1)
+		{
+			//FAssignableAudioOutput NewChannel;
+			//MixerChannels.Add(NewChannel);
+			ResizeOutputMixer();
+		}
+
+		auto AvailableOutput = MixerChannels.Pop();
+		
+		auto* AutoNewInput = Cast<UM2AudioTrackPin>(InputPin.Value);
+		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
+		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
+		AvailableOutput.AssignedPin = AutoNewInput;
+	}
+
+
+
+	/*
 	int i = 0;
 	for (auto& Channel : MixerChannels)
 	{
@@ -187,20 +248,20 @@ inline void UM2VariMixerVertex::BuildVertex()
 
 		i++;
 	}
-
-	UpdateMuteAndSoloStates();
+	*/
+	//UpdateMuteAndSoloStates();
 }
 
 inline FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
 {
-	if (!MixerChannels.IsValidIndex(ChannelIndex))
-	{
-		return FLinearColor::Gray;
-	}
-	if (MixerChannels[ChannelIndex].AssignedPin->LinkedPin)
-	{
-		return MixerChannels[ChannelIndex].AssignedPin->LinkedPin->ParentVertex->GetVertexColor();
-	}
+	//if (!MixerChannels.IsValidIndex(ChannelIndex))
+	//{
+	//	return FLinearColor::Gray;
+	//}
+	//if (MixerChannels[ChannelIndex].AssignedPin->LinkedPin)
+	//{
+	//	return MixerChannels[ChannelIndex].AssignedPin->LinkedPin->ParentVertex->GetVertexColor();
+	//}
 
 	return FLinearColor::Gray;
 }
@@ -209,7 +270,7 @@ inline FAssignableAudioOutput UM2VariMixerVertex::CreateChannel()
 {
 	FAssignableAudioOutput NewChannel;
 	//MixerChannels.Add(NewChannel);
-	NumConnectedChannels++;
+	//NumConnectedChannels++;
 	return NewChannel;
 }
 
@@ -224,4 +285,22 @@ inline void UM2VariMixerVertex::ResizeOutputMixer()
 	EMetaSoundBuilderResult BuildResult;
 	const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
 		, BuildResult);
+
+	//add the new mixer to the array so that we can remove it when destroying the node
+	MixerNodes.Add(NewMixerNode);
+
+	auto LastRemainingChannel = MixerChannels.Pop();
+
+	//populate the channels with the new mixer node
+	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
+
+	//we need the new mixer node's outputs
+	auto NewOutputs = BuilderContext->FindNodeOutputs(NewMixerNode, BuildResult);
+
+	BuilderResults.Add("MixerNode", BuildResult);
+
+	//connect output audio channels of new mixer to the last remaining channel
+	BuilderContext->ConnectNodes(NewOutputs[0], LastRemainingChannel.AudioLeftOutputInputHandle, BuildResult);
+	BuilderContext->ConnectNodes(NewOutputs[1], LastRemainingChannel.AudioRightOutputInputHandle, BuildResult);
+
 }
