@@ -269,7 +269,7 @@ inline void UM2VariMixerVertex::BuildVertex()
 		i++;
 	}
 	*/
-	//UpdateMuteAndSoloStates();
+	UpdateMuteAndSoloStates();
 }
 
 inline FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
