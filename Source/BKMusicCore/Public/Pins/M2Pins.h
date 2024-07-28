@@ -215,6 +215,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UM2MetasoundLiteralPin* AudioStreamR = nullptr;
 
+	//this is a convenience for the vari mixer, it's a way to keep track of the audio stream that is connected to this pin
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UM2MetasoundLiteralPin* GainParameter = nullptr;
+
 };
 
 UCLASS()

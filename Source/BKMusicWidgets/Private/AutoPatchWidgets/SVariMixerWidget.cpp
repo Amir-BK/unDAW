@@ -14,18 +14,20 @@ void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* I
 	ChildSlot
 		[
 			SAssignNew(MainHorizontalBox, SHorizontalBox)
-				+ SHorizontalBox::Slot()
+				/*+ SHorizontalBox::Slot()
 				[
 					SNew(SMixerChannelWidget, InMixerVertex, INDEX_NONE)
 						.IsEnabled(false)
 						.Visibility_Lambda([this]() -> EVisibility { return ChannelWidgets.Num() > 0 ? EVisibility::Collapsed : EVisibility::Visible; })
-				]
+				]*/
 
 		];
 }
 
 void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex)
 {
+	checkNoEntry();
+	
 	MixerVertex = InMixerVertex;
 	ChannelIndex = InChannelIndex;
 
@@ -112,6 +114,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex
 void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin)
 {
 	Pin = InPin;
+	MixerVertex = Cast<UM2VariMixerVertex>(Pin->ParentVertex);
 	
 	ChildSlot
 		[
@@ -134,8 +137,8 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 					SAssignNew(VolumeSlider, SAudioSlider)
 					//	.SliderBackgroundColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
 					//	.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
-					//	.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
-					//	.OnValueChanged_Lambda([this](float NewValue) { MixerVertex->UpdateGainParameter(ChannelIndex, NewValue); })
+						.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
+						.OnValueChanged(this, &SMixerChannelWidget::UpdateVolumeSliderValue)
 				]
 				//+ SVerticalBox::Slot()
 				//[
@@ -159,8 +162,9 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 
 								[
 									SAssignNew(MuteCheckBox, SCheckBox)
+										.OnCheckStateChanged(this, &SMixerChannelWidget::UpdateMuteCheckBoxState)
 									//	.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelMuteState(ChannelIndex, NewState); })
-									//	.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
+										.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
 										.ToolTipText(FText::FromString("Mute"))
 								]
 
@@ -177,8 +181,9 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 
 								[
 									SAssignNew(SoloCheckBox, SCheckBox)
-										.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
-										//.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
+										.OnCheckStateChanged(this, &SMixerChannelWidget::UpdateSoloCheckBoxState)
+										//.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
+										.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
 										.ToolTipText(FText::FromString("Solo"))
 
 								]

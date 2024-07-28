@@ -32,29 +32,38 @@ public:
 
 	float GetVolumeSliderValue() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return 0.0f;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->GainValue;
+		return Pin->GainValue;
 	}
+
+	void UpdateVolumeSliderValue(float NewValue)
+	{
+		Pin->GainValue = NewValue;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
+
+	void UpdateMuteCheckBoxState(ECheckBoxState NewState)
+	{
+		Pin->bMute = NewState == ECheckBoxState::Checked;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
+
+	void UpdateSoloCheckBoxState(ECheckBoxState NewState)
+	{
+		Pin->bSolo = NewState == ECheckBoxState::Checked;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
 
 	ECheckBoxState GetMuteCheckBoxState() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return ECheckBoxState::Unchecked;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bMute ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		return Pin->bMute ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 	};
 
 	ECheckBoxState GetSoloCheckBoxState() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return ECheckBoxState::Unchecked;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		return Pin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 	};
 
 	TSharedPtr<SCheckBox> MuteCheckBox;

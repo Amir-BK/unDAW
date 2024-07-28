@@ -62,29 +62,39 @@ void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
 
 inline void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 {
-	bSoloActive = MixerChannels.ContainsByPredicate([](const FAssignableAudioOutput& Channel) { return Channel.AssignedPin->bSolo; });
 
-	for (int i = 0; i < MixerChannels.Num(); i++)
+	//probably a bit costly, check if ANY channel has solo active, we should probably only do this when changing solo states
+	auto AnySoloArray = InputM2SoundPins.FilterByPredicate([](const TPair<FName, UM2Pins*>& Pin) { return Cast<UM2AudioTrackPin>(Pin.Value)->bSolo; });
+
+	bSoloActive = AnySoloArray.Num() > 0;
+
+	for (auto& [Name, Pin] : InputM2SoundPins)
 	{
-		auto& Channel = MixerChannels[i];
-		//Channel.MuteState = ECheckBoxState::Unchecked;
-		//Channel.SoloState = ECheckBoxState::Unchecked;
-		if (Channel.AssignedPin->bMute && !Channel.AssignedPin->bSolo)
+		auto* AudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+		if (AudioTrackPin == nullptr)
 		{
-			//Channel.MuteState = ECheckBoxState::Checked;
-			UpdateGainParam_Internal(i, 0.0f);
+			continue;
+		}
+	
+
+		if(AudioTrackPin->bMute && !AudioTrackPin->bSolo)
+		{
+			//UpdateGainParam_Internal(AudioTrackPin->ChannelIndex, 0.0f);
+			UpdateGainParamForPin_Internal(AudioTrackPin, 0.0f);
 			continue;
 		}
 
-		if (bSoloActive && !Channel.AssignedPin->bSolo)
+		if (bSoloActive && !AudioTrackPin->bSolo)
 		{
-			//Channel.MuteState = ECheckBoxState::Checked;
-			UpdateGainParam_Internal(i, 0.0f);
+			//UpdateGainParam_Internal(AudioTrackPin->ChannelIndex, 0.0f);
+			UpdateGainParamForPin_Internal(AudioTrackPin, 0.0f);
 			continue;
 		}
 
-		UpdateGainParam_Internal(i, Channel.AssignedPin->GainValue);
+		UpdateGainParamForPin_Internal(AudioTrackPin, AudioTrackPin->GainValue);
+
 	}
+
 }
 
 inline void UM2VariMixerVertex::UpdateGainParam_Internal(int ChannelIndex, float newGain)
@@ -94,6 +104,15 @@ inline void UM2VariMixerVertex::UpdateGainParam_Internal(int ChannelIndex, float
 
 	auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
 	BuilderContext->SetNodeInputDefault(MixerChannels[ChannelIndex].GainParameterInputHandle, NewFloatLiteral, BuildResult);
+}
+
+void UM2VariMixerVertex::UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin, float newGain)
+{
+	FName FloatName;
+	EMetaSoundBuilderResult BuildResult;
+
+	auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
+	BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
 }
 
 UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
@@ -219,6 +238,7 @@ inline void UM2VariMixerVertex::BuildVertex()
 		auto* AutoNewInput = Cast<UM2AudioTrackPin>(InputPin.Value);
 		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
 		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
+		AutoNewInput->GainParameter = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.GainParameterInputHandle);
 		AvailableOutput.AssignedPin = AutoNewInput;
 	}
 
