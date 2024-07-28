@@ -2,6 +2,8 @@
 
 #include "MusicScenePlayerActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundSourceBus.h"
+#include "Sound/AudioBus.h"
 #include "Metasound.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "MetasoundGeneratorHandle.h"
@@ -33,6 +35,72 @@ bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaS
 	//
 
 	return GetDAWSequencerData()->AttachActionPatchToMixer(MixerAlias, Patch, InVolume, InDelegate);
+}
+
+UM2ActionVertex* AMusicScenePlayerActor::AttachPatchToActor(UMetaSoundPatch* Patch, AActor* Actor, FName SocketName, float InVolume, class USoundAttenuation* AttenuationSettings)
+{
+	return nullptr;
+}
+
+UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, FRotator Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed, float VolumeMultiplier, float PitchMultiplier, float StartTime, USoundAttenuation* AttenuationSettings, USoundConcurrency* ConcurrencySettings, bool bAutoDestroy)
+{
+	//so the whole point of this thing is that we need an audio bus and a source bus, the source bus will be attached to the actual actor,
+	//the audio bus needs to be assigned to an audio bus output vertex
+    
+	auto NewSourceBus = NewObject<USoundSourceBus>(this, NAME_None, RF_Transient);
+	auto NewAudioBus = NewObject<UAudioBus>(this, NAME_None, RF_Transient);
+
+	NewAudioBus->AudioBusChannels = EAudioBusChannels::Stereo;
+	NewSourceBus->NumChannels = 2;
+
+	//REMEMBER TO CHANGE THIS TO THE ACTUAL AUDIO BUS
+	NewSourceBus->AudioBus = NewAudioBus;
+
+	auto NewActionVertex = NewObject<UM2ActionVertex>(this, NAME_None, RF_Transient);
+	NewActionVertex->Patch = Patch;
+
+	NewActionVertex->SourceBus = NewSourceBus;
+	NewActionVertex->AudioBus = NewAudioBus;
+
+	GetDAWSequencerData()->AddTransientVertex(NewActionVertex);
+
+	NewSourceBus->bAutoDeactivateWhenSilent = false;
+
+	
+	auto BusTransmitterSoftClassPath = FSoftObjectPath(TEXT("/unDAW/Patches/System/MSP_BusTransmitter.MSP_BusTransmitter"));
+
+	auto BusTransmitterClass = Cast<UMetaSoundPatch>(BusTransmitterSoftClassPath.TryLoad());
+
+	EMetaSoundBuilderResult Result;
+
+	const auto& BuilderContext = GetDAWSequencerData()->BuilderContext;
+
+	auto NewTransientBusOut = BuilderContext->AddNode(BusTransmitterClass, Result);
+
+	auto BusInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("Audio Bus"), Result);
+
+	auto BusInputObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(NewAudioBus);
+
+	BuilderContext->SetNodeInputDefault(BusInput, BusInputObjectLiteral, Result);
+	//now to connect the audio outputs
+	using namespace M2Sound::Pins;
+	auto AsAudioTrackOutPin = Cast<UM2AudioTrackPin>(NewActionVertex->OutputM2SoundPins[AutoDiscovery::AudioTrack]);
+
+	auto BusInputAudioLeft = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW Insert.Audio In L"), Result);
+	auto BusInputAudioRight = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW Insert.Audio In R"), Result);
+
+	BuilderContext->ConnectNodes(AsAudioTrackOutPin->AudioStreamL->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), BusInputAudioLeft, Result);
+	BuilderContext->ConnectNodes(AsAudioTrackOutPin->AudioStreamR->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), BusInputAudioRight, Result);
+
+	//finally create the audio component which should start streaming...
+	NewActionVertex->AudioComponent = UGameplayStatics::SpawnSoundAttached(NewSourceBus, AttachToComponent, AttachPointName, Location, Rotation, LocationType, bStopWhenAttachedToDestroyed, VolumeMultiplier, PitchMultiplier, StartTime, AttenuationSettings, ConcurrencySettings, bAutoDestroy);
+
+	
+
+
+
+
+	return NewActionVertex;
 }
 
 // Sets default values

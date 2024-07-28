@@ -9,6 +9,7 @@
 #include "Components/AudioComponent.h"
 #include "HarmonixMetasound/Components/MusicClockComponent.h"
 #include "HarmonixMetasound/Components/MusicTempometerComponent.h"
+#include "Vertexes/M2ActionVertex.h"
 #include "HarmonixMidi/MidiSongPos.h"
 
 #include "Delegates/DelegateBase.h"
@@ -27,6 +28,9 @@ public:
 	UFUNCTION(Exec)
 	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAudioBus> TestAudioBus;
+
 	//creates a transient music timestamp to trigger node using the metasound builder, connects its output to the graph output, watches the output
 	// via the metasound output subsystem and FINALLY, calls the delegate when the trigger is executed
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
@@ -44,6 +48,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW|Quantization", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	bool AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate);
+
+	UFUNCTION(BlueprintCallable)
+	UM2ActionVertex* AttachPatchToActor(UMetaSoundPatch* Patch, AActor* Actor, FName SocketName, float InVolume, class USoundAttenuation* AttenuationSettings = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
+	UM2ActionVertex* SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, USoundAttenuation* AttenuationSettings = nullptr, USoundConcurrency* ConcurrencySettings = nullptr, bool bAutoDestroy = true);
+
 
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();

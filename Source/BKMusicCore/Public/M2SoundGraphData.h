@@ -787,7 +787,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TSet<UM2SoundVertex*> Vertexes;
 
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, VisibleAnywhere)
 	TSet<UM2SoundVertex*> TransientVertexes;
 
 

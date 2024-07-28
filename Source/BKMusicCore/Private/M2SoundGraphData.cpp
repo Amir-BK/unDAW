@@ -434,11 +434,11 @@ void UDAWSequencerData::ReinitGraph()
 
 void UDAWSequencerData::AddTransientVertex(UM2SoundVertex* Vertex)
 {
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Transient Vertex %s"), *Vertex->GetName())
 	TransientVertexes.Add(Vertex);
 	Vertex->SequencerData = this;
 	Vertex->BuildVertex();
-	Vertex->CollectParamsForAutoConnect();
+	//Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
