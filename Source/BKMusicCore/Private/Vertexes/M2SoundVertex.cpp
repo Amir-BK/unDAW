@@ -236,7 +236,7 @@ UMetaSoundSourceBuilder& UM2SoundVertex::GetBuilderContext() const
 void UM2SoundVertex::VertexNeedsBuilderUpdates()
 {
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
-		BuildVertex();
+	BuildVertex();
 	//CollectParamsForAutoConnect();
 	UpdateConnections();
 
