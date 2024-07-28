@@ -368,14 +368,16 @@ void UM2SoundGraph::InitializeGraph()
 		//create node in accordance to the vertex class, a little ugly but we have only three cases
 		//for now check for the node class, we're looking for Patch Vertex, Audio Output Vertex and 'Input Handle Node' vertex
 
+		UM2SoundEdGraphNode* Node = nullptr;
+
 		if (Vertex->IsA<UM2SoundPatch>())
 		{
-			CreateDefaultNodeForVertex<UM2SoundPatchContainerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
+			Node = CreateDefaultNodeForVertex<UM2SoundPatchContainerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
 		}
 
 		if (Vertex->IsA<UM2SoundAudioOutput>())
 		{
-			CreateDefaultNodeForVertex<UM2SoundGraphAudioOutputNode>(Vertex, FPlacementDefaults::OutputsColumnPosition);
+			Node =CreateDefaultNodeForVertex<UM2SoundGraphAudioOutputNode>(Vertex, FPlacementDefaults::OutputsColumnPosition);
 		}
 
 		if (Vertex->IsA<UM2SoundBuilderInputHandleVertex>())
@@ -383,12 +385,17 @@ void UM2SoundGraph::InitializeGraph()
 			auto InNode = CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
 
 			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackName);
+
+			Node = InNode;
 		}
 
 		if (Vertex->IsA<UM2VariMixerVertex>())
 		{
-			CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
+			Node = CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
 		}
+
+		Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);
+		Node->GetGraph()->MapVertexToNode(Node->Vertex, Node);
 	}
 
 	//for (const auto& [Vertex, Node] : VertexToNodeMap)

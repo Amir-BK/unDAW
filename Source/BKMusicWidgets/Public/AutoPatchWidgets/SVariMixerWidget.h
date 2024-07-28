@@ -21,7 +21,10 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex);
 
+	void Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin);
+
 	UM2VariMixerVertex* MixerVertex;
+	UM2AudioTrackPin* Pin;
 	uint8 ChannelIndex;
 
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
@@ -29,29 +32,38 @@ public:
 
 	float GetVolumeSliderValue() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return 0.0f;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->GainValue;
+		return Pin->GainValue;
 	}
+
+	void UpdateVolumeSliderValue(float NewValue)
+	{
+		Pin->GainValue = NewValue;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
+
+	void UpdateMuteCheckBoxState(ECheckBoxState NewState)
+	{
+		Pin->bMute = NewState == ECheckBoxState::Checked;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
+
+	void UpdateSoloCheckBoxState(ECheckBoxState NewState)
+	{
+		Pin->bSolo = NewState == ECheckBoxState::Checked;
+
+		MixerVertex->UpdateMuteAndSoloStates();
+	};
 
 	ECheckBoxState GetMuteCheckBoxState() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return ECheckBoxState::Unchecked;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bMute ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		return Pin->bMute ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 	};
 
 	ECheckBoxState GetSoloCheckBoxState() const
 	{
-		if (!MixerVertex->MixerChannels.IsValidIndex(ChannelIndex))
-		{
-			return ECheckBoxState::Unchecked;
-		}
-		return MixerVertex->MixerChannels[ChannelIndex].AssignedPin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+		return Pin->bSolo ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 	};
 
 	TSharedPtr<SCheckBox> MuteCheckBox;
@@ -84,6 +96,20 @@ public:
 		MainHorizontalBox->AddSlot()
 			[
 				SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
+			];
+
+		ChannelWidgets.Add(NewChannelWidget);
+	}
+
+	void AddChannelWidget(UM2AudioTrackPin* InPin)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Adding channel widget"));
+
+		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
+
+		MainHorizontalBox->AddSlot()
+			[
+				SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
 			];
 
 		ChannelWidgets.Add(NewChannelWidget);

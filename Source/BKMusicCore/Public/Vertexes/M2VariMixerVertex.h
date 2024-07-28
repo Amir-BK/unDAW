@@ -52,7 +52,13 @@ public:
 private:
 	void UpdateGainParam_Internal(int ChannelIndex, float newGain);
 
+	void UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin, float newGain);
+
+	//UPROPERTY()
+	//TArray<TObjectPtr<UM2
+
 public:
+	UM2AudioTrackPin* CreateMixerInputPin();
 
 	UFUNCTION()
 	void UpdateGainParameter(int ChannelIndex, float newGain);
