@@ -198,6 +198,24 @@ struct FM2SoundGraphAddNodeAction_NewAudioInsert : public FM2SoundGraphAddNodeAc
 };
 
 USTRUCT()
+struct FM2SoundGraphPromoteToGraphInputAction : public FM2SoundGraphAddNodeAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphPromoteToGraphInputAction() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Promote to Graph Input"), INVTEXT("Tooltip"), 0, 0, 0) {}
+	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
+};
+
+USTRUCT()
+struct FM2SoundGraphPromoteToGraphOutputAction : public FM2SoundGraphAddNodeAction
+{
+	GENERATED_BODY()
+
+	FM2SoundGraphPromoteToGraphOutputAction() : FM2SoundGraphAddNodeAction(INVTEXT(""), INVTEXT("Promote to Graph Output"), INVTEXT("Tooltip"), 0, 0, 0) {}
+	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
+};
+
+USTRUCT()
 struct FM2SoundGraphAddNodeAction_NewGraphInputNode : public FM2SoundGraphAddNodeAction
 {
 	GENERATED_BODY()

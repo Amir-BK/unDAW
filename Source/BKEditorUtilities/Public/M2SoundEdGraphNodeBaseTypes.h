@@ -323,6 +323,22 @@ public:
 };
 
 UCLASS()
+class UM2SoundDynamicGraphInputNode : public UM2SoundEdGraphNode
+{
+	GENERATED_BODY()
+
+public:
+	UM2SoundDynamicGraphInputNode() { bCanRenameNode = true; }
+
+	void OnRenameNode(const FString& NewName) override;
+
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
+
+	void AllocateDefaultPins() override;
+
+};
+
+UCLASS()
 class UM2SoundVariMixerNode : public UM2SoundGraphConsumer
 {
 	GENERATED_BODY()

@@ -6,6 +6,7 @@
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "Vertexes/M2SoundVertex.h"
 #include "Components/AudioComponent.h"
+#include "Sound/AudioBus.h"
 #include "unDAWSettings.h"
 #include "MetasoundSource.h"
 #include <EditableMidiFile.h>
@@ -77,7 +78,7 @@ void UDAWSequencerData::CreateNewPatchBuilder()
 
 void UDAWSequencerData::CreateDefaultVertexes()
 {
-	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/Fusion.Fusion'"));
 	auto DefaultPatch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 	//we need to create an audio output and a vari mixer and connect them, this needs to be done even for empty daw sequencer files.
 	// the output cannot be deleted from the graph, so we can just create it and connect it to the mixer
@@ -434,11 +435,11 @@ void UDAWSequencerData::ReinitGraph()
 
 void UDAWSequencerData::AddTransientVertex(UM2SoundVertex* Vertex)
 {
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Vertex %s"), *Vertex->GetName())
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Adding Transient Vertex %s"), *Vertex->GetName())
 	TransientVertexes.Add(Vertex);
 	Vertex->SequencerData = this;
 	Vertex->BuildVertex();
-	Vertex->CollectParamsForAutoConnect();
+	//Vertex->CollectParamsForAutoConnect();
 	Vertex->UpdateConnections();
 	Vertex->OnVertexUpdated.Broadcast();
 }
@@ -839,7 +840,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 	}
 }
 
-void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
+void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder, UAudioBus* MasterOutputBus)
 {
 	MSBuilderSystem = GEngine->GetEngineSubsystem<UMetaSoundBuilderSubsystem>();
 
@@ -851,6 +852,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 	//MSBuilderSystem->
 	//log SavedBuilder result
 
+	//probably no reason to even consider the saved builder, we're always recreating it
 	if (SavedBuilder == nullptr) UE_LOG(unDAWDataLogs, Verbose, TEXT("Builder %s not found"), *BuilderName.ToString())
 
 		if (SavedBuilder)
@@ -873,7 +875,7 @@ void UDAWSequencerData::FindOrCreateBuilderForAsset(bool bResetBuilder)
 
 	BuilderContext = MSBuilderSystem->CreateSourceBuilder(BuilderName, CoreNodes.OnPlayOutputNode, CoreNodes.OnFinishedNodeInput, CoreNodes.AudioOuts, BuildResult, MasterOptions.OutputFormat, false);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Create Builder")), BuildResult);
-	CoreNodes.InitCoreNodes(BuilderContext, this);
+	CoreNodes.InitCoreNodes(BuilderContext, this, MasterOutputBus);
 	SetLoopSettings(CoreNodes.bIsLooping, CoreNodes.BarLoopDuration);
 
 	//iterate over vertexes and create the nodes
@@ -917,7 +919,7 @@ void UDAWSequencerData::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild)
+void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild, UAudioBus* MasterOutBus)
 {
 	//if Midi file is empty don't audition
 
@@ -928,9 +930,9 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
 	//AuditionComponent->
-	if (bForceRebuild) FindOrCreateBuilderForAsset(true);
+	if (bForceRebuild) FindOrCreateBuilderForAsset(true, MasterOutBus);
 
-	if (!BuilderContext) FindOrCreateBuilderForAsset(false);
+	if (!BuilderContext) FindOrCreateBuilderForAsset(false, MasterOutBus);
 	BuilderContext->Audition(this, InAuditionComponent, OnCreateAuditionGeneratorHandle, true);
 	SavedMetaSound->VirtualizationMode = EVirtualizationMode::PlayWhenSilent;
 	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
@@ -1078,10 +1080,14 @@ void FM2SoundCoreNodesComposite::CreateOrUpdateMemberInput(FMetaSoundBuilderNode
 	}
 }
 
-void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession)
+void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession, UAudioBus* InMasterOutBus)
 {
 	//populate midi filter document
 	FSoftObjectPath MidiFilterAssetRef(TEXT("/unDAW/Patches/System/unDAW_MidiFilter.unDAW_MidiFilter"));
+	auto BusTransmitterSoftClassPath = FSoftObjectPath(TEXT("/unDAW/Patches/System/MSP_BusTransmitter.MSP_BusTransmitter"));
+
+	//we can store this reference here to avoid loading it when creating new transient spatialized patch outputs
+	BusTransmitterPatchClass = Cast<UMetaSoundPatch>(BusTransmitterSoftClassPath.TryLoad());
 
 	EMetaSoundBuilderResult BuildResult;
 	SessionData = ParentSession;
@@ -1098,6 +1104,11 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 		CreateFilterNodeForTrack(TrackIndex);
 	}
 
+	if (InMasterOutBus != nullptr)
+	{
+		MasterOutputBus = InMasterOutBus;
+		CreateBusTransmitterAndStrealMainOutput();
+	}
 	//CreateMainMixer();
 }
 
@@ -1136,6 +1147,25 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	BuilderContext->ConnectNodes(NewMidiStreamOutput, GraphOutput, BuildResult);
 
 	return NewMidiStreamOutput;
+}
+
+void FM2SoundCoreNodesComposite::CreateBusTransmitterAndStrealMainOutput()
+{
+	EMetaSoundBuilderResult Result;
+
+	auto NewTransientBusOut = BuilderContext->AddNode(BusTransmitterPatchClass, Result);
+	auto BusInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("Audio Bus"), Result);
+	auto BusInputObjectLiteral = SessionData->MSBuilderSystem->CreateObjectMetaSoundLiteral(MasterOutputBus);
+
+	BuilderContext->SetNodeInputDefault(BusInput, BusInputObjectLiteral, Result);
+
+	auto BusInputAudioLeft = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW Insert.Audio In L"), Result);
+	auto BusInputAudioRight = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW Insert.Audio In R"), Result);
+
+	AudioOuts.Empty();
+	AudioOuts.Add(BusInputAudioLeft);
+	AudioOuts.Add(BusInputAudioRight);
+
 }
 
 void FM2SoundCoreNodesComposite::CreateMidiPlayerAndMainClock()

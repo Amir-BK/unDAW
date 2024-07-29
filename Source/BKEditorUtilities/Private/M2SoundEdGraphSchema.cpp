@@ -129,8 +129,35 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 		if (FromPin->PinType.PinCategory == "MetasoundLiteral")
 		{
+			//auto PromoteToGraphInputAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+
+			switch (FromPin->Direction)
+			{
+			case EGPD_Input:
+				//PromoteToGraphInputAction->UpdateSearchData(INVTEXT("Promote To Graph Input"), FText::FromString(""), FText::FromString(""), FText::FromName(""));
+				
+				ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphPromoteToGraphInputAction>());
+
+				break;
+
+			case EGPD_Output:
+				ContextMenuBuilder.AddAction(MakeShared<FM2SoundGraphPromoteToGraphOutputAction>());
+				break;
+
+			case EGPD_MAX:
+				break;
+
+			default:
+				break;
+
+			}
+			
+			
 			for (const auto& [InputName, Input] : SequencerData->CoreNodes.MemberInputMap)
 			{
+
+	
+				
 				if (FromPin->PinType.PinSubCategory != Input.DataType)
 				{
 					continue;
@@ -427,9 +454,11 @@ void UM2SoundGraph::PerformVertexToNodeBinding()
 	}
 }
 
+
+
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
 {
-	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/Fusion.Fusion'"));
 	FGraphNodeCreator<UM2SoundPatchContainerNode> NodeCreator(*ParentGraph);
 	UM2SoundPatchContainerNode* Node = NodeCreator.CreateUserInvokedNode();
 	auto* NewVertex = NewObject<UM2SoundPatch>(Node->GetSequencerData(), NAME_None, RF_Transactional);
@@ -525,4 +554,22 @@ UEdGraphNode* FM2SoundGraphAddNodeAction_NewVariMixerNode::MakeNode(UEdGraph* Pa
 	NodeCreator.Finalize();
 
 	return Node;
+}
+
+UEdGraphNode* FM2SoundGraphPromoteToGraphInputAction::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
+{
+	FGraphNodeCreator<UM2SoundDynamicGraphInputNode> NodeCreator(*ParentGraph);
+	auto Node = NodeCreator.CreateUserInvokedNode();
+
+	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(Node->GetSequencerData());
+	//Node->Name = FName("Graph Input");
+
+	NodeCreator.Finalize();
+	
+	return Node;
+}
+
+UEdGraphNode* FM2SoundGraphPromoteToGraphOutputAction::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)
+{
+	return nullptr;
 }
