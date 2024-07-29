@@ -52,6 +52,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UM2ActionVertex* AttachPatchToActor(UMetaSoundPatch* Patch, AActor* Actor, FName SocketName, float InVolume, class USoundAttenuation* AttenuationSettings = nullptr);
 
+	//allows spawning a metasound patch attached to a scene component, if the patch implements the 'audible action' interface it will be connected automatically to the MIDI clock and the transport
+	//An audio component is spawned via the gameplaystatics library, the reference to it is stored in the return vertex
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
 	UM2ActionVertex* SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, USoundAttenuation* AttenuationSettings = nullptr, USoundConcurrency* ConcurrencySettings = nullptr, bool bAutoDestroy = true);
 

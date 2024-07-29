@@ -78,7 +78,7 @@ void UDAWSequencerData::CreateNewPatchBuilder()
 
 void UDAWSequencerData::CreateDefaultVertexes()
 {
-	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
+	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/Fusion.Fusion'"));
 	auto DefaultPatch = CastChecked<UMetaSoundPatch>(DefaultPatchTest.TryLoad());
 	//we need to create an audio output and a vari mixer and connect them, this needs to be done even for empty daw sequencer files.
 	// the output cannot be deleted from the graph, so we can just create it and connect it to the mixer

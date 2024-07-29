@@ -542,3 +542,18 @@ TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
 //
 //	return nullptr;
 //}
+
+void UM2SoundDynamicGraphInputNode::OnRenameNode(const FString& NewName)
+{
+}
+
+FText UM2SoundDynamicGraphInputNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	return INVTEXT("INPUT NAME PLACEHOLDER");
+}
+
+void UM2SoundDynamicGraphInputNode::AllocateDefaultPins()
+{
+	//create one wildcard output pin
+	CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), FName(TEXT("Wildcard")));
+}
