@@ -57,6 +57,7 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 	NewSourceBus->AudioBus = NewAudioBus;
 
 	auto NewActionVertex = NewObject<UM2ActionVertex>(this, NAME_None, RF_Transient);
+	NewActionVertex->SequencerData = GetDAWSequencerData();
 	NewActionVertex->Patch = Patch;
 
 	NewActionVertex->SourceBus = NewSourceBus;
@@ -93,6 +94,7 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 	BuilderContext->ConnectNodes(AsAudioTrackOutPin->AudioStreamR->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), BusInputAudioRight, Result);
 
 	//finally create the audio component which should start streaming...
+	GetDAWSequencerData()->ConnectTransientVertexToMidiClock(NewActionVertex);
 	NewActionVertex->AudioComponent = UGameplayStatics::SpawnSoundAttached(NewSourceBus, AttachToComponent, AttachPointName, Location, Rotation, LocationType, bStopWhenAttachedToDestroyed, VolumeMultiplier, PitchMultiplier, StartTime, AttenuationSettings, ConcurrencySettings, bAutoDestroy);
 
 	
