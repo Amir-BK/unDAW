@@ -29,7 +29,7 @@ public:
 	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAudioBus> TestAudioBus;
+	TObjectPtr<UAudioBus> MasterAudioBus;
 
 	//creates a transient music timestamp to trigger node using the metasound builder, connects its output to the graph output, watches the output
 	// via the metasound output subsystem and FINALLY, calls the delegate when the trigger is executed

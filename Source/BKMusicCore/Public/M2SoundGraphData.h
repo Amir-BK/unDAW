@@ -335,6 +335,9 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY()
 	TArray<FMemberInput> MemberInputs;
 
+	UPROPERTY()
+	TObjectPtr<UMetaSoundPatch> BusTransmitterPatchClass;
+
 	UPROPERTY(VisibleAnywhere)
 	TMap<FName, FMemberInput> MemberInputMap;
 
@@ -367,6 +370,9 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 	UPROPERTY(VisibleAnywhere)
 	TArray<FAssignableAudioOutput> MasterOutputs;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAudioBus> MasterOutputBus;
+
 	//graph build results and metadata
 
 	UPROPERTY(VisibleAnywhere)
@@ -389,11 +395,13 @@ struct BKMUSICCORE_API FM2SoundCoreNodesComposite
 protected:
 	friend class UDAWSequencerData;
 
-	void InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession);
+	void InitCoreNodes(UMetaSoundSourceBuilder* InBuilderContext, UDAWSequencerData* ParentSession, UAudioBus* InMasterOutBus = nullptr);
 
 	UMetaSoundSourceBuilder* BuilderContext;
 
 	FMetaSoundBuilderNodeOutputHandle CreateFilterNodeForTrack(int32 TrackMetadataIndex);
+
+	void CreateBusTransmitterAndStrealMainOutput();
 
 private:
 
@@ -704,7 +712,7 @@ public:
 	void UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& OutDiscoveredChannels);
 
 	UFUNCTION()
-	void FindOrCreateBuilderForAsset(bool bResetBuilder = false);
+	void FindOrCreateBuilderForAsset(bool bResetBuilder = false, UAudioBus* MasterOutputBus = nullptr);
 
 	UFUNCTION()
 	void ApplyParameterPack();
@@ -745,7 +753,7 @@ public:
 	TEnumAsByte<EBKPlayState> PlayState;
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW")
-	void AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false);
+	void AuditionBuilder(UAudioComponent* InAuditionComponent, bool bForceRebuild = false, UAudioBus* MasterOutBus = nullptr);
 
 	//for now this has to be set, although switching midi files is possible it deletes the entire graph
 	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
