@@ -543,31 +543,22 @@ void UM2SoundPatch::BuildVertex()
 		bIsRebuilding = true;
 	}
 
+	if (!IsValid(Patch))
+	{
+		BuilderResults.Add(FName(TEXT("No Patch Assigned or patch is invalid")), EMetaSoundBuilderResult::Failed);
+		return;
+	
+	}
+
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
 	//OutBuiltData.NodeHandle = NodeHandle;
-	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
+	//BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
 	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
 	//OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 
-	//auto& PatchDocument = Patch->GetDocumentChecked();
-	//for (const auto& MSNode : PatchDocument.RootGraph.Graph.Nodes)
-	//{
-	//	//just print every single bit of information this node exposes for now, go on GPT, I believe in you
-
-	//	auto MSName = MSNode.Name;
-	//	auto InLiterals = MSNode.InputLiterals;
-
-	//	for (const auto& InLiteral : InLiterals)
-	//	{
-	//		//FMetasoundFrontendVertexLiteral InLiteral;
-	//		auto InID = InLiteral.VertexID;
-	//		auto InValue = InLiteral.Value;
-	//		//UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Node: %s, Input ID: %d, Value: %f"), *MSName.ToString(), InID, InValue);
-	//	}
-	//}
 }
 
 void UM2SoundPatch::TryFindVertexDefaultRangesInCache()

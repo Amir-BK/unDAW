@@ -175,6 +175,8 @@ private:
 
 	void UpdateAudioKnobs()
 	{
+		if(!IsValid(PatchVertex->Patch)) return;
+		
 		auto GraphVariables = PatchVertex->Patch->GetDocumentChecked().RootGraph.Graph.Variables;
 
 		if (!MainAudioKnobsBox.IsValid()) return;
