@@ -282,11 +282,6 @@ public:
 #endif
 };
 
-UCLASS()
-class BKMUSICCORE_API UM2SoundCompositeVertex : public UM2SoundVertex
-{
-	GENERATED_BODY()
-};
 
 UCLASS(Abstract)
 //this is a literal node that can be used to pass a value to the metasound graph
@@ -363,6 +358,19 @@ public:
 	FLinearColor GetVertexColor() const override;
 
 	//anvoid InitFromMemberName(FName InMemberName);
+};
+
+UCLASS()
+
+class BKMUSICCORE_API UM2SoundDynamicGraphInputVertex : public UM2SoundBuilderInputHandleVertex
+{
+	GENERATED_BODY()
+
+public:
+	//UPROPERTY()
+	//FName MemberName;
+
+	void BuildVertex() override;
 };
 
 UCLASS()

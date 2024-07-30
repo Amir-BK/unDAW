@@ -583,3 +583,18 @@ void UM2SoundLiteralNodeVertex::DestroyVertex()
 	GetSequencerData()->BuilderContext->RemoveNode(NodeHandle, BuildResult);
 	GetSequencerData()->RemoveVertex(this);
 }
+
+void UM2SoundDynamicGraphInputVertex::BuildVertex()
+{
+	//we need to check that the name is not already used and that we are connected to something
+	//EMetaSoundBuilderResult BuildResult;
+	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+	auto& BuilderContext = SequencerData->BuilderContext;
+
+	if (OutputM2SoundPins.IsEmpty())
+	{
+		//This is fine, we're uninitialized 
+	}
+
+	
+}
