@@ -738,13 +738,13 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
-							if (LinkedNoteDataMap.Contains(midiChannel))
+							if (LinkedNoteDataMap.Contains(foundPair.TrackId))
 							{
-								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
+								LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
 							}
 							else {
-								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(midiChannel, TArray<FLinkedMidiEvents>()));
-								LinkedNoteDataMap[midiChannel].LinkedNotes.Add(foundPair);
+								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(foundPair.TrackId, TArray<FLinkedMidiEvents>()));
+								LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
 							}
 						}
 					}
