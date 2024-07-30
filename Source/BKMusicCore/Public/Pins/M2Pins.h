@@ -34,6 +34,7 @@ namespace M2Sound
 		{
 			static const FName Default("Default");
 			static const FName AudioTrack("AudioTrack");
+			static const FName WildCard("WildCard");
 			static const FName MetasoundLiteral("MetasoundLiteral");
 			//unreal interface outputs, for now stereo only
 			static const FName StereoLeft("UE.OutputFormat.Stereo.Audio:0");

@@ -586,15 +586,14 @@ void UM2SoundLiteralNodeVertex::DestroyVertex()
 
 void UM2SoundDynamicGraphInputVertex::BuildVertex()
 {
-	//we need to check that the name is not already used and that we are connected to something
-	//EMetaSoundBuilderResult BuildResult;
-	auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
-	auto& BuilderContext = SequencerData->BuilderContext;
+	////we need to check that the name is not already used and that we are connected to something
+	////EMetaSoundBuilderResult BuildResult;
+	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
+	//auto& BuilderContext = SequencerData->BuilderContext;
 
-	if (OutputM2SoundPins.IsEmpty())
-	{
-		//This is fine, we're uninitialized 
-	}
-
-	
+	//if (OutputM2SoundPins.IsEmpty())
+	//{
+	//	//This is fine, we're uninitialized 
+	//}
+	OutputM2SoundPins.Add(FName("GraphInput"), CreateWildCardOutPin());
 }

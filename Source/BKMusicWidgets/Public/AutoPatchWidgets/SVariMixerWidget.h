@@ -103,7 +103,6 @@ public:
 
 	void AddChannelWidget(UM2AudioTrackPin* InPin)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Adding channel widget"));
 
 		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
 

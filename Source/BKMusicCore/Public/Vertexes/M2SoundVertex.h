@@ -234,7 +234,7 @@ public:
 		T* NewPin = CreatePin();
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Input;
 		NewPin->SetHandle(InHandle);
-		NewPin->CreateCompositePin(GetBuilderContext());
+		//NewPin->CreateCompositePin(GetBuilderContext());
 
 		return NewPin;
 	}
@@ -246,7 +246,29 @@ public:
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Output;
 
 		NewPin->SetHandle(InHandle);
-		NewPin->CreateCompositePin(GetBuilderContext());
+		//NewPin->CreateCompositePin(GetBuilderContext());
+		return NewPin;
+	}
+
+	UM2MetasoundLiteralPin* CreateWildCardInPin()
+	{
+		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
+		NewPin->Direction = M2Sound::Pins::EPinDirection::Input;
+		NewPin->DataType = M2Sound::Pins::AutoDiscovery::WildCard;
+		NewPin->Name = FName(TEXT("DynamicOutput"));
+		//NewPin->CreateCompositePin(GetBuilderContext());
+
+		return NewPin;
+	}
+
+	UM2MetasoundLiteralPin* CreateWildCardOutPin()
+	{
+		UM2MetasoundLiteralPin* NewPin = CreatePin<UM2MetasoundLiteralPin>();
+		NewPin->Direction = M2Sound::Pins::EPinDirection::Output;
+		NewPin->DataType = M2Sound::Pins::AutoDiscovery::WildCard;
+		NewPin->Name = FName(TEXT("DynamicInput"));
+		//NewPin->CreateCompositePin(GetBuilderContext());
+
 		return NewPin;
 	}
 
@@ -367,6 +389,7 @@ class BKMUSICCORE_API UM2SoundDynamicGraphInputVertex : public UM2SoundBuilderIn
 	GENERATED_BODY()
 
 public:
+	//UM2SoundDynamicGraphInputVertex() { CreateWildCardOutPin(); }
 	//UPROPERTY()
 	//FName MemberName;
 

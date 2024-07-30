@@ -334,7 +334,7 @@ public:
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
-	void AllocateDefaultPins() override;
+	//void AllocateDefaultPins() override;
 
 };
 

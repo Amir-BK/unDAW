@@ -58,7 +58,8 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 
 		if (ACategory == "MetasoundLiteral")
 		{
-			if (A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+			// kinda crazy dunno if I got it right, if categories match OR only one is a wildcard then we can connect
+			if (A->PinType.PinSubCategory == B->PinType.PinSubCategory || (!(B->PinType.PinSubCategory != "WildCard") != !(A->PinType.PinSubCategory != "WildCard")))
 			{
 				if(!bWillCauseLoop) 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
 			}
