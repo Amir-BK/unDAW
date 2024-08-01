@@ -980,6 +980,25 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 
 #endif
 
+bool UDAWSequencerData::RenameNamedInput(FName OldName, FName NewName)
+{
+	if (NamedInputs.Contains(NewName)) return false;
+	
+	if (NamedInputs.Contains(OldName))
+	{
+		
+		auto& MemberInput = NamedInputs[OldName];
+		MemberInput->Name = UM2SoundGraphStatics::CheckIfInputNameIsUniqueAndMakeItSo(this, NewName);
+		NamedInputs.Remove(OldName);
+		NamedInputs.Add(NewName, MemberInput);
+
+		return true;
+	}
+
+	checkNoEntry();
+	return false;
+}
+
 void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 {
 	IsRecreatingMidiFile = true;

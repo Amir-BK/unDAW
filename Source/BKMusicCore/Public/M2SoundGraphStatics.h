@@ -47,6 +47,9 @@ class BKMUSICCORE_API UM2SoundGraphStatics : public UBlueprintFunctionLibrary
 
 public:
 
+
+	static FName CheckIfInputNameIsUniqueAndMakeItSo(UDAWSequencerData* InGraph, FName Name = NAME_None);
+
 	/**
 	 * Get the parent preset name of a patch if it has one, otherwise will return the name of the patch itself
 	 * @param Patch The patch to get the parent preset name of

@@ -5,7 +5,9 @@
 #include "Sound/SoundSourceBus.h"
 #include "Sound/AudioBus.h"
 #include "Metasound.h"
+#include "HarmonixMidi/MusicTimeSpan.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "EditableMidiFile.h"
 #include "MetasoundGeneratorHandle.h"
 
 bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
@@ -103,6 +105,28 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 
 
 	return NewActionVertex;
+}
+
+bool AMusicScenePlayerActor::AttachMidiClipAtTimestamp(UMidiFile* InMidiClip, FMusicalTimeSpan InTimeSpan, FMusicTimestamp InTimestamp, EMidiClockSubdivisionQuantization InQuantizationUnits)
+{
+	//so we want to take the midi data and for now
+	//EMidiClockSubdivisionQuantization OffsetUnits = EMidiClockSubdivisionQuantization::Bar;
+
+	//calculate the tick
+	auto OffsetTicks = InMidiClip->GetSongMaps()->CalculateMidiTick(InTimestamp, InQuantizationUnits);
+	
+	//create new editable copy of the midi clip
+
+
+	UEditableMidiFile* EditableMidiClip = NewObject<UEditableMidiFile>(this, NAME_None, RF_Transient);
+	EditableMidiClip->LoadFromHarmonixBaseFile(InMidiClip, nullptr, OffsetTicks);
+	
+	MidiClips.Add(EditableMidiClip);
+	auto UniqueID = FGuid::NewGuid().ToString() + TEXT(".mid");
+	//EditableMidiClip->SaveStdMidiFile(FPaths::ProjectContentDir() / UniqueID);
+	EditableMidiClip->SaveStdMidiFile(FPaths::ProjectContentDir() + InMidiClip->GetName() + FString::FromInt(rand()) +  TEXT(".mid"));
+
+	return false;
 }
 
 // Sets default values

@@ -392,8 +392,11 @@ public:
 	//UM2SoundDynamicGraphInputVertex() { CreateWildCardOutPin(); }
 	//UPROPERTY()
 	//FName MemberName;
+	void RenameInput(FName InMemberName);
 
 	void BuildVertex() override;
+
+	bool bIsSet = false;
 };
 
 UCLASS()

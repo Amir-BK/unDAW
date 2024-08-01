@@ -546,7 +546,7 @@ TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
 void UM2SoundDynamicGraphInputNode::OnRenameNode(const FString& NewName)
 {
 	//this is very lazy and won't work, we need to ensure names are unique, but for now, we'll just set the name
-	Cast<UM2SoundDynamicGraphInputVertex>(Vertex)->MemberName = FName(*NewName);
+	Cast<UM2SoundDynamicGraphInputVertex>(Vertex)->RenameInput(FName(NewName)); //  MemberName = FName(*NewName);
 
 }
 

@@ -25,6 +25,10 @@ class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSc
 
 public:
 
+	UPROPERTY(EditAnywhere)
+	TArray<UMidiFile*> MidiClips;
+
+
 	UFUNCTION(Exec)
 	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
 
@@ -57,6 +61,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
 	UM2ActionVertex* SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, USoundAttenuation* AttenuationSettings = nullptr, USoundConcurrency* ConcurrencySettings = nullptr, bool bAutoDestroy = true);
 
+	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
+
+	bool AttachMidiClipAtTimestamp(UMidiFile* InMidiClip, FMusicalTimeSpan InTimeSpan, FMusicTimestamp InTimestamp, EMidiClockSubdivisionQuantization InQuantizationUnits = EMidiClockSubdivisionQuantization::None );
 
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();

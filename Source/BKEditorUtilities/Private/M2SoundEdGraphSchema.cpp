@@ -563,7 +563,11 @@ UEdGraphNode* FM2SoundGraphPromoteToGraphInputAction::MakeNode(UEdGraph* ParentG
 	auto Node = NodeCreator.CreateUserInvokedNode();
 
 	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundDynamicGraphInputVertex>(Node->GetSequencerData());
+	FName CurrentInputName = FromPin->PinName;
+	Cast<UM2SoundDynamicGraphInputVertex>(Node->Vertex)->MemberName = UM2SoundGraphStatics::CheckIfInputNameIsUniqueAndMakeItSo(Node->GetSequencerData(), CurrentInputName);
 	Node->GetSequencerData()->AddVertex(Node->Vertex);
+
+
 	//Node->Name = FName("Graph Input");
 
 	NodeCreator.Finalize();
