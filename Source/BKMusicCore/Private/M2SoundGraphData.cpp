@@ -397,7 +397,7 @@ FString GetUniqueNameForTrack(const FString& BaseName, const UMidiFile& MidiFile
 void UDAWSequencerData::AddTrack()
 {
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
@@ -532,7 +532,7 @@ void UDAWSequencerData::CalculateSequenceDuration()
 void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 {
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
@@ -574,7 +574,7 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	//so, before we can delete the note we need to empty our pending notes map and repopulate the main data map
 	// no actually, we can just remove the note from the midi file first
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	auto& NoteMetadata = M2TrackMetadata[PendingNote.TrackId];
 	PendingNote.ChannelId = NoteMetadata.ChannelIndexRaw;
@@ -639,7 +639,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
 				//we need to create a new midi file copy, so we don't modify the original
 		auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(inMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(inMidiFile);
 	HarmonixMidiFile = MidiFileCopy;
 
 		TArray<TTuple<int, int>> FoundChannels;
@@ -1004,7 +1004,7 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 	IsRecreatingMidiFile = true;
 
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	for (auto PendingNote : PendingLinkedMidiNotesMap)
 	{

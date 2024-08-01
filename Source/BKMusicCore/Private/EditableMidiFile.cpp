@@ -3,7 +3,7 @@
 #include "EditableMidiFile.h"
 #include "Curves/CurveFloat.h"
 
-void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloat* InTempoCurve, int32 InOffsetTicks)
+void UEditableMidiFile::LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* BaseFile, UCurveFloat* InTempoCurve, int32 InOffsetTicks)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UEditableMidiFile::LoadFromHarmonixBaseFile"));
 	// Copy the base file's data

@@ -23,7 +23,7 @@ public:
 	UPROPERTY()
 	int32 LoopBarDuration = 4;
 
-	void LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloat* InTempoCurve = nullptr, int32 InOffsetTicks = 0);
+	void LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* BaseFile, UCurveFloat* InTempoCurve = nullptr, int32 InOffsetTicks = 0);
 
 	void PopulateTempoCurve();
 
