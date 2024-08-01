@@ -15,6 +15,7 @@
 #include "HarmonixMetasound/DataTypes/MidiStream.h"
 #include "HarmonixMetasound/DataTypes/MidiClock.h"
 #include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
+#include "HarmonixMetasound/DataTypes/MidiAsset.h"
 #include "MetasoundWave.h"
 
 
@@ -173,7 +174,11 @@ namespace unDAW::Metasounds
 		{
 			Inputs.Add({ INVTEXT("MidiClock"), INVTEXT("Midi Clock Input"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiClock>(),{ FName("unDAW.Midi Clock") } });
 			Inputs.Add({ INVTEXT("Transport"), INVTEXT("Transport Input"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMusicTransportEventStream>(),{ FName("unDAW.Transport") } });
+			Inputs.Add({ INVTEXT("MidiAsset"), INVTEXT("Midi Asset Input"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiAsset>(),{ FName("unDAW.Midi Asset") } });
 			Outputs.Append(AudioOutputs);
+			Outputs.Add({ INVTEXT("OnActionComplete"), INVTEXT("Trigger output when the action is complete and should be cleaned up"), Metasound::GetMetasoundDataTypeName<Metasound::FTrigger>(),{ FName("unDAW Action.OnComplete") } });
+			Outputs.Add({ INVTEXT("MidiStream"), INVTEXT("If the action also includes a midi player this can be used to watch its output"), Metasound::GetMetasoundDataTypeName<HarmonixMetasound::FMidiStream>(),{ FName("unDAW.Midi Stream") } });
+
 		}
 
 		const FOutput AudioOutputs[2] =
