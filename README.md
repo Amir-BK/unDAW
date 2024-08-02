@@ -1,3 +1,4 @@
+As UE5.5 fixes some issues related to MIDI nodes and the dynamic builder, and as not a single person has ever reached out to me about currently using unDAW I am switching to ue5-main on the dev branch.
 
 [![Status update + walkthrough](https://img.youtube.com/vi/jQYDYK7mDKQ/0.jpg)](https://www.youtube.com/watch?v=jQYDYK7mDKQ)
 
