@@ -103,8 +103,8 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(FMusicTimestamp InTi
 	{
 		//NewActionVertex->InputM2SoundPins[FName("unDAW.Midi Asset")]->GetHandle<FMetaSoundBuilderNodeInputHandle>();		//NewActionVertex->MidiAsset = MidiClip;
 		//auto MidiAssetInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW.Midi Asset"), Result);
-		//auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(ShiftAndCropMidiAsset(MidiClip, FMusicalTimeSpan(), InTimestamp, InQuantizationUnits));
-		auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(MidiClip);
+		auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(ShiftAndCropMidiAsset(MidiClip, FMusicalTimeSpan(), InTimestamp, InQuantizationUnits));
+		//auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(MidiClip);
 		BuilderContext->SetNodeInputDefault(NewActionVertex->InputM2SoundPins[FName("unDAW.Midi Asset")]->GetHandle<FMetaSoundBuilderNodeInputHandle>() , MidiAssetObjectLiteral, Result);
 	}
 

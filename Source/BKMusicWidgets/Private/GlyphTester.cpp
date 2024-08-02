@@ -35,7 +35,7 @@ void UGlyphTester::UpdateGlyphString(FName newString)
 	fontMeasureRes = fontMeasureService->Measure(outString, EngravingFont);
 
 	auto WidgetWindow = FSlateApplication::Get().FindWidgetWindow(StaticCastSharedRef<SWindow, SWidget, ESPMode::ThreadSafe>(this->GetCachedWidget().ToSharedRef()));
-	FVector2D viewportSize;
+	//FVector2D viewportSize;
 	float DPIScale = 1;
 	FVector2f WindowSize = FVector2f::ZeroVector;
 	if (WidgetWindow != nullptr)
@@ -60,7 +60,7 @@ void UGlyphTester::NativePreConstruct()
 		//this->GetCachedWidget().ToSharedRef();
 
 		auto WidgetWindow = FSlateApplication::Get().FindWidgetWindow(StaticCastSharedRef<SWindow, SWidget, ESPMode::ThreadSafe>(this->GetCachedWidget().ToSharedRef()));
-		FVector2D viewportSize;
+		//FVector2D viewportSize;
 		float DPIScale = 1;
 		if (WidgetWindow != nullptr)
 		{
