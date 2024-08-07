@@ -406,7 +406,7 @@ protected:
 private:
 
 	UPROPERTY();
-	UDAWSequencerData* SessionData;
+	TObjectPtr<UDAWSequencerData> SessionData;
 	void CreateMidiPlayerAndMainClock();
 	void CreateMainMixer();
 
@@ -436,7 +436,7 @@ public:
 	UMetaSoundPatchBuilder* PatchBuilder;
 
 	UPROPERTY(VisibleAnywhere)
-	UMetaSoundPatch* BuilderPatch;
+	TObjectPtr <UMetaSoundPatch> BuilderPatch;
 
 	UFUNCTION(CallInEditor)
 	void CreateNewPatchBuilder();
@@ -566,7 +566,7 @@ public:
 	void ExecuteTriggerParameter(FName ParameterName);
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
-	UMetasoundGeneratorHandle* GeneratorHandle;
+	TObjectPtr <UMetasoundGeneratorHandle> GeneratorHandle;
 
 	//tickable object interface, neccesary to monitor the sequencer in editor
 
@@ -583,7 +583,7 @@ public:
 
 	//After BeginPlay it is safe to use this audio component to set up additional output watchers or to send audio parameters
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
-	UAudioComponent* AuditionComponent = nullptr;
+	TObjectPtr<UAudioComponent> AuditionComponent = nullptr;
 
 	TSet<TTuple<int32, int32>> CurrentlyActiveNotes;
 
@@ -642,10 +642,10 @@ public:
 	FOnSelectionChanged OnSelectionChanged;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW")
-	UMetaSoundSourceBuilder* BuilderContext;
+	TObjectPtr <UMetaSoundSourceBuilder> BuilderContext;
 
 	UPROPERTY(VisibleAnywhere)
-	UCurveFloat* TempoCurve;
+	TObjectPtr <UCurveFloat> TempoCurve;
 
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
@@ -656,7 +656,7 @@ public:
 	int SelectedTrackIndex = INDEX_NONE;
 
 	UPROPERTY()
-	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
+	TMap<TObjectPtr <UM2SoundVertex>, FAssignableAudioOutput> AudioOutsMap;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
@@ -696,14 +696,14 @@ public:
 
 	//void ApplyParameterViaParameterPack
 
-	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
+	const TSet<TObjectPtr<UM2SoundVertex>>& GetVertexes() const { return Vertexes; }
 
 	void RemoveVertex(UM2SoundVertex* Vertex);
 
 #if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
-	UM2SoundGraphBase* M2SoundGraph;
+	TObjectPtr <UM2SoundGraphBase> M2SoundGraph;
 
 	UPROPERTY()
 	FVector2D GraphPosition;
@@ -735,7 +735,7 @@ public:
 	//for now this has to be set, although switching midi files is possible it deletes the entire graph
 	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", BlueprintReadOnly)
-	UMidiFile* HarmonixMidiFile;
+	TObjectPtr <UMidiFile> HarmonixMidiFile;
 
 	//we probably don't need all of these copies... 
 	UPROPERTY()
@@ -770,10 +770,10 @@ private:
 	FTrackDisplayOptions InvalidTrackRef;
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<UM2SoundVertex*> Vertexes;
+	TSet<TObjectPtr <UM2SoundVertex>> Vertexes;
 
 	UPROPERTY(Transient, VisibleAnywhere)
-	TSet<UM2SoundVertex*> TransientVertexes;
+	TSet<TObjectPtr <UM2SoundVertex>> TransientVertexes;
 
 
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
@@ -782,16 +782,16 @@ private:
 public:
 
 	UPROPERTY()
-	TMap<FName, UM2VariMixerVertex*> Mixers;
+	TMap<FName, TObjectPtr <UM2VariMixerVertex>> Mixers;
 
 	UPROPERTY()
-	TMap<FName, UM2MetasoundLiteralPin*> NamedInputs;
+	TMap<FName, TObjectPtr <UM2MetasoundLiteralPin>> NamedInputs;
 
 	UFUNCTION()
 	bool RenameNamedInput(FName OldName, FName NewName);
 
 	UPROPERTY()
-	TMap<FName, UM2MetasoundLiteralPin*> NamedOutputs;
+	TMap<FName, TObjectPtr<UM2MetasoundLiteralPin>> NamedOutputs;
 
 	//TArray<FName> GetMixerNames();
 

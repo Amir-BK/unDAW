@@ -132,7 +132,7 @@ public:
 
 	// any region should be agnostic to the level of the hierarchy it's at and in fact the methods already implement it as such
 	UPROPERTY()
-	USFZOpCodeLineParser* ParentPtr = nullptr;
+	TObjectPtr<USFZOpCodeLineParser> ParentPtr = nullptr;
 
 	/**
 	*@brief this is the main caller function of this class, give it any string of any length and it will break it into opcode key/token values, also substitutes SFZ defines that were declared earlier in the file
@@ -156,10 +156,10 @@ class BK_EDITORUTILITIES_API USFZHierarchialOpcodeContainer : public UObject {
 	GENERATED_BODY()
 
 	UPROPERTY()
-	USFZHierarchialOpcodeContainer* ParentPtr = nullptr;
+	TObjectPtr<USFZHierarchialOpcodeContainer> ParentPtr = nullptr;
 
 	UPROPERTY()
-	TArray< USFZHierarchialOpcodeContainer*> ChildPtrs;
+	TArray<TObjectPtr<USFZHierarchialOpcodeContainer>> ChildPtrs;
 
 	// these are the opcodes contained in this hierarchical structure
 	UPROPERTY()
@@ -194,7 +194,7 @@ public:
 	static int32 ParseOpCodeValueToInt(const FString& Value);
 	int NumFilesFailedToImport = 0;
 	UPROPERTY()
-	TMap<FName, USoundWave*> ImportedWavsMap;
+	TMap<FName, TObjectPtr<USoundWave>> ImportedWavsMap;
 	FSFZImportSettings SFZsettings;
 
 	void ShowImportDialog(int32 ImportedAssetIndex)

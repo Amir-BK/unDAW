@@ -33,7 +33,7 @@ public:
 	void OnTempoCurveChanged(UCurveBase* InCurve, EPropertyChangeType::Type Type);
 
 	UPROPERTY(VisibleAnywhere)
-	UCurveFloat* Curve;
+	TObjectPtr < UCurveFloat> Curve;
 
 	UPROPERTY()
 	TArray<FTempoInfoPoint> TempoInfoPoints;

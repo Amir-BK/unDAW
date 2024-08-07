@@ -25,7 +25,7 @@ public:
 	static void OpenSelectedMidiFileInEditorWidget(FSoftObjectPath MidiFileSoftPath);
 
 private:
-	TSharedPtr< FFksfzaSampleBankAssetActions> SFZAssetTypeActions;
+	
 	//TSharedPtr< FFKMidiEditorAssetActions> FKMidiAssetTypeActions;
 	TSharedPtr< FDAWSequenceAssetActions> DAWAssetTypeActions;
 	TSharedPtr< FM2SoundGraphPanelNodeFactory> M2SoundGraphPanelNodeFactory;

@@ -157,10 +157,10 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnywhere)
-	UM2SoundVertex* ParentVertex = nullptr;
+	TObjectPtr<UM2SoundVertex> ParentVertex = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
-	UM2Pins* LinkedPin;
+	TObjectPtr<UM2Pins> LinkedPin;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<UM2Pins>> LinkedPins;
@@ -214,14 +214,14 @@ public:
 	bool bSolo = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UM2MetasoundLiteralPin* AudioStreamL = nullptr;
+	TObjectPtr < UM2MetasoundLiteralPin> AudioStreamL = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UM2MetasoundLiteralPin* AudioStreamR = nullptr;
+	TObjectPtr < UM2MetasoundLiteralPin> AudioStreamR = nullptr;
 
 	//this is a convenience for the vari mixer, it's a way to keep track of the audio stream that is connected to this pin
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UM2MetasoundLiteralPin* GainParameter = nullptr;
+	TObjectPtr < UM2MetasoundLiteralPin> GainParameter = nullptr;
 
 };
 

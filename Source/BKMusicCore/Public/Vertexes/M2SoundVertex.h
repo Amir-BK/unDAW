@@ -417,7 +417,7 @@ class BKMUSICCORE_API UM2SoundPatch : public UM2SoundLiteralNodeVertex
 public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
-	UMetaSoundPatch* Patch;
+	TObjectPtr <UMetaSoundPatch> Patch;
 
 	UFUNCTION(CallInEditor, Category = "M2Sound")
 	void SaveDefaultsToVertexCache();

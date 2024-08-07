@@ -40,7 +40,7 @@ public:
 	TSubclassOf<ABaseUnpatchActor> UnpatchActorClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoPatch")
-	UDAWSequencerData* SequncerData;
+	TObjectPtr <UDAWSequencerData> SequncerData;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AutoPatch", meta = (MakeEditWidget))
 	FTransform StartTransform;

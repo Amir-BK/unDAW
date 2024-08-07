@@ -69,7 +69,7 @@ public:
 	FName Name;
 
 	UPROPERTY(EditAnywhere)
-	UM2SoundVertex* Vertex;
+	TObjectPtr<UM2SoundVertex> Vertex;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
 
@@ -84,9 +84,9 @@ public:
 
 	// used to automatically resolve the track assignment of the node when adding inserts
 	UPROPERTY(VisibleAnywhere, Category = "M2Sound Node")
-	TArray<UM2SoundEdGraphNode*> CurrentTrackOutputs;
+	TArray<TObjectPtr<UM2SoundEdGraphNode>> CurrentTrackOutputs;
 
-	UM2SoundEdGraphNode* CurrentTrackInput;
+	TObjectPtr<UM2SoundEdGraphNode> CurrentTrackInput;
 
 	void AllocateDefaultPins() override;
 

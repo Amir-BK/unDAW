@@ -219,7 +219,7 @@ void UDAWSequencerData::Tick(float DeltaTime)
 {
 	if (!AuditionComponent) return;
 
-	GeneratorHandle->UpdateWatchers();
+	//GeneratorHandle->UpdateWatchers();
 	MetasoundCpuUtilization = GeneratorHandle->GetCPUCoreUtilization();
 
 }

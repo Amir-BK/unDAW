@@ -30,7 +30,7 @@ class BK_EDITORUTILITIES_API UBKListnerComponentConfigWidget : public UEditorUti
 	TObjectPtr<AMusicScenePlayerActor> DefaultSceneManager;
 
 	UPROPERTY()
-	UDAWListenerComponent* ControlledComponent;
+	TObjectPtr<UDAWListenerComponent> ControlledComponent;
 
 	TSharedPtr<SVerticalBox> MainViewArea;
 

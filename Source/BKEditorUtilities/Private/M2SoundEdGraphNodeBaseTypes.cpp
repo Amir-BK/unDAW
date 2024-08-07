@@ -95,7 +95,7 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 		if (PinLinkedTo > 0)
 		{
 			//we need to check if we're currently connected to a vertex, if so, break that connection;
-			auto* CurrentConnection = Cast<UM2Pins>(Pin->PinType.PinSubCategoryObject)->LinkedPin;
+			UM2Pins* CurrentConnection = Cast<UM2Pins>(Pin->PinType.PinSubCategoryObject)->LinkedPin;
 			if (CurrentConnection)
 			{
 				//break the connection

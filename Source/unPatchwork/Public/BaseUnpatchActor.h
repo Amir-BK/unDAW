@@ -29,7 +29,7 @@ protected:
 	friend class AAutoPatchActorMapper;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Unpatch")
-	UM2SoundVertex* M2Vertex;
+	TObjectPtr<UM2SoundVertex> M2Vertex;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

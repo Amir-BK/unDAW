@@ -29,10 +29,10 @@ class BKMUSICCORE_API UM2ActionVertex : public UM2SoundPatch
 		FName AttachedSocketName = NAME_None;
 
 		UPROPERTY()
-		USoundSourceBus* SourceBus = nullptr;
+		TObjectPtr <USoundSourceBus> SourceBus = nullptr;
 
 		UPROPERTY()
-		UAudioBus* AudioBus = nullptr;
+		TObjectPtr <UAudioBus> AudioBus = nullptr;
 
 		//UMidiFile* MidiClip = nullptr;
 

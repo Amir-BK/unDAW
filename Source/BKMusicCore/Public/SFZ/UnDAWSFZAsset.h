@@ -86,7 +86,7 @@ struct FSFZRegionMappingParameters
 	TEnumAsByte<E_SFZ_TRIGGERTYPE> triggerType;
 
 	UPROPERTY();
-	USoundWave* WavAsset;
+	TObjectPtr<USoundWave> WavAsset;
 };
 
 class FFK_SFZ_Region_Performance_Proxy;
@@ -110,7 +110,7 @@ public:
 
 	// the wav file for this region
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
-	USoundWave* WavAsset = nullptr;
+	TObjectPtr<USoundWave> WavAsset = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|SFZ")
 	TObjectPtr<USoundWave> ObjectPtrWavAsset;
@@ -206,11 +206,11 @@ public:
 	void InitializeParams();
 
 	//
-	TSharedPtr<USoundWave> GetSampleSharedPtr()
-	{
-		if (!SampleSharedPtr.IsValid()) SampleSharedPtr = MakeShareable(WavAsset);
-		return SampleSharedPtr;
-	}
+	//TSharedPtr<USoundWave> GetSampleSharedPtr()
+	//{
+	//	if (!SampleSharedPtr.IsValid()) SampleSharedPtr = MakeShareable(*WavAsset);
+	//	return SampleSharedPtr;
+	//}
 
 private:
 	TSharedPtr<USoundWave> SampleSharedPtr;
@@ -226,7 +226,7 @@ public:
 	FSFZRegionPerformanceParameters Region_Performance_Parameters;
 
 	UPROPERTY()
-	USFZRegion* RegionDataPtr;
+	TObjectPtr<USFZRegion> RegionDataPtr;
 private:
 
 	friend class UFK_SFZ_Performer;
@@ -235,7 +235,7 @@ private:
 	void InitWithRegionObjectAndPitch(const float& inVelocity, const int& Note, USFZRegion* RegionData);
 
 	UPROPERTY()
-	USoundWave* sample;
+	TObjectPtr<USoundWave> sample;
 
 	TSharedPtr<FSFZRegionPerformanceParameters> PerfStructDataPtr;
 	TSharedPtr<USoundWave> SampleDataPtr;
@@ -286,7 +286,7 @@ class BKMUSICCORE_API USFZGroupedRegions : public UObject //, public IAudioProxy
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = "BK Music|SFZ|Region Data")
-	TArray<USFZRegion*> RegionsInGroup;
+	TArray<TObjectPtr<USFZRegion>> RegionsInGroup;
 
 	USFZRegion* GetRegionForVelocity(int velocityIn, E_SFZ_TRIGGERTYPE trigtype, int rrSeqPosition);;
 
@@ -299,7 +299,7 @@ public:
  * @brief a parsed SFZ file referenced imported wav assets within unreal that can be used to perform an SFZ instrument via metasounds or quartz.
  */
 UCLASS(BlueprintType, Category = "BK Music|SFZ")
-class BKMUSICCORE_API UFKSFZAsset : public UObject, public IAudioProxyDataFactory
+class BKMUSICCORE_API UFKSFZAsset : public UObject
 {
 	GENERATED_BODY()
 
@@ -308,7 +308,7 @@ public:
 	UFKSFZAsset();
 
 	UPROPERTY()
-	TArray<USFZRegion*> Regions;
+	TArray<TObjectPtr<USFZRegion>> Regions;
 
 	/**
 	 * @brief Spawns a new instance of an FK SFZ Instrument performer, this object is considered the 'manager' class for a single SFZ instrument, it manages region logics for this instrument and generates new audio components using 'performNote' and 'performNoteOff' method, future versions will also manage passing CC parameters to all existing components.
@@ -317,9 +317,6 @@ public:
 	 * @param metasoundToUse the metasound used to perform the SFZ regions in all their complexities, given that only very specifically designed metasounds that receive all the parameters sent by the performers will sound correctly this parameter probably shouldn't be exposed to end users and the specific required metasound should be set in code.
 	 * @return new instance of the performer.
 	 */
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
-	static UFK_SFZ_Performer* CreateSFZPerformerFromSampleBank(UFKSFZAsset* inAsset, UMetaSoundSource* metasoundToUse = nullptr);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BK Music|SFZ")
 	static TArray<UFKSFZAsset*> GetAllSFZAssets();
@@ -363,11 +360,11 @@ public:
 	TMap<int, int> ccDefaultValMap;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|SFZ")
-	TMap<int, USFZGroupedRegions*> notesToGroupsMap;
+	TMap<int, TObjectPtr<USFZGroupedRegions>> notesToGroupsMap;
 
 	//TUniquePtr<Audio::IProxyData> CreateNewProxyData(const Audio::FProxyDataInitParams& InitParams) override;
 
-	virtual TSharedPtr<Audio::IProxyData> CreateProxyData(const Audio::FProxyDataInitParams& InitParams) override;
+	
 
 private:
 	friend class F_FK_SFZ_Asset_Proxy;
@@ -376,23 +373,6 @@ private:
 	 * This needs to be called by the factory when all regions are done importing so that we actually populate the map
 	 */
 	void MapNotesToRanges();
-	TSharedPtr<TMap<int, USFZGroupedRegions*>> DataPtr;
-};
-
-class BKMUSICCORE_API F_FK_SFZ_Asset_Proxy : public Audio::TProxyData<F_FK_SFZ_Asset_Proxy>
-{
-public:
-	IMPL_AUDIOPROXY_CLASS(F_FK_SFZ_Asset_Proxy);
-
-	explicit F_FK_SFZ_Asset_Proxy(const UFKSFZAsset* InInstrument) : Guid(FGuid::NewGuid()), DataPtr(InInstrument->DataPtr) {}
-	F_FK_SFZ_Asset_Proxy(const F_FK_SFZ_Asset_Proxy& Other) = default;
-
-	FGuid Guid;
-
-	USFZGroupedRegions* GetRegionGroupForNote(bool& success, int note) const;
-
-private:
-
 	TSharedPtr<TMap<int, USFZGroupedRegions*>> DataPtr;
 };
 

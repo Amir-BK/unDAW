@@ -26,7 +26,7 @@ class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSc
 public:
 
 	UPROPERTY(EditAnywhere)
-	TArray<UMidiFile*> MidiClips;
+	TArray< TObjectPtr<UMidiFile>> MidiClips;
 
 
 	UFUNCTION(Exec)
@@ -89,13 +89,13 @@ public:
 	//The harmonix music clock component exposes a lot of nice functions and writes the tempo data to the MaterialParameterCollection
 	//but it has some quirks, it's bar reading might not be accurate, especially if you send seek events to the midi player
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicClockComponent* VideoSyncedMidiClock;
+	TObjectPtr <UMusicClockComponent> VideoSyncedMidiClock;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicClockComponent* AudioSyncedMidiClock;
+	TObjectPtr < UMusicClockComponent> AudioSyncedMidiClock;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicTempometerComponent* MusicTempometer;
+	TObjectPtr <UMusicTempometerComponent> MusicTempometer;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "unDAW|Music Scene")
 	TObjectPtr<UMaterialParameterCollection> MaterialParameterCollection;

@@ -14,9 +14,9 @@
 void BKEditorUtilitiesModule::StartupModule()
 {
 	//GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
-	SFZAssetTypeActions = MakeShared<FFksfzaSampleBankAssetActions>();
+	//SFZAssetTypeActions = MakeShared<FFksfzaSampleBankAssetActions>();
 	DAWAssetTypeActions = MakeShared<FDAWSequenceAssetActions>();
-	FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
+	//FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
 	FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(DAWAssetTypeActions.ToSharedRef());
 	//FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(FKMidiAssetTypeActions.ToSharedRef());
 
@@ -50,7 +50,7 @@ void BKEditorUtilitiesModule::ShutdownModule()
 	// we call this function before unloading the module.
 
 	if (!FModuleManager::Get().IsModuleLoaded("AssetTools")) return;
-	FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
+	//FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(SFZAssetTypeActions.ToSharedRef());
 	FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(DAWAssetTypeActions.ToSharedRef());
 	//FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(FKMidiAssetTypeActions.ToSharedRef());
 }

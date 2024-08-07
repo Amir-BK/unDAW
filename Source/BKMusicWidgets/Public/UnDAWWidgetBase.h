@@ -32,7 +32,7 @@ public:
 protected:
 	//Scene manager reference
 	UPROPERTY()
-	AMusicScenePlayerActor* SceneManager;
+	TObjectPtr < AMusicScenePlayerActor> SceneManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW", Meta = (DisplayName = "DAW Sequencer Data"))
 	TObjectPtr<UDAWSequencerData> DawSequencerData;

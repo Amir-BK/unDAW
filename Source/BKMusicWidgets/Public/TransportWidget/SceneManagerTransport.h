@@ -56,28 +56,28 @@ public:
 protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class USlider* PlayPosition;
+	TObjectPtr<USlider> PlayPosition;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTransportGlyphButton* PlayButton;
+	TObjectPtr<UTransportGlyphButton> PlayButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTransportGlyphButton* PauseButton;
+	TObjectPtr<UTransportGlyphButton> PauseButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTransportGlyphButton* InitButton;
+	TObjectPtr<UTransportGlyphButton> InitButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTransportGlyphButton* StopButton;
+	TObjectPtr<UTransportGlyphButton> StopButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTransportGlyphButton* KillButton;
+	TObjectPtr<UTransportGlyphButton> KillButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTextBlock* DurationText;
+	TObjectPtr<UTextBlock> DurationText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	class UTextBlock* CurrentPositionText;
+	TObjectPtr<UTextBlock> CurrentPositionText;
 
 	UPROPERTY()
 	float CurrentSeek = 0;
