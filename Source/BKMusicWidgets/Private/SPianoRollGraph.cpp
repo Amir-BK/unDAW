@@ -103,7 +103,7 @@ EMidiClockSubdivisionQuantization TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits InT
 void SPianoRollGraph::Construct(const FArguments& InArgs)
 
 {
-	PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
+	//PluginDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetBaseDir();
 	auto KeyMapsSoftPath = FSoftObjectPath("/unDAW/KeyboardMappings/MidiEditorKeyBindings.MidiEditorKeyBindings");
 	KeyMappings = Cast<UBKEditorUtilsKeyboardMappings>(KeyMapsSoftPath.TryLoad());
 

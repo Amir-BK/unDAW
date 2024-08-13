@@ -125,4 +125,4 @@ void BKEditorUtilitiesModule::OpenSelectedMidiFileInEditorWidget(FSoftObjectPath
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(BKEditorUtilitiesModule, BKEditorUtilities)
+IMPLEMENT_MODULE(BKEditorUtilitiesModule, BK_EditorUtilities)

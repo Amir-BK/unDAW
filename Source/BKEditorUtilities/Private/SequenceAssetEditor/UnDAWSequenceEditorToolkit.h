@@ -13,6 +13,7 @@
 
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
+#include "MidiDeviceManager.h"
 #include "GraphEditor.h"
 
 class FSequenceAssetDetails : public IDetailCustomization
@@ -98,6 +99,10 @@ protected:
 	TSharedPtr<SHorizontalBox> TransportControls;
 	TSharedPtr<STextBlock> CPUCoreUtilizationWidget;
 
+	TArray<TSharedPtr<FString>> InputDeviceNames;
+	TSharedPtr<FString> SelectedInputDeviceName;
+	UMIDIDeviceInputController* MidiDeviceController = nullptr;
+
 	void SetupPreviewPerformer();
 	//void PlayAudioComponent();
 	//void StopAudioComponent();
@@ -106,6 +111,9 @@ protected:
 
 	UFUNCTION()
 	void OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const;
+
+	UFUNCTION()
+	void OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
 
 public:
 	//midi editing - it for the purpose of tracking editor undo operations,

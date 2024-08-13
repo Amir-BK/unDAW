@@ -309,5 +309,5 @@ void AMusicScenePlayerActor::InitHarmonixComponents()
 
 void AMusicScenePlayerActor::UpdateWatchers()
 {
-	GeneratorHandle->UpdateWatchers();
+	//GeneratorHandle->UpdateWatchers();
 }

@@ -165,7 +165,7 @@ void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudi
 	}
 }
 
-TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumetInterface()
+TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumentInterface()
 {
 	TArray<UMetaSoundPatch*> Patches;
 

@@ -18,6 +18,7 @@
 #include "MetasoundBuilderSubsystem.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
+#include "MidiDeviceManager.h"
 
 #include <Pins/M2Pins.h>
 #include "M2SoundGraphData.generated.h"
@@ -424,6 +425,17 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
+	bool bJustReceivedMessage = false;
+
+	UFUNCTION()
+	void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+
+	UFUNCTION()
+	void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+
+	UFUNCTION()
+	void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
+
 	float MetasoundCpuUtilization = 0.0f;
 
 	bool AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate);
@@ -784,11 +796,14 @@ public:
 	UPROPERTY()
 	TMap<FName, TObjectPtr <UM2VariMixerVertex>> Mixers;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TMap<FName, TObjectPtr <UM2MetasoundLiteralPin>> NamedInputs;
 
 	UFUNCTION()
 	bool RenameNamedInput(FName OldName, FName NewName);
+
+	UFUNCTION(CallInEditor, Category = "unDAW")
+	void PrintAllInputsAndOutputsToLog();
 
 	UPROPERTY()
 	TMap<FName, TObjectPtr<UM2MetasoundLiteralPin>> NamedOutputs;
@@ -835,6 +850,10 @@ inline bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2M
 			BuilderContext->ConnectNodeInputToGraphInput(MemberName, InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
 			InOutput->bIsSet = true;
 		}
+
+		InInput->LinkedPin = InOutput;
+		InOutput->LinkedPin = InInput;
+
 		//auto GraphInputMember = BuilderContext->ConnectNodeInputToGraphInput
 		return Result == EMetaSoundBuilderResult::Succeeded;
 	}

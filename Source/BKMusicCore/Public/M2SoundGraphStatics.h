@@ -96,7 +96,7 @@ public:
 	* @return An array of all the patches that implement the instrument interface
 	* */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
-	static TArray<UMetaSoundPatch*> GetAllPatchesImplementingInstrumetInterface();
+	static TArray<UMetaSoundPatch*> GetAllPatchesImplementingInstrumentInterface();
 
 	/**
 	* Get All Metasound Patches that implement the unDAW insert parameter interface

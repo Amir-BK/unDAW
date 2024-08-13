@@ -33,7 +33,7 @@ public:
 
 	void NodeConnectionListChanged() override;
 
-	void PinConnectionListChanged(UEdGraphPin* Pin) override;
+	virtual void PinConnectionListChanged(UEdGraphPin* Pin) override;
 
 	bool CanCreateUnderSpecifiedSchema(const UEdGraphSchema* Schema) const override { return Schema->IsA(UM2SoundEdGraphSchema::StaticClass()); }
 	bool IncludeParentNodeContextMenu() const override { return true; }

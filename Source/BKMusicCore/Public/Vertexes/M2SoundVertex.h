@@ -394,7 +394,7 @@ public:
 	//FName MemberName;
 	void RenameInput(FName InMemberName);
 
-	void BuildVertex() override;
+	virtual void BuildVertex() override;
 
 	bool bIsSet = false;
 };

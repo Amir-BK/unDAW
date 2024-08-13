@@ -25,6 +25,29 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+		//if we have a track for this channel, add the note to the track
+		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+		bJustReceivedMessage = true;
+	//FWorldContext* WorldContext = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
+	//WorldContext->World
+
+}
+
+void UDAWSequencerData::OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note Off %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+		//if we have a track for this channel, remove the note from the track
+		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+}
+
+void UDAWSequencerData::OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Control Change %d, %d, %d, %d"), Timestamp, Channel, Type, Value)
+}
+
 bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
 	FMetasoundFrontendVersion ActionInterface;
@@ -278,7 +301,8 @@ void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const
 void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	Value.Get(CurrentTimestampData);
-
+	//UE_LOG(LogTemp, Log, TEXT("Count in seconds %f"), HarmonixMidiFile->GetSongMaps()->GetCountInSeconds());
+	//HarmonixMidiFile->GetSongMaps()->Precou
 	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 }
 
@@ -618,8 +642,8 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 		if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
 		{
 			UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
-				MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent, 1, false);
-			MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent, 1, false);
+				MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent, 1, EAllowShrinking::No);
+			MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent, 1, EAllowShrinking::No);
 		}
 		else {
 			UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
@@ -997,6 +1021,20 @@ bool UDAWSequencerData::RenameNamedInput(FName OldName, FName NewName)
 
 	checkNoEntry();
 	return false;
+}
+
+void UDAWSequencerData::PrintAllInputsAndOutputsToLog()
+{
+//get all IOs from builder context
+	TArray<FMetaSoundBuilderNodeOutputHandle> AllOutputs;
+	TArray<FMetaSoundBuilderNodeInputHandle> AllInputs;
+
+	UMetaSoundFrontendMemberMetadata* MemberMetadata = NewObject<UMetaSoundFrontendMemberMetadata>(this);
+	//MemberMetadata->
+
+	//BuilderContext->SetMemberMetadata()
+	BuilderContext->InitNodeLocations();
+	
 }
 
 void UDAWSequencerData::PushPendingNotesToNewMidiFile()
