@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SGraphPin.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
  *
  */
-class BK_EDITORUTILITIES_API SM2SoundGraphPin : public SCompoundWidget
+class BK_EDITORUTILITIES_API SM2SoundGraphPin : public SGraphPin
 {
 public:
 	SLATE_BEGIN_ARGS(SM2SoundGraphPin)
@@ -16,5 +17,5 @@ public:
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UEdGraphPin* InGraphPinObj);
 };

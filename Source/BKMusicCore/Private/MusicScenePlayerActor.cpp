@@ -48,14 +48,14 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(FMusicTimestamp InTi
 {
 	//so the whole point of this thing is that we need an audio bus and a source bus, the source bus will be attached to the actual actor,
 	//the audio bus needs to be assigned to an audio bus output vertex
-    
+	
 	auto NewSourceBus = NewObject<USoundSourceBus>(this, NAME_None, RF_Transient);
 	auto NewAudioBus = NewObject<UAudioBus>(this, NAME_None, RF_Transient);
 
 	NewAudioBus->AudioBusChannels = EAudioBusChannels::Stereo;
 	NewSourceBus->NumChannels = 2;
 
-	//REMEMBER TO CHANGE THIS TO THE ACTUAL AUDIO BUS
+	
 	NewSourceBus->AudioBus = NewAudioBus;
 
 	auto NewActionVertex = NewObject<UM2ActionVertex>(this, NAME_None, RF_Transient);
@@ -101,6 +101,18 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(FMusicTimestamp InTi
 	//if midi clip is not a nullptr, we assume it was already shifted and cropped, it can be assigned to the interface midi asset input
 	if (MidiClip != nullptr)
 	{
+		//5.5 add clock offseter, feed offset clock to node 
+		auto ClockOffsetNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName("HarmonixNodes"), FName("MidiClockoffsetNode")), Result, 0);
+		auto BarOffsetInput = BuilderContext->FindNodeInputByName(ClockOffsetNode, FName("Offset (Bars)"), Result);
+		auto BeatOffsetInput = BuilderContext->FindNodeInputByName(ClockOffsetNode, FName("Offset (Beats)"), Result);
+
+		FName MetasoundIntName;
+		FName MetasoundFloatLiteral;
+		auto BarOffsetLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateIntMetaSoundLiteral(-InTimestamp.Bar, MetasoundIntName);
+		auto BeatOffsetLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateFloatMetaSoundLiteral(-InTimestamp.Beat, MetasoundFloatLiteral);
+
+		BuilderContext->SetNodeInputDefault(BarOffsetInput, BarOffsetLiteral, Result);
+
 		//NewActionVertex->InputM2SoundPins[FName("unDAW.Midi Asset")]->GetHandle<FMetaSoundBuilderNodeInputHandle>();		//NewActionVertex->MidiAsset = MidiClip;
 		//auto MidiAssetInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW.Midi Asset"), Result);
 		auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(ShiftAndCropMidiAsset(MidiClip, FMusicalTimeSpan(), InTimestamp, InQuantizationUnits));

@@ -109,11 +109,14 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		[
 			SAssignNew(MainHorizontalBox, SHorizontalBox)
 				.IsEnabled(this, &SM2LiteralControllerWidget::IsControlEnabled)
+
 				+ SHorizontalBox::Slot()
 				[
 					SNew(STextBlock)
 						.Text(FText::FromName(InLiteralPin.Name))
 						.ColorAndOpacity_Lambda([this]() -> FSlateColor { return PinColor; })
+						.MinDesiredWidth(150)
+						.AutoWrapText(true)
 						.ToolTipText(FText::FromString(FString::Printf(TEXT("%s %s"), *Info.DataTypeDisplayText.ToString(), LiteralPin->IsConstructorPin() ? TEXT(", Construcor Pin") : TEXT(""))))
 				]
 				//a spacer
@@ -125,6 +128,11 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		];
 	
+	//if direction is output, we're done
+	if (InLiteralPin.Direction == EGPD_Output)
+	{
+		return;
+	}
 
 	switch (Info.PreferredLiteralType)
 	{
@@ -150,6 +158,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 
 		PinColor = Settings->BooleanPinTypeColor;
 		MainHorizontalBox->AddSlot()
+			.MaxWidth(200)
 			[
 				SNew(SCheckBox)
 					.IsChecked_Lambda([this]() -> ECheckBoxState { return bLiteralBoolValue ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
@@ -164,11 +173,14 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		LiteralPin->LiteralValue.TryGet(LiteralFloatValue);
 
 		MainHorizontalBox->AddSlot()
+			.MaxWidth(200)
 			[
 				SNew(SNumericEntryBox<float>)
 					.AllowSpin(true)
 					.OnValueChanged(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
 					.Value_Lambda([this]() -> TOptional<float> { return LiteralFloatValue; })
+					.MinDesiredValueWidth(100)
+					
 				//.Value_Lambda([this, &InLiteralPin]() -> TOptional<float> { return InLiteralPin.GetFloatValue(); })
 				//.OnValueCommitted_Lambda([this, &InLiteralPin](float NewValue, ETextCommit::Type CommitType) { InLiteralPin.SetFloatValue(NewValue); })
 			];
@@ -206,7 +218,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			EnumOptionToValue.GenerateKeyArray(EnumOptions);
 
 			MainHorizontalBox->AddSlot()
-				.AutoWidth()
+				.MaxWidth(200)
 				[
 					SNew(SComboBox<TSharedPtr<FString>>)
 					.OptionsSource(&EnumOptions)
@@ -225,6 +237,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		{
 			PinColor = Settings->IntPinTypeColor;
 			MainHorizontalBox->AddSlot()
+				.MaxWidth(200)
 				[
 					SNew(SNumericEntryBox<int32>)
 						.AllowSpin(true)

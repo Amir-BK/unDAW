@@ -29,9 +29,6 @@ public:
 	TArray< TObjectPtr<UMidiFile>> MidiClips;
 
 
-	UFUNCTION(Exec)
-	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
-
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAudioBus> MasterAudioBus;
 
