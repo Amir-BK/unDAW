@@ -28,6 +28,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Types/SlateAttribute.h"
+#include <Pianoroll/MarqueeOperation.h>
 
 //#include "SMidiNoteContainer.h"
 
@@ -136,6 +137,8 @@ public:
 #endif
 
 private:
+
+	FPianorollMarqueeOperation MarqueeSelection;
 
 	TSlateAttribute<float> PianoTabWidth;
 
@@ -289,6 +292,9 @@ protected:
 
 	// = FVector2f::Zero();
 	bool bLMBdown = false;
+
+	float TotalMouseDelta = 0;
+
 	bool wasLMDownLastFrame = false;
 	bool isCtrlPressed = false;
 	bool isShiftPressed = false;

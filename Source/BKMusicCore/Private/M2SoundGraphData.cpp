@@ -1070,6 +1070,19 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 		//HarmonixMidiFile
 }
 
+void UDAWSequencerData::OnStartPlaying(const FQualifiedFrameTime& InStartTime)
+{
+}
+
+void UDAWSequencerData::OnStopPlaying(const FQualifiedFrameTime& InStopTime)
+{
+}
+
+FFrameTime UDAWSequencerData::OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate)
+{
+	return FFrameTime();
+}
+
 FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput()
 {
 	if (MasterOutputs.Num() > 1)

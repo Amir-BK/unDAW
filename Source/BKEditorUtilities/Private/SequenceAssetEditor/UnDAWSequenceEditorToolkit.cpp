@@ -67,6 +67,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					->SetSizeCoefficient(0.8f)
 					->AddTab("DAWSequenceMixerTab", ETabState::OpenedTab)
 					->AddTab("PianoRollTab", ETabState::OpenedTab)
+					
 				)
 				->Split
 				(
@@ -98,11 +99,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
+			
+
 				[
 					SNew(SOverlay)
 						+SOverlay::Slot()
 						[
 							SNew(SAssetDropTarget)
+								.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
 								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
@@ -141,6 +145,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			return DockTab;
 		}))
 		.SetDisplayName(INVTEXT("Piano Roll"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
 	CreateGraphEditorWidget();

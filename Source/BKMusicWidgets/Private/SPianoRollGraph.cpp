@@ -614,10 +614,23 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 {
 	//UE_LOG(LogTemp, Log, TEXT("Is this locking?"))
 
+	const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+	const bool bIsRightMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::RightMouseButton;
+	const bool bIsMiddleMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton;
+	const bool bIsRightMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
+	const bool bIsLeftMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton);
+	const bool bIsMiddleMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton);
+
 	FReply Reply = FReply::Unhandled();
 	if (OnMouseButtonDownDelegate.IsBound())
 	{
 		Reply = OnMouseButtonDownDelegate.Execute(MyGeometry, MouseEvent);
+	}
+
+	if (bIsLeftMouseButtonEffecting)
+	{
+		//test marquee
+
 	}
 
 	//if in note draw mode, add note to pending notes map
@@ -967,6 +980,16 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			FLinearColor::Gray.CopyWithNewOpacity(0.5f * horizontalZoom),
 			false,
 			FMath::Max(5.0f * horizontalZoom, 1.0f));
+
+		//draw beat number
+		FSlateDrawElement::MakeText(OutDrawElements,
+			LayerId + 10,
+			AllottedGeometry.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, 14))),
+			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(beat).Beat)),
+			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
+			ESlateDrawEffect::None,
+			FLinearColor::White
+		);
 	}
 
 	for (auto& bar : VisibleBars)
@@ -979,6 +1002,17 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			FLinearColor::Blue.CopyWithNewOpacity(0.5f),
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
+
+		//draw bar number
+
+		FSlateDrawElement::MakeText(OutDrawElements,
+			LayerId + 20,
+			AllottedGeometry.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
+			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(bar).Bar)),
+			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
+			ESlateDrawEffect::None,
+			FLinearColor::White
+		);
 	}
 
 	//draw play cursor

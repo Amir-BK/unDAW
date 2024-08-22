@@ -237,6 +237,9 @@ public:
 	};
 
 	UPROPERTY()
+	FLinearColor PinColor = FLinearColor::White;
+
+	UPROPERTY()
 	FMetasoundFrontendLiteral LiteralValue;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

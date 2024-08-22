@@ -21,6 +21,7 @@
 #include "MidiDeviceManager.h"
 
 #include <Pins/M2Pins.h>
+#include "Evaluation/IMovieSceneCustomClockSource.h"
 #include "M2SoundGraphData.generated.h"
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
@@ -420,7 +421,7 @@ class UMappedVertexCache;
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
-class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject
+class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject, public IMovieSceneCustomClockSource
 {
 	GENERATED_BODY()
 public:
@@ -825,6 +826,16 @@ public:
 	//further optimizations can be achieved by tracking the transport position and state and using that to push notes on time
 	UFUNCTION()
 	void PushPendingNotesToNewMidiFile();
+
+	public:
+		// IMovieSceneCustomClockSource interface
+
+		//virtual void OnTick(float DeltaSeconds, float InPlayRate) override;
+		virtual void OnStartPlaying(const FQualifiedFrameTime& InStartTime) override;
+		virtual void OnStopPlaying(const FQualifiedFrameTime& InStopTime) override;
+		virtual FFrameTime OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate) override;
+
+		// end IMovieSceneCustomClockSource interface
 };
 
 template<>

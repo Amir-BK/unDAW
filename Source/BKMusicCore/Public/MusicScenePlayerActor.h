@@ -11,6 +11,9 @@
 #include "HarmonixMetasound/Components/MusicTempometerComponent.h"
 #include "Vertexes/M2ActionVertex.h"
 #include "HarmonixMidi/MidiSongPos.h"
+#include "Evaluation/IMovieSceneCustomClockSource.h"
+
+#include "LevelSequenceActor.h"
 
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateSettings.h"
@@ -19,7 +22,7 @@
 
 
 UCLASS()
-class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
+class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface, public IMovieSceneCustomClockSource
 {
 	GENERATED_BODY()
 
@@ -133,4 +136,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
+
+public:
+	// IMovieSceneCustomClockSource interface
+
+	virtual void OnTick(float DeltaSeconds, float InPlayRate) override;
+	virtual void OnStartPlaying(const FQualifiedFrameTime& InStartTime) override;
+	virtual void OnStopPlaying(const FQualifiedFrameTime& InStopTime) override;
+	virtual FFrameTime OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate) override;
+
+	// end IMovieSceneCustomClockSource interface
+
+		/** Pointer to the sequence actor to use for playback */
+	UPROPERTY(EditAnywhere, Category = "Synchronization")
+	TObjectPtr<ALevelSequenceActor> Sequence;
+
 };

@@ -9,6 +9,9 @@
 #include "Materials/MaterialParameterCollection.h"
 #include "EditableMidiFile.h"
 #include "MetasoundGeneratorHandle.h"
+#include <MovieSceneSequencePlayer.h>
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 
 bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
@@ -322,4 +325,60 @@ void AMusicScenePlayerActor::InitHarmonixComponents()
 void AMusicScenePlayerActor::UpdateWatchers()
 {
 	//GeneratorHandle->UpdateWatchers();
+}
+
+void AMusicScenePlayerActor::OnTick(float DeltaSeconds, float InPlayRate)
+{
+	//UE_LOG(LogTemp, Log, TEXT("Tick"))
+	//auto FrameNumber = VideoSyncedMidiClock->GetCurrentSmoothedAudioRenderSongPos().SecondsIncludingCountIn * InPlayRate;
+	//Sequence->GetSequencePlayer()->SetPlaybackPosition(FMovieSceneSequencePlaybackParams(FrameNumber, EUpdatePositionMethod::Play));
+	//ClockLastUp
+}
+
+void AMusicScenePlayerActor::OnStartPlaying(const FQualifiedFrameTime& InStartTime)
+{
+	UE_LOG(LogTemp, Log, TEXT("Start Playing"))
+	if(!bHarmonixInitialized)
+	{
+	bAutoPlay = true;
+	BeginPlay();
+	}
+	UE_LOG(LogTemp, Log, TEXT("Start Playing, in start time %f"), InStartTime.AsSeconds())
+	SendTransportCommand(EBKTransportCommands::Play);
+	SendSeekCommand(InStartTime.AsSeconds());
+	//Sequence->GetSequencePlayer()->SetTimeController(MakeShared<FMovieSceneTimeController_Custom>());
+	//Sequence->GetSequencePlayer()->Play();
+}
+
+void AMusicScenePlayerActor::OnStopPlaying(const FQualifiedFrameTime& InStopTime)
+{
+	UE_LOG(LogTemp, Log, TEXT("Stop Playing"))
+	SendTransportCommand(EBKTransportCommands::Pause);
+
+}
+
+FFrameTime AMusicScenePlayerActor::OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate)
+{
+	//when the game is running it's preffered to take the time from the harmonix components 
+	if(bHarmonixInitialized)
+	{
+		auto CurrentTIme = VideoSyncedMidiClock->GetCurrentSmoothedAudioRenderSongPos();
+		auto FrameNumber = CurrentTIme.SecondsIncludingCountIn * InCurrentTime.Rate;
+
+		return FrameNumber;
+	}
+	else {
+		const auto& MidiSongMap = GetDAWSequencerData()->HarmonixMidiFile->GetSongMaps();
+		const auto MidiSongTick = MidiSongMap->CalculateMidiTick(GetDAWSequencerData()->CurrentTimestampData, EMidiClockSubdivisionQuantization::None);
+		const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(MidiSongTick);
+
+
+		//UE_LOG(LogTemp, Log, TEXT("Current Frame %f"), InCurrentTime.Time.AsDecimal())
+
+		auto FrameNumber = CurrentTimeMiliSeconds * .001f * InCurrentTime.Rate;
+		//UE_LOG(LogTemp, Log, TEXT("Current Frame %d"), FrameNumber.)
+		return FrameNumber;
+	}
+	
+
 }

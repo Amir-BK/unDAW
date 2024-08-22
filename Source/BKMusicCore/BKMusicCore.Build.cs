@@ -58,8 +58,8 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-                ,"MIDIDevice"
-            }
+                ,"MIDIDevice", "LevelSequence", "MovieScene", "MovieSceneTracks"
+			}
 
             );
 

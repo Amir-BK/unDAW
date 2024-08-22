@@ -8,23 +8,26 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SM2SoundGraphPin::Construct(const FArguments& InArgs, UEdGraphPin* InGraphPinObj)
 {
+	
+
+	LiteralPin = Cast<UM2MetasoundLiteralPin>(InGraphPinObj->PinType.PinSubCategoryObject.Get());
+
+
 	SGraphPin::Construct(SGraphPin::FArguments(), InGraphPinObj);
-
-	auto M2SoundLiteralSubCategoryObject = Cast<UM2MetasoundLiteralPin>(InGraphPinObj->PinType.PinSubCategoryObject.Get());
-
-	if(M2SoundLiteralSubCategoryObject == nullptr)
+	//bUsePinColorForText = true; 
+	
+}
+TSharedRef<SWidget> SM2SoundGraphPin::GetDefaultValueWidget()
+{
+	if(LiteralPin != nullptr)
 	{
-		return;
-	}
+		auto TempValWidget =  SNew(SM2LiteralControllerWidget, *LiteralPin);
+		PinColor = TempValWidget->PinColor;
 
-	LabelAndValue.Get()->ClearChildren();
-	//LabelAndValue.Get()->
-	LabelAndValue.Get()->AddSlot().AttachWidget(SNew(SM2LiteralControllerWidget, *M2SoundLiteralSubCategoryObject));
-	/*
-	ChildSlot
-	[
-		// Populate the widget
-	];
-	*/
+		return TempValWidget;
+	}
+	else {
+		return SNullWidget::NullWidget;
+	}
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
