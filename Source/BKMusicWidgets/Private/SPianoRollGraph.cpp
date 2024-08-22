@@ -984,7 +984,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		//draw beat number
 		FSlateDrawElement::MakeText(OutDrawElements,
 			LayerId + 10,
-			AllottedGeometry.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, 14))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, -PaintPosVector.Y + 14))),
 			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(beat).Beat)),
 			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
 			ESlateDrawEffect::None,
@@ -1007,7 +1007,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 		FSlateDrawElement::MakeText(OutDrawElements,
 			LayerId + 20,
-			AllottedGeometry.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, - PaintPosVector.Y))),
 			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(bar).Bar)),
 			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
 			ESlateDrawEffect::None,
