@@ -187,6 +187,7 @@ public:
 
 	TArray<int32> VisibleBeats;
 	TArray<int32> VisibleBars;
+	TArray<int32> VisibleSubdivisions;
 	FVector2D ComputeDesiredSize(float) const override { return FVector2D(1000, 1000); };
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;

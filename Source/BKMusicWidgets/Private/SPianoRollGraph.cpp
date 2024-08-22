@@ -450,15 +450,29 @@ void SPianoRollGraph::RecalcGrid()
 	//int GridBars = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Bar;
 
 	VisibleBars.Empty();
+	VisibleSubdivisions.Empty();
 
 	//populate subdiv array
 	float subDivTick = LeftMostTick;
 	while (!MidiSongMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
 	{
-		VisibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(QuantizationGridUnit)));
+		VisibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats)));
 		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
 		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
 	}
+
+	// if we're not in beats mode, we need to calculate the subdivisions
+	subDivTick = LeftMostTick;
+	if(QuantizationGridUnit != EMusicTimeSpanOffsetUnits::Beats)
+	{
+		while (!MidiSongMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
+		{
+		VisibleSubdivisions.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(QuantizationGridUnit)));
+		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
+
+		}
+	}
+
 
 	//populate bar array
 	// can probably just leave it as time, rather than calculate back and forth...
@@ -973,11 +987,11 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	for (auto& beat : VisibleBeats)
 	{
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			LayerId,
+			LayerId +5,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Gray.CopyWithNewOpacity(0.5f * horizontalZoom),
+			FLinearColor::Blue,
 			false,
 			FMath::Max(5.0f * horizontalZoom, 1.0f));
 
@@ -986,7 +1000,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			LayerId + 10,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, -PaintPosVector.Y + 14))),
 			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(beat).Beat)),
-			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
+			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 9),
 			ESlateDrawEffect::None,
 			FLinearColor::White
 		);
@@ -995,11 +1009,11 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	for (auto& bar : VisibleBars)
 	{
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			LayerId,
+			LayerId + 9,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
-			FLinearColor::Blue.CopyWithNewOpacity(0.5f),
+			FLinearColor::Gray,
 			false,
 			FMath::Max(15.0f * horizontalZoom, 1.0f));
 
@@ -1009,10 +1023,24 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			LayerId + 20,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, - PaintPosVector.Y))),
 			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(bar).Bar)),
-			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 12),
+			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 9),
 			ESlateDrawEffect::None,
 			FLinearColor::White
 		);
+	}
+
+	//subdivisions, paint in light blue
+
+	for (const auto& Subdivision : VisibleSubdivisions)
+	{
+		FSlateDrawElement::MakeLines(OutDrawElements,
+			LayerId,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Subdivision) * horizontalZoom, 0))),
+			vertLine,
+			ESlateDrawEffect::None,
+			FLinearColor::Black,
+			false,
+			FMath::Max(5.0f * horizontalZoom, 1.0f));
 	}
 
 	//draw play cursor
