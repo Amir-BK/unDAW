@@ -262,7 +262,7 @@ void UDAWSequencerData::SetLoopSettings(const bool& InbIsLooping, const int32& B
 	BuilderContext->SetNodeInputDefault(SimpleLoopBoolInput, MSBuilderSystem->CreateBoolMetaSoundLiteral(InbIsLooping, DataTypeName), BuildResult);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Set Simple Loop Input")), BuildResult);
 
-	if (BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
+	//if (BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Setting Loop Settings %s, %d"), InbIsLooping ? TEXT("True") : TEXT("False"), BarDuration)
 }
 

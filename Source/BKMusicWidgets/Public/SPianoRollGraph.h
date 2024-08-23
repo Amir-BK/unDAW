@@ -99,6 +99,21 @@ public:
 DECLARE_DELEGATE(FOnInitComplete)
 DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
 
+enum class EGridPointType : uint8
+{
+	Bar,
+	Beat,
+	Subdivision
+};
+
+struct FMusicalGridPoint
+{
+	EGridPointType Type = EGridPointType::Bar;
+	int32 Bar = 0;
+	int8 Beat = 1;
+	int8 Subdivision = 1;
+};
+
 class ITimeSliderController;
 
 /**
@@ -144,6 +159,8 @@ private:
 
 	bool bIsAttributeBoundMusicTimestamp = false;
 
+	//TArray<FMusicalGridPoint> GridPoints;
+
 public:
 
 	float CursorFollowAnchorPosition = 0.5f;
@@ -188,6 +205,8 @@ public:
 	TArray<int32> VisibleBeats;
 	TArray<int32> VisibleBars;
 	TArray<int32> VisibleSubdivisions;
+	TArray<FMusicalGridPoint> GridPoints;
+	TMap<int32, FMusicalGridPoint> GridPointMap;
 	FVector2D ComputeDesiredSize(float) const override { return FVector2D(1000, 1000); };
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
@@ -267,6 +286,8 @@ public:
 	void UpdateSlotsZOrder();
 
 	void RecalcGrid();
+
+	void RecalcSubdivisions();
 
 	TSharedPtr<SWrapBox> QuantizationButtons;
 
