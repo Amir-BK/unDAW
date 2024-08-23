@@ -342,12 +342,9 @@ protected:
 
 	virtual void CacheDesiredSize(float InLayoutScaleMultiplier) override;
 
-	TOptional<EMouseCursor::Type> GetCursor() const override
-	{
-		if (InputMode == EPianoRollEditorMouseMode::empty || InputMode == EPianoRollEditorMouseMode::Panning) return EMouseCursor::Default;
+	EMouseCursor::Type CursorType = EMouseCursor::Default;
 
-		return EMouseCursor::None;
-	}
+	TOptional<EMouseCursor::Type> GetCursor() const override;
 	// End SWidget overrides.
 
 public:

@@ -424,7 +424,14 @@ void SPianoRollGraph::AddHorizontalX(float inputX)
 void SPianoRollGraph::CacheDesiredSize(float InLayoutScaleMultiplier) //Super::CacheDesiredSize(InLayoutScaleMultiplier)
 {
 	RecalcGrid();
-};
+}
+inline TOptional<EMouseCursor::Type> SPianoRollGraph::GetCursor() const
+{
+	//if (InputMode == EPianoRollEditorMouseMode::empty || InputMode == EPianoRollEditorMouseMode::Panning) return EMouseCursor::Default;
+
+	return CursorType;
+}
+;
 
 void SPianoRollGraph::RecalcGrid()
 {
@@ -736,6 +743,11 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 
 	}
 
+	if (bIsRightMouseButtonDown)
+	{
+		CursorType = EMouseCursor::GrabHandClosed;
+	}
+
 	//if in note draw mode, add note to pending notes map
 	//TimeAtMouse
 	//SessionData->PendingLinkedMidiNotesMap.Add(1, CreateNoteAtMousePosition(localMousePosition, MidiSongMap, QuantizationGridUnit));
@@ -756,6 +768,21 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 }
 FReply SPianoRollGraph::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	
+	const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+	const bool bIsRightMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::RightMouseButton;
+	const bool bIsMiddleMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton;
+	const bool bIsRightMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
+	const bool bIsLeftMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton);
+	const bool bIsMiddleMouseButtonDown = MouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton);
+
+	if(bIsRightMouseButtonEffecting)
+	{
+		CursorType = EMouseCursor::Default;
+	}
+	
+	
+	
 	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bLMBdown = false;
@@ -855,6 +882,14 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		return false;
 		});
 
+	if (bIsRightMouseButtonDown)
+	{
+
+		PositionOffset.Y += MouseEvent.GetCursorDelta().Y;
+		AddHorizontalX(MouseEvent.GetCursorDelta().X);
+		return FReply::Handled().CaptureMouse(AsShared());
+	}
+
 	if (bLMBdown) {
 		switch (InputMode)
 		{
@@ -868,8 +903,6 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 
 		case EPianoRollEditorMouseMode::Panning:
 
-			PositionOffset.Y += MouseEvent.GetCursorDelta().Y;
-			AddHorizontalX(MouseEvent.GetCursorDelta().X);
 		default:
 
 			break;
