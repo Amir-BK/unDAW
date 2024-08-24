@@ -246,7 +246,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 	//timeline is in miliseconds
 	CurrentTimelinePosition = CurrentTimeMiliSeconds * .001f;
 
-	if (bFollowCursor)
+	if (bFollowCursor && SessionData->PlayState == EBKPlayState::TransportPlaying)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 
