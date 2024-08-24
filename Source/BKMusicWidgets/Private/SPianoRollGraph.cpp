@@ -5,6 +5,7 @@
 #include "Logging/StructuredLog.h"
 #include "ITimeSlider.h"
 #include "Widgets/Input/SButton.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "Algo/BinarySearch.h"
 
 //#include <BKMusicWidgets.h>
@@ -149,6 +150,8 @@ void SPianoRollGraph::Construct(const FArguments& InArgs)
 			colorsArray.Add(UEngravingSubsystem::IsNoteInCmajor(i) ? &GridColor : &AccidentalGridColor);
 		}
 	}
+
+	RecalcSubdivisions();
 
 	//FString test = FString(UEngravingSubsystem::pitchNumToStringRepresentation(61));
 
@@ -1263,6 +1266,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		);
 
 	}
+#if (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 5)
 	for (size_t i = 0; i < MidiSongMap->GetNumTimeSignatureChanges(); i++)
 	{
 		//draw a blue box at each time sig change
@@ -1277,7 +1281,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		);
 
 	}
-
+#endif
 
 
 	

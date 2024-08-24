@@ -12,6 +12,7 @@
 #include <EditableMidiFile.h>
 #include <HarmonixMidi/Blueprint/MidiNote.h>
 #include <HarmonixMetasound/DataTypes/MidiEventInfo.h>
+#include "Runtime/Launch/Resources/Version.h"
 #include <Vertexes/M2VariMixerVertex.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
@@ -242,7 +243,12 @@ void UDAWSequencerData::Tick(float DeltaTime)
 {
 	if (!AuditionComponent) return;
 
-	//GeneratorHandle->UpdateWatchers();
+//in UE 5.5 we don't need to call the update function, it's called automatically
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
+	GeneratorHandle->UpdateWatchers();
+#endif
+
+
 	MetasoundCpuUtilization = GeneratorHandle->GetCPUCoreUtilization();
 
 }
@@ -1028,8 +1034,9 @@ void UDAWSequencerData::PrintAllInputsAndOutputsToLog()
 //get all IOs from builder context
 	TArray<FMetaSoundBuilderNodeOutputHandle> AllOutputs;
 	TArray<FMetaSoundBuilderNodeInputHandle> AllInputs;
-
+#if ((ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 5))
 	UMetaSoundFrontendMemberMetadata* MemberMetadata = NewObject<UMetaSoundFrontendMemberMetadata>(this);
+#endif
 	//MemberMetadata->
 
 	//BuilderContext->SetMemberMetadata()
