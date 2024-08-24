@@ -743,6 +743,19 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 	if (bIsLeftMouseButtonEffecting)
 	{
 		//test marquee
+		// if we're clicking in the top 45 pixels (MAGIC NUMBERS) this is a seek click, for now print log
+		//auto localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - PositionOffset;
+		if (GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).Y < 45.0f)
+		{
+			UE_LOG(SPIANOROLLLOG, Log, TEXT("Seek Click!"));
+			//SetInputMode(EPianoRollEditorMouseMode::seek);
+			//OnSeekEvent.ExecuteIfBound(CurrentTimelinePosition);
+			OnSeekEvent.ExecuteIfBound(MidiFile->GetSongMaps()->TickToMs(ValueAtMouseCursorPostSnapping) * .001f);
+		}
+		else {
+			//SetInputMode(EPianoRollEditorMouseMode::drawNotes);
+			UE_LOG(SPIANOROLLLOG, Log, TEXT("Click!"));
+		}
 
 	}
 
@@ -1065,8 +1078,11 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	// bad stupid code, this should happen in the tick event
 
 	bool bShowPianoTab = true;
+	bool bShowTimeline = true;
 
-	auto MarginVector = FVector2f(PianoTabWidth.Get(), 0);
+	float TimelineMargin = 42.0f;
+
+	auto MarginVector = FVector2f(PianoTabWidth.Get(), TimelineMargin);
 	auto PaintPosVector = PositionOffset + MarginVector;
 
 	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, (FVector2d)PaintPosVector));
@@ -1158,133 +1174,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	}
 #endif // LEGACY_BARS_BEATS
 
-	//draw subdivisions
-	for (const auto& [Tick, GridPoint] : GridPointMap)
-	{
-		FLinearColor LineColor;
 
-			
-		//ugly as heck but probably ok for now
-			switch (GridPoint.Type)
-			{
-				case EGridPointType::Bar:
-					//draw bar number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 20,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y))),
-						FText::FromString(FString::FromInt(GridPoint.Bar)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-					//draw beat number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 10,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick)* horizontalZoom, -PaintPosVector.Y + 18))),
-						FText::FromString(FString::FromInt(GridPoint.Beat)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-					//draw subdivision number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 10,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick)* horizontalZoom, -PaintPosVector.Y + 30))),
-						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-
-					LineColor = FLinearColor::Gray;
-					break;
-
-				case EGridPointType::Subdivision:
-					//draw subdivision number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 10,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 30))),
-						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-					LineColor = FLinearColor::Black;
-					break;
-
-				case EGridPointType::Beat:
-					//draw beat number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 10,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 18))),
-						FText::FromString(FString::FromInt(GridPoint.Beat)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-					//draw subdivision number
-					FSlateDrawElement::MakeText(OutDrawElements,
-						LayerId + 10,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 30))),
-						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-						FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-						ESlateDrawEffect::None,
-						FLinearColor::White
-					);
-
-					LineColor = FLinearColor::Blue;
-					break;
-
-
-			}
-
-			FSlateDrawElement::MakeLines(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick)* horizontalZoom, 0))),
-				vertLine,
-				ESlateDrawEffect::None,
-				LineColor,
-				false,
-				FMath::Max(5.0f * horizontalZoom, 1.0f));
-
-	}
-
-	for (const auto& TempoInfoPoint : MidiSongMap->GetTempoMap().GetTempoPoints())
-	{
-		//draw a square every tempo point
-		FSlateDrawElement::MakeBox(OutDrawElements,
-			LayerId + 10,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TempoInfoPoint.StartTick) * horizontalZoom, -PaintPosVector.Y + 32))),
-			&gridBrush,
-			ESlateDrawEffect::None,
-			FLinearColor::Red
-		);
-
-	}
-#if (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 5)
-	for (size_t i = 0; i < MidiSongMap->GetNumTimeSignatureChanges(); i++)
-	{
-		//draw a blue box at each time sig change
-		auto TimeSignaturePoint = MidiSongMap->GetTimeSignaturePoint(i);
-
-		FSlateDrawElement::MakeBox(OutDrawElements,
-			LayerId + 10,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSignaturePoint->StartTick) * horizontalZoom, -PaintPosVector.Y + 42))),
-			&gridBrush,
-			ESlateDrawEffect::None,
-			FLinearColor::White
-		);
-
-	}
-#endif
-
-
-	
 
 	//draw play cursor
 	FSlateDrawElement::MakeLines(OutDrawElements,
@@ -1468,15 +1358,6 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 #endif
 
-	//snapped mouse cursor
-	FSlateDrawElement::MakeLines(OutDrawElements,
-		PostNotesLayerID,
-		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) * horizontalZoom, 0))),
-		vertLine,
-		ESlateDrawEffect::None,
-		FLinearColor(255, 0, 255),
-		false,
-		FMath::Max(2.0f * horizontalZoom, 1.0f));
 
 	if (InputMode == EPianoRollEditorMouseMode::drawNotes)
 	{
@@ -1568,7 +1449,159 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		}
 	}
 
-	return PostNotesLayerID;
+	int timelineLayerID = PostNotesLayerID++;
+
+	//paint black box 50 units height as background for timeline
+	FSlateDrawElement::MakeBox(OutDrawElements,
+		timelineLayerID,
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, TimelineMargin), FSlateLayoutTransform(1.0f, FVector2D(0.0f, -PaintPosVector.Y))),
+		&gridBrush,
+		ESlateDrawEffect::None,
+		FLinearColor::Black
+	);
+
+
+
+	//draw subdivisions
+	for (const auto& [Tick, GridPoint] : GridPointMap)
+	{
+		FLinearColor LineColor;
+
+
+
+
+
+		//ugly as heck but probably ok for now
+		switch (GridPoint.Type)
+		{
+		case EGridPointType::Bar:
+			//draw bar number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y))),
+				FText::FromString(FString::FromInt(GridPoint.Bar)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+			//draw beat number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 18))),
+				FText::FromString(FString::FromInt(GridPoint.Beat)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+			//draw subdivision number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 30))),
+				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+
+			LineColor = FLinearColor::Gray;
+			break;
+
+		case EGridPointType::Subdivision:
+			//draw subdivision number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 30))),
+				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+			LineColor = FLinearColor::Black;
+			break;
+
+		case EGridPointType::Beat:
+			//draw beat number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 18))),
+				FText::FromString(FString::FromInt(GridPoint.Beat)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+			//draw subdivision number
+			FSlateDrawElement::MakeText(OutDrawElements,
+				timelineLayerID,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, -PaintPosVector.Y + 30))),
+				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+
+			LineColor = FLinearColor::Blue;
+			break;
+
+
+		}
+
+		FSlateDrawElement::MakeLines(OutDrawElements,
+			timelineLayerID,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, 0))),
+			vertLine,
+			ESlateDrawEffect::None,
+			LineColor,
+			false,
+			FMath::Max(5.0f * horizontalZoom, 1.0f));
+
+	}
+
+	for (const auto& TempoInfoPoint : MidiSongMap->GetTempoMap().GetTempoPoints())
+	{
+		//draw a square every tempo point
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			timelineLayerID,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TempoInfoPoint.StartTick) * horizontalZoom, -PaintPosVector.Y + 32))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			FLinearColor::Red
+		);
+
+	}
+#if (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 5)
+	for (size_t i = 0; i < MidiSongMap->GetNumTimeSignatureChanges(); i++)
+	{
+		//draw a blue box at each time sig change
+		auto TimeSignaturePoint = MidiSongMap->GetTimeSignaturePoint(i);
+
+		FSlateDrawElement::MakeBox(OutDrawElements,
+			timelineLayerID,
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSignaturePoint->StartTick) * horizontalZoom, -PaintPosVector.Y + 42))),
+			&gridBrush,
+			ESlateDrawEffect::None,
+			FLinearColor::White
+		);
+
+	}
+#endif
+
+
+	//snapped mouse cursor
+	FSlateDrawElement::MakeLines(OutDrawElements,
+		timelineLayerID++,
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping)* horizontalZoom, 0))),
+		vertLine,
+		ESlateDrawEffect::None,
+		FLinearColor(255, 0, 255),
+		false,
+		FMath::Max(2.0f * horizontalZoom, 1.0f));
+
+	return timelineLayerID;
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
