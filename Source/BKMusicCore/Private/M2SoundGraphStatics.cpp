@@ -6,6 +6,25 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
+
+FName UM2SoundGraphStatics::CheckIfInputNameIsUniqueAndMakeItSo(UDAWSequencerData* InGraph, FName Name)
+{
+	//inputs in this context refer to named graph inputs, not to vertex input pins, i.e these can connect to vertex inputs, in builder terminology InputNodeOutput 
+
+	if (InGraph->NamedInputs.Contains(Name))
+	{
+		FName NewName = FName(*FString::Printf(TEXT("%s%d"), *Name.ToString(), InGraph->NamedInputs.Num()));
+		//InGraph->NamedInputs.Add(NewName);
+		return CheckIfInputNameIsUniqueAndMakeItSo(InGraph, NewName);
+	}
+	else
+	{
+		//InGraph->NamedInputs.Add(Name);
+		return Name;
+	}
+
+}
+
 FName UM2SoundGraphStatics::GetParentPresetNameIfAny(UMetaSoundPatch* Patch)
 {
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
@@ -146,7 +165,7 @@ void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudi
 	}
 }
 
-TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumetInterface()
+TArray<UMetaSoundPatch*> UM2SoundGraphStatics::GetAllPatchesImplementingInstrumentInterface()
 {
 	TArray<UMetaSoundPatch*> Patches;
 

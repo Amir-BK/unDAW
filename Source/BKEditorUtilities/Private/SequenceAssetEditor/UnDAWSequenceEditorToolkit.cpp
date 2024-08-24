@@ -20,6 +20,7 @@
 #include "TimeSliderArgs.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 #include "SAssetDropTarget.h"
+#include "Widgets/Input/SComboBox.h"
 
 #include "Widgets/Docking/SDockTab.h"
 
@@ -66,6 +67,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					->SetSizeCoefficient(0.8f)
 					->AddTab("DAWSequenceMixerTab", ETabState::OpenedTab)
 					->AddTab("PianoRollTab", ETabState::OpenedTab)
+					
 				)
 				->Split
 				(
@@ -97,11 +99,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
+			
+
 				[
 					SNew(SOverlay)
 						+SOverlay::Slot()
 						[
 							SNew(SAssetDropTarget)
+								.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
 								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
@@ -140,6 +145,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			return DockTab;
 		}))
 		.SetDisplayName(INVTEXT("Piano Roll"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 
 	CreateGraphEditorWidget();
@@ -471,7 +477,41 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 					.OnValueChanged_Lambda([this](float NewValue) { if (PianoRollGraph) PianoRollGraph->NewNoteVelocity = NewValue; }));
 
 				ToolbarBuilder.EndSection();
+				//now a new section, combobox for midi input 
+
+				ToolbarBuilder.BeginSection("MIDI Input");
+				TArray<FMIDIDeviceInfo> InputDevices;
+				TArray<FMIDIDeviceInfo> OutputDevices;
+
+				UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
+
+				InputDeviceNames.Empty();
+				
+				for (auto& Device : InputDevices)
+				{
+					InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
+				}
+
+				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
+					.OptionsSource(&InputDeviceNames)
+					.OnSelectionChanged(this, &FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged)
+					.InitiallySelectedItem(InputDeviceNames[0])
+					.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
+						{
+							return SNew(STextBlock).Text(FText::FromString(*InItem));
+						})
+					.Content()
+					[
+						SNew(STextBlock).Text(INVTEXT("MIDI Input Device"))
+					]);
+
+
+
 			}));
+
+		
+
+			
 
 	AddToolbarExtender(ToolbarExtender);
 }
@@ -506,6 +546,28 @@ void FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(const FDragDropEvent& Event
 	
 	//return false;
 }
+
+void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Midi Input Device Changed"));
+	int32 DeviceID;
+	UMIDIDeviceManager::GetMIDIInputDeviceIDByName(*NewSelection.Get(), DeviceID);
+	SelectedInputDeviceName =NewSelection;
+	MidiDeviceController = UMIDIDeviceManager::CreateMIDIDeviceInputController(DeviceID, 512);
+
+	MidiDeviceController->OnMIDINoteOn.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOn);
+	MidiDeviceController->OnMIDINoteOff.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOff);
+	//control change
+	MidiDeviceController->OnMIDIControlChange.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiControlChange);
+
+	//MidiDeviceController->OnMIDINoteOn.
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Midi Data Received"));
+	//		//SequenceData->ProcessMidiData(Data);
+	//	});
+}
+
+
 
 FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {

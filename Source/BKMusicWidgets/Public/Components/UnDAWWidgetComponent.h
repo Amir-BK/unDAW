@@ -25,7 +25,7 @@ public:
 	TObjectPtr<UUnDAWWidgetBase> DAWWidgetInstance;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "unDAW|Widget")
-	AMusicScenePlayerActor* SceneManager;
+	TObjectPtr <AMusicScenePlayerActor> SceneManager;
 
 	UUnDAWWidgetComponent();
 	virtual void InitWidget() override; //to cache a reference to the widget instance as an undaw widget

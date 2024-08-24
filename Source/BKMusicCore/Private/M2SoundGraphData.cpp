@@ -12,6 +12,7 @@
 #include <EditableMidiFile.h>
 #include <HarmonixMidi/Blueprint/MidiNote.h>
 #include <HarmonixMetasound/DataTypes/MidiEventInfo.h>
+#include "Runtime/Launch/Resources/Version.h"
 #include <Vertexes/M2VariMixerVertex.h>
 
 DEFINE_LOG_CATEGORY(unDAWDataLogs);
@@ -24,6 +25,29 @@ struct FEventsWithIndex
 	FMidiEvent Event;
 	int32 EventIndex;
 };
+
+void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+		//if we have a track for this channel, add the note to the track
+		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+		bJustReceivedMessage = true;
+	//FWorldContext* WorldContext = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
+	//WorldContext->World
+
+}
+
+void UDAWSequencerData::OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note Off %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+		//if we have a track for this channel, remove the note from the track
+		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+}
+
+void UDAWSequencerData::OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value)
+{
+	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Control Change %d, %d, %d, %d"), Timestamp, Channel, Type, Value)
+}
 
 bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
@@ -219,7 +243,12 @@ void UDAWSequencerData::Tick(float DeltaTime)
 {
 	if (!AuditionComponent) return;
 
+//in UE 5.5 we don't need to call the update function, it's called automatically
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 	GeneratorHandle->UpdateWatchers();
+#endif
+
+
 	MetasoundCpuUtilization = GeneratorHandle->GetCPUCoreUtilization();
 
 }
@@ -239,7 +268,7 @@ void UDAWSequencerData::SetLoopSettings(const bool& InbIsLooping, const int32& B
 	BuilderContext->SetNodeInputDefault(SimpleLoopBoolInput, MSBuilderSystem->CreateBoolMetaSoundLiteral(InbIsLooping, DataTypeName), BuildResult);
 	CoreNodes.BuilderResults.Add(FName(TEXT("Set Simple Loop Input")), BuildResult);
 
-	if (BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
+	//if (BarDuration != INDEX_NONE) HarmonixMidiFile->GetSongMaps()->SetLengthTotalBars(BarDuration); //small hack, for now, so we don't overwrite duration if not needed
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Setting Loop Settings %s, %d"), InbIsLooping ? TEXT("True") : TEXT("False"), BarDuration)
 }
 
@@ -278,7 +307,8 @@ void UDAWSequencerData::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const
 void UDAWSequencerData::ReceiveMetaSoundMidiClockOutput(FName OutputName, const FMetaSoundOutput Value)
 {
 	Value.Get(CurrentTimestampData);
-
+	//UE_LOG(LogTemp, Log, TEXT("Count in seconds %f"), HarmonixMidiFile->GetSongMaps()->GetCountInSeconds());
+	//HarmonixMidiFile->GetSongMaps()->Precou
 	OnTimeStampUpdated.Broadcast(CurrentTimestampData);
 }
 
@@ -397,7 +427,7 @@ FString GetUniqueNameForTrack(const FString& BaseName, const UMidiFile& MidiFile
 void UDAWSequencerData::AddTrack()
 {
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	//add track at the end of metadata array, ensure widget is updated
 	FTrackDisplayOptions NewTrackMetaData;
@@ -532,7 +562,7 @@ void UDAWSequencerData::CalculateSequenceDuration()
 void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 {
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
@@ -574,7 +604,7 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	//so, before we can delete the note we need to empty our pending notes map and repopulate the main data map
 	// no actually, we can just remove the note from the midi file first
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	auto& NoteMetadata = M2TrackMetadata[PendingNote.TrackId];
 	PendingNote.ChannelId = NoteMetadata.ChannelIndexRaw;
@@ -618,8 +648,8 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 		if (FoundStartEvent != INDEX_NONE && FoundEndEvent != INDEX_NONE)
 		{
 			UE_LOG(unDAWDataLogs, Verbose, TEXT("Found note to delete!"))
-				MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent, 1, false);
-			MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent, 1, false);
+				MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundEndEvent, 1, EAllowShrinking::No);
+			MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetRawEvents().RemoveAt(FoundStartEvent, 1, EAllowShrinking::No);
 		}
 		else {
 			UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to delete!"))
@@ -639,7 +669,7 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
 				//we need to create a new midi file copy, so we don't modify the original
 		auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(inMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(inMidiFile);
 	HarmonixMidiFile = MidiFileCopy;
 
 		TArray<TTuple<int, int>> FoundChannels;
@@ -980,12 +1010,46 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 
 #endif
 
+bool UDAWSequencerData::RenameNamedInput(FName OldName, FName NewName)
+{
+	if (NamedInputs.Contains(NewName)) return false;
+	
+	if (NamedInputs.Contains(OldName))
+	{
+		
+		auto& MemberInput = NamedInputs[OldName];
+		MemberInput->Name = UM2SoundGraphStatics::CheckIfInputNameIsUniqueAndMakeItSo(this, NewName);
+		NamedInputs.Remove(OldName);
+		NamedInputs.Add(NewName, MemberInput);
+
+		return true;
+	}
+
+	checkNoEntry();
+	return false;
+}
+
+void UDAWSequencerData::PrintAllInputsAndOutputsToLog()
+{
+//get all IOs from builder context
+	TArray<FMetaSoundBuilderNodeOutputHandle> AllOutputs;
+	TArray<FMetaSoundBuilderNodeInputHandle> AllInputs;
+#if ((ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 5))
+	UMetaSoundFrontendMemberMetadata* MemberMetadata = NewObject<UMetaSoundFrontendMemberMetadata>(this);
+#endif
+	//MemberMetadata->
+
+	//BuilderContext->SetMemberMetadata()
+	BuilderContext->InitNodeLocations();
+	
+}
+
 void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 {
 	IsRecreatingMidiFile = true;
 
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
-	MidiFileCopy->LoadFromHarmonixBaseFile(HarmonixMidiFile);
+	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	for (auto PendingNote : PendingLinkedMidiNotesMap)
 	{
@@ -1011,6 +1075,19 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 	//HarmonixMidiFile = MidiFileCopy;
 	//MidiFileCopy->operator new
 		//HarmonixMidiFile
+}
+
+void UDAWSequencerData::OnStartPlaying(const FQualifiedFrameTime& InStartTime)
+{
+}
+
+void UDAWSequencerData::OnStopPlaying(const FQualifiedFrameTime& InStopTime)
+{
+}
+
+FFrameTime UDAWSequencerData::OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate)
+{
+	return FFrameTime();
 }
 
 FAssignableAudioOutput FM2SoundCoreNodesComposite::GetFreeMasterMixerAudioOutput()

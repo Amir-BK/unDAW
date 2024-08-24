@@ -8,39 +8,39 @@ void UEngravingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	//FBKMusicWidgetsModule::GetContentDir() + "Fonts\metadata\"
-	FString PluginContentDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetContentDir();
+	//FString PluginContentDir = IPluginManager::Get().FindPlugin(TEXT("unDAW"))->GetContentDir();
 
-	FString SMUFLGlyphNamesFilepath = PluginContentDir + TEXT("/Fonts/Metadata/glyphnames.json");
-	FString SMUFLClassesMetaFilepath = PluginContentDir + TEXT("/Fonts/Metadata/classes.json");
-	FString result, classesResult;
+	//FString SMUFLGlyphNamesFilepath = PluginContentDir + TEXT("/Fonts/Metadata/glyphnames.json");
+	//FString SMUFLClassesMetaFilepath = PluginContentDir + TEXT("/Fonts/Metadata/classes.json");
+	//FString result, classesResult;
 
-	FFileHelper::LoadFileToString(result, *SMUFLGlyphNamesFilepath);
-	FFileHelper::LoadFileToString(classesResult, *SMUFLClassesMetaFilepath);
+	//FFileHelper::LoadFileToString(result, *SMUFLGlyphNamesFilepath);
+	//FFileHelper::LoadFileToString(classesResult, *SMUFLClassesMetaFilepath);
 
-	TSharedPtr<FJsonObject> GlyphsJSON, ClassesJSON;
+	//TSharedPtr<FJsonObject> GlyphsJSON, ClassesJSON;
 
-	FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(result), GlyphsJSON);
-	for (auto i = GlyphsJSON.Get()->Values.CreateConstIterator(); i; ++i)
-	{
-		auto JSONObject = i->Value->AsObject();
-		FString tempString = i->Value->AsObject()->GetStringField(TEXT("codepoint"));
-		GlyphToUnicodeMap.Add(FName(i->Key), FParse::HexNumber(*tempString.Right(4)));
-		//UE_LOG(LogTemp, Warning,TEXT("Key is: %s"), *i->Key);
-	};
+	//FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(result), GlyphsJSON);
+	//for (auto i = GlyphsJSON.Get()->Values.CreateConstIterator(); i; ++i)
+	//{
+	//	auto JSONObject = i->Value->AsObject();
+	//	FString tempString = i->Value->AsObject()->GetStringField(TEXT("codepoint"));
+	//	GlyphToUnicodeMap.Add(FName(i->Key), FParse::HexNumber(*tempString.Right(4)));
+	//	//UE_LOG(LogTemp, Warning,TEXT("Key is: %s"), *i->Key);
+	//};
 
-	FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(classesResult), ClassesJSON);
-	for (auto i = ClassesJSON.Get()->Values.CreateConstIterator(); i; ++i)
-	{
-		FGlyphCategory newCategory;
+	//FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(classesResult), ClassesJSON);
+	//for (auto i = ClassesJSON.Get()->Values.CreateConstIterator(); i; ++i)
+	//{
+	//	FGlyphCategory newCategory;
 
-		auto ContentArray = i->Value->AsArray();
-		for (auto& item : ContentArray) {
-			newCategory.ContentGlyphs.Add(FName(item.Get()->AsString()));
-		}
-		//FString tempString = i->Value->AsObject()->GetStringField(TEXT("codepoint"));
-		//GlyphToUnicodeMap.Add(FName(i->Key), FParse::HexNumber(*tempString.Right(4)));
-		SMUFLClasses.Add(FName(i->Key), newCategory);
-	};
+	//	auto ContentArray = i->Value->AsArray();
+	//	for (auto& item : ContentArray) {
+	//		newCategory.ContentGlyphs.Add(FName(item.Get()->AsString()));
+	//	}
+	//	//FString tempString = i->Value->AsObject()->GetStringField(TEXT("codepoint"));
+	//	//GlyphToUnicodeMap.Add(FName(i->Key), FParse::HexNumber(*tempString.Right(4)));
+	//	SMUFLClasses.Add(FName(i->Key), newCategory);
+	//};
 }
 
 int32 UEngravingSubsystem::GetUnicodeIntForGlyph(FName GlyphName)

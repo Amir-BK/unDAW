@@ -95,7 +95,7 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 		if (PinLinkedTo > 0)
 		{
 			//we need to check if we're currently connected to a vertex, if so, break that connection;
-			auto* CurrentConnection = Cast<UM2Pins>(Pin->PinType.PinSubCategoryObject)->LinkedPin;
+			UM2Pins* CurrentConnection = Cast<UM2Pins>(Pin->PinType.PinSubCategoryObject)->LinkedPin;
 			if (CurrentConnection)
 			{
 				//break the connection
@@ -545,15 +545,18 @@ TSharedPtr<SGraphNode> UM2SoundRerouteNode::CreateVisualWidget()
 
 void UM2SoundDynamicGraphInputNode::OnRenameNode(const FString& NewName)
 {
+	//this is very lazy and won't work, we need to ensure names are unique, but for now, we'll just set the name
+	Cast<UM2SoundDynamicGraphInputVertex>(Vertex)->RenameInput(FName(NewName)); //  MemberName = FName(*NewName);
+
 }
 
 FText UM2SoundDynamicGraphInputNode::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return INVTEXT("INPUT NAME PLACEHOLDER");
+	return FText::FromName(Cast<UM2SoundDynamicGraphInputVertex>(Vertex)->MemberName);
 }
 
-void UM2SoundDynamicGraphInputNode::AllocateDefaultPins()
-{
-	//create one wildcard output pin
-	CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), FName(TEXT("Wildcard")));
-}
+//void UM2SoundDynamicGraphInputNode::AllocateDefaultPins()
+//{
+//	//create one wildcard output pin
+//	CreatePin(EGPD_Output, FName(TEXT("MetasoundLiteral")), FName(TEXT("Wildcard")));
+//}

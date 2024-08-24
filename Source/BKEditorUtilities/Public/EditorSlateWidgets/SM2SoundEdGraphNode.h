@@ -14,6 +14,7 @@
 #include "AutoPatchWidgets/SAutoPatchWidget.h"
 #include "ScopedTransaction.h"
 #include "M2SoundEdGraphSchema.h"
+#include "SM2SoundGraphPin.h"
 
 /**
  * I'm lazy so this slate widget is going to only be used for patches/inserts
@@ -83,6 +84,8 @@ public:
 		if (AsM2SoundPatchContainerNode) AsM2SoundPatchContainerNode->OnNodeUpdated.Unbind();
 		//GraphNode->OnNodeUpdated.Unbind();
 	}
+
+	virtual TSharedPtr<SGraphPin> CreatePinWidget(UEdGraphPin* InPin) const override;
 
 private:
 	T ParameterInterface;
@@ -287,3 +290,10 @@ protected:
 	//patch vertex
 	UM2SoundPatch* PatchVertex;
 };
+
+template<typename T>
+inline TSharedPtr<SGraphPin> SM2SoundPatchContainerGraphNode<T>::CreatePinWidget(UEdGraphPin* InPin) const
+{
+
+	return SNew(SM2SoundGraphPin, InPin);
+}

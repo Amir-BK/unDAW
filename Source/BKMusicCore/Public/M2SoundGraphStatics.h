@@ -47,6 +47,9 @@ class BKMUSICCORE_API UM2SoundGraphStatics : public UBlueprintFunctionLibrary
 
 public:
 
+
+	static FName CheckIfInputNameIsUniqueAndMakeItSo(UDAWSequencerData* InGraph, FName Name = NAME_None);
+
 	/**
 	 * Get the parent preset name of a patch if it has one, otherwise will return the name of the patch itself
 	 * @param Patch The patch to get the parent preset name of
@@ -93,7 +96,7 @@ public:
 	* @return An array of all the patches that implement the instrument interface
 	* */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "unDAW|MetaSound Builder Helper")
-	static TArray<UMetaSoundPatch*> GetAllPatchesImplementingInstrumetInterface();
+	static TArray<UMetaSoundPatch*> GetAllPatchesImplementingInstrumentInterface();
 
 	/**
 	* Get All Metasound Patches that implement the unDAW insert parameter interface

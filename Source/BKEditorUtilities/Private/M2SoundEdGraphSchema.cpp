@@ -58,7 +58,8 @@ const FPinConnectionResponse UM2SoundEdGraphSchema::CanCreateConnection(const UE
 
 		if (ACategory == "MetasoundLiteral")
 		{
-			if (A->PinType.PinSubCategory == B->PinType.PinSubCategory)
+			// kinda crazy dunno if I got it right, if categories match OR only one is a wildcard then we can connect
+			if (A->PinType.PinSubCategory == B->PinType.PinSubCategory || (!(B->PinType.PinSubCategory != "WildCard") != !(A->PinType.PinSubCategory != "WildCard")))
 			{
 				if(!bWillCauseLoop) 	return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Connect Metasound Literals, Type: ") + B->PinType.PinSubCategory.ToString());
 			}
@@ -358,6 +359,8 @@ FM2SoundGraphToOutputAction::FM2SoundGraphToOutputAction(const TArray<UEdGraphPi
 , SourcePins(InSourcePins)
 {}
 
+
+
 void UM2SoundGraph::SaveVertexRangesToCache()
 {
 	//we'll need only the patches
@@ -561,7 +564,12 @@ UEdGraphNode* FM2SoundGraphPromoteToGraphInputAction::MakeNode(UEdGraph* ParentG
 	FGraphNodeCreator<UM2SoundDynamicGraphInputNode> NodeCreator(*ParentGraph);
 	auto Node = NodeCreator.CreateUserInvokedNode();
 
-	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundBuilderInputHandleVertex>(Node->GetSequencerData());
+	Node->Vertex = FVertexCreator::CreateVertex<UM2SoundDynamicGraphInputVertex>(Node->GetSequencerData());
+	FName CurrentInputName = FromPin->PinName;
+	Cast<UM2SoundDynamicGraphInputVertex>(Node->Vertex)->MemberName = UM2SoundGraphStatics::CheckIfInputNameIsUniqueAndMakeItSo(Node->GetSequencerData(), CurrentInputName);
+	Node->GetSequencerData()->AddVertex(Node->Vertex);
+
+
 	//Node->Name = FName("Graph Input");
 
 	NodeCreator.Finalize();

@@ -20,10 +20,10 @@ class UM2SoundEdGraphNode;
 
 struct FPlacementDefaults
 {
-	static const int OffsetBetweenNodes = 200;
-	static const int OutputsColumnPosition = 1400;
-	static const int InputsColumnPosition = 300;
-	static const int InstrumentColumns = 950;
+	static constexpr int OffsetBetweenNodes = 200;
+	static constexpr int OutputsColumnPosition = 1400;
+	static constexpr int InputsColumnPosition = 300;
+	static constexpr int InstrumentColumns = 950;
 };
 
 UCLASS()
@@ -68,10 +68,10 @@ public:
 	void PerformVertexToNodeBinding();
 
 	//UPROPERTY(Transient, EditFixedSize, EditAnywhere, Instanced, meta = (TitleProperty = "{Name}") , Category = "Selection")
-	TArray<UM2SoundEdGraphNode*> SelectedNodes;
+	TArray<TObjectPtr<UM2SoundEdGraphNode>> SelectedNodes;
 
 	UPROPERTY(Transient, EditFixedSize, Instanced, EditAnywhere, Category = "Selection")
-	TArray<UM2SoundVertex*> SelectedVertices;
+	TArray<TObjectPtr<UM2SoundVertex>> SelectedVertices;
 
 	UFUNCTION()
 	void OnVertexAdded(UM2SoundVertex* Vertex) {
@@ -104,7 +104,7 @@ public:
 private:
 
 	UPROPERTY()
-	TMap<UM2SoundVertex*, UM2SoundEdGraphNode*> VertexToNodeMap;
+	TMap<TObjectPtr<UM2SoundVertex>, TObjectPtr<UM2SoundEdGraphNode>> VertexToNodeMap;
 };
 
 /**

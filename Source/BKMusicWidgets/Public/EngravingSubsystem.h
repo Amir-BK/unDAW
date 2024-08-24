@@ -170,77 +170,6 @@ public:
 	TMap<FName, FGlyphData> glyphs;
 };
 
-UCLASS(BlueprintType, EditInlineNew, Meta = (UsesHierarchy = "true", ShowInnerProperties = "true"), CollapseCategories, Category = "BK Music|Engraving|Tests")
-class BKMUSICWIDGETS_API UMusicalEvent : public UObject
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|Engraving|Tests")
-	int32 duration = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|Engraving|Tests")
-	float velocity = 100;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|Engraving|Tests")
-	int32 start_time = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|Engraving|Tests")
-	FQuantizedDuration QuartzDuration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", EditInLine = "true"), Category = "BK Music|Engraving|Tests")
-	FQuartzQuantizationBoundary QuartzStarttime;
-
-	//this is the event which is 'note off' for this guy,
-	UPROPERTY()
-	UPitchedMusicalEvent* LinkedEvent;
-};
-
-UCLASS(BlueprintType, Meta = (UsesHierarchy = "true", ShowInnerProperties = "true"), CollapseCategories, Category = "BK Music|Engraving|Tests")
-class BKMUSICWIDGETS_API UPitchedMusicalEvent : public UMusicalEvent
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BluePrintSetter = UpdatePitch, meta = (ExposeOnSpawn = "true", EditInLine = "true", ClampMin = "0", ClampMax = "127"), Category = "BK Music|Engraving|Tests")
-	int pitch = 0;
-
-	UPROPERTY(BlueprintReadOnly, Category = "BK Music|Engraving|Tests")
-	FString NoteName = "G6";
-
-	//used for previewing musical events before the user adds them
-	bool bIsPreview = false;
-
-	UFUNCTION(BluePrintSetter, Category = "BK Music|Engraving|Tests")
-	void UpdatePitch(int newPitch);
-};
-
-UCLASS(BlueprintType, EditInlineNew, Meta = (UsesHierarchy = "true", ShowInnerProperties = "true"), CollapseCategories, Category = "BK Music|Engraving|Tests")
-class BKMUSICWIDGETS_API UMusicSceneTrack : public UObject
-{
-	GENERATED_BODY()
-public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ShowInnerProperties = "true", DisplayPriority = "1"), Category = "BK Music|Engraving|Tests")
-	FString TrackName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, meta = (ShowInnerProperties = "true", DisplayPriority = "1"), Category = "BK Music|Engraving|Tests")
-	TArray<UMusicalEvent*> contentEvents;
-};
-
-UCLASS(BlueprintType)
-class BKMUSICWIDGETS_API UMusicSceneAsset : public UDataAsset
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, meta = (ShowInnerProperties = "true", DisplayPriority = "1"), Category = "BK Music|Engraving|Tests")
-	TArray<UMusicalEvent*> contentTest;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, meta = (ShowInnerProperties = "true", DisplayPriority = "1"), Category = "BK Music|Engraving|Tests")
-	TArray<UMusicSceneTrack*> Tracks;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Engraving|Tests")
-	float startingBPM;
-};
 
 /**
  * Engraving subsystem, loads SMUFL fonts, manages their metadata, stuff.
@@ -269,7 +198,7 @@ public:
 	TMap<FName, FGlyphCategory> SMUFLClasses;
 
 	UPROPERTY(BluePrintReadOnly, DisplayName = "Engraving Fonts", Category = "BK Music|Engraving|Tests")
-	TMap<FName, UMusicFont*> music_fonts;
+	TMap<FName, TObjectPtr<UMusicFont>> music_fonts;
 
 	constexpr static bool IsNoteInCmajor(int const noteIn) {
 		if (noteIn % 12 == 0) return true;

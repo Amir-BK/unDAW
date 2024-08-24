@@ -18,8 +18,10 @@
 #include "MetasoundBuilderSubsystem.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
+#include "MidiDeviceManager.h"
 
 #include <Pins/M2Pins.h>
+#include "Evaluation/IMovieSceneCustomClockSource.h"
 #include "M2SoundGraphData.generated.h"
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWDataLogs, Verbose, All);
@@ -406,7 +408,7 @@ protected:
 private:
 
 	UPROPERTY();
-	UDAWSequencerData* SessionData;
+	TObjectPtr<UDAWSequencerData> SessionData;
 	void CreateMidiPlayerAndMainClock();
 	void CreateMainMixer();
 
@@ -419,10 +421,21 @@ class UMappedVertexCache;
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
 UCLASS(BlueprintType, EditInlineNew, Category = "unDAW Sequence")
-class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject
+class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameObject, public IMovieSceneCustomClockSource
 {
 	GENERATED_BODY()
 public:
+
+	bool bJustReceivedMessage = false;
+
+	UFUNCTION()
+	void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+
+	UFUNCTION()
+	void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+
+	UFUNCTION()
+	void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
 
 	float MetasoundCpuUtilization = 0.0f;
 
@@ -436,7 +449,7 @@ public:
 	UMetaSoundPatchBuilder* PatchBuilder;
 
 	UPROPERTY(VisibleAnywhere)
-	UMetaSoundPatch* BuilderPatch;
+	TObjectPtr <UMetaSoundPatch> BuilderPatch;
 
 	UFUNCTION(CallInEditor)
 	void CreateNewPatchBuilder();
@@ -498,6 +511,7 @@ public:
 		return false;
 	};
 
+	//this templating is a stupid confusing waste of time doesn't save any effort and makes the code harder to read, can just make these plain ole methods
 	template<typename T>
 	bool ConnectPins(T* InInput, T* InOutput)
 	{
@@ -506,33 +520,9 @@ public:
 		return false;
 	};
 
+
 	template<>
-	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
-	{
-		if (InInput && InOutput)
-		{
-			EMetaSoundBuilderResult Result;
-			BuilderContext->ConnectNodes(InOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
-
-			//print all data from the pins so we debug what's going on
-			//print connection result
-			if (Result == EMetaSoundBuilderResult::Succeeded)
-			{
-				InInput->LinkedPin = InOutput;
-				InOutput->LinkedPin = InInput;
-			}
-			else
-			{
-				UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Failed!"));
-			}
-
-			InInput->ConnectionResult = Result;
-			
-
-			return Result == EMetaSoundBuilderResult::Succeeded;
-		}
-		return false;
-	};
+	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput);;
 
 	template<>
 	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
@@ -589,7 +579,7 @@ public:
 	void ExecuteTriggerParameter(FName ParameterName);
 
 	UPROPERTY(BlueprintReadOnly, Category = "unDAW|Audition Component")
-	UMetasoundGeneratorHandle* GeneratorHandle;
+	TObjectPtr <UMetasoundGeneratorHandle> GeneratorHandle;
 
 	//tickable object interface, neccesary to monitor the sequencer in editor
 
@@ -606,7 +596,7 @@ public:
 
 	//After BeginPlay it is safe to use this audio component to set up additional output watchers or to send audio parameters
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "unDAW")
-	UAudioComponent* AuditionComponent = nullptr;
+	TObjectPtr<UAudioComponent> AuditionComponent = nullptr;
 
 	TSet<TTuple<int32, int32>> CurrentlyActiveNotes;
 
@@ -665,10 +655,10 @@ public:
 	FOnSelectionChanged OnSelectionChanged;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "unDAW")
-	UMetaSoundSourceBuilder* BuilderContext;
+	TObjectPtr <UMetaSoundSourceBuilder> BuilderContext;
 
 	UPROPERTY(VisibleAnywhere)
-	UCurveFloat* TempoCurve;
+	TObjectPtr <UCurveFloat> TempoCurve;
 
 	UMetaSoundBuilderSubsystem* MSBuilderSystem;
 
@@ -679,7 +669,7 @@ public:
 	int SelectedTrackIndex = INDEX_NONE;
 
 	UPROPERTY()
-	TMap<UM2SoundVertex*, FAssignableAudioOutput> AudioOutsMap;
+	TMap<TObjectPtr <UM2SoundVertex>, FAssignableAudioOutput> AudioOutsMap;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
@@ -719,14 +709,14 @@ public:
 
 	//void ApplyParameterViaParameterPack
 
-	const TSet<UM2SoundVertex*>& GetVertexes() const { return Vertexes; }
+	const TSet<TObjectPtr<UM2SoundVertex>>& GetVertexes() const { return Vertexes; }
 
 	void RemoveVertex(UM2SoundVertex* Vertex);
 
 #if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
-	UM2SoundGraphBase* M2SoundGraph;
+	TObjectPtr <UM2SoundGraphBase> M2SoundGraph;
 
 	UPROPERTY()
 	FVector2D GraphPosition;
@@ -758,7 +748,7 @@ public:
 	//for now this has to be set, although switching midi files is possible it deletes the entire graph
 	//I'll make this thus read only, and change the facotry so that it creates a new empty midi file when we create a new session
 	UPROPERTY(VisibleAnywhere, Category = "unDAW", BlueprintReadOnly)
-	UMidiFile* HarmonixMidiFile;
+	TObjectPtr <UMidiFile> HarmonixMidiFile;
 
 	//we probably don't need all of these copies... 
 	UPROPERTY()
@@ -793,10 +783,10 @@ private:
 	FTrackDisplayOptions InvalidTrackRef;
 
 	UPROPERTY(VisibleAnywhere)
-	TSet<UM2SoundVertex*> Vertexes;
+	TSet<TObjectPtr <UM2SoundVertex>> Vertexes;
 
 	UPROPERTY(Transient, VisibleAnywhere)
-	TSet<UM2SoundVertex*> TransientVertexes;
+	TSet<TObjectPtr <UM2SoundVertex>> TransientVertexes;
 
 
 	// as the sequener should contain a 'recipe' it effectively needs several maps to store the data, mapping the different types of vertexes, the data in these, coupled with the metadata extracted from the midi file should suffice to create a static performer
@@ -805,7 +795,19 @@ private:
 public:
 
 	UPROPERTY()
-	TMap<FName, UM2VariMixerVertex*> Mixers;
+	TMap<FName, TObjectPtr <UM2VariMixerVertex>> Mixers;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<FName, TObjectPtr <UM2MetasoundLiteralPin>> NamedInputs;
+
+	UFUNCTION()
+	bool RenameNamedInput(FName OldName, FName NewName);
+
+	UFUNCTION(CallInEditor, Category = "unDAW")
+	void PrintAllInputsAndOutputsToLog();
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<UM2MetasoundLiteralPin>> NamedOutputs;
 
 	//TArray<FName> GetMixerNames();
 
@@ -824,4 +826,71 @@ public:
 	//further optimizations can be achieved by tracking the transport position and state and using that to push notes on time
 	UFUNCTION()
 	void PushPendingNotesToNewMidiFile();
+
+	public:
+		// IMovieSceneCustomClockSource interface
+
+		//virtual void OnTick(float DeltaSeconds, float InPlayRate) override;
+		virtual void OnStartPlaying(const FQualifiedFrameTime& InStartTime) override;
+		virtual void OnStopPlaying(const FQualifiedFrameTime& InStopTime) override;
+		virtual FFrameTime OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate) override;
+
+		// end IMovieSceneCustomClockSource interface
 };
+
+template<>
+inline bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
+{
+
+	//so we need to check if output is wildcard, if it is wildcard we check if the builder already has a graph input for this pin, if it does we connect it,
+	// if not we create it and assign the handle to the pin.
+
+	if (InOutput->DataType == M2Sound::Pins::AutoDiscovery::WildCard)
+	{
+		EMetaSoundBuilderResult Result;
+		//auto* VertexAsDynamicInput = Cast<UM2SoundDynamicGraphInputVertex>(InOutput->ParentVertex);
+		FName MemberName = InOutput->AutoGeneratedGraphInputName;
+		if (InOutput->bIsSet)
+		{
+			BuilderContext->ConnectNodeInputToGraphInput(MemberName, InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+		}
+		else
+		{
+			// this is problematic, we need a more robust mechanism for settings defaults, this will assign the default by the first connection which is unpredictable and undesirable
+			InOutput->SetHandle<FMetaSoundBuilderNodeOutputHandle>(BuilderContext->AddGraphInputNode(MemberName, InInput->DataType, InInput->LiteralValue, Result));
+			BuilderContext->ConnectNodeInputToGraphInput(MemberName, InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+			InOutput->bIsSet = true;
+		}
+
+		InInput->LinkedPin = InOutput;
+		InOutput->LinkedPin = InInput;
+
+		//auto GraphInputMember = BuilderContext->ConnectNodeInputToGraphInput
+		return Result == EMetaSoundBuilderResult::Succeeded;
+	}
+
+
+	if (InInput && InOutput)
+	{
+		EMetaSoundBuilderResult Result;
+		BuilderContext->ConnectNodes(InOutput->GetHandle<FMetaSoundBuilderNodeOutputHandle>(), InInput->GetHandle<FMetaSoundBuilderNodeInputHandle>(), Result);
+
+		//print all data from the pins so we debug what's going on
+		//print connection result
+		if (Result == EMetaSoundBuilderResult::Succeeded)
+		{
+			InInput->LinkedPin = InOutput;
+			InOutput->LinkedPin = InInput;
+		}
+		else
+		{
+			UE_LOG(unDAWDataLogs, Warning, TEXT("Connection Failed!"));
+		}
+
+		InInput->ConnectionResult = Result;
+
+
+		return Result == EMetaSoundBuilderResult::Succeeded;
+	}
+	return false;
+}

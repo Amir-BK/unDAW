@@ -11,6 +11,9 @@
 #include "HarmonixMetasound/Components/MusicTempometerComponent.h"
 #include "Vertexes/M2ActionVertex.h"
 #include "HarmonixMidi/MidiSongPos.h"
+#include "Evaluation/IMovieSceneCustomClockSource.h"
+
+#include "LevelSequenceActor.h"
 
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateSettings.h"
@@ -19,14 +22,15 @@
 
 
 UCLASS()
-class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface
+class BKMUSICCORE_API AMusicScenePlayerActor : public AActor, public IBK_MusicSceneManagerInterface, public IMovieSceneCustomClockSource
 {
 	GENERATED_BODY()
 
 public:
 
-	UFUNCTION(Exec)
-	void TestExecCommand(FString Command) { GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Command); }
+	UPROPERTY(EditAnywhere)
+	TArray< TObjectPtr<UMidiFile>> MidiClips;
+
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAudioBus> MasterAudioBus;
@@ -55,8 +59,12 @@ public:
 	//allows spawning a metasound patch attached to a scene component, if the patch implements the 'audible action' interface it will be connected automatically to the MIDI clock and the transport
 	//An audio component is spawned via the gameplaystatics library, the reference to it is stored in the return vertex
 	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
-	UM2ActionVertex* SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, USoundAttenuation* AttenuationSettings = nullptr, USoundConcurrency* ConcurrencySettings = nullptr, bool bAutoDestroy = true);
+	UM2ActionVertex* SpawnPatchAttached(FMusicTimestamp InTimestamp, UMetaSoundPatch* Patch, UMidiFile* MidiClip = nullptr, EMidiClockSubdivisionQuantization InQuantizationUnits = EMidiClockSubdivisionQuantization::None, USceneComponent* AttachToComponent = nullptr, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, USoundAttenuation* AttenuationSettings = nullptr, USoundConcurrency* ConcurrencySettings = nullptr, bool bAutoDestroy = true);
 
+	//to play midi files at the correct time we need to shift the midi file to the correct time, and crop it to the correct length
+	UFUNCTION(BlueprintCallable, Category = "Audio", meta = (AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true", Keywords = "play"))
+
+	UEditableMidiFile* ShiftAndCropMidiAsset(UMidiFile* InMidiClip, FMusicalTimeSpan InTimeSpan, FMusicTimestamp InTimestamp, EMidiClockSubdivisionQuantization InQuantizationUnits = EMidiClockSubdivisionQuantization::None );
 
 	// Sets default values for this actor's properties
 	AMusicScenePlayerActor();
@@ -81,13 +89,13 @@ public:
 	//The harmonix music clock component exposes a lot of nice functions and writes the tempo data to the MaterialParameterCollection
 	//but it has some quirks, it's bar reading might not be accurate, especially if you send seek events to the midi player
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicClockComponent* VideoSyncedMidiClock;
+	TObjectPtr <UMusicClockComponent> VideoSyncedMidiClock;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicClockComponent* AudioSyncedMidiClock;
+	TObjectPtr < UMusicClockComponent> AudioSyncedMidiClock;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "unDAW|Music Scene")
-	UMusicTempometerComponent* MusicTempometer;
+	TObjectPtr <UMusicTempometerComponent> MusicTempometer;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "unDAW|Music Scene")
 	TObjectPtr<UMaterialParameterCollection> MaterialParameterCollection;
@@ -128,4 +136,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "BK Music")
 	void UpdateWatchers();
+
+public:
+	// IMovieSceneCustomClockSource interface
+
+	virtual void OnTick(float DeltaSeconds, float InPlayRate) override;
+	virtual void OnStartPlaying(const FQualifiedFrameTime& InStartTime) override;
+	virtual void OnStopPlaying(const FQualifiedFrameTime& InStopTime) override;
+	virtual FFrameTime OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate) override;
+
+	// end IMovieSceneCustomClockSource interface
+
+		/** Pointer to the sequence actor to use for playback */
+	UPROPERTY(EditAnywhere, Category = "Synchronization")
+	TObjectPtr<ALevelSequenceActor> Sequence;
+
 };

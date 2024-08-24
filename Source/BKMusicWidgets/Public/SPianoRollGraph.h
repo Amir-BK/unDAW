@@ -28,6 +28,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Types/SlateAttribute.h"
+#include <Pianoroll/MarqueeOperation.h>
 
 //#include "SMidiNoteContainer.h"
 
@@ -98,6 +99,21 @@ public:
 DECLARE_DELEGATE(FOnInitComplete)
 DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
 
+enum class EGridPointType : uint8
+{
+	Bar,
+	Beat,
+	Subdivision
+};
+
+struct FMusicalGridPoint
+{
+	EGridPointType Type = EGridPointType::Bar;
+	int32 Bar = 0;
+	int8 Beat = 1;
+	int8 Subdivision = 1;
+};
+
 class ITimeSliderController;
 
 /**
@@ -137,9 +153,13 @@ public:
 
 private:
 
+	FPianorollMarqueeOperation MarqueeSelection;
+
 	TSlateAttribute<float> PianoTabWidth;
 
 	bool bIsAttributeBoundMusicTimestamp = false;
+
+	//TArray<FMusicalGridPoint> GridPoints;
 
 public:
 
@@ -184,6 +204,9 @@ public:
 
 	TArray<int32> VisibleBeats;
 	TArray<int32> VisibleBars;
+	TArray<int32> VisibleSubdivisions;
+	TArray<FMusicalGridPoint> GridPoints;
+	TMap<int32, FMusicalGridPoint> GridPointMap;
 	FVector2D ComputeDesiredSize(float) const override { return FVector2D(1000, 1000); };
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
@@ -264,6 +287,8 @@ public:
 
 	void RecalcGrid();
 
+	void RecalcSubdivisions();
+
 	TSharedPtr<SWrapBox> QuantizationButtons;
 
 	TSharedPtr<SWrapBox> GetQuantizationButtons();
@@ -289,6 +314,9 @@ protected:
 
 	// = FVector2f::Zero();
 	bool bLMBdown = false;
+
+	float TotalMouseDelta = 0;
+
 	bool wasLMDownLastFrame = false;
 	bool isCtrlPressed = false;
 	bool isShiftPressed = false;
@@ -314,12 +342,9 @@ protected:
 
 	virtual void CacheDesiredSize(float InLayoutScaleMultiplier) override;
 
-	TOptional<EMouseCursor::Type> GetCursor() const override
-	{
-		if (InputMode == EPianoRollEditorMouseMode::empty || InputMode == EPianoRollEditorMouseMode::Panning) return EMouseCursor::Default;
+	EMouseCursor::Type CursorType = EMouseCursor::Default;
 
-		return EMouseCursor::None;
-	}
+	TOptional<EMouseCursor::Type> GetCursor() const override;
 	// End SWidget overrides.
 
 public:

@@ -3,7 +3,7 @@
 #include "EditableMidiFile.h"
 #include "Curves/CurveFloat.h"
 
-void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloat* InTempoCurve)
+void UEditableMidiFile::LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* BaseFile, UCurveFloat* InTempoCurve, int32 InOffsetTicks)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UEditableMidiFile::LoadFromHarmonixBaseFile"));
 	// Copy the base file's data
@@ -11,6 +11,48 @@ void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloa
 	//InitParams .NameOfFeatureRequestingProxyData = ;
 	auto ProxyData = BaseFile->CreateProxyData(InitParams);
 	TheMidiData = *StaticCastSharedPtr<FMidiFileProxy>(ProxyData)->GetMidiFile();
+	
+	if(InOffsetTicks != 0)
+	{
+		int i = 0;
+		for (auto& Track : TheMidiData.Tracks)
+		{
+			//skip the first track as its the tempo track, the use case I support is to offset all tracks except the tempo track
+			//if (i++ == 0) continue;
+
+			//new midi track
+			auto NewTrack = FMidiTrack(*Track.GetName());
+
+			for (auto& Event : Track.GetEvents())
+			{
+				//Track.ChangeTick(Track.GetRawEvents(), Event.GetTick() + InOffsetTicks);
+				//if event is text and tick == 0, skip
+				if(Event.GetMsg().MsgType() == FMidiMsg::EType::Text && Event.GetTick() == 0)
+				{
+					//NewTrack.AddEvent(Event);
+					continue;
+				}
+
+				//if event is tempo or time sig event and tick is 0 skip
+				if(Event.GetMsg().MsgType() == FMidiMsg::EType::Tempo || Event.GetMsg().MsgType() == FMidiMsg::EType::TimeSig)
+				{
+					if(Event.GetTick() == 0)
+					{
+						NewTrack.AddEvent(Event);
+						continue;
+					}
+				}
+
+				auto NewMessage = Event.GetMsg();
+				FMidiEvent NewEvent = FMidiEvent(Event.GetTick() + InOffsetTicks, Event.GetMsg());
+				NewTrack.AddEvent(NewEvent);
+			}
+
+			TheMidiData.Tracks[i++] = NewTrack;
+		}
+		SortAllTracks();
+	}
+
 	//TheMidiData.SongMaps.Init(TheMidiData.TicksPerQuarterNote);
 	if(InTempoCurve)
 	{
@@ -26,12 +68,10 @@ void UEditableMidiFile::LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloa
 	//TheMidiData.SongMaps.GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(75), 0);
 
 	//print the track names
+	//PopulateTempoCurve();
+	//OnTempoCurveChanged
 
-	for (auto& Track : TheMidiData.Tracks)
-	{
-		FString TrackName = *Track.GetName();
-		UE_LOG(LogTemp, Warning, TEXT("Track Name: %s"), *TrackName);
-	}
+	SortAllTracks();
 
 	RenderableCopyOfMidiFileData = nullptr;
 	ProxyData.Reset();

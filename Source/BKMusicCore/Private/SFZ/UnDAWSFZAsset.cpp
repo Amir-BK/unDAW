@@ -2,20 +2,10 @@
 
 #include "SFZ/UnDAWSFZAsset.h"
 
-#include "SFZ/UnDAWSFZPerformer.h"
-
 UFKSFZAsset::UFKSFZAsset()
 {
 }
 
-UFK_SFZ_Performer* UFKSFZAsset::CreateSFZPerformerFromSampleBank(UFKSFZAsset* inAsset, UMetaSoundSource* metasoundToUse)
-{
-	auto toReturn = NewObject<UFK_SFZ_Performer>();
-	toReturn->ParentSFZBank = inAsset;
-	toReturn->PerformanceMetasound = metasoundToUse;
-
-	return toReturn;
-}
 
 TArray<UFKSFZAsset*> UFKSFZAsset::GetAllSFZAssets()
 {
@@ -97,12 +87,6 @@ void UFKSFZAsset::MapNotesToRanges()
 	}
 }
 
-TSharedPtr<Audio::IProxyData> UFKSFZAsset::CreateProxyData(const Audio::FProxyDataInitParams& InitParams)
-{
-	if (!DataPtr) DataPtr = MakeShared<TMap<int, USFZGroupedRegions*>>();
-	*DataPtr = notesToGroupsMap;
-	return MakeShared<F_FK_SFZ_Asset_Proxy>(this);
-}
 
 //this is the critical function where the performance data is populated in the runtime struct
 void UFK_Region_Runtime_Performance_Data::InitWithRegionObjectAndPitch(const float& inVelocity, const int& Note, USFZRegion* RegionData)
@@ -169,7 +153,7 @@ void USFZRegion::InitializeParams()
 		if (IsValid(WavAsset))
 		{
 			const auto& SampleRate = WavAsset->GetSampleRateForCurrentPlatform();
-			UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Platform SR: %f "), SampleRate)
+			//UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Platform SR: %f "), SampleRate)
 				SFZNormalizedTimedParamsArray.Add(key, static_cast<float>(value) / SampleRate);
 		}
 		else
@@ -189,10 +173,10 @@ void USFZRegion::InitializeParams()
 			for (const auto& LoopRegion : WavAsset->GetLoopRegions())
 			{
 				Loop_Start_Time = static_cast<float>(LoopRegion.FramePosition) / SampleRate;
-				UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Detected Loop Cue Point In wave file with no loop data set start: %d, %f "), LoopRegion.FramePosition, Loop_Start_Time)
+			//	UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Detected Loop Cue Point In wave file with no loop data set start: %d, %f "), LoopRegion.FramePosition, Loop_Start_Time)
 					Loop_Duration_Time = static_cast<float>(LoopRegion.FrameLength) / SampleRate;
 
-				UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Detected Loop Cue Point In ave File with no loop data set duration: %d, %f "), LoopRegion.FrameLength, Loop_Duration_Time)
+			//	UE_LOG(FK_SFZ_Logs, Verbose, TEXT("Detected Loop Cue Point In ave File with no loop data set duration: %d, %f "), LoopRegion.FrameLength, Loop_Duration_Time)
 			}
 		}
 	}
@@ -240,18 +224,4 @@ void USFZGroupedRegions::GetRegionsForCondition(TArray<USFZRegion*>& InArray, bo
 			}
 		}
 	}
-}
-
-USFZGroupedRegions* F_FK_SFZ_Asset_Proxy::GetRegionGroupForNote(bool& success, int note) const
-{
-	if (!DataPtr.Get()->Contains(note))
-	{
-		success = false;
-
-		return nullptr;
-	}
-	const auto Group = DataPtr.Get()->Find(note);
-	success = true;
-
-	return *Group;
 }

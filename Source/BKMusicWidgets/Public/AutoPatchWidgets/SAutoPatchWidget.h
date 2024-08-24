@@ -62,6 +62,8 @@ public:
 
 		TSharedPtr<const Metasound::Frontend::IEnumDataTypeInterface> EnumInterface;
 
+		FLinearColor Color = FLinearColor::White;
+
 		int32 EnumValue = 0;
 
 

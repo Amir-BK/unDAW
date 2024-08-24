@@ -11,6 +11,7 @@ public class BKMusicCore : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+        CppStandard = CppStandardVersion.Cpp20;
 
         PrivateIncludePaths.AddRange(
                         new string[] {
@@ -57,7 +58,8 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "unDAWMetaSounds","MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-            }
+                ,"MIDIDevice", "LevelSequence", "MovieScene", "MovieSceneTracks"
+			}
 
             );
 

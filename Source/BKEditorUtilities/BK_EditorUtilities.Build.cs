@@ -51,7 +51,7 @@ public class BK_EditorUtilities : ModuleRules
                 "GraphEditor", "AudioWidgets", "MetasoundEditor",
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
-                "ToolMenus"
+                "ToolMenus", "MIDIDevice", "MovieSceneTools", "MovieScene"
 
                 // ... add other public dependencies that you statically link with here ...
 			}

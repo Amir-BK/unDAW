@@ -5,8 +5,13 @@
 #include "Sound/SoundSourceBus.h"
 #include "Sound/AudioBus.h"
 #include "Metasound.h"
+#include "HarmonixMidi/MusicTimeSpan.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "EditableMidiFile.h"
 #include "MetasoundGeneratorHandle.h"
+#include <MovieSceneSequencePlayer.h>
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 
 bool AMusicScenePlayerActor::AttachM2VertexToMixerInput(FName MixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
@@ -42,18 +47,18 @@ UM2ActionVertex* AMusicScenePlayerActor::AttachPatchToActor(UMetaSoundPatch* Pat
 	return nullptr;
 }
 
-UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Patch, USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, FRotator Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed, float VolumeMultiplier, float PitchMultiplier, float StartTime, USoundAttenuation* AttenuationSettings, USoundConcurrency* ConcurrencySettings, bool bAutoDestroy)
+UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(FMusicTimestamp InTimestamp, UMetaSoundPatch* Patch, UMidiFile* MidiClip, EMidiClockSubdivisionQuantization InQuantizationUnits, USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, FRotator Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed, float VolumeMultiplier, float PitchMultiplier, float StartTime, USoundAttenuation* AttenuationSettings, USoundConcurrency* ConcurrencySettings, bool bAutoDestroy)
 {
 	//so the whole point of this thing is that we need an audio bus and a source bus, the source bus will be attached to the actual actor,
 	//the audio bus needs to be assigned to an audio bus output vertex
-    
+	
 	auto NewSourceBus = NewObject<USoundSourceBus>(this, NAME_None, RF_Transient);
 	auto NewAudioBus = NewObject<UAudioBus>(this, NAME_None, RF_Transient);
 
 	NewAudioBus->AudioBusChannels = EAudioBusChannels::Stereo;
 	NewSourceBus->NumChannels = 2;
 
-	//REMEMBER TO CHANGE THIS TO THE ACTUAL AUDIO BUS
+	
 	NewSourceBus->AudioBus = NewAudioBus;
 
 	auto NewActionVertex = NewObject<UM2ActionVertex>(this, NAME_None, RF_Transient);
@@ -77,6 +82,7 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 	const auto& BuilderContext = GetDAWSequencerData()->BuilderContext;
 
 	auto NewTransientBusOut = BuilderContext->AddNode(BusTransmitterClass, Result);
+	NewActionVertex->AdditionalNodes.Add(NewTransientBusOut);
 
 	auto BusInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("Audio Bus"), Result);
 
@@ -95,6 +101,41 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 
 	//finally create the audio component which should start streaming...
 	GetDAWSequencerData()->ConnectTransientVertexToMidiClock(NewActionVertex);
+	//if midi clip is not a nullptr, we assume it was already shifted and cropped, it can be assigned to the interface midi asset input
+	if (MidiClip != nullptr)
+	{
+		//5.5 add clock offseter, feed offset clock to node 
+		auto ClockOffsetNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName("HarmonixNodes"), FName("MidiClockoffsetNode")), Result, 0);
+		auto BarOffsetInput = BuilderContext->FindNodeInputByName(ClockOffsetNode, FName("Offset (Bars)"), Result);
+		auto BeatOffsetInput = BuilderContext->FindNodeInputByName(ClockOffsetNode, FName("Offset (Beats)"), Result);
+
+		FName MetasoundIntName;
+		FName MetasoundFloatLiteral;
+		auto BarOffsetLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateIntMetaSoundLiteral(-InTimestamp.Bar, MetasoundIntName);
+		auto BeatOffsetLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateFloatMetaSoundLiteral(-InTimestamp.Beat, MetasoundFloatLiteral);
+
+		BuilderContext->SetNodeInputDefault(BarOffsetInput, BarOffsetLiteral, Result);
+
+		//NewActionVertex->InputM2SoundPins[FName("unDAW.Midi Asset")]->GetHandle<FMetaSoundBuilderNodeInputHandle>();		//NewActionVertex->MidiAsset = MidiClip;
+		//auto MidiAssetInput = BuilderContext->FindNodeInputByName(NewTransientBusOut, FName("unDAW.Midi Asset"), Result);
+		auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(ShiftAndCropMidiAsset(MidiClip, FMusicalTimeSpan(), InTimestamp, InQuantizationUnits));
+		//auto MidiAssetObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateObjectMetaSoundLiteral(MidiClip);
+		BuilderContext->SetNodeInputDefault(NewActionVertex->InputM2SoundPins[FName("unDAW.Midi Asset")]->GetHandle<FMetaSoundBuilderNodeInputHandle>() , MidiAssetObjectLiteral, Result);
+	}
+
+	auto TimestampBarIntInput = NewActionVertex->InputM2SoundPins[FName("unDAW.Action.TimeStampBar")]->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+	auto TimestampBeatIntInput = NewActionVertex->InputM2SoundPins[FName("unDAW.Action.TimeStampBeat")]->GetHandle<FMetaSoundBuilderNodeInputHandle>();
+
+	FName DataTypeName;
+
+	auto TimestampBarIntObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateIntMetaSoundLiteral(InTimestamp.Bar, DataTypeName);
+	auto TimestampBeatIntObjectLiteral = GetDAWSequencerData()->MSBuilderSystem->CreateIntMetaSoundLiteral(InTimestamp.Beat, DataTypeName);
+
+	BuilderContext->SetNodeInputDefault(TimestampBarIntInput, TimestampBarIntObjectLiteral, Result);
+	BuilderContext->SetNodeInputDefault(TimestampBeatIntInput, TimestampBeatIntObjectLiteral, Result);
+
+	NewActionVertex->ExecuteTriggerOnPatch(FName("unDAW Action.OnAdded"));
+
 	NewActionVertex->AudioComponent = UGameplayStatics::SpawnSoundAttached(NewSourceBus, AttachToComponent, AttachPointName, Location, Rotation, LocationType, bStopWhenAttachedToDestroyed, VolumeMultiplier, PitchMultiplier, StartTime, AttenuationSettings, ConcurrencySettings, bAutoDestroy);
 
 	
@@ -103,6 +144,28 @@ UM2ActionVertex* AMusicScenePlayerActor::SpawnPatchAttached(UMetaSoundPatch* Pat
 
 
 	return NewActionVertex;
+}
+
+UEditableMidiFile* AMusicScenePlayerActor::ShiftAndCropMidiAsset(UMidiFile* InMidiClip, FMusicalTimeSpan InTimeSpan, FMusicTimestamp InTimestamp, EMidiClockSubdivisionQuantization InQuantizationUnits)
+{
+	//so we want to take the midi data and for now
+	//EMidiClockSubdivisionQuantization OffsetUnits = EMidiClockSubdivisionQuantization::Bar;
+
+	//calculate the tick
+	auto OffsetTicks = InMidiClip->GetSongMaps()->CalculateMidiTick(InTimestamp, InQuantizationUnits);
+	
+	//create new editable copy of the midi clip
+
+
+	UEditableMidiFile* EditableMidiClip = NewObject<UEditableMidiFile>(this, NAME_None, RF_Transient);
+	EditableMidiClip->LoadFromHarmonixMidiFileAndApplyModifiers(InMidiClip, nullptr, OffsetTicks);
+	
+	MidiClips.Add(EditableMidiClip);
+	//auto UniqueID = FGuid::NewGuid().ToString() + TEXT(".mid");
+	//EditableMidiClip->SaveStdMidiFile(FPaths::ProjectContentDir() / UniqueID);
+	//EditableMidiClip->SaveStdMidiFile(FPaths::ProjectContentDir() + InMidiClip->GetName() + FString::FromInt(rand()) +  TEXT(".mid"));
+
+	return EditableMidiClip;
 }
 
 // Sets default values
@@ -261,5 +324,61 @@ void AMusicScenePlayerActor::InitHarmonixComponents()
 
 void AMusicScenePlayerActor::UpdateWatchers()
 {
-	GeneratorHandle->UpdateWatchers();
+	//GeneratorHandle->UpdateWatchers();
+}
+
+void AMusicScenePlayerActor::OnTick(float DeltaSeconds, float InPlayRate)
+{
+	//UE_LOG(LogTemp, Log, TEXT("Tick"))
+	//auto FrameNumber = VideoSyncedMidiClock->GetCurrentSmoothedAudioRenderSongPos().SecondsIncludingCountIn * InPlayRate;
+	//Sequence->GetSequencePlayer()->SetPlaybackPosition(FMovieSceneSequencePlaybackParams(FrameNumber, EUpdatePositionMethod::Play));
+	//ClockLastUp
+}
+
+void AMusicScenePlayerActor::OnStartPlaying(const FQualifiedFrameTime& InStartTime)
+{
+	UE_LOG(LogTemp, Log, TEXT("Start Playing"))
+	if(!bHarmonixInitialized)
+	{
+	bAutoPlay = true;
+	BeginPlay();
+	}
+	UE_LOG(LogTemp, Log, TEXT("Start Playing, in start time %f"), InStartTime.AsSeconds())
+	SendTransportCommand(EBKTransportCommands::Play);
+	SendSeekCommand(InStartTime.AsSeconds());
+	//Sequence->GetSequencePlayer()->SetTimeController(MakeShared<FMovieSceneTimeController_Custom>());
+	//Sequence->GetSequencePlayer()->Play();
+}
+
+void AMusicScenePlayerActor::OnStopPlaying(const FQualifiedFrameTime& InStopTime)
+{
+	UE_LOG(LogTemp, Log, TEXT("Stop Playing"))
+	SendTransportCommand(EBKTransportCommands::Pause);
+
+}
+
+FFrameTime AMusicScenePlayerActor::OnRequestCurrentTime(const FQualifiedFrameTime& InCurrentTime, float InPlayRate)
+{
+	//when the game is running it's preffered to take the time from the harmonix components 
+	if(bHarmonixInitialized)
+	{
+		auto CurrentTIme = VideoSyncedMidiClock->GetCurrentSmoothedAudioRenderSongPos();
+		auto FrameNumber = CurrentTIme.SecondsIncludingCountIn * InCurrentTime.Rate;
+
+		return FrameNumber;
+	}
+	else {
+		const auto& MidiSongMap = GetDAWSequencerData()->HarmonixMidiFile->GetSongMaps();
+		const auto MidiSongTick = MidiSongMap->CalculateMidiTick(GetDAWSequencerData()->CurrentTimestampData, EMidiClockSubdivisionQuantization::None);
+		const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(MidiSongTick);
+
+
+		//UE_LOG(LogTemp, Log, TEXT("Current Frame %f"), InCurrentTime.Time.AsDecimal())
+
+		auto FrameNumber = CurrentTimeMiliSeconds * .001f * InCurrentTime.Rate;
+		//UE_LOG(LogTemp, Log, TEXT("Current Frame %d"), FrameNumber.)
+		return FrameNumber;
+	}
+	
+
 }

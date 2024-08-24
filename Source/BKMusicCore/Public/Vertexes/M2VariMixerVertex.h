@@ -31,7 +31,7 @@ public:
 	TArray<FMetaSoundNodeHandle> MixerNodes;
 
 	UPROPERTY(VisibleAnywhere)
-	TMap<UM2SoundVertex*, FAssignableAudioOutput> VertexToChannelMap;
+	TMap< TObjectPtr<UM2SoundVertex>, FAssignableAudioOutput> VertexToChannelMap;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FAssignableAudioOutput> MixerChannels;

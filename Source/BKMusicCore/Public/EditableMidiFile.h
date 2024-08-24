@@ -23,7 +23,7 @@ public:
 	UPROPERTY()
 	int32 LoopBarDuration = 4;
 
-	void LoadFromHarmonixBaseFile(UMidiFile* BaseFile, UCurveFloat* InTempoCurve = nullptr);
+	void LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* BaseFile, UCurveFloat* InTempoCurve = nullptr, int32 InOffsetTicks = 0);
 
 	void PopulateTempoCurve();
 
@@ -33,7 +33,7 @@ public:
 	void OnTempoCurveChanged(UCurveBase* InCurve, EPropertyChangeType::Type Type);
 
 	UPROPERTY(VisibleAnywhere)
-	UCurveFloat* Curve;
+	TObjectPtr < UCurveFloat> Curve;
 
 	UPROPERTY()
 	TArray<FTempoInfoPoint> TempoInfoPoints;

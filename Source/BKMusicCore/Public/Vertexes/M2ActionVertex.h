@@ -23,13 +23,18 @@ class BKMUSICCORE_API UM2ActionVertex : public UM2SoundPatch
 		TObjectPtr<USceneComponent> AttachedSceneComponent = nullptr;
 
 		UPROPERTY()
+		TArray<FMetaSoundNodeHandle> AdditionalNodes;
+
+		UPROPERTY()
 		FName AttachedSocketName = NAME_None;
 
 		UPROPERTY()
-		USoundSourceBus* SourceBus = nullptr;
+		TObjectPtr <USoundSourceBus> SourceBus = nullptr;
 
 		UPROPERTY()
-		UAudioBus* AudioBus = nullptr;
+		TObjectPtr <UAudioBus> AudioBus = nullptr;
+
+		//UMidiFile* MidiClip = nullptr;
 
 		UPROPERTY(BlueprintReadOnly, Category = "Musical Gameplay")
 		TObjectPtr<UAudioComponent> AudioComponent = nullptr;
