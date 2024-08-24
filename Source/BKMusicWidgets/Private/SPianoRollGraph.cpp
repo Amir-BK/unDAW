@@ -747,15 +747,9 @@ FReply SPianoRollGraph::OnMouseButtonDown(const FGeometry& MyGeometry, const FPo
 		//auto localMousePosition = GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - PositionOffset;
 		if (GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).Y < 45.0f)
 		{
-			UE_LOG(SPIANOROLLLOG, Log, TEXT("Seek Click!"));
-			//SetInputMode(EPianoRollEditorMouseMode::seek);
-			//OnSeekEvent.ExecuteIfBound(CurrentTimelinePosition);
 			OnSeekEvent.ExecuteIfBound(MidiFile->GetSongMaps()->TickToMs(ValueAtMouseCursorPostSnapping) * .001f);
 		}
-		else {
-			//SetInputMode(EPianoRollEditorMouseMode::drawNotes);
-			UE_LOG(SPIANOROLLLOG, Log, TEXT("Click!"));
-		}
+
 
 	}
 
@@ -906,24 +900,15 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		return FReply::Handled().CaptureMouse(AsShared());
 	}
 
-	if (bLMBdown) {
-		switch (InputMode)
+	if (bIsLeftMouseButtonDown) {
+		
+		if (GetCachedGeometry().AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()).Y < 45.0f)
 		{
-		case EPianoRollEditorMouseMode::seek:
-			OnSeekEvent.ExecuteIfBound(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
-			//UE_LOG(LogTemp, Log, TEXT("Is Delegate bound?? %s"), OnSeekEvent.IsBound() ? TEXT("Yes") : TEXT("No"));
-
-			//UE_LOG(LogTemp, Log, TEXT("Seeking to: %f"), MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
-			//parentMidiEditor->SetCurrentPosition(MidiSongMap->TickToMs(ValueAtMouseCursorPostSnapping) / 1000.0f);
-			break;
-
-		case EPianoRollEditorMouseMode::Panning:
-
-		default:
-
-			break;
+			//UE_LOG(SPIANOROLLLOG, Log, TEXT("Seek Drag!"));
+			//SetInputMode(EPianoRollEditorMouseMode::seek);
+			//OnSeekEvent.ExecuteIfBound(CurrentTimelinePosition);
+			OnSeekEvent.ExecuteIfBound(MidiFile->GetSongMaps()->TickToMs(ValueAtMouseCursorPostSnapping) * .001f);
 		}
-
 		return FReply::Handled().CaptureMouse(AsShared());
 	}
 
