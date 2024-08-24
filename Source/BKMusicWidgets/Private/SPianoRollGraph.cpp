@@ -1356,6 +1356,8 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	}
 
 	//draw piano roll, overlayed on the original geometry (not the offset geometry), let's start with drawing a big gray background rectangle
+	auto PianorollLayerId = PostNotesLayerID++;
+	
 	for (int i = 0; i <= 127; i++)
 	{
 		bool isSelectedNote = i == HoveredPitch;
@@ -1363,7 +1365,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		FLinearColor TracksColor = UEngravingSubsystem::IsNoteInCmajor(i) ? FLinearColor::White : FLinearColor::Black;
 
 		FSlateDrawElement::MakeBox(OutDrawElements,
-			PostNotesLayerID++,
+			PianorollLayerId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MarginVector.X, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
@@ -1376,7 +1378,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		//also draw black lines for the white keys
 
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			PostNotesLayerID++,
+			PianorollLayerId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(0.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - i)))),
 			HorizontalLinePoints,
 			ESlateDrawEffect::None,
@@ -1388,7 +1390,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	for (const auto& [MetadataIndex, NoteNumber] : SessionData->CurrentlyActiveNotes)
 	{
 		FSlateDrawElement::MakeBox(OutDrawElements,
-			PostNotesLayerID++,
+			PianorollLayerId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MarginVector.X, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - NoteNumber)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
@@ -1536,7 +1538,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		}
 
 		FSlateDrawElement::MakeLines(OutDrawElements,
-			timelineLayerID,
+			PianorollLayerId - 1,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(Tick) * horizontalZoom, 0))),
 			vertLine,
 			ESlateDrawEffect::None,
