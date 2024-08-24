@@ -563,7 +563,7 @@ void SPianoRollGraph::RecalcSubdivisions()
 	const float LastTickOfLastBar = SessionData->HarmonixMidiFile->GetLastEventTick();
 
 	int32 BarCount = 1;
-	float BarTick = FirstTickOfFirstBar;
+	float BarTick = 0;
 	while (BarTick <= LastTickOfLastBar)
 	{
 		//VisibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(BarTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));

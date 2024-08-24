@@ -207,16 +207,8 @@ void AMusicScenePlayerActor::DAWSequencePlayStateChange(EBKPlayState NewState)
 	PlayState = NewState;
 }
 
-//hmmm
-
-inline UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
-	return SessionData;
-}
-
-// Called when the game starts or when spawned
-void AMusicScenePlayerActor::BeginPlay()
+void AMusicScenePlayerActor::ResetAudioComponentAndBuilder()
 {
-	Super::BeginPlay();
 	bHarmonixInitialized = false;
 
 	if (!GetDAWSequencerData())
@@ -239,6 +231,20 @@ void AMusicScenePlayerActor::BeginPlay()
 	//AuditionComponent = AudioComponent
 
 	if (bAutoPlay) GetDAWSequencerData()->SendTransportCommand(EBKTransportCommands::Play);
+}
+
+//hmmm
+
+inline UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
+	return SessionData;
+}
+
+// Called when the game starts or when spawned
+void AMusicScenePlayerActor::BeginPlay()
+{
+	Super::BeginPlay();
+	ResetAudioComponentAndBuilder();
+
 }
 
 void AMusicScenePlayerActor::PerformanceMetasoundGeneratorCreated()
@@ -338,11 +344,17 @@ void AMusicScenePlayerActor::OnTick(float DeltaSeconds, float InPlayRate)
 void AMusicScenePlayerActor::OnStartPlaying(const FQualifiedFrameTime& InStartTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("Start Playing"))
-	if(!bHarmonixInitialized)
-	{
-	bAutoPlay = true;
-	BeginPlay();
-	}
+
+		if (GetDAWSequencerData()->AuditionComponent == nullptr || !bHarmonixInitialized)
+		{
+			ResetAudioComponentAndBuilder();
+		}
+
+	//if(!bHarmonixInitialized)
+	//{
+	//bAutoPlay = true;
+	//BeginPlay();
+	//}
 	UE_LOG(LogTemp, Log, TEXT("Start Playing, in start time %f"), InStartTime.AsSeconds())
 	SendTransportCommand(EBKTransportCommands::Play);
 	SendSeekCommand(InStartTime.AsSeconds());

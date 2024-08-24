@@ -80,6 +80,9 @@ public:
 	UFUNCTION()
 	void DAWSequencePlayStateChange(EBKPlayState NewState);
 
+	UFUNCTION(BlueprintCallable, Category = "unDAW")
+	void ResetAudioComponentAndBuilder();
+
 	UPROPERTY(EditAnywhere, Category = "unDAW")
 	bool bAutoPlay = false;
 
