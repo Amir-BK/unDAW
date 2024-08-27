@@ -14,14 +14,17 @@ UMovieSceneSection* UUndawSequenceMovieSceneTrack::AddNewDAWDataOnRow(UDAWSequen
 	FFrameTime DurationToUse = 1.f * FrameRate; // if all else fails, use 1 second duration
 
 
-	const float Duration = DAWData->SequenceDuration;
+	const float Duration = DAWData->SequenceDuration * .001f;
 
 	DurationToUse = Duration * FrameRate;
 
+
+	
 	//add the section
 	UUndawMidiMovieSceneTrackSection* NewEvaluationSection = Cast<UUndawMidiMovieSceneTrackSection>(CreateNewSection());
 	NewEvaluationSection->InitialPlacementOnRow(DAWSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
 	NewEvaluationSection->DAWSequencerData = DAWData;
+	NewEvaluationSection->TrackIndexInParentSession = RowIndex;
 
 	DAWSections.Add(NewEvaluationSection);
 

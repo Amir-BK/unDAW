@@ -5,6 +5,104 @@
 //#include "Tracks/MidiAssetSceneTrack.h"
 
 
+void UUndawMidiMovieSceneTrackSection::CreateMarksOnBars()
+{
+	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
+
+	FFrameRate FrameRate = MovieScene->GetTickResolution();
+
+	FFrameTime SectionStartTime = GetInclusiveStartFrame();
+	FFrameTime SectionEndTime = GetExclusiveEndFrame();
+
+	const auto& BarMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
+	const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
+	const float LastTickOfLastBar = DAWSequencerData->HarmonixMidiFile->GetLastEventTick();
+
+	MovieScene->DeleteMarkedFrames();
+
+	float BarTick = 0;
+	int i = 0;
+	while (BarTick <= LastTickOfLastBar)
+	{
+		const auto& BarTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(BarTick);
+		FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime * .001f));
+
+
+		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
+		MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), ++i);
+		MarkedFrameTest.Color = FLinearColor::Green;
+		MovieScene->AddMarkedFrame(MarkedFrameTest);
+
+		BarTick += DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+	}
+
+}
+
+void UUndawMidiMovieSceneTrackSection::CreateMarksOnBeats()
+{
+	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
+
+	FFrameRate FrameRate = MovieScene->GetTickResolution();
+
+	FFrameTime SectionStartTime = GetInclusiveStartFrame();
+	FFrameTime SectionEndTime = GetExclusiveEndFrame();
+
+	const auto& BarMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
+	const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
+	const float LastTickOfLastBar = DAWSequencerData->HarmonixMidiFile->GetLastEventTick();
+
+	MovieScene->DeleteMarkedFrames();
+
+	float BarTick = 0;
+
+	while (BarTick <= LastTickOfLastBar)
+	{
+		const auto& BarTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(BarTick);
+		FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime * .001f));
+
+
+		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
+		//MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), ++i);
+		MarkedFrameTest.Color = FLinearColor::Gray;
+		MovieScene->AddMarkedFrame(MarkedFrameTest);
+
+		BarTick += DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Beat, BarTick);
+	}
+}
+
+void UUndawMidiMovieSceneTrackSection::CreateMarksForNotesInRange()
+{
+	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
+
+	FFrameRate FrameRate = MovieScene->GetTickResolution();
+
+	FFrameTime SectionStartTime = GetInclusiveStartFrame();
+	FFrameTime SectionEndTime = GetExclusiveEndFrame();
+
+	const auto& BarMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
+
+	MovieScene->DeleteMarkedFrames();
+
+	auto LinkedNotesTracks = DAWSequencerData->LinkedNoteDataMap;
+	const auto& Track = LinkedNotesTracks[TrackIndexInParentSession];
+	auto TrackColor = DAWSequencerData->GetTracksDisplayOptions(TrackIndexInParentSession).trackColor;
+
+	for (const auto& Note : Track.LinkedNotes)
+	{
+		const auto& NoteTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(Note.StartTick);
+
+		FFrameTime NoteFrameTime = FFrameTime(FrameRate.AsFrameTime(NoteTime * .001f));
+
+		if (NoteFrameTime >= SectionStartTime && NoteFrameTime <= SectionEndTime)
+		{
+			auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(NoteFrameTime.FrameNumber));
+			MarkedFrameTest.Label = FString::Printf(TEXT("Note %d"), Note.pitch);
+			MarkedFrameTest.Color = TrackColor;
+			MovieScene->AddMarkedFrame(MarkedFrameTest);
+		}
+	}
+}
+
 UUndawMidiMovieSceneTrackSection::UUndawMidiMovieSceneTrackSection(const FObjectInitializer& ObjInit) : Super(ObjInit)
 {
 	//bRequiresRangedHook = true;
@@ -29,8 +127,17 @@ EMovieSceneChannelProxyType UUndawMidiMovieSceneTrackSection::CacheChannelProxy(
 	UMovieScene* MovieScene = MutableThis->GetTypedOuter<UMovieScene>();
 
 	FMovieSceneChannelMetaData MetaData;
+	MetaData.Name = FName("SoundVolume");
 	MetaData.DisplayText = NSLOCTEXT("MovieScene", "SoundVolume", "Sound Volume");
 	Channels.Add(SoundVolume, MetaData, TMovieSceneExternalValue<float>());
+
+	MetaData.Name = FName("PitchBend");
+	MetaData.DisplayText = NSLOCTEXT("MovieScene", "PitchBend", "Pitch Bend");
+	Channels.Add(PitchBend, MetaData, TMovieSceneExternalValue<float>());
+
+	//MetaData.Name = FName("MidiNotes");
+	//MetaData.DisplayText = NSLOCTEXT("MovieScene", "MidiNotes", "Midi Notes");
+	//Channels.Add(MidiNotes, MetaData, TMovieSceneExternalValue<FLinkedMidiEvents>());
 	
 	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
 	return EMovieSceneChannelProxyType::Dynamic;
@@ -122,3 +229,11 @@ double UUndawMidiMovieSceneTrackSection::GetDeltaTimeAsSeconds(const UE::MovieSc
 	return DeltaSeconds;
 }
 
+bool FMovieSceneMidiTrackChannel::Serialize(FArchive& Ar)
+{
+	return false;
+}
+
+void FMovieSceneMidiTrackChannel::PostSerialize(const FArchive& Ar)
+{
+}

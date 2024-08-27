@@ -14,6 +14,26 @@
 #include <Sequencer/UndawSequenceMovieSceneTrack.h>
 
 
+class FMidiSceneConductorSectionPainter : public ISequencerSection
+{
+	FMidiSceneConductorSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer);
+
+
+	virtual FText GetSectionTitle() const override;
+
+	virtual float GetSectionHeight() const override;
+
+	virtual int32 OnPaintSection(FSequencerSectionPainter& InPainter) const override;
+
+	virtual UMovieSceneSection* GetSectionObject() override;
+
+	/** The section we are visualizing. */
+	UMovieSceneSection& Section;
+
+	TSharedPtr<ITimeSlider> TimeSlider;
+
+};
+
 class FMidiSceneSectionPainter : public ISequencerSection
 {
 public:

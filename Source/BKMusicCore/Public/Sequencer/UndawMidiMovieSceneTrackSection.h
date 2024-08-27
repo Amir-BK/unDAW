@@ -3,6 +3,8 @@
 
 #include "CoreMinimal.h"
 #include "Channels/MovieSceneAudioTriggerChannel.h"
+#include "Channels/MovieSceneChannelEditorData.h"
+#include "Channels/MovieSceneCurveChannelCommon.h"
 #include "Channels/MovieSceneBoolChannel.h"
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneIntegerChannel.h"
@@ -11,12 +13,63 @@
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "MidiObjects/MidiAsset.h"
 #include "Sections/MovieSceneHookSection.h"
+#include "M2SoundGraphData.h"
 #include "UndawMidiMovieSceneTrackSection.generated.h"
 
 
 class UUndawSequenceMovieSceneTrack;
 class UDAWSequencerData;
 
+template<>
+struct TMovieSceneExternalValue<FLinkedMidiEvents>
+{
+
+};
+
+USTRUCT()
+struct FMovieSceneMidiTrackChannel : public FMovieSceneChannel
+{
+	GENERATED_BODY()
+
+	typedef FLinkedMidiEvents CurveValueType;
+	typedef FLinkedMidiEvents ChannelValueType;
+
+	friend struct TMovieSceneChannelTraits<FMovieSceneMidiTrackChannel>;
+	using FMovieSceneMidiTrackChannelImp = TMovieSceneCurveChannelImpl<FMovieSceneMidiTrackChannel>;
+
+	bool SerializeFromMismatchedTag(const FPropertyTag& Tag, FStructuredArchive::FSlot Slot) {return false; }
+	bool Serialize(FArchive& Ar);
+#if WITH_EDITORONLY_DATA
+	void PostSerialize(const FArchive& Ar);
+#endif
+
+};
+
+template<>
+struct TStructOpsTypeTraits<FMovieSceneMidiTrackChannel> : public TStructOpsTypeTraitsBase2<FMovieSceneMidiTrackChannel>
+{
+	enum
+	{
+		WithStructuredSerializeFromMismatchedTag = true,
+		WithSerializer = true,
+#if WITH_EDITORONLY_DATA
+		WithPostSerialize = true,
+#endif
+	};
+	static constexpr EPropertyObjectReferenceType WithSerializerObjectReferences = EPropertyObjectReferenceType::None;
+
+};
+
+template<>
+struct TMovieSceneChannelTraits<FMovieSceneMidiTrackChannel> : TMovieSceneChannelTraitsBase<FMovieSceneMidiTrackChannel>
+{
+#if WITH_EDITOR
+
+	/** Float channels can have external values (ie, they can get their values from external objects for UI purposes) */
+	typedef TMovieSceneExternalValue<FLinkedMidiEvents> ExtendedEditorDataType;
+
+#endif
+};
 
 UCLASS()
 class BKMUSICCORE_API UUndawMidiMovieSceneTrackSection : public UMovieSceneSection//, public IMovieSceneEntityProvider //, public IMidiBroadcaster
@@ -25,6 +78,15 @@ class BKMUSICCORE_API UUndawMidiMovieSceneTrackSection : public UMovieSceneSecti
 	GENERATED_BODY()
 
 protected:
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void CreateMarksOnBars();
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void CreateMarksOnBeats();
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void CreateMarksForNotesInRange();
 
 	UPROPERTY()
 	UUndawMidiMovieSceneTrackSection* This = nullptr;
@@ -40,17 +102,24 @@ protected:
 public:
 
 	UPROPERTY()
+	int TrackIndexInParentSession = INDEX_NONE;
+
+	UPROPERTY()
 	FMovieSceneFloatChannel SoundVolume;
+
+	UPROPERTY()
+	FMovieSceneFloatChannel PitchBend;
 
 	UPROPERTY()
 	TObjectPtr<UDAWSequencerData> DAWSequencerData;
 
-	UPROPERTY(EditAnywhere, Category = "MidiBroadcaster")
-	FString BroadcasterName = "SequencerMidiBroadcaster";
+	UPROPERTY()
+	FMovieSceneMidiTrackChannel MidiNotes;
 
-	
-	UPROPERTY(EditAnywhere, Category = "MidiBroadcaster")
-	TMap<FString, float> CustomPlayHeads;
+	UPROPERTY(EditAnywhere, Category = "unDAW")
+	FString TrackName = "Midi Track Name";
+
+
 
 
 	
