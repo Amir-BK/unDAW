@@ -5,6 +5,8 @@
 #include "ContentBrowserModule.h"
 
 #include "UObject/UObjectArray.h"
+#include "ISequencerModule.h"
+#include "TrackEditor/UndawTrackEditor.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 #include "Serialization/JsonSerializer.h"
@@ -42,6 +44,10 @@ void BKEditorUtilitiesModule::StartupModule()
 
 	FDAWEditorToolbarCommands::Register();
 	FM2SoundNodeCommands::Register();
+
+	ISequencerModule& sequencerModule = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer");
+	sequencerModule.RegisterTrackEditor(FOnCreateTrackEditor::CreateStatic(&FUndawMovieTrackEditor::CreateTrackEditor));
+
 };
 
 void BKEditorUtilitiesModule::ShutdownModule()

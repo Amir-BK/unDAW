@@ -25,6 +25,7 @@
 #include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
+#include "Framework/Docking/TabManager.h"
 
 void FUnDAWSequenceEditorToolkit::RenameSelectedNodes()
 {
@@ -95,10 +96,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	//TSharedRef<ITimeSliderController> TimelineTimeSliderController = MakeShared<FSequencerCurveEditorTimeSliderController>(TimeSliderArgs, SequencerPtr, InSequencer->GetCurveEditor().ToSharedRef());
 
 	//SequencerWidgets.CreateTimeSlider(TimelineTimeSliderController, false);
-
+	//InTabManager->GetPrivateApi().HideWindows();
+	
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
+				.TabRole(ETabRole::NomadTab)
+				//.TabColorScale
+	
 			
 
 				[
