@@ -1,8 +1,12 @@
 https://youtube.com/playlist?list=PLnC4434gGyWHi6OtNmQmJqOdjTMzaERWO&si=weaAYodd1pBFRdrs
 
-## DAWSession/Midi Level Sequencer Custom Tracks
-![20240828173634_1066x600_2024-08-28 17-15-23](https://github.com/user-attachments/assets/2841ca3e-d32f-4e3f-864c-38e93720f4c9)
+# *NEW* DAWSession/Midi Level Sequencer Custom Tracks
+![20240828180452_800x450_2024-08-28 18-00-17](https://github.com/user-attachments/assets/cc093fe5-80d4-4f43-9d02-f07bdc0aed9d)
 
+Easily add markers on bars, subdivisions or midi notes within the selection range.
+![20240828181209_800x450_2024-08-28 18-00-54](https://github.com/user-attachments/assets/c3a6361f-ec70-48d2-b20d-81887e80cdf2)
+
+*WIP* Sequencer can be synchronized to Metasound Midi Clock as a Sequencer Custom Clock Provider. 
 
 # Status
 
