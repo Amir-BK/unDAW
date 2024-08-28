@@ -22,7 +22,8 @@ public:
 
 
 
-
+	UFUNCTION(CallInEditor, Category = "DAW")
+	void TestFunction() {};
 	
 
 public:

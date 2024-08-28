@@ -79,14 +79,17 @@ class BKMUSICCORE_API UUndawMidiMovieSceneTrackSection : public UMovieSceneSecti
 
 protected:
 
+	//Creates marked frames for all bars in the song
 	UFUNCTION(CallInEditor, Category = "Midi")
-	void CreateMarksOnBars();
+	void MarkBars();
 
+	//Create marked frames on each selected subdivision within the selection range 
 	UFUNCTION(CallInEditor, Category = "Midi")
-	void CreateMarksOnBeats();
+	void MarkSubdivisionsInRange();
 
+	//Create marked frames for each note in the selection range on the selected midi track
 	UFUNCTION(CallInEditor, Category = "Midi")
-	void CreateMarksForNotesInRange();
+	void MarkNotesInRange();
 
 	UPROPERTY()
 	UUndawMidiMovieSceneTrackSection* This = nullptr;
@@ -94,6 +97,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Midi", BlueprintReadWrite)
 	float PlayRate = 1.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
+	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
+
+	////when true, the section will only mark the frames that are within the selection range
+	//UPROPERTY(EditAnywhere, Category = "Midi")
+	//bool bMarkOnlyInSelection = false;
 
 
 	double SectionLocalCurrentTime=0;
