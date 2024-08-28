@@ -1,5 +1,9 @@
 https://youtube.com/playlist?list=PLnC4434gGyWHi6OtNmQmJqOdjTMzaERWO&si=weaAYodd1pBFRdrs
 
+## DAWSession/Midi Level Sequencer Custom Tracks
+![20240828173634_1066x600_2024-08-28 17-15-23](https://github.com/user-attachments/assets/2841ca3e-d32f-4e3f-864c-38e93720f4c9)
+
+
 # Status
 
 unDAW has a whole bunch of features, most of them in a somewhat unfinished state but some are already useful (like that SFZ/DSpreset converter), given the scope of the project I don't know when if ever it will be 'finished' or 'polished', the source code contains some possibly useful examples for interactions with the new harmonix infrastructure and with the metasound builder subsystem, if you can figure it out you can already use unDAW to create some musical gameplay outcomes which are not so easy to achieve without using the builder and settings things up right (although unDAW may be a bit too complicated in its attempt to be generic), you can easily attach a new metasound patch to an existing midi clock and use it to trigger musically timed events inside the metasound or on the gamethread, for instance, which is not that easy to set up with Quartz (or possible to set up with a static metasound without the builder).
