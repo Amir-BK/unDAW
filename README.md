@@ -1,6 +1,6 @@
 https://youtube.com/playlist?list=PLnC4434gGyWHi6OtNmQmJqOdjTMzaERWO&si=weaAYodd1pBFRdrs
 
-# *NEW* DAWSession/Midi Level Sequencer Custom Tracks
+### DAWSession/Midi Level Sequencer Custom Tracks
 ![20240828180452_800x450_2024-08-28 18-00-17](https://github.com/user-attachments/assets/cc093fe5-80d4-4f43-9d02-f07bdc0aed9d)
 
 Easily add markers on bars, subdivisions or midi notes within the selection range.
