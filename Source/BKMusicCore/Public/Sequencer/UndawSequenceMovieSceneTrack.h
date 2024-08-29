@@ -22,10 +22,6 @@ public:
 
 
 
-	UFUNCTION(CallInEditor, Category = "DAW")
-	void TestFunction() {};
-	
-
 public:
 
 	virtual UMovieSceneSection* AddNewDAWDataOnRow(UDAWSequencerData* DAWData, FFrameNumber Time, int32 RowIndex);
