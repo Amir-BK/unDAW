@@ -63,6 +63,10 @@ TSharedRef<ISequencerSection> FUndawMovieTrackEditor::MakeSectionInterface(UMovi
 	return MakeShareable(new FMidiSceneSectionPainter(SectionObject, GetSequencer()));
 }
 
+void FUndawMovieTrackEditor::Resize(float NewSize, UMovieSceneTrack* InTrack)
+{
+}
+
 TSharedRef<SWidget> FUndawMovieTrackEditor::BuildDAWSubMenu(FOnAssetSelected OnAssetSelected, FOnAssetEnterPressed OnAssetEnterPressed)
 {
 	return SNullWidget::NullWidget;

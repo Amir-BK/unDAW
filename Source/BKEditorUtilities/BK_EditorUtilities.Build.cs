@@ -46,7 +46,7 @@ public class BK_EditorUtilities : ModuleRules
                 "HarmonixMidi",
                 "Harmonix", "Blutility", "BKMusicWidgets", "HarmonixDsp",
                 "XmlParser", "FileUtilities", "MetasoundFrontend", "MetasoundEngine",
-                "BKMusicCore", "ScriptableEditorWidgets", "EditorScriptingUtilities", "AssetTools",
+                "ScriptableEditorWidgets", "EditorScriptingUtilities", "AssetTools",
                 "DetailCustomizations", "EditorWidgets", "EditorSubsystem", "AudioExtensions", "unDAWMetaSounds",
                 "GraphEditor", "AudioWidgets", "MetasoundEditor",
                 "MetasoundGraphCore",

@@ -67,7 +67,8 @@ class FUndawMovieTrackEditor : public FMovieSceneTrackEditor
 	virtual void BuildAddTrackMenu(FMenuBuilder& MenuBuilder) override;
 	virtual TSharedPtr<SWidget> BuildOutlinerEditWidget(const FGuid& ObjectBinding, UMovieSceneTrack* Track, const FBuildEditWidgetParams& Params) override;
 	virtual TSharedRef<ISequencerSection> MakeSectionInterface(UMovieSceneSection& SectionObject, UMovieSceneTrack& Track, FGuid ObjectBinding) override;
-	
+	virtual bool IsResizable(UMovieSceneTrack* InTrack) const override { return true; }
+	virtual void Resize(float NewSize, UMovieSceneTrack* InTrack) override;
 
 	//
 
