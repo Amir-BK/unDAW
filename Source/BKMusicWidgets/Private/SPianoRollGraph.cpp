@@ -3,7 +3,6 @@
 #include "SPianoRollGraph.h"
 #include "SlateOptMacros.h"
 #include "Logging/StructuredLog.h"
-#include "ITimeSlider.h"
 #include "Widgets/Input/SButton.h"
 #include "Runtime/Launch/Resources/Version.h"
 #include "Algo/BinarySearch.h"
