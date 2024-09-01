@@ -341,7 +341,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 			FLinkedMidiEvents newNote = FLinkedMidiEvents();
 			newNote.NoteVelocity = NewNoteVelocity;
 			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
-			newNote.pitch = HoveredPitch;
+			newNote.Pitch = HoveredPitch;
 			newNote.TrackId = SessionData->SelectedTrackIndex;
 			newNote.ChannelId = TrackMetadata.ChannelIndexRaw;
 			newNote.StartTick = ValueAtMouseCursorPostSnapping;
@@ -714,7 +714,7 @@ FLinkedMidiEvents CreateNoteAtMousePosition(FVector2D mousePosition, FSongMaps* 
 	FLinkedMidiEvents newNote;
 	newNote.StartTick = MidiSongMap->MsToTick(mousePosition.X);
 	newNote.EndTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(newNote.StartTick), EMidiClockSubdivisionQuantization::Bar);
-	newNote.pitch = mousePosition.Y;
+	newNote.Pitch = mousePosition.Y;
 	newNote.TrackId = 1;
 	newNote.ChannelId = 1;
 	newNote.CalculateDuration(MidiSongMap);
@@ -865,7 +865,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 	CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
 		if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
 		{
-			if (note->pitch == HoveredPitch)
+			if (note->Pitch == HoveredPitch)
 			{
 				SelectedNote = note;
 				return true;
@@ -881,7 +881,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 	SessionData->PendingLinkedMidiNotesMap.FindByPredicate([&](FLinkedMidiEvents& note) {
 		if (tickAtMouse >= note.StartTick && tickAtMouse <= note.EndTick)
 		{
-			if (note.pitch == HoveredPitch)
+			if (note.Pitch == HoveredPitch)
 			{
 				SelectedNote = &note;
 				return true;
@@ -1188,7 +1188,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		auto& note = SelectedNote;
 		FSlateDrawElement::MakeBox(OutDrawElements,
 			LayerId,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D((note->Duration + 20) * horizontalZoom, rowHeight + (50 * verticalZoom)), FSlateLayoutTransform(1.0f, FVector2D((note->StartTime - 5.0f) * horizontalZoom, (-25.0f * verticalZoom) + rowHeight * (127 - note->pitch)))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D((note->Duration + 20) * horizontalZoom, rowHeight + (50 * verticalZoom)), FSlateLayoutTransform(1.0f, FVector2D((note->StartTime - 5.0f) * horizontalZoom, (-25.0f * verticalZoom) + rowHeight * (127 - note->Pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
 			colorNegative.CopyWithNewOpacity(0.5f)
@@ -1200,7 +1200,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackId).trackColor) };
 		FSlateDrawElement::MakeGradient(OutDrawElements,
 			LayerId + note->TrackId,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->Pitch)))),
 			GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
 			FVector4f::One() * 2.0f
 		);
@@ -1211,7 +1211,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note.TrackId).trackColor) };
 		FSlateDrawElement::MakeGradient(OutDrawElements,
 			LayerId + note.TrackId,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(note.Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note.StartTime * horizontalZoom, rowHeight * (127 - note.pitch)))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note.Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note.StartTime * horizontalZoom, rowHeight * (127 - note.Pitch)))),
 			GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
 			FVector4f::One() * note.cornerRadius
 		);
@@ -1226,7 +1226,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		auto& note = PreviewNotePtr;
 		FSlateDrawElement::MakeBox(OutDrawElements,
 			PostNotesLayerID,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->pitch)))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->Pitch)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
 			trackColor.CopyWithNewOpacity(0.5f)
