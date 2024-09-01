@@ -150,7 +150,7 @@ struct FLinkedMidiEvents
 	{
 		StartTick = StartEvent.GetTick();
 		EndTick = EndEvent.GetTick();
-		pitch = StartEvent.GetMsg().Data1;
+		Pitch = StartEvent.GetMsg().Data1;
 	}
 
 	FLinkedMidiEvents()
@@ -167,7 +167,7 @@ struct FLinkedMidiEvents
 	int32 EndIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data", BlueprintReadOnly)
-	uint8 pitch = 0;
+	uint8 Pitch = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
 	int32 StartTick = 0;
@@ -200,7 +200,7 @@ struct FLinkedMidiEvents
 
 	FString GetFormmatedString()
 	{
-		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, pitch, TrackId);
+		return FString::Printf(TEXT("StartTick: %d, \nEndTick: %d, \nDuration: %f, \nPitch: %d,\nTrackID: %d"), StartTick, EndTick, Duration, Pitch, TrackId);
 	}
 };
 

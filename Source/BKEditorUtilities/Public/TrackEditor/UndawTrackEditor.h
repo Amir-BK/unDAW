@@ -34,10 +34,10 @@ class FMidiSceneConductorSectionPainter : public ISequencerSection
 
 };
 
-class FMidiSceneSectionPainter : public ISequencerSection
+class FUndawSequencerSectionPainter : public ISequencerSection
 {
 public:
-	FMidiSceneSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer);
+	FUndawSequencerSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer);
 
 	virtual FText GetSectionTitle() const override;
 
@@ -46,6 +46,10 @@ public:
 	virtual int32 OnPaintSection(FSequencerSectionPainter& InPainter) const override;
 
 	virtual UMovieSceneSection* GetSectionObject() override;
+
+	virtual void CustomizePropertiesDetailsView(TSharedRef<IDetailsView> DetailsView, const FSequencerSectionPropertyDetailsViewCustomizationParams& InParams) const override;
+
+	//virtual bool IsReadOnly() const override { return true; }
 
 	/** The section we are visualizing. */
 	UMovieSceneSection& Section;
@@ -88,6 +92,8 @@ protected:
 
 	/** Delegate for AnimatablePropertyChanged in HandleAssetAdded for sounds */
 	FKeyPropertyResult AddNewSound(FFrameNumber KeyTime, class UDAWSequencerData* Sound, UUndawSequenceMovieSceneTrack* Track, int32 RowIndex);
+
+	TWeakPtr<ISequencer> Sequencer;
 
 	//TSharedPtr<ISequencer> Sequencer;
 };

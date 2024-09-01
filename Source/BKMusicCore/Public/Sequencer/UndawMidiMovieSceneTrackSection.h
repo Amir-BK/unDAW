@@ -9,6 +9,7 @@
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneIntegerChannel.h"
 #include "Channels/MovieSceneStringChannel.h"
+#include "Channels/MovieSceneEventChannel.h"
 //#include "MidiBroadcasters/MidiBroadcaster.h"
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "MidiObjects/MidiAsset.h"
@@ -91,6 +92,10 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkNotesInRange();
 
+	//deletes all key frames on the note tracks and rebuilds them based on the midi data
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void RebuildNoteKeyFrames();
+
 	UPROPERTY()
 	UUndawMidiMovieSceneTrackSection* This = nullptr;
 
@@ -114,19 +119,24 @@ public:
 	int TrackIndexInParentSession = INDEX_NONE;
 
 	UPROPERTY()
-	FMovieSceneFloatChannel SoundVolume;
-
-	UPROPERTY()
 	FMovieSceneFloatChannel PitchBend;
 
-	UPROPERTY()
-	TObjectPtr<UDAWSequencerData> DAWSequencerData;
 
 	UPROPERTY()
-	FMovieSceneMidiTrackChannel MidiNotes;
+	TObjectPtr<UDAWSequencerData> DAWData;
 
-	UPROPERTY(EditAnywhere, Category = "unDAW")
-	FString TrackName = "Midi Track Name";
+	UPROPERTY()
+	TObjectPtr<UMovieScene> ParentMovieScene;
+
+	//UPROPERTY()
+	//FMovieSceneIntegerChannel MidiNotes;
+
+
+
+	UPROPERTY()
+	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
+
+
 
 
 
@@ -159,6 +169,12 @@ protected:
 
 public:
 
+#if WITH_EDITORONLY_DATA
+
+	UPROPERTY()
+	float SectionHeight = 200.0f;
+
+#endif
 
 
 
@@ -176,4 +192,5 @@ private:
 
 
 	double GetDeltaTimeAsSeconds(const UE::MovieScene::FEvaluationHookParams& Params) const;
+
 };

@@ -2,6 +2,7 @@
 
 #include "MovieScene.h"
 //#include "MidiObjects/MidiTrack.h"
+#include "Sections/MovieSceneEventTriggerSection.h"
 #include "Sequencer/UndawMidiMovieSceneTrackSection.h"
 
 
@@ -19,13 +20,55 @@ UMovieSceneSection* UUndawSequenceMovieSceneTrack::AddNewDAWDataOnRow(UDAWSequen
 	DurationToUse = Duration * FrameRate;
 
 
+
 	
 	//add the section
 	UUndawMidiMovieSceneTrackSection* NewEvaluationSection = Cast<UUndawMidiMovieSceneTrackSection>(CreateNewSection());
 	NewEvaluationSection->InitialPlacementOnRow(DAWSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
-	NewEvaluationSection->DAWSequencerData = DAWData;
+	NewEvaluationSection->DAWData = DAWData;
 	NewEvaluationSection->TrackIndexInParentSession = RowIndex;
+	NewEvaluationSection->ParentMovieScene = GetTypedOuter<UMovieScene>();
 
+	const auto& SongsMap = DAWData->HarmonixMidiFile->GetSongMaps();
+	//add all notes to the section's NoteEvents
+	//for (const FMidiNoteEvent& NoteEvent : DAWData->NoteEvents)
+
+	/*
+	TArray<FFrameNumber> NoteTimes;
+	TArray<int> NotePitches;
+	for (const auto& Note : DAWData->LinkedNoteDataMap[RowIndex].LinkedNotes)
+	{
+		const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f;
+		const auto NoteFrameTime = FFrameTime(NoteTime * FrameRate);
+
+		NoteTimes.Add(NoteFrameTime.FrameNumber);
+		NotePitches.Add(Note.Pitch);
+	}
+	NewEvaluationSection->MidiNotes.AddKeys(NoteTimes, NotePitches);
+	*/
+	
+	for (int i = 0; i < DAWData->LinkedNoteDataMap.Num(); i++)
+	{
+		TArray<int> NotePitchesChannels;
+		TArray<FFrameNumber> NoteTimesChannels;
+		NewEvaluationSection->MidiNoteChannels.Add(FMovieSceneIntegerChannel());
+		auto& LastChannel = NewEvaluationSection->MidiNoteChannels.Last();
+		for (const auto& Note : DAWData->LinkedNoteDataMap[i].LinkedNotes)
+		{
+			const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f;
+			const auto NoteFrameTime = FFrameTime(NoteTime * FrameRate);
+
+			NoteTimesChannels.Add(NoteFrameTime.FrameNumber);
+			NotePitchesChannels.Add(Note.Pitch);
+
+
+		}
+		LastChannel.AddKeys(NoteTimesChannels, NotePitchesChannels);
+	
+	}
+	
+
+	//NewEvaluationSection->MidiNotes.
 	DAWSections.Add(NewEvaluationSection);
 
 	return NewEvaluationSection;
@@ -38,7 +81,7 @@ UMovieSceneSection* UUndawSequenceMovieSceneTrack::CreateNewSection()
 
 void UUndawSequenceMovieSceneTrack::AddSection(UMovieSceneSection& Section)
 {
-	DAWSections.Add(Cast<UUndawMidiMovieSceneTrackSection>(&Section));
+	DAWSections.Add(&Section);
 }
 
 bool UUndawSequenceMovieSceneTrack::SupportsType(TSubclassOf<UMovieSceneSection> SectionClass) const
@@ -46,9 +89,6 @@ bool UUndawSequenceMovieSceneTrack::SupportsType(TSubclassOf<UMovieSceneSection>
 	if (SectionClass == UUndawMidiMovieSceneTrackSection::StaticClass())
 		return true;
 
-	//DEPRECATED
-	//if(SectionClass == UMidiSceneSection::StaticClass())
-		//return true;
 
 	return false;
 }

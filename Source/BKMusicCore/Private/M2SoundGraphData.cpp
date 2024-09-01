@@ -394,7 +394,7 @@ void UDAWSequencerData::PrintMidiData()
 			UE_LOG(unDAWDataLogs, Verbose, TEXT("Channel %d"), Channel)
 				for (auto& Note : LinkedNotes.LinkedNotes)
 				{
-					UE_LOG(unDAWDataLogs, Verbose, TEXT("Note %d, Start %d, End %d, [TR: %d, CH: %d]"), Note.pitch, Note.StartTick, Note.EndTick, Note.TrackId, Note.ChannelId)
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Note %d, Start %d, End %d, [TR: %d, CH: %d]"), Note.Pitch, Note.StartTick, Note.EndTick, Note.TrackId, Note.ChannelId)
 				}
 		}
 
@@ -579,8 +579,8 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 			return;
 	}
 
-	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexRaw, PendingNote.pitch, PendingNote.NoteVelocity);
-	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexRaw, PendingNote.pitch);
+	auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexRaw, PendingNote.Pitch, PendingNote.NoteVelocity);
+	auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexRaw, PendingNote.Pitch);
 	auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
 	auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);
 
@@ -611,14 +611,14 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Deleting note from track %d, channel %d"), PendingNote.TrackId, PendingNote.ChannelId)
 		//print pending note data
-		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pending Note Data: Start %d, End %d, Pitch %d, Channel %d"), PendingNote.StartTick, PendingNote.EndTick, PendingNote.pitch, PendingNote.ChannelId)
+		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pending Note Data: Start %d, End %d, Pitch %d, Channel %d"), PendingNote.StartTick, PendingNote.EndTick, PendingNote.Pitch, PendingNote.ChannelId)
 
 		auto FoundStartEvent = MidiFileCopy->GetTrack(NoteMetadata.TrackIndexInParentMidi)->GetEvents().IndexOfByPredicate([PendingNote](const FMidiEvent& Event) {
 		// print event tick and data
 		if (!Event.GetMsg().IsNoteOn()) return false;
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note on Event Tick %d, Data1 %d, Data2 %d, Channel %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
-			if (Event.GetTick() == PendingNote.StartTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+			if (Event.GetTick() == PendingNote.StartTick && Event.GetMsg().GetStdData1() == PendingNote.Pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
 			{
 				return true;
 			}
@@ -634,7 +634,7 @@ void UDAWSequencerData::DeleteLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Delete note off Event Tick %d, Data1 %d, Data2 %d, Channel: %d"), Event.GetTick(), Event.GetMsg().GetStdData1(), Event.GetMsg().GetStdData2(), Event.GetMsg().GetStdChannel())
 			//start with comparing the tick and the channel...
-			if (Event.GetTick() == PendingNote.EndTick && Event.GetMsg().GetStdData1() == PendingNote.pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
+			if (Event.GetTick() == PendingNote.EndTick && Event.GetMsg().GetStdData1() == PendingNote.Pitch && Event.GetMsg().GetStdChannel() == PendingNote.ChannelId)
 			{
 				return true;
 			}
@@ -1059,8 +1059,8 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
 			auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
-		auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch, 127);
-		auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.pitch);
+		auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.Pitch, 127);
+		auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.Pitch);
 		auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
 		auto NewEndNoteMidiEvent = FMidiEvent(PendingNote.EndTick, EndMessage);
 
