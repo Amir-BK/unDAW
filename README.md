@@ -1,5 +1,10 @@
 https://youtube.com/playlist?list=PLnC4434gGyWHi6OtNmQmJqOdjTMzaERWO&si=weaAYodd1pBFRdrs
 
+# Community/Feedback/Support -  
+Please join the discord server - https://discord.gg/hTKjSfcbEn
+
+# Features/News/Latest (partial list) 
+
 ### DAWSession/Midi Level Sequencer Custom Tracks
 ![20240828180452_800x450_2024-08-28 18-00-17](https://github.com/user-attachments/assets/cc093fe5-80d4-4f43-9d02-f07bdc0aed9d)
 
