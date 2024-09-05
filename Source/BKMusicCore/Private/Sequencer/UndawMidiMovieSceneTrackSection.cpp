@@ -224,8 +224,8 @@ EMovieSceneChannelProxyType UUndawMidiMovieSceneTrackSection::CacheChannelProxy(
 		for (int i = 0; i < MidiNoteChannels.Num(); i++)	
 		{
 			//FMovieSceneChannelMetaData MetaData;
-			MetaData.Name = FName(FString::Printf(TEXT("%s %d"), *DAWData->GetTracksDisplayOptions(i).trackName, i));
-			MetaData.DisplayText = FText::FromString(FString::Printf(TEXT("%s %d"), *DAWData->GetTracksDisplayOptions(i).trackName, i));
+			MetaData.Name = FName(FString::Printf(TEXT("%s %d"), *DAWData->GetTracksDisplayOptions(i).TrackName, i));
+			MetaData.DisplayText = FText::FromString(FString::Printf(TEXT("%s %d"), *DAWData->GetTracksDisplayOptions(i).TrackName, i));
 			MetaData.Color = DAWData->GetTracksDisplayOptions(i).trackColor;
 
 			Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());

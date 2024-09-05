@@ -176,32 +176,12 @@ public:
 		//parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
 		TrackData = InArgs._TrackData;
-		FString FusionPatchName;
-		if (TrackData->fusionPatch != nullptr) FusionPatchName = TrackData->fusionPatch->GetName();
-		else FusionPatchName = TEXT("DEPRECATED");
+		FString FusionPatchName = TEXT("DEPRECATED");
 		CurrentItem = MakeShareable(new FString(FusionPatchName));
 		//OnFusionPatchChanged = InArgs._OnFusionPatchChanged;
 		ConnectedGraph = InArgs._ConnectedGraph;
 		SequencerData = InArgs._SequencerData;
 
-		//if (parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch != nullptr)
-		//{
-		//	CurrentItem = MakeShareable(new FString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).fusionPatch->GetName()));
-		//}
-		//else {
-		//	CurrentItem = MakeShareable(new FString(TEXT("Please select fusion patch")));
-		//}
-
-		for (auto& patch : UFKSFZAsset::GetAllFusionPatchAssets())
-		{
-			if (TrackData->fusionPatch == patch) {
-				CurrentItem = MakeShareable(new FString(patch->GetName()));
-				optionsArray.Add(CurrentItem);
-			}
-			else {
-				if (IsValid(patch)) optionsArray.Add(MakeShareable(new FString(patch->GetName())));
-			}
-		}
 
 		ChildSlot
 			[
@@ -225,27 +205,8 @@ public:
 									+ SVerticalBox::Slot()
 									[
 										SNew(SEditableTextBox)
-											.Text(FText::FromString(TrackData->trackName))
-											//.Text(FText::FromString(FString::Printf(TEXT("%s %d ch: %d"), *parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).TrackIndexInParentMidi, parentMidiEditor->GetTracksDisplayOptions(slotInParentID).ChannelIndexInParentMidi)))
-										//	.Text(FText::FromString(parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName))
-											//.OnTextCommitted_Lambda([this](const FText& newText, ETextCommit::Type commitType) {parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackName = newText.ToString(); })
+											.Text(FText::FromString(TrackData->TrackName))
 									]
-
-									//+ SVerticalBox::Slot()
-									//[
-									//	SNew(SComboBox<TSharedPtr<FString>>)
-									//		.OptionsSource(&optionsArray)
-									//		.OnGenerateWidget(this, &SMIDITrackControls::MakeWidgetForOption)
-									//		.OnSelectionChanged(this, &SMIDITrackControls::OnSelectionChanged)
-
-									//		.InitiallySelectedItem(CurrentItem)
-									//		[
-
-									//			SNew(STextBlock)
-									//				.Text_Lambda([this]() {return GetCurrentItemLabel(); })
-
-									//		]
-									//]
 
 									+SVerticalBox::Slot()
 									[
@@ -269,7 +230,7 @@ public:
 													.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
 													return TrackData->trackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
 														})))
-													//.Size(FVector2D(350.0f, 20.0f))
+	
 													.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)
 											]
 

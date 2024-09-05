@@ -64,10 +64,15 @@ TArray<FString> IBK_MusicSceneManagerInterface::GetMidiOutputNames()
 	if (!GetDAWSequencerData()) return TArray<FString>();
 
 	TArray<FString> MidiOutputNames;
-	for (const auto& [Name, Input] : GetDAWSequencerData()->CoreNodes.MemberInputMap)
+	for (const auto& TrackMetaData : GetDAWSequencerData()->M2TrackMetadata)
 	{
-		if (Input.DataType == "MidiStream")
-			MidiOutputNames.Add(Name.ToString());
+		MidiOutputNames.Add(TrackMetaData.TrackName);
 	}
+
+	//for (const auto& [Name, Input] : GetDAWSequencerData()->CoreNodes.MemberInputMap)
+	//{
+	//	if (Input.DataType == "MidiStream")
+	//		MidiOutputNames.Add(Name.ToString());
+	//}
 	return MidiOutputNames;
 }

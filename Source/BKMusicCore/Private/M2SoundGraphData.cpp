@@ -402,7 +402,7 @@ void UDAWSequencerData::PrintMidiData()
 	UE_LOG(unDAWDataLogs, Log, TEXT("Tracks in unDAW Metadata"))
 		for (auto& Track : M2TrackMetadata)
 		{
-			UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *Track.trackName)
+			UE_LOG(unDAWDataLogs, Log, TEXT("Track %s"), *Track.TrackName)
 		}
 
 	//tracks in midi file
@@ -429,15 +429,15 @@ void UDAWSequencerData::AddTrack()
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
-	//add track at the end of metadata array, ensure widget is updated
+
 	FTrackDisplayOptions NewTrackMetaData;
 	NewTrackMetaData.ChannelIndexInParentMidi = 0;
 	NewTrackMetaData.ChannelIndexRaw = 0;
-	NewTrackMetaData.trackName = GetUniqueNameForTrack(TEXT("New Track"), *MidiFileCopy);
-	NewTrackMetaData.fusionPatch = nullptr;
+	NewTrackMetaData.TrackName = GetUniqueNameForTrack(TEXT("New Track"), *MidiFileCopy);
+
 	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
 
-	auto NewTrack = MidiFileCopy->AddTrack(NewTrackMetaData.trackName);
+	auto NewTrack = MidiFileCopy->AddTrack(NewTrackMetaData.TrackName);
 
 	//auto TrackIndexByName = HarmonixMidiFile->FindTrackIndexByName(NewTrackMetaData.trackName);
 	NewTrackMetaData.TrackIndexInParentMidi = MidiFileCopy->GetTracks().Num() - 1;
@@ -445,7 +445,7 @@ void UDAWSequencerData::AddTrack()
 	//HarmonixMidiFile->SortAllTracks();
 	M2TrackMetadata.Add(NewTrackMetaData);
 	CoreNodes.CreateFilterNodeForTrack(M2TrackMetadata.Num() - 1);
-	//UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(this, M2TrackMetadata.Num() - 1);
+
 
 	HarmonixMidiFile = MidiFileCopy;
 
@@ -497,37 +497,37 @@ inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int
 	UFusionPatch* PianoPatch = static_cast<UFusionPatch*>(PianoPatchPath.TryLoad());
 
 	M2TrackMetadata.Empty();
-	for (const auto& [trackID, channelID] : InTracks)
+	for (const auto& [TrackID, ChannelID] : InTracks)
 	{
-		FTrackDisplayOptions newTrack;
-		bool bIsPrimaryChannel = HarmonixMidiFile->GetTrack(trackID)->GetPrimaryMidiChannel() == channelID;
-		newTrack.ChannelIndexInParentMidi = bIsPrimaryChannel ? 0 : channelID;
-		newTrack.ChannelIndexRaw = channelID;
-		newTrack.TrackIndexInParentMidi = trackID;
+		FTrackDisplayOptions NewTrack;
+		bool bIsPrimaryChannel = HarmonixMidiFile->GetTrack(TrackID)->GetPrimaryMidiChannel() == ChannelID;
+		NewTrack.ChannelIndexInParentMidi = bIsPrimaryChannel ? 0 : ChannelID;
+		NewTrack.ChannelIndexRaw = ChannelID;
+		NewTrack.TrackIndexInParentMidi = TrackID;
 
-		newTrack.trackName = *HarmonixMidiFile->GetTrack(trackID)->GetName() + " Ch: " + FString::FromInt(channelID) + " Tr: " + FString::FromInt(trackID);
-		newTrack.fusionPatch = PianoPatch;
-		int IndexOfNewTrack = M2TrackMetadata.Add(newTrack);
+		NewTrack.TrackName = *HarmonixMidiFile->GetTrack(TrackID)->GetName() + " Ch: " + FString::FromInt(ChannelID) + " Tr: " + FString::FromInt(TrackID);
 
-		FLinearColor trackColor;
+		int IndexOfNewTrack = M2TrackMetadata.Add(NewTrack);
+
+		FLinearColor TrackColor;
 
 		switch (IndexOfNewTrack)
 		{
 		case 0:
-			trackColor = FLinearColor::Red;
+			TrackColor = FLinearColor::Red;
 			break;
 		case 1:
-			trackColor = FLinearColor::Yellow;
+			TrackColor = FLinearColor::Yellow;
 			break;
 		case 2:
-			trackColor = FLinearColor::Green;
+			TrackColor = FLinearColor::Green;
 			break;
 
 		default:
-			trackColor = FLinearColor::MakeRandomSeededColor(channelID * 16 + trackID);
+			TrackColor = FLinearColor::MakeRandomSeededColor(ChannelID * 16 + TrackID);
 			break;
 		}
-		M2TrackMetadata[IndexOfNewTrack].trackColor = trackColor;
+		M2TrackMetadata[IndexOfNewTrack].trackColor = TrackColor;
 
 		//So actually here we can create the Midi Stream Core Nodes...
 
@@ -589,9 +589,6 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 
 	PendingLinkedMidiNotesMap.Add(PendingNote);
 	MidiFileCopy->SortAllTracks();
-	//auto LastEventTick = MidiFileCopy->GetLastEventTick();
-	//MidiFileCopy->GetSongMaps()->SetLengthTotalBars(4);
-	//MidiFileCopy->LoopBarDuration = 4;
 
 	HarmonixMidiFile = MidiFileCopy;
 	MarkPackageDirty();
@@ -861,8 +858,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 
 		NewTrackMetaData.ChannelIndexInParentMidi = 0;
 		NewTrackMetaData.TrackIndexInParentMidi = 0;
-		NewTrackMetaData.trackName = TEXT("Default Track");
-		NewTrackMetaData.fusionPatch = nullptr;
+		NewTrackMetaData.TrackName = TEXT("Default Track");
 		NewTrackMetaData.trackColor = FLinearColor::Red;
 		//
 
@@ -956,7 +952,7 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	if (HarmonixMidiFile->IsEmpty()) return;
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Auditioning Builder"))
-		FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
+	FOnCreateAuditionGeneratorHandleDelegate OnCreateAuditionGeneratorHandle;
 	OnCreateAuditionGeneratorHandle.BindUFunction(this, TEXT("OnMetaSoundGeneratorHandleCreated"));
 	AuditionComponent = InAuditionComponent;
 	//AuditionComponent->
@@ -968,17 +964,6 @@ void UDAWSequencerData::AuditionBuilder(UAudioComponent* InAuditionComponent, bo
 	AuditionComponent->SetVolumeMultiplier(MasterOptions.MasterVolume);
 }
 
-//UM2SoundGraphRenderer* UDAWSequencerData::CreatePerformer(UAudioComponent* InAuditionComponent)
-//{
-//	auto SequencerPerformer = NewObject<UM2SoundGraphRenderer>(this);
-//
-//	//OnVertexAdded.AddDynamic(SequencerPerformer, &UM2SoundGraphRenderer::UpdateVertex);
-//	SequencerPerformer->InitPerformer();
-//
-//	SequencerPerformer->OutputFormat = MasterOptions.OutputFormat;
-//
-//	return SequencerPerformer;
-//}
 
 #if WITH_EDITOR
 void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -992,21 +977,11 @@ void UDAWSequencerData::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 		OnMidiDataChanged.Broadcast();
 	}
 
-	//if (PropertyName == TEXT("MasterVolume"))
-	//{
-	//	if (EditorPreviewPerformer && EditorPreviewPerformer->AuditionComponentRef)
-	//	{
-	//		EditorPreviewPerformer->AuditionComponentRef->SetVolumeMultiplier(MasterOptions.MasterVolume);
-	//	}
-	//}
+
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Changed %s"), *PropertyName.ToString())
 }
 
-//TArray<FName> UDAWSequencerData::GetMixerNames()
-//{
-//	return Mixers.GenerateKeyArray();
-//}
 
 #endif
 
@@ -1051,14 +1026,14 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
-	for (auto PendingNote : PendingLinkedMidiNotesMap)
+	for (const auto& PendingNote : PendingLinkedMidiNotesMap)
 	{
 		//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
 		auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
-			auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
+		auto TargetTrack = MidiFileCopy->GetTrack(TrackMetaData.TrackIndexInParentMidi);
 		auto StartMessage = FMidiMsg::CreateNoteOn(TrackMetaData.ChannelIndexInParentMidi, PendingNote.Pitch, 127);
 		auto EndMessage = FMidiMsg::CreateNoteOff(TrackMetaData.ChannelIndexInParentMidi, PendingNote.Pitch);
 		auto NewStartNoteMidiEvent = FMidiEvent(PendingNote.StartTick, StartMessage);
@@ -1201,7 +1176,7 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	//this guy only has one output, which is the MidiStream grab it and add it to MappedOutputs
 
 	//MappedOutputs.Add(TrackMetadataIndex, FMemberInput{ FName(TrackMetadata.trackName), NewMidiStreamOutput});
-	CreateOrUpdateMemberInput(NewMidiStreamOutput, FName(TrackMetadata.trackName + ".MidiStream"), TrackMetadataIndex);
+	CreateOrUpdateMemberInput(NewMidiStreamOutput, FName(TrackMetadata.TrackName + ".MidiStream"), TrackMetadataIndex);
 
 	//set default values to "Track Index" and "Channel Index"
 	auto TrackInput = BuilderContext->FindNodeInputByName(NewNode, FName(TEXT("Track Index")), BuildResult);
@@ -1220,7 +1195,7 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	BuilderContext->ConnectNodes(MainMidiStreamOutput, MidiStreamInput, BuildResult);
 
 	//for now also connect to graph output with the same name as the metadata track name
-	auto GraphOutput = BuilderContext->AddGraphOutputNode(FName(TrackMetadata.trackName), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult);
+	auto GraphOutput = BuilderContext->AddGraphOutputNode(FName(TrackMetadata.TrackName), TEXT("MidiStream"), FMetasoundFrontendLiteral(), BuildResult);
 	BuilderContext->ConnectNodes(NewMidiStreamOutput, GraphOutput, BuildResult);
 
 	return NewMidiStreamOutput;

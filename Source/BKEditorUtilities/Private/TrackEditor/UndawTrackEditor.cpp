@@ -173,7 +173,7 @@ FText FUndawSequencerSectionPainter::GetSectionTitle() const
 {
 	auto UDawSection = Cast<UUndawMidiMovieSceneTrackSection>(&Section);
 	auto SequencerData = UDawSection->DAWData;
-	auto TrackName = SequencerData ? SequencerData->GetTracksDisplayOptions(UDawSection->TrackIndexInParentSession).trackName : "DAW Sequence";
+	auto TrackName = SequencerData ? SequencerData->GetTracksDisplayOptions(UDawSection->TrackIndexInParentSession).TrackName : "DAW Sequence";
 	
 	return FText::FromString(TrackName);
 }
