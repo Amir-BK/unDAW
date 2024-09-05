@@ -24,13 +24,19 @@ void UDAWListenerComponent::BeginPlay()
 		const auto& AudiotionComponent = SceneManager->GetDAWSequencerData()->AuditionComponent;
 
 		if (MetaSoundOutputSubsystem && AudiotionComponent)
+
+
 		{
-			const auto FoundOutput = MetaSoundOutputSubsystem->WatchOutput(AudiotionComponent, FName(WatchedOutput), OnMidiStreamOutputReceived);
-			if (FoundOutput)
+			bool bIsDelegateAlreadyBound = OnMidiStreamOutputReceived.IsBound();
+
+			UE_CLOG(bIsDelegateAlreadyBound, LogTemp, Warning, TEXT("OnMidiStreamOutputReceived is already bound!"));
+			OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) {
+				ReceiveMetaSoundMidiStreamOutput(FName(WatchedOutput), Value);
+				});
+			bIsWatchingOutput = MetaSoundOutputSubsystem->WatchOutput(AudiotionComponent, FName(WatchedOutput), OnMidiStreamOutputReceived);
+			if (bIsWatchingOutput)
 			{
-				OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) {
-					ReceiveMetaSoundMidiStreamOutput(FName(WatchedOutput), Value);
-					});
+
 			}
 		}
 		else
