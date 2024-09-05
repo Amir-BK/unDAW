@@ -414,7 +414,7 @@ void UM2SoundGraph::InitializeGraph()
 		{
 			auto InNode = CreateDefaultNodeForVertex< UM2SoundGraphInputNode>(Vertex, FPlacementDefaults::InputsColumnPosition);
 
-			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackName);
+			InNode->Name = FName(GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).TrackName);
 
 			Node = InNode;
 		}

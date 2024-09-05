@@ -34,42 +34,33 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
 	FLinearColor trackColor;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	float trackZOrder;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
-	float TrackVolume = 1.0f;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
-	FString trackName;
+	FString TrackName;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadOnly, Category = "BK Music|Track Settings")
 	int TrackIndexInParentMidi;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadOnly, Category = "BK Music|Track Settings")
 	int ChannelIndexInParentMidi;
 
 	//I don't fully understand what harmonix are doing with the 'is primary channel' but this leads to different results when
 	// sending notes to fusion vs. when receiving notes from the watch subsystem, to account for that, we save both values
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadOnly, Category = "BK Music|Track Settings")
 	int ChannelIndexRaw;
 
-	//the desired render mode, if Custom Patch is selected a custom metasound patch will be inserted into the graph by the builder. Make sure this patch can receive a MIDI stream and output audio, consult the example instrument for reference.
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
-	TEnumAsByte<ETrackRendererMode> RenderMode = ETrackRendererMode::FusionPatch;
 
 	UPROPERTY()
 	bool CreateMidiOutput = true;
 
-	//the fusion patch to use in case 'Fusion Patch' mode is selected
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::FusionPatch", EditConditionHides))
-	TObjectPtr<UFusionPatch> fusionPatch;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings", meta = (EditCondition = "RenderMode==ETrackRendererMode::CustomPatch", EditConditionHides))
-	TScriptInterface<IMetaSoundDocumentInterface> MidiPatchClass;
 
 	//Can be used to visualize the available KeyZones the used fusion patch exposes
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BK Music|Track Settings")
+	UPROPERTY(BlueprintReadOnly, Category = "BK Music|Track Settings")
 	TMap<int, bool> SampleAvailabilityMap;
 
 	FTrackDisplayOptions()
@@ -78,9 +69,8 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 		trackColor = FLinearColor::Gray;
 		trackZOrder = 0.0f;
 		isSelected = false;
-		fusionPatch = nullptr;
 		TrackIndexInParentMidi = INDEX_NONE;
 		ChannelIndexInParentMidi = INDEX_NONE;
-		trackName = FString(TEXT("INVALID TRACK"));
+		TrackName = FString(TEXT("INVALID TRACK"));
 	}
 };

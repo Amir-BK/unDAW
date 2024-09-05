@@ -2,6 +2,7 @@
 
 #include "ListenerComponent/DAWListenerComponent.h"
 
+
 // Sets default values for this component's properties
 UDAWListenerComponent::UDAWListenerComponent()
 {
@@ -16,6 +17,30 @@ UDAWListenerComponent::UDAWListenerComponent()
 void UDAWListenerComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (SceneManager)
+	{
+		UMetaSoundOutputSubsystem* MetaSoundOutputSubsystem = GetWorld()->GetSubsystem<UMetaSoundOutputSubsystem>();
+		const auto& AudiotionComponent = SceneManager->GetDAWSequencerData()->AuditionComponent;
+
+		if (MetaSoundOutputSubsystem && AudiotionComponent)
+		{
+			const auto FoundOutput = MetaSoundOutputSubsystem->WatchOutput(AudiotionComponent, FName(WatchedOutput), OnMidiStreamOutputReceived);
+			if (FoundOutput)
+			{
+				OnMidiStreamOutputReceived.BindLambda([this](FName OutputName, const FMetaSoundOutput Value) {
+					ReceiveMetaSoundMidiStreamOutput(FName(WatchedOutput), Value);
+					});
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Could not find MetasoundOutputSubsystem or AudiotionComponent"));
+		}
+	}
+
+
+
 
 	// ...
 }
@@ -40,10 +65,37 @@ void UDAWListenerComponent::SetSceneManager(AMusicScenePlayerActor* inSceneManag
 	InitEvent();
 }
 
+void UDAWListenerComponent::ReceiveMetaSoundMidiStreamOutput(FName OutputName, const FMetaSoundOutput Value)
+{
+	FMidiEventInfo MidiEvent;
+
+	const bool MidiEventGetSuccess = Value.Get(MidiEvent);
+	if (MidiEventGetSuccess)
+	{
+		OnMidiEvent.Broadcast(MidiEvent);
+	}
+}
+
 // Called every frame
 void UDAWListenerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UDAWListenerComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	//when WatchedOutput is changed get the metadata from the scene manager
+	if (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UDAWListenerComponent, WatchedOutput))
+	{
+		if (SceneManager)
+		{
+			MidiTrackMetadata = *SceneManager->GetDAWSequencerData()->M2TrackMetadata.FindByPredicate([&](const FTrackDisplayOptions& Track) {
+				return Track.TrackName == WatchedOutput;
+				});
+		}
+	}
 }
