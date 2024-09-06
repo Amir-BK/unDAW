@@ -89,9 +89,13 @@ void SUndawMusicSequencer::CreateScrollBox()
 
 			];
 
-		TrackRoot->OnVerticalMajorSlotResized.BindLambda([this](float InNewSize) { 
-			UE_LOG(LogTemp, Warning, TEXT("Slot resized to %f"), InNewSize);
+		TrackRoot->ControlsArea->OnVerticalMajorSlotResized.BindLambda([this](float InNewSize) { 
+			MajorTabWidth = InNewSize;
 			for (auto& TrackRoot : TrackRoots) { TrackRoot->ResizeSplitter(InNewSize); }});
+
+		TrackRoot->ControlsArea->OnVerticalMajorSlotHover.BindLambda([this](bool bIsHovering) {
+			MajorTabAlpha = bIsHovering ? 0.0f : 0.25f;
+			});
 
 		TrackRoots.Add(TrackRoot);
 		//TrackSlotsScrollBox.Add(TrackSlot);
@@ -101,12 +105,8 @@ void SUndawMusicSequencer::CreateScrollBox()
 
 int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	auto TimelineGeometry = AllottedGeometry.MakeChild(
-		FVector2f(150, 0),
-		FVector2f(AllottedGeometry.Size.X - 150, TimelineHeight)
-	);
 
-	auto TimelineCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(TimelineGeometry.LocalToAbsolute(FVector2D(0, 0)), TimelineGeometry.Size));
+	//auto TimelineCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(TimelineGeometry.LocalToAbsolute(FVector2D(0, 0)), TimelineGeometry.Size));
 
 	auto TrackAreaGeometry = AllottedGeometry.MakeChild(
 		FVector2f(0, TimelineHeight),
@@ -117,6 +117,19 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+
+	//paint the major tab line on top of everything
+	FSlateDrawElement::MakeLines(
+		OutDrawElements,
+		LayerId,
+		TrackAreaGeometry.ToPaintGeometry(),
+		{ FVector2D(MajorTabWidth + 2, 0), FVector2D(MajorTabWidth + 2, AllottedGeometry.Size.Y) },
+		ESlateDrawEffect::None,
+		FLinearColor::Gray.CopyWithNewOpacity(MajorTabAlpha),
+		false,
+		5.0f
+	);
+
 	
 	return LayerId;
 }
@@ -143,7 +156,7 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId,
-		AllottedGeometry.ToPaintGeometry(FVector2D(150, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
+		AllottedGeometry.ToPaintGeometry(FVector2D(MajorTabWidth, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
 		FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 		ESlateDrawEffect::None,
 		FLinearColor::Black
@@ -170,6 +183,22 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	return LayerId;
 }
 
+FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	TRange<float> MajorTabRange(MajorTabWidth + 2, MajorTabWidth + 7);
+	const FVector2D LocalMousePosition = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+	if (MajorTabRange.Contains(LocalMousePosition.X))
+	{
+		MajorTabAlpha = 0.25f;
+	}
+	else
+	{
+		MajorTabAlpha = 0.0f;
+	}
+	
+	return FReply::Unhandled();
+}
+
 void SDawSequencerTrackRoot::Construct(const FArguments& InArgs)
 {
 	ChildSlot
@@ -178,7 +207,7 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNew(SDAwSequencerTrackControlsArea)
+					SAssignNew(ControlsArea, SDAwSequencerTrackControlsArea)
 						.DesiredWidth(150)
 				]
 				+ SHorizontalBox::Slot()
@@ -207,7 +236,7 @@ void SDAwSequencerTrackControlsArea::Construct(const FArguments& InArgs)
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					SNew(SBox)
+					SAssignNew(ControlsBox, SBox)
 						.HeightOverride(100)
 						.WidthOverride(DesiredWidth.Get())
 						[
@@ -256,11 +285,28 @@ FReply SDAwSequencerTrackControlsArea::OnMouseButtonDown(const FGeometry& MyGeom
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Resizing"));
 			bIsResizing = true;
-			return FReply::Handled();
+			return FReply::Handled().CaptureMouse(AsShared());
 		}
 	}
 
 
+	
+	return FReply::Unhandled();
+}
+
+FReply SDAwSequencerTrackControlsArea::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	const bool bIsLeftMouseButtonAffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+
+	if (bIsLeftMouseButtonAffecting)
+	{
+		if (bIsResizing)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Resizing done"));
+			bIsResizing = false;
+			return FReply::Handled().ReleaseMouseCapture();
+		}
+	}
 	
 	return FReply::Unhandled();
 }
@@ -275,10 +321,17 @@ FReply SDAwSequencerTrackControlsArea::OnMouseMove(const FGeometry& MyGeometry, 
 	{
 		
 		bIsHoveringOverResizeArea = true;
+		//OnVerticalMajorSlotHover.ExecuteIfBound(true);
 	
 	}
 	else {
 		bIsHoveringOverResizeArea = false;
+		//OnVerticalMajorSlotHover.ExecuteIfBound(false);
+	}
+
+	if (bIsResizing)
+	{
+		OnVerticalMajorSlotResized.ExecuteIfBound(LocalMousePosition.X);
 	}
 	
 	return FReply::Unhandled();
