@@ -788,6 +788,7 @@ FReply SPianoRollGraph::OnMouseButtonUp(const FGeometry& MyGeometry, const FPoin
 	if(bIsRightMouseButtonEffecting)
 	{
 		CursorType = EMouseCursor::Default;
+		return FReply::Unhandled().ReleaseMouseCapture();
 	}
 	
 	
