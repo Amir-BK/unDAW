@@ -19,6 +19,7 @@
 
 #include "TrackPlaybackAndDisplayOptions.h"
 #include "MidiDeviceManager.h"
+#include "MidiDrivenSequence/MidiDrivenLevelSequence.h"
 
 #include <Pins/M2Pins.h>
 #include "Evaluation/IMovieSceneCustomClockSource.h"
@@ -425,6 +426,11 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
+	UPROPERTY()
+	UMidiDrivenLevelSequence* MidiDrivenLevelSequence;
+
+	void EnsureLevelSequence();
 
 	bool bJustReceivedMessage = false;
 

@@ -13,7 +13,7 @@
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
-DEFINE_LOG_CATEGORY(SPIANOROLLLOG);
+DEFINE_LOG_CATEGORY(SPianoRollLog);
 
 SLATE_IMPLEMENT_WIDGET(SPianoRollGraph)
 void SPianoRollGraph::PrivateRegisterAttributes(FSlateAttributeInitializer& AttributeInitializer)
@@ -195,7 +195,7 @@ void SPianoRollGraph::RecalculateSlotOffsets()
 
 void SPianoRollGraph::SetSessionData(UDAWSequencerData* inSessionData)
 {
-	UE_LOG(SPIANOROLLLOG, Log, TEXT("Setting Session Data!"));
+	UE_LOG(SPianoRollLog, Log, TEXT("Setting Session Data!"));
 
 	if (SessionData)
 	{
@@ -554,7 +554,7 @@ void SPianoRollGraph::RecalcSubdivisions()
 	if (SessionData == nullptr) return;
 
 	const auto& MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
-	UE_LOG(SPIANOROLLLOG, Log, TEXT("Quantization Grid Unit: %s"), *UEnum::GetValueAsString(QuantizationGridUnit));
+	UE_LOG(SPianoRollLog, Log, TEXT("Quantization Grid Unit: %s"), *UEnum::GetValueAsString(QuantizationGridUnit));
 	GridPointMap.Empty();
 
 	// this time we're populating the entire grid point map

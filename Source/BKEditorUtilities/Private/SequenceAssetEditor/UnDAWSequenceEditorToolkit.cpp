@@ -25,7 +25,37 @@
 #include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
+#include "Sequencer/UndawMusicSequencer.h"
 #include "Framework/Docking/TabManager.h"
+
+
+TSharedRef<ISequencer> FUnDAWSequenceEditorToolkit::CreateMusicSequencer()
+{
+	auto& SequencerModule = FModuleManager::Get().LoadModuleChecked<ISequencerModule>("Sequencer");
+
+	FSequencerInitParams SequencerInitParams;
+	{
+		SequencerInitParams.RootSequence = SequenceData->MidiDrivenLevelSequence;
+		SequencerInitParams.ViewParams.bShowPlaybackRangeInTimeSlider = false;
+	}
+
+	InstancedSequencer = SequencerModule.CreateSequencer(SequencerInitParams);
+	auto WidgetName =InstancedSequencer->GetTopTimeSliderWidget()->GetParentWidget()->GetWidgetClass().GetWidgetType();
+	UE_LOG(LogTemp, Warning, TEXT("Widget Name %s"), *WidgetName.ToString());
+
+	SBorder* StealBorder = static_cast<SBorder*>(InstancedSequencer->GetTopTimeSliderWidget()->GetParentWidget().Get());
+	StealBorder->SetContent(SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.FillWidth(1.0f)
+		[
+			SNew(STextBlock)
+				.Text_Lambda([this]() { return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), SequenceData->CurrentTimestampData.Bar, SequenceData->CurrentTimestampData.Beat)); })
+		]);
+
+	//InstancedSequencer->Time
+
+	return InstancedSequencer.ToSharedRef();
+}
 
 void FUnDAWSequenceEditorToolkit::RenameSelectedNodes()
 {
@@ -68,6 +98,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					->SetSizeCoefficient(0.8f)
 					->AddTab("DAWSequenceMixerTab", ETabState::OpenedTab)
 					->AddTab("PianoRollTab", ETabState::OpenedTab)
+					->AddTab("Sequencer", ETabState::OpenedTab)
 					
 				)
 				->Split
@@ -94,14 +125,27 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
 	ISequencerWidgetsModule& SequencerWidgets = FModuleManager::Get().LoadModuleChecked<ISequencerWidgetsModule>("SequencerWidgets");
 	//TSharedRef<ITimeSliderController> TimelineTimeSliderController = MakeShared<FSequencerCurveEditorTimeSliderController>(TimeSliderArgs, SequencerPtr, InSequencer->GetCurveEditor().ToSharedRef());
+	//CreateMusicSequencer();
 
 	//SequencerWidgets.CreateTimeSlider(TimelineTimeSliderController, false);
 	//InTabManager->GetPrivateApi().HideWindows();
+
+	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
+		{
+			return SNew(SDockTab)
+				//.TabRole(ETabRole::NomadTab)
+				[
+					SNew(SUndawMusicSequencer, SequenceData)
+				];
+		}))
+		.SetDisplayName(INVTEXT("Sequencer"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
 	
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
-				.TabRole(ETabRole::NomadTab)
+				//.TabRole(ETabRole::NomadTab)
 				//.TabColorScale
 	
 			

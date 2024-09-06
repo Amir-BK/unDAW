@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
+#include "MidiDrivensSequenceEditor/MidiDrivenSequenceFactory.h"
 #include "M2SoundEdGraphSchema.h"
 
 UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn, FName CallingContext)
@@ -23,6 +24,10 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 
 		NewSequence->PopulateFromMidiFile(NewMidiFile);
 	}
+
+	UMidiDrivenSequenceFactory* SequenceFactory = NewObject<UMidiDrivenSequenceFactory>();
+
+	NewSequence->MidiDrivenLevelSequence = Cast<UMidiDrivenLevelSequence>(SequenceFactory->FactoryCreateNew(UMidiDrivenLevelSequence::StaticClass(), NewSequence, InName, Flags, Context, Warn));
 
 	//NewSequence->M2SoundGraph->InitializeGraph();
 

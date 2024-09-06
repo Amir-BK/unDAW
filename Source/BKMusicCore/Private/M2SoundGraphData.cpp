@@ -26,6 +26,11 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+void UDAWSequencerData::EnsureLevelSequence()
+{
+
+}
+
 void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)

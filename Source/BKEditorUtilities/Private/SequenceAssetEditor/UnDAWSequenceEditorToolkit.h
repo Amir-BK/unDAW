@@ -14,6 +14,8 @@
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
 #include "MidiDeviceManager.h"
+#include "ISequencer.h"
+#include "ISequencerModule.h"
 #include "GraphEditor.h"
 
 class FSequenceAssetDetails : public IDetailCustomization
@@ -42,6 +44,8 @@ private:
 class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {
 public:
+
+	TSharedRef<ISequencer> CreateMusicSequencer();
 
 	void RenameSelectedNodes();
 
@@ -77,6 +81,7 @@ public:
 
 	TSharedPtr<SDockTab> MetasoundGraphEditorBox;
 	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
+	TSharedPtr<ISequencer> InstancedSequencer;
 
 	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
