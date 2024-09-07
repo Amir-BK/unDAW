@@ -19,13 +19,13 @@ void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData
 	ChildSlot[
 		SAssignNew(ScrollBox, SScrollBox)
 			+SScrollBox::Slot()
-			.FillSize(1.0f)
+			.AutoSize()
 			[
 				SAssignNew(Splitter, SSplitter)
 				
 					.Orientation(Orient_Vertical)
 					.HitDetectionSplitterHandleSize(5.0f)
-					.ResizeMode(ESplitterResizeMode::Fill)
+					.ResizeMode(ESplitterResizeMode::FixedSize)
 			]
 	];
 
@@ -59,16 +59,6 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 		);
 
 		TrackRoot->ControlsArea->ControlsBox->SetWidthOverride(MajorTabWidth);
-
-	/*	TrackRoot->LaneBox->SetContent(
-			SNew(SBorder)
-			.BorderBackgroundColor(FLinearColor::Black)
-			.Content()
-			[
-				SNew(STextBlock)
-					.Text(FText::FromString("Lane"))
-			]*/
-		//);
 
 		TrackRoot->ControlsArea->OnVerticalMajorSlotResized.BindLambda([this](float InNewSize) { 
 			MajorTabWidth = InNewSize;
@@ -237,11 +227,11 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerDa
 				.AutoWidth()
 				[
 					SAssignNew(ControlsArea, SDAwSequencerTrackControlsArea)
-						.DesiredWidth(150)
 				]
 				+ SHorizontalBox::Slot()
 				[
 					SAssignNew(LaneBox, SBox)
+						.MinDesiredHeight(150)
 						.Content()
 						[
 							SAssignNew(Lane, SDawSequencerTrackLane, InSequenceToEdit, TrackId)
@@ -300,7 +290,6 @@ FReply SDAwSequencerTrackControlsArea::OnMouseButtonDown(const FGeometry& MyGeom
 	{
 		if (bIsHoveringOverResizeArea)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Resizing"));
 			bIsResizing = true;
 			return FReply::Handled().CaptureMouse(AsShared());
 		}
@@ -319,7 +308,6 @@ FReply SDAwSequencerTrackControlsArea::OnMouseButtonUp(const FGeometry& MyGeomet
 	{
 		if (bIsResizing)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Resizing done"));
 			bIsResizing = false;
 			return FReply::Handled().ReleaseMouseCapture();
 		}
@@ -330,20 +318,22 @@ FReply SDAwSequencerTrackControlsArea::OnMouseButtonUp(const FGeometry& MyGeomet
 
 FReply SDAwSequencerTrackControlsArea::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	//resize the slot
+	
+	////resize the slot
 	const FVector2D LocalMousePosition = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
-	//UE_LOG(LogTemp, Warning, TEXT("Mouse position %s, target val %f"), *LocalMousePosition.ToString(), MyGeometry.Size.X - 5);
+	////UE_LOG(LogTemp, Warning, TEXT("Mouse position %s, target val %f"), *LocalMousePosition.ToString(), MyGeometry.Size.X - 5);
+
+
 
 	if (LocalMousePosition.X > MyGeometry.Size.X - 5)
 	{
 		
 		bIsHoveringOverResizeArea = true;
-		//OnVerticalMajorSlotHover.ExecuteIfBound(true);
+
 	
 	}
 	else {
 		bIsHoveringOverResizeArea = false;
-		//OnVerticalMajorSlotHover.ExecuteIfBound(false);
 	}
 
 	if (bIsResizing)
@@ -358,15 +348,16 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 {
 	//print section height cause wtf
 	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
-	
+	const float SectionDuration = (Clip->EndTick - Clip->StartTick) / 200;
 	//just fill the background with a gray box
+
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId++,
-		AllottedGeometry.ToPaintGeometry(),
-		FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+		AllottedGeometry.ToPaintGeometry(FVector2D(SectionDuration, AllottedGeometry.Size.Y), 1.0f),
+		FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
 		ESlateDrawEffect::None,
-		FLinearColor::Green.CopyWithNewOpacity(0.2f)
+		bIsHovered && GetParentWidget()->IsHovered() ? FLinearColor::Green.CopyWithNewOpacity(0.5f) : FLinearColor::Green.CopyWithNewOpacity(0.2f)
 	);
 
 
@@ -376,7 +367,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = Note.StartTick / 200;
+		const float X = (Note.StartTick - Clip->StartTick)/ 200;
 		const float Width = (Note.EndTick - Note.StartTick) / 200;
 		const float Y = (127 - Note.Pitch) * Height;
 
@@ -395,7 +386,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 		OutDrawElements,
 		LayerId++,
 		AllottedGeometry.ToPaintGeometry(),
-		INVTEXT("Test"),
+		FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d"), Clip->StartTick, Clip->EndTick)),
 		FAppStyle::GetFontStyle("NormalFont"),
 		ESlateDrawEffect::None,
 		FLinearColor::White
@@ -409,14 +400,20 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	
 	for (const auto& Section : Sections)
 	{
+		auto LayoutTransform = FSlateLayoutTransform(FVector2D(0, 0));
+		
+		const float SectionDuration = (Section->Clip->EndTick - Section->Clip->StartTick) / 200;
+		//UE_LOG(LogTemp, Warning, TEXT("Section Duration %f"), SectionDuration);
 		auto SectionGeometry = AllottedGeometry.MakeChild(
-			FVector2f(0, 0),
-			FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y)
+			FVector2f(Section->Clip->StartTick / 200, 0),
+			FVector2f(SectionDuration, AllottedGeometry.Size.Y)
 		);
+			
+
 
 		auto SectionCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(SectionGeometry.LocalToAbsolute(FVector2D(0, 0)), SectionGeometry.Size));
 		
-		LayerId = Section->OnPaint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+		LayerId = Section->OnPaint(Args, SectionGeometry, SectionCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	}
 	
 	return LayerId;
