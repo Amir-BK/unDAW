@@ -135,16 +135,22 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	);
 
 	// draw 30 vertical lines for fun, 
+	TRange<float> DrawRange(HorizontalOffset, AllottedGeometry.Size.X + HorizontalOffset);
 	for (int i = 0; i < 30; i++)
 	{
-		const float X = MajorTabWidth + i * 100;
-		const FVector2D Start(X, 0);
-		const FVector2D End(X, TimelineHeight);
+		const float X = i * 100;
+		if (!DrawRange.Contains(X))
+		{
+			continue;
+		}
+		const FVector2D Start(MajorTabWidth + X - HorizontalOffset, 0);
+		const FVector2D End(MajorTabWidth + X - HorizontalOffset, TimelineHeight);
+
 
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
 			LayerId,
-			AllottedGeometry.ToPaintGeometry(FVector2D(150, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
+			AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
 			{ Start, End },
 			ESlateDrawEffect::None,
 			FLinearColor::White
@@ -211,7 +217,9 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 
 	if (bIsPanning)
 	{
-		HorizontalScrollOffset += MouseEvent.GetCursorDelta().X;
+		HorizontalOffset -= MouseEvent.GetCursorDelta().X;
+		HorizontalOffset = FMath::Max(0.0f, HorizontalOffset);
+		for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}
 	
@@ -235,6 +243,7 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerDa
 						.Content()
 						[
 							SAssignNew(Lane, SDawSequencerTrackLane, InSequenceToEdit, TrackId)
+								.Clipping(EWidgetClipping::ClipToBounds)
 						]
 
 
@@ -405,7 +414,7 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		const float SectionDuration = (Section->Clip->EndTick - Section->Clip->StartTick) / 200;
 		//UE_LOG(LogTemp, Warning, TEXT("Section Duration %f"), SectionDuration);
 		auto SectionGeometry = AllottedGeometry.MakeChild(
-			FVector2f(Section->Clip->StartTick / 200, 0),
+			FVector2f((Section->Clip->StartTick / 200) - HorizontalOffset, 0),
 			FVector2f(SectionDuration, AllottedGeometry.Size.Y)
 		);
 			

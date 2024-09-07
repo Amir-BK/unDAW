@@ -56,6 +56,8 @@ public:
 	bool bIsHoveringOverSectionResizeArea = false;
 	int32 HoveringOverSectionIndex = INDEX_NONE;
 
+	float HorizontalOffset = 0.0f;
+
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId)
 	{
 		SequenceData = InSequenceToEdit;
@@ -98,11 +100,10 @@ public:
 
 		//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
 		//check if hovering over section
-		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X;
+		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + HorizontalOffset;
 		const float MouseToPixel = MouseLocalX * 200;
 		constexpr int32 SectionResizeAreaWidth = 5;
 
-		//UE_LOG(LogTemp, Warning, TEXT("MouseLocalX: %f"), MouseLocalX);
 		bool bAnySectionHovered = false;
 		for (int32 i = 0; i < Sections.Num(); i++)
 		{
@@ -189,6 +190,8 @@ class SDawSequencerTrackRoot : public SCompoundWidget
 	TSharedPtr<SBox> LaneBox;
 	TSharedPtr<SDawSequencerTrackLane> Lane;
 
+	float HorizontalOffset = 0.0f;
+
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId);
 
 	void ResizeSplitter(float InNewSize) {
@@ -214,7 +217,7 @@ public:
 
 protected:
 
-	float HorizontalScrollOffset = 0.0f;
+	float HorizontalOffset = 0.0f;
 	float TimelineHeight;
 	bool bIsPanning = false;
 
@@ -237,9 +240,6 @@ protected:
 	UDAWSequencerData* SequenceData = nullptr;
 
 	TSharedPtr<SScrollBox> ScrollBox;
-	TSharedPtr<SGridPanel> GridPanel;
-	TArray<SGridPanel::FSlot*> LaneSlots;
-	TArray<SGridPanel::FSlot*> TrackSlots;
 	TSharedPtr<SSplitter> Splitter;
 
 	TArray<SScrollBox::FSlot*> TrackSlotsScrollBox;
