@@ -28,15 +28,18 @@ class SDawSequencerTrackSection : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDawSequencerTrackSection) {}
+		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
 	SLATE_END_ARGS()
 
 	FLinkedNotesClip* Clip = nullptr;
 	bool bIsHovered = false;
 
+	TAttribute<FLinearColor> TrackColor;
 
 	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip)
 	{
 		Clip = InClip;
+		TrackColor = InArgs._TrackColor;
 	}
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
@@ -55,6 +58,7 @@ public:
 	bool bIsHoveringOverSectionDragArea = false;
 	bool bIsHoveringOverSectionResizeArea = false;
 	int32 HoveringOverSectionIndex = INDEX_NONE;
+	int32 SelectedSectionIndex = INDEX_NONE;
 
 	float HorizontalOffset = 0.0f;
 
@@ -72,8 +76,11 @@ public:
 		for (auto& Clip : SequenceData->Tracks[TrackId].LinkedNotesClips)
 		{
 			TSharedPtr<SDawSequencerTrackSection> Section;
+
 			
-			SAssignNew(Section, SDawSequencerTrackSection, &Clip);
+			SAssignNew(Section, SDawSequencerTrackSection, &Clip)
+				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTracksDisplayOptions(TrackId).trackColor; }));
+
 			Section->AssignParentWidget(SharedThis(this));
 			Sections.Add(Section);
 		}
@@ -86,7 +93,11 @@ public:
 		}
 		else if (bIsHoveringOverSectionDragArea)
 		{
-			return EMouseCursor::CardinalCross;
+			if (SelectedSectionIndex == HoveringOverSectionIndex)
+				return EMouseCursor::CardinalCross;
+			else
+				return EMouseCursor::Crosshairs;
+			
 		}
 		else {
 			return EMouseCursor::Default;
@@ -145,6 +156,15 @@ public:
 
 	}
 
+	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override {
+		if (bIsHoveringOverSectionDragArea)
+		{
+			SelectedSectionIndex = HoveringOverSectionIndex;
+			return FReply::Handled();
+		};
+
+		return FReply::Unhandled();
+	}
 };
 
 class SDAwSequencerTrackControlsArea : public SCompoundWidget

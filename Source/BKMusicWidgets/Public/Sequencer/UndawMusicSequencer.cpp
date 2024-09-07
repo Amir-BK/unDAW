@@ -40,23 +40,26 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 	int i = 0;
 	for (auto& Track : SequenceData->M2TrackMetadata)
 	{
-		
+		auto ColorLambda = TAttribute<FSlateColor>::CreateLambda([this, i]() { return SequenceData->GetTracksDisplayOptions(i).trackColor; });
+
 		TSharedPtr<SDawSequencerTrackRoot> TrackRoot;
 		Splitter->AddSlot(i)
 			[
 				SAssignNew(TrackRoot, SDawSequencerTrackRoot, SequenceData, i)
 
+
 			];
 
 		TrackRoot->ControlsArea->ControlsBox->SetContent(
 			SNew(SBorder)
-			.BorderBackgroundColor(TAttribute<FSlateColor>::CreateLambda([this, i]() { return SequenceData->GetTracksDisplayOptions(i).trackColor; }))
+			.BorderBackgroundColor(ColorLambda)
 			.Content()
 			[
 				SNew(STextBlock)
 					.Text(FText::FromString(Track.TrackName))
 			]
 		);
+
 
 		TrackRoot->ControlsArea->ControlsBox->SetWidthOverride(MajorTabWidth);
 
@@ -72,6 +75,13 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 		//TrackSlotsScrollBox.Add(TrackSlot);
 		i++;
 	}
+
+	//oversize box?
+	Splitter->AddSlot()
+		[
+			SNullWidget::NullWidget
+		];
+
 
 }
 
@@ -218,6 +228,7 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 	if (bIsPanning)
 	{
 		HorizontalOffset -= MouseEvent.GetCursorDelta().X;
+		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
 		HorizontalOffset = FMath::Max(0.0f, HorizontalOffset);
 		for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
@@ -244,6 +255,7 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerDa
 						[
 							SAssignNew(Lane, SDawSequencerTrackLane, InSequenceToEdit, TrackId)
 								.Clipping(EWidgetClipping::ClipToBounds)
+								
 						]
 
 
@@ -366,7 +378,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 		AllottedGeometry.ToPaintGeometry(FVector2D(SectionDuration, AllottedGeometry.Size.Y), 1.0f),
 		FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
 		ESlateDrawEffect::None,
-		bIsHovered && GetParentWidget()->IsHovered() ? FLinearColor::Green.CopyWithNewOpacity(0.5f) : FLinearColor::Green.CopyWithNewOpacity(0.2f)
+		bIsHovered && GetParentWidget()->IsHovered() ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f)
 	);
 
 
