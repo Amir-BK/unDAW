@@ -11,6 +11,7 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSplitter.h"
 #include "Widgets/Layout/SBox.h"
+#include "UndawMusicDrawingStatics.h"
 #include <M2SoundGraphData.h>
 
 DECLARE_DELEGATE_OneParam(
@@ -23,6 +24,63 @@ DECLARE_DELEGATE_OneParam(
 	/** called when the spacer is hovered so we can change its color */
 	bool);
 
+class SDawSequencerTrackSection : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SDawSequencerTrackSection) {}
+	SLATE_END_ARGS()
+
+	FLinkedNotesClip* Clip = nullptr;
+
+	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip)
+	{
+		Clip = InClip;
+	}
+
+	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+};
+
+class SDawSequencerTrackLane : public SCompoundWidget
+{
+public:
+	SLATE_BEGIN_ARGS(SDawSequencerTrackLane) {}
+	SLATE_END_ARGS()
+
+	UDAWSequencerData* SequenceData = nullptr;
+	int32 TrackId = INDEX_NONE;
+	TArray<TSharedPtr<SDawSequencerTrackSection>> Sections;
+
+	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId)
+	{
+		SequenceData = InSequenceToEdit;
+		TrackId = InTrackId;
+
+		PopulateSections();
+
+	}
+
+	void PopulateSections()
+	{
+		for (auto& Clip : SequenceData->Tracks[TrackId].LinkedNotesClips)
+		{
+			TSharedPtr<SDawSequencerTrackSection> Section;
+			
+			SAssignNew(Section, SDawSequencerTrackSection, &Clip);
+			Sections.Add(Section);
+		}
+	}
+
+	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override {
+
+		//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
+		return FReply::Unhandled();
+
+	}
+
+};
 
 class SDAwSequencerTrackControlsArea : public SCompoundWidget
 {
@@ -40,6 +98,7 @@ public:
 	FOnVerticalMajorSlotResized OnVerticalMajorSlotResized;
 	FOnVerticalMajorSlotHover OnVerticalMajorSlotHover;
 	TSharedPtr<SBox> ControlsBox;
+	TSharedPtr<SBox> LaneBox;
 
 	TOptional<EMouseCursor::Type> GetCursor() const override;
 
@@ -63,8 +122,10 @@ class SDawSequencerTrackRoot : public SCompoundWidget
 	TSharedPtr<SSplitter> Splitter;
 	FOnVerticalMajorSlotResized OnVerticalMajorSlotResized;
 	TSharedPtr<SDAwSequencerTrackControlsArea> ControlsArea;
+	TSharedPtr<SBox> LaneBox;
+	TSharedPtr<SDawSequencerTrackLane> Lane;
 
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId);
 
 	void ResizeSplitter(float InNewSize) {
 		ControlsArea->ResizeControlsBox(InNewSize);
@@ -89,20 +150,25 @@ public:
 
 protected:
 
+	float HorizontalScrollOffset = 0.0f;
 	float TimelineHeight;
+	bool bIsPanning = false;
 
-	void CreateGridPanel();
-	void CreateScrollBox();
+	void PopulateSequencerFromDawData();
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	int32 PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 
+
+	TOptional<EMouseCursor::Type> GetCursor() const override;
+
+	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-	FReply OnLaneBorderMouseDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
-	FReply OnLaneBorderMouseUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
-	FReply OnLaneBorderMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+
 
 	UDAWSequencerData* SequenceData = nullptr;
 
@@ -118,5 +184,7 @@ protected:
 	float MajorTabAlpha = 0.0f;
 
 	TArray<TSharedPtr<SDawSequencerTrackRoot>> TrackRoots;
+
+	TMap<int32, FMusicalGridPoint> GridPointMap;
 	
 };

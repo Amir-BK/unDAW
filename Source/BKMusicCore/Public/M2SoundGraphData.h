@@ -206,13 +206,39 @@ struct FLinkedMidiEvents
 };
 
 USTRUCT(BlueprintType)
-struct FLinkedNotesTrack
+struct FLinkedNotesClip
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
+	int32 StartTick = 0;
+
+	UPROPERTY()
+	int32 EndTick = 0;
+
+	UPROPERTY()
+	int32 OffsetTick = 0;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FLinkedMidiEvents> LinkedNotes;
 };
+
+USTRUCT(BlueprintType)
+struct FDawSequencerTrack
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	int32 MetadataIndex = INDEX_NONE;
+
+	UPROPERTY()
+	FName TrackName;
+
+	UPROPERTY()
+	TArray<FLinkedNotesClip> LinkedNotesClips;
+
+};
+
 
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMasterChannelOutputSettings {
@@ -236,41 +262,12 @@ struct FTimeStamppedWavContainer {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
-	FMusicTimestamp TimeStamp;
+	int32 StartTick;
 
 	UPROPERTY(EditAnywhere, Category = "unDAW Sequence")
 	TObjectPtr <USoundWave> SoundWave;
 };
 
-USTRUCT(BlueprintType, Category = "unDAW Sequence")
-struct FTimeStamppedCurveContainer {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	FMusicTimestamp TimeStamp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	TObjectPtr <UCurveFloat> Curve;
-};
-
-USTRUCT(BlueprintType, Category = "unDAW Sequence")
-struct FTimeStamppedMidiContainer {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	FMusicTimestamp TimeStamp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	TObjectPtr<UMidiFile> MidiFile;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "unDAW Sequence")
-	bool bIsClockSource;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "unDAW Sequence", meta = (TitleProperty = "trackName"))
-	TArray<FTrackDisplayOptions> TracksMappings;
-};
 
 DECLARE_MULTICAST_DELEGATE(FMidiDataChanged)
 DECLARE_MULTICAST_DELEGATE(FOnSelectionChanged)
@@ -569,6 +566,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "M2Sound")
 	FOnVertexNeedsBuilderUpdates OnVertexNeedsBuilderConnectionUpdates;
 
+	UPROPERTY()
+	TArray<FDawSequencerTrack> Tracks;
+
 	UFUNCTION()
 	void RebuildVertex(UM2SoundVertex* Vertex);
 
@@ -775,7 +775,7 @@ public:
 	// (if not passed as ref)
 
 	UPROPERTY(BlueprintReadOnly)
-	TMap<int, FLinkedNotesTrack> LinkedNoteDataMap;
+	TMap<int, FLinkedNotesClip> LinkedNoteDataMap;
 
 	//UPROPERTY()
 	//TMap <FMidiExplicitMidiInstrumentTrack, FLinkedMidiEvents> SievedLinkedMidiEventsMap;

@@ -19,8 +19,10 @@ void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData
 	ChildSlot[
 		SAssignNew(ScrollBox, SScrollBox)
 			+SScrollBox::Slot()
+			.FillSize(1.0f)
 			[
 				SAssignNew(Splitter, SSplitter)
+				
 					.Orientation(Orient_Vertical)
 					.HitDetectionSplitterHandleSize(5.0f)
 					.ResizeMode(ESplitterResizeMode::Fill)
@@ -28,66 +30,45 @@ void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData
 	];
 
 	//CreateGridPanel();
-	CreateScrollBox();
+	PopulateSequencerFromDawData();
 }
 
-void SUndawMusicSequencer::CreateGridPanel()
-{
-	constexpr int TracksRow = 0;
-	constexpr int LanesRow = 1;
 
-
-	
-	for (int i = 0; i < 20; i++)
-	{
-		SGridPanel::FSlot* TrackSlot;
-		SGridPanel::FSlot* LaneSlot;
-
-		GridPanel->AddSlot(TracksRow, i)
-			.Expose(TrackSlot)
-			[
-				SNew(SBox)
-					.WidthOverride(100)
-					.HeightOverride(100)
-					[
-						SNew(SBorder)
-							.BorderBackgroundColor(FLinearColor::Red)
-							.Content()
-							[
-								SNew(STextBlock)
-									.Text(FText::FromString(FString::Printf(TEXT("Track %d"), i)))
-							]
-					]
-
-			];
-
-		GridPanel->AddSlot(LanesRow, i)
-			.Expose(LaneSlot)
-			[
-				SNew(STextBlock)
-					.Text(FText::FromString(FString::Printf(TEXT("Track %d"), i)))
-			];
-
-	
-
-		TrackSlots.Add(TrackSlot);
-		LaneSlots.Add(LaneSlot);
-
-	}
-}
-
-void SUndawMusicSequencer::CreateScrollBox()
+void SUndawMusicSequencer::PopulateSequencerFromDawData()
 {
 
-	//add 25 tracks
-	for (int i = 0; i < 25; i++)
+	int i = 0;
+	for (auto& Track : SequenceData->M2TrackMetadata)
 	{
+		
 		TSharedPtr<SDawSequencerTrackRoot> TrackRoot;
 		Splitter->AddSlot(i)
 			[
-				SAssignNew(TrackRoot, SDawSequencerTrackRoot)
+				SAssignNew(TrackRoot, SDawSequencerTrackRoot, SequenceData, i)
 
 			];
+
+		TrackRoot->ControlsArea->ControlsBox->SetContent(
+			SNew(SBorder)
+			.BorderBackgroundColor(TAttribute<FSlateColor>::CreateLambda([this, i]() { return SequenceData->GetTracksDisplayOptions(i).trackColor; }))
+			.Content()
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString(Track.TrackName))
+			]
+		);
+
+		TrackRoot->ControlsArea->ControlsBox->SetWidthOverride(MajorTabWidth);
+
+	/*	TrackRoot->LaneBox->SetContent(
+			SNew(SBorder)
+			.BorderBackgroundColor(FLinearColor::Black)
+			.Content()
+			[
+				SNew(STextBlock)
+					.Text(FText::FromString("Lane"))
+			]*/
+		//);
 
 		TrackRoot->ControlsArea->OnVerticalMajorSlotResized.BindLambda([this](float InNewSize) { 
 			MajorTabWidth = InNewSize;
@@ -99,6 +80,7 @@ void SUndawMusicSequencer::CreateScrollBox()
 
 		TrackRoots.Add(TrackRoot);
 		//TrackSlotsScrollBox.Add(TrackSlot);
+		i++;
 	}
 
 }
@@ -165,7 +147,7 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	// draw 30 vertical lines for fun, 
 	for (int i = 0; i < 30; i++)
 	{
-		const float X = i * 100;
+		const float X = MajorTabWidth + i * 100;
 		const FVector2D Start(X, 0);
 		const FVector2D End(X, TimelineHeight);
 
@@ -183,6 +165,47 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	return LayerId;
 }
 
+TOptional<EMouseCursor::Type> SUndawMusicSequencer::GetCursor() const
+{
+	
+	if (bIsPanning)
+	{
+		return EMouseCursor::GrabHand;
+	}
+	
+	return EMouseCursor::Default;
+}
+
+FReply SUndawMusicSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	
+	const bool bIsRightButtonDown = MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
+
+	if (bIsRightButtonDown)
+	{
+		bIsPanning = true;
+		return FReply::Handled().CaptureMouse(AsShared());
+	}
+	
+	return FReply::Unhandled();
+}
+
+FReply SUndawMusicSequencer::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	const bool bIsRightButtonAffecting = MouseEvent.GetEffectingButton() == EKeys::RightMouseButton;
+
+	if (bIsRightButtonAffecting)
+	{
+		if (bIsPanning)
+		{
+			bIsPanning = false;
+			return FReply::Handled().ReleaseMouseCapture();
+		}
+	}
+	
+	return FReply::Unhandled();
+}
+
 FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	TRange<float> MajorTabRange(MajorTabWidth + 2, MajorTabWidth + 7);
@@ -195,11 +218,17 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 	{
 		MajorTabAlpha = 0.0f;
 	}
+
+	if (bIsPanning)
+	{
+		HorizontalScrollOffset += MouseEvent.GetCursorDelta().X;
+		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
+	}
 	
 	return FReply::Unhandled();
 }
 
-void SDawSequencerTrackRoot::Construct(const FArguments& InArgs)
+void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId)
 {
 	ChildSlot
 		[
@@ -212,16 +241,13 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs)
 				]
 				+ SHorizontalBox::Slot()
 				[
-					SNew(SBox)
+					SAssignNew(LaneBox, SBox)
+						.Content()
 						[
-							SNew(SBorder)
-								.BorderBackgroundColor(FLinearColor::Green)
-								.Content()
-								[
-									SNew(STextBlock)
-										.Text(FText::FromString("Track Contents"))
-								]
+							SAssignNew(Lane, SDawSequencerTrackLane, InSequenceToEdit, TrackId)
 						]
+
+
 				]
 		];
 }
@@ -237,16 +263,7 @@ void SDAwSequencerTrackControlsArea::Construct(const FArguments& InArgs)
 				.AutoWidth()
 				[
 					SAssignNew(ControlsBox, SBox)
-						.HeightOverride(100)
-						.WidthOverride(DesiredWidth.Get())
-						[
-						SNew(SBorder)
-							.BorderBackgroundColor(FLinearColor::Green)
-							[
-								SNew(STextBlock)
-									.Text(FText::FromString("Controls"))
-							]
-						]
+
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
@@ -335,4 +352,72 @@ FReply SDAwSequencerTrackControlsArea::OnMouseMove(const FGeometry& MyGeometry, 
 	}
 	
 	return FReply::Unhandled();
+}
+
+int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+	//print section height cause wtf
+	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
+	
+	//just fill the background with a gray box
+	FSlateDrawElement::MakeBox(
+		OutDrawElements,
+		LayerId++,
+		AllottedGeometry.ToPaintGeometry(),
+		FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+		ESlateDrawEffect::None,
+		FLinearColor::Green.CopyWithNewOpacity(0.2f)
+	);
+
+
+
+	//draw notes
+	const float Height = AllottedGeometry.Size.Y / 127;
+	LayerId++;
+	for (const auto& Note : Clip->LinkedNotes)
+	{
+		const float X = Note.StartTick / 200;
+		const float Width = (Note.EndTick - Note.StartTick) / 200;
+		const float Y = (127 - Note.Pitch) * Height;
+
+		FSlateDrawElement::MakeLines(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(),
+			{ FVector2D(X, Y), FVector2D(X + Width, Y) },
+			ESlateDrawEffect::None,
+			FLinearColor::White
+		);
+	}
+
+	// draw the name of the clip
+	FSlateDrawElement::MakeText(
+		OutDrawElements,
+		LayerId++,
+		AllottedGeometry.ToPaintGeometry(),
+		INVTEXT("Test"),
+		FAppStyle::GetFontStyle("NormalFont"),
+		ESlateDrawEffect::None,
+		FLinearColor::White
+	);
+	
+	return LayerId;
+}
+
+int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+	
+	for (const auto& Section : Sections)
+	{
+		auto SectionGeometry = AllottedGeometry.MakeChild(
+			FVector2f(0, 0),
+			FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y)
+		);
+
+		auto SectionCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(SectionGeometry.LocalToAbsolute(FVector2D(0, 0)), SectionGeometry.Size));
+		
+		LayerId = Section->OnPaint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	}
+	
+	return LayerId;
 }

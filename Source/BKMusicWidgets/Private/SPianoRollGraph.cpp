@@ -512,28 +512,52 @@ void SPianoRollGraph::RecalcGrid()
 
 	if (!LinkedNoteDataMap) return;
 
-	for (auto& track : *LinkedNoteDataMap)
+	for (auto& track : SessionData->Tracks)
 	{
-		for (auto& note : track.Value.LinkedNotes)
+		for (auto& clip : track.LinkedNotesClips)
 		{
-			bool NoteInRightBound = note.StartTick < RightMostTick;
-
-			//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop, no, we actually CAN'T
-			// cause tracks
-			//if (!NoteInRightBound) {
-			//	//This is the bad note? print its values
-			//	UE_LOG(SPIANOROLLLOG, Log, TEXT("Bad Note! StartTick %d, EndTick %d, RightMostTick %f"), note.StartTick, note.EndTick, RightMostTick);
-
-			//	}
-			if (note.EndTick >= LeftMostTick)
+			for (auto& note : clip.LinkedNotes)
 			{
-				//if notes are too small, don't draw
-				//if(note->Duration * horizontalZoom >= 1.0f)
+				bool NoteInRightBound = note.StartTick < RightMostTick;
 
-				CulledNotesArray.Add(&note);
-				//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
+				//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop, no, we actually CAN'T
+				// cause tracks
+				//if (!NoteInRightBound) {
+				//	//This is the bad note? print its values
+				//	UE_LOG(SPIANOROLLLOG, Log, TEXT("Bad Note! StartTick %d, EndTick %d, RightMostTick %f"), note.StartTick, note.EndTick, RightMostTick);
+
+				//	}
+				if (note.EndTick >= LeftMostTick)
+				{
+					//if notes are too small, don't draw
+					//if(note->Duration * horizontalZoom >= 1.0f)
+
+					CulledNotesArray.Add(&note);
+					//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
+				}
 			}
 		}
+		
+		//for (auto& note : track.Value.LinkedNotes)
+		//{
+		//	bool NoteInRightBound = note.StartTick < RightMostTick;
+
+		//	//as tracks are sorted we can assume that if we reached the right bound of the screen, we can break the loop, no, we actually CAN'T
+		//	// cause tracks
+		//	//if (!NoteInRightBound) {
+		//	//	//This is the bad note? print its values
+		//	//	UE_LOG(SPIANOROLLLOG, Log, TEXT("Bad Note! StartTick %d, EndTick %d, RightMostTick %f"), note.StartTick, note.EndTick, RightMostTick);
+
+		//	//	}
+		//	if (note.EndTick >= LeftMostTick)
+		//	{
+		//		//if notes are too small, don't draw
+		//		//if(note->Duration * horizontalZoom >= 1.0f)
+
+		//		CulledNotesArray.Add(&note);
+		//		//note->cornerRadius = FMath::Clamp(note->Duration * horizontalZoom, 1.0f, 10.0f);
+		//	}
+		//}
 	}
 
 	CulledNotesArray.Sort([](const FLinkedMidiEvents& A, const FLinkedMidiEvents& B) { return A.StartTick < B.StartTick; });
@@ -1108,68 +1132,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	if (SessionData == nullptr) return LayerId;
 
 	auto* MidiSongMap = MidiFile->GetSongMaps();
-#ifdef LEGACY_BARS_BEATS
 
-
-
-	//bar and beatlines, calculated earlier, not on the paint event
-	for (auto& beat : VisibleBeats)
-	{
-		FSlateDrawElement::MakeLines(OutDrawElements,
-			LayerId +5,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, 0))),
-			vertLine,
-			ESlateDrawEffect::None,
-			FLinearColor::Blue,
-			false,
-			FMath::Max(5.0f * horizontalZoom, 1.0f));
-
-		//draw beat number
-		FSlateDrawElement::MakeText(OutDrawElements,
-			LayerId + 10,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(beat) * horizontalZoom, -PaintPosVector.Y + 14))),
-			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(beat).Beat)),
-			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 9),
-			ESlateDrawEffect::None,
-			FLinearColor::White
-		);
-	}
-
-	for (auto& bar : VisibleBars)
-	{
-		FSlateDrawElement::MakeLines(OutDrawElements,
-			LayerId + 9,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, 0))),
-			vertLine,
-			ESlateDrawEffect::None,
-			FLinearColor::Gray,
-			false,
-			FMath::Max(15.0f * horizontalZoom, 1.0f));
-
-		//draw bar number
-
-		FSlateDrawElement::MakeText(OutDrawElements,
-			LayerId + 20,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(bar) * horizontalZoom, - PaintPosVector.Y))),
-			FText::FromString(FString::FromInt(MidiSongMap->GetBarMap().TickToMusicTimestamp(bar).Bar)),
-			FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 9),
-			ESlateDrawEffect::None,
-			FLinearColor::White
-		);
-	}
-#endif // LEGACY_BARS_BEATS
-
-
-
-	//draw play cursor
-	FSlateDrawElement::MakeLines(OutDrawElements,
-		LayerId,
-		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(CurrentTimelinePosition * horizontalZoom * 1000, 0))),
-		vertLine,
-		ESlateDrawEffect::None,
-		FLinearColor::Red,
-		false,
-		FMath::Max(5.0f * horizontalZoom, 1.0f));
 
 	//mouse crosshairs
 	FLinearColor trackColor = SessionData->SelectedTrackIndex != INDEX_NONE ? SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor : FLinearColor::White;
@@ -1587,6 +1550,18 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		FLinearColor(255, 0, 255),
 		false,
 		FMath::Max(2.0f * horizontalZoom, 1.0f));
+
+
+	//draw play cursor
+	FSlateDrawElement::MakeLines(OutDrawElements,
+		LayerId,
+		OffsetGeometryChild.ToPaintGeometry(FVector2D(MaxWidth, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(CurrentTimelinePosition* horizontalZoom * 1000, 0))),
+		vertLine,
+		ESlateDrawEffect::None,
+		FLinearColor::Red,
+		false,
+		FMath::Max(5.0f * horizontalZoom, 1.0f));
+
 
 	return timelineLayerID;
 }

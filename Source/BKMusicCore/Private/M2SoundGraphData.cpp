@@ -764,20 +764,39 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 						if (midiChannel == unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].Event.GetMsg().GetStdChannel())
 						{
 							FLinkedMidiEvents foundPair = FLinkedMidiEvents(unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].Event, MidiEvent,
-								unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].EventIndex, index);
+							unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].EventIndex, index);
 							foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
 							foundPair.ChannelId = midiChannel;
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels
-							if (LinkedNoteDataMap.Contains(foundPair.TrackId))
+
+							if (Tracks.IsValidIndex(foundPair.TrackId))
 							{
-								LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
+								Tracks[foundPair.TrackId].LinkedNotesClips[0].LinkedNotes.Add(foundPair);
+								if (foundPair.EndTick > Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick) Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick = foundPair.EndTick;
 							}
 							else {
-								LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(foundPair.TrackId, TArray<FLinkedMidiEvents>()));
-								LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
+								FLinkedNotesClip NewClip;
+								FDawSequencerTrack NewTrack;
+								NewClip.StartTick = foundPair.StartTick;
+								NewTrack.MetadataIndex = foundPair.TrackId;
+
+								NewClip.LinkedNotes.Add(foundPair);
+								NewTrack.LinkedNotesClips.Add(NewClip);
+								Tracks.Add(NewTrack);
 							}
+
+
+							//TODO: REMOVE - OLD IMPLEMENTATION
+							//if (LinkedNoteDataMap.Contains(foundPair.TrackId))
+							//{
+							//	LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
+							//}
+							//else {
+							//	LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(foundPair.TrackId, TArray<FLinkedMidiEvents>()));
+							//	LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
+							//}
 						}
 					}
 				};

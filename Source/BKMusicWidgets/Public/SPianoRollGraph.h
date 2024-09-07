@@ -28,6 +28,7 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Types/SlateAttribute.h"
+#include "UndawMusicDrawingStatics.h"
 #include <Pianoroll/MarqueeOperation.h>
 
 //#include "SMidiNoteContainer.h"
@@ -98,21 +99,6 @@ public:
 
 DECLARE_DELEGATE(FOnInitComplete)
 DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
-
-enum class EGridPointType : uint8
-{
-	Bar,
-	Beat,
-	Subdivision
-};
-
-struct FMusicalGridPoint
-{
-	EGridPointType Type = EGridPointType::Bar;
-	int32 Bar = 0;
-	int8 Beat = 1;
-	int8 Subdivision = 1;
-};
 
 class ITimeSliderController;
 
@@ -254,7 +240,7 @@ public:
 	TArray<FMidiEvent> TimeSignatureEvents;
 	TArray<int> FoundChannels;
 
-	TMap<int, FLinkedNotesTrack>* LinkedNoteDataMap;
+	TMap<int, FLinkedNotesClip>* LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
 
 	FLinkedMidiEvents TemporaryNote;
