@@ -26,6 +26,7 @@ public:
 	float VerticalOffset = 0.0f;
 	bool bIsPanActive = false;
 	bool bLockVerticalPan = false;
+	UDAWSequencerData* SequenceData = nullptr;
 
 	FReply OnMousePan(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 	{
@@ -38,6 +39,25 @@ public:
 		}
 		bIsPanActive = false;
 		return FReply::Unhandled();
+	}
+
+	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+	{
+		if (MouseEvent.GetWheelDelta() > 0)
+		{
+			Zoom += 0.1f;
+		}
+		else
+		{
+			Zoom -= 0.1f;
+		}
+		return FReply::Handled();
+	}
+
+
+	const float TransformTickToPixel(const float Tick) const
+	{
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - HorizontalOffset) * Zoom;
 	}
 
 };
@@ -55,7 +75,7 @@ public:
 	FText TrackMetaDataName = FText::GetEmpty();
 	int32 TrackIndex = INDEX_NONE;
 	FLinearColor TrackColor = FLinearColor::White;
-	UDAWSequencerData* SequenceData = nullptr;
+	
 	FLinkedNotesClip* Clip = nullptr;
 
 	/** Constructs this widget with InArgs */
@@ -67,9 +87,14 @@ public:
 
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
-		if(OnMousePan(MyGeometry, MouseEvent).IsEventHandled()) return FReply::Handled();
+			return OnMousePan(MyGeometry, MouseEvent);
+	}
 
-		return FReply::Unhandled();
+	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		//only temporal zoom for now I guess
+		
+		return OnZoom(MyGeometry, MouseEvent);
 	}
 
 };

@@ -293,6 +293,14 @@ protected:
 
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Mouse wheel"));
+		bool bIsCtrlPressed = MouseEvent.IsControlDown();
+	
+		return bIsCtrlPressed ? FReply::Handled() : FReply::Unhandled();
+
+	}
 
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 

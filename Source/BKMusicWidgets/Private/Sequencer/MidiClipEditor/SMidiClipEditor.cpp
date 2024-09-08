@@ -40,15 +40,16 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		LayerId++;
 		for (const auto& Note : Clip->LinkedNotes)
 		{
-			const float X = (Note.StartTick) / 200;
-			const float Width = (Note.EndTick - Note.StartTick) / 200;
+			const float Start = TransformTickToPixel(Note.StartTick + Clip->StartTick);
+			const float End = TransformTickToPixel(Note.EndTick + Clip->StartTick);
+			const float Width = End - Start;
 			const float Y = (127 - Note.Pitch) * Height;
 
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,
 				LayerId,
 				OffsetPaintGeometry,
-				{ FVector2D(X, Y), FVector2D(X + Width, Y) },
+				{ FVector2D(Start, Y), FVector2D(Start + Width, Y) },
 				ESlateDrawEffect::None,
 				TrackColor
 			);
@@ -58,7 +59,7 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	}
 
 
-	FSlateDrawElement::MakeText(OutDrawElements, LayerId, ScreenCenterPaintGeometry, TrackMetaDataName, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
+	FSlateDrawElement::MakeText(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), TrackMetaDataName, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
 	return LayerId;
 }
