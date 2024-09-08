@@ -132,15 +132,22 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
 	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
-			return SNew(SDockTab)
+			auto DockTab = SNew(SDockTab)
 				//.TabRole(ETabRole::NomadTab)
 				[
-					SNew(SUndawMusicSequencer, SequenceData)
+					SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+
 				];
+
+			MusicSequencer->OnMidiClipsFocused.BindSP(this, &FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused);
+
+			return DockTab;
 		}))
 		.SetDisplayName(INVTEXT("Sequencer"))
 		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
 		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+	
 	
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
@@ -303,6 +310,11 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 	}
 }
 
+void FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> Clips)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Clips Focused"));
+}
+
 void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
 {
 	//const FScopedTransaction Transaction(TEXT(""), INVTEXT("Rename Node"), NodeBeingChanged);
@@ -326,15 +338,6 @@ void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
 
 void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 {
-	//if (Performer && Performer->AuditionComponentRef)
-	//{
-	   // auto Metasound = Performer->AuditionComponentRef->GetSound();
-		//FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
-		//check(MetasoundAsset);
-
-	//AdditionalGraphCommands = MakeShared<FUICommandList>();
-
-	//AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete,)
 
 	FGraphAppearanceInfo AppearanceInfo;
 	FString CornerText = TEXT("M");
@@ -344,8 +347,6 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AppearanceInfo.PIENotifyText = FText::FromString(TEXT("PIE is active"));
 
 	SGraphEditor::FGraphEditorEvents GraphEvents;
-	// GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
-	// GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
 
 	GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
 	GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
@@ -357,7 +358,6 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Rename, FExecuteAction::CreateLambda([this]() { UE_LOG(LogTemp, Warning, TEXT("Rename Node")); }));
 
 	SAssignNew(MetasoundGraphEditor, SGraphEditor)
-		//   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
 		.AssetEditorToolkit(SharedThis(this))
 		.AdditionalCommands(AdditionalGraphCommands)
 		.Appearance(AppearanceInfo)

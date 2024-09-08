@@ -14,6 +14,9 @@
 #include "UndawMusicDrawingStatics.h"
 #include <M2SoundGraphData.h>
 
+
+class SDawSequencerTrackSection;
+
 DECLARE_DELEGATE_OneParam(
 	FOnVerticalMajorSlotResized,
 	/** The new size coefficient of the slot */
@@ -24,6 +27,17 @@ DECLARE_DELEGATE_OneParam(
 	/** called when the spacer is hovered so we can change its color */
 	bool);
 
+DECLARE_DELEGATE_OneParam(
+	FOnSectionSelected,
+	/** called when the spacer is hovered so we can change its color */
+	TSharedPtr<SDawSequencerTrackSection>);
+
+typedef TTuple<FDawSequencerTrack*, FLinkedNotesClip*> ClipTrackTuple;
+
+DECLARE_DELEGATE_OneParam(
+	FOnMidiClipsFocused,
+	TArray<ClipTrackTuple>);
+
 class SDawSequencerTrackSection : public SCompoundWidget
 {
 public:
@@ -32,11 +46,14 @@ public:
 	SLATE_END_ARGS()
 
 	FLinkedNotesClip* Clip = nullptr;
+	FDawSequencerTrack* ParentTrack = nullptr;
 	bool bIsHovered = false;
+	bool bIsSelected = false;
+
 
 	TAttribute<FLinearColor> TrackColor;
 
-	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip)
+	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack)
 	{
 		Clip = InClip;
 		TrackColor = InArgs._TrackColor;
@@ -78,7 +95,7 @@ public:
 			TSharedPtr<SDawSequencerTrackSection> Section;
 
 			
-			SAssignNew(Section, SDawSequencerTrackSection, &Clip)
+			SAssignNew(Section, SDawSequencerTrackSection, &Clip, &SequenceData->Tracks[TrackId])
 				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTracksDisplayOptions(TrackId).trackColor; }));
 
 			Section->AssignParentWidget(SharedThis(this));
@@ -93,17 +110,18 @@ public:
 		}
 		else if (bIsHoveringOverSectionDragArea)
 		{
-			if (SelectedSectionIndex == HoveringOverSectionIndex)
+			if (Sections[HoveringOverSectionIndex]->bIsSelected)
 				return EMouseCursor::CardinalCross;
 			else
 				return EMouseCursor::Crosshairs;
-			
 		}
 		else {
-			return EMouseCursor::Default;
+			return TOptional<EMouseCursor::Type>();
 		}
 
 	}
+
+	FOnSectionSelected OnSectionSelected;
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
@@ -157,8 +175,12 @@ public:
 	}
 
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override {
-		if (bIsHoveringOverSectionDragArea)
+
+		const bool bIsLeftMoustButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+
+		if (bIsLeftMoustButtonEffecting && bIsHoveringOverSectionDragArea)
 		{
+			OnSectionSelected.ExecuteIfBound(Sections[HoveringOverSectionIndex]);
 			SelectedSectionIndex = HoveringOverSectionIndex;
 			return FReply::Handled();
 		};
@@ -233,7 +255,7 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit);
-
+	FOnMidiClipsFocused OnMidiClipsFocused;
 
 protected:
 
@@ -241,7 +263,25 @@ protected:
 	float TimelineHeight;
 	bool bIsPanning = false;
 
+	TSharedPtr<SDawSequencerTrackSection> SelectedSection;
+
+
 	void PopulateSequencerFromDawData();
+	void OnSectionSelected(TSharedPtr<SDawSequencerTrackSection> InSelectedSection)
+	{
+		if(SelectedSection.IsValid())	SelectedSection->bIsSelected = false;
+		SelectedSection = InSelectedSection;
+		SelectedSection->bIsSelected = true;
+
+		//in the future might support multiple focused clips
+		if (OnMidiClipsFocused.IsBound())
+		{
+			TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> FocusedClips;
+			FocusedClips.Add(TTuple<FDawSequencerTrack*, FLinkedNotesClip*>(SelectedSection->ParentTrack, SelectedSection->Clip));
+			OnMidiClipsFocused.Execute(FocusedClips);
+
+		}
+	}
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	int32 PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;

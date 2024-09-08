@@ -63,6 +63,8 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 
 		TrackRoot->ControlsArea->ControlsBox->SetWidthOverride(MajorTabWidth);
 
+		TrackRoot->Lane->OnSectionSelected.BindSP(this, &SUndawMusicSequencer::OnSectionSelected);
+
 		TrackRoot->ControlsArea->OnVerticalMajorSlotResized.BindLambda([this](float InNewSize) { 
 			MajorTabWidth = InNewSize;
 			for (auto& TrackRoot : TrackRoots) { TrackRoot->ResizeSplitter(InNewSize); }});
@@ -101,6 +103,17 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//paint the major tab line on top of everything
+	FSlateDrawElement::MakeLines(
+		OutDrawElements,
+		LayerId,
+		TrackAreaGeometry.ToPaintGeometry(),
+		{ FVector2D(MajorTabWidth + 2, 0), FVector2D(MajorTabWidth + 2, AllottedGeometry.Size.Y) },
+		ESlateDrawEffect::None,
+		FLinearColor::Black.CopyWithNewOpacity(0.2f),
+		false,
+		5.0f
+	);
+
 	FSlateDrawElement::MakeLines(
 		OutDrawElements,
 		LayerId,
@@ -372,13 +385,16 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 	const float SectionDuration = (Clip->EndTick - Clip->StartTick) / 200;
 	//just fill the background with a gray box
 
+	const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
+	const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
+
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId++,
 		AllottedGeometry.ToPaintGeometry(FVector2D(SectionDuration, AllottedGeometry.Size.Y), 1.0f),
 		FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
 		ESlateDrawEffect::None,
-		bIsHovered && GetParentWidget()->IsHovered() ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f)
+		ColorToUse
 	);
 
 
@@ -388,7 +404,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = (Note.StartTick - Clip->StartTick)/ 200;
+		const float X = (Note.StartTick)/ 200;
 		const float Width = (Note.EndTick - Note.StartTick) / 200;
 		const float Y = (127 - Note.Pitch) * Height;
 
@@ -402,7 +418,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 		);
 	}
 
-	// draw the name of the clip
+	// draw start and end ticks it helps with debugging
 	FSlateDrawElement::MakeText(
 		OutDrawElements,
 		LayerId++,

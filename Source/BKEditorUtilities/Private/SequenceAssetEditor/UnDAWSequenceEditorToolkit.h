@@ -6,6 +6,7 @@
 #include "EditorUndoClient.h"
 #include "M2SoundGraphData.h"
 #include "SPianoRollGraph.h"
+#include "Sequencer/UndawMusicSequencer.h"
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
 #include "GlyphButton.h"
@@ -59,6 +60,7 @@ public:
 	TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
 
 	void OnSelectionChanged(const TSet<UObject*>& SelectedNodes);
+	void OnSequencerClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> Clips);
 
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
@@ -81,6 +83,7 @@ public:
 
 	TSharedPtr<SDockTab> MetasoundGraphEditorBox;
 	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
+	TSharedPtr<SUndawMusicSequencer> MusicSequencer;
 	TSharedPtr<ISequencer> InstancedSequencer;
 
 	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);

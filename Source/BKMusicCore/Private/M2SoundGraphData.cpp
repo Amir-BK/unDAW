@@ -773,6 +773,12 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 
 							if (Tracks.IsValidIndex(foundPair.TrackId))
 							{
+								auto& Clip = Tracks[foundPair.TrackId].LinkedNotesClips[0];
+								// subtract clip start from start and end ticks before adding
+
+								foundPair.StartTick -= Clip.StartTick;
+								foundPair.EndTick -= Clip.StartTick;
+
 								Tracks[foundPair.TrackId].LinkedNotesClips[0].LinkedNotes.Add(foundPair);
 								if (foundPair.EndTick > Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick) Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick = foundPair.EndTick;
 							}
