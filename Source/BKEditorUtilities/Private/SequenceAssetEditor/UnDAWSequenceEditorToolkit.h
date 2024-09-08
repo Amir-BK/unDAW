@@ -18,6 +18,7 @@
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "GraphEditor.h"
+#include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 
 class FSequenceAssetDetails : public IDetailCustomization
 {
@@ -45,8 +46,6 @@ private:
 class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {
 public:
-
-	TSharedRef<ISequencer> CreateMusicSequencer();
 
 	void RenameSelectedNodes();
 

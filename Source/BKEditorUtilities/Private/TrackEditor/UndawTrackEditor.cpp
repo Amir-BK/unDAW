@@ -202,7 +202,7 @@ int32 FUndawSequencerSectionPainter::OnPaintSection(FSequencerSectionPainter& In
 		auto LinkedNotesTracks = SequencerData->LinkedNoteDataMap;
 		for (const auto& [Index,Track] : LinkedNotesTracks)
 		{
-			const auto& TrackColor = SequencerData->GetTrackMetadata(Index).trackColor;
+			const auto& TrackColor = SequencerData->GetTrackMetadata(Index).TrackColor;
 			auto StoredSectionHeight = GetSectionHeight();
 			for (const auto& Note : Track.LinkedNotes)
 			{

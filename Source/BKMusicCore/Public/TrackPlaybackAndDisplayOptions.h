@@ -32,7 +32,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	bool isSelected;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BK Music|Track Settings")
-	FLinearColor trackColor;
+	FLinearColor TrackColor;
 
 	UPROPERTY(BlueprintReadWrite, Category = "BK Music|Track Settings")
 	float trackZOrder;
@@ -66,7 +66,7 @@ struct BKMUSICCORE_API FTrackDisplayOptions
 	FTrackDisplayOptions()
 	{
 		isVisible = true;
-		trackColor = FLinearColor::Gray;
+		TrackColor = FLinearColor::Gray;
 		trackZOrder = 0.0f;
 		isSelected = false;
 		TrackIndexInParentMidi = INDEX_NONE;

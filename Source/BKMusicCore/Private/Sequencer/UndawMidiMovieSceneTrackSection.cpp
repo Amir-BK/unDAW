@@ -133,7 +133,7 @@ void UUndawMidiMovieSceneTrackSection::MarkNotesInRange()
 
 	auto LinkedNotesTracks = DAWData->LinkedNoteDataMap;
 	const auto& Track = LinkedNotesTracks[TrackIndexInParentSession];
-	auto TrackColor = DAWData->GetTrackMetadata(TrackIndexInParentSession).trackColor;
+	auto TrackColor = DAWData->GetTrackMetadata(TrackIndexInParentSession).TrackColor;
 
 	for (const auto& Note : Track.LinkedNotes)
 	{
@@ -226,7 +226,7 @@ EMovieSceneChannelProxyType UUndawMidiMovieSceneTrackSection::CacheChannelProxy(
 			//FMovieSceneChannelMetaData MetaData;
 			MetaData.Name = FName(FString::Printf(TEXT("%s %d"), *DAWData->GetTrackMetadata(i).TrackName, i));
 			MetaData.DisplayText = FText::FromString(FString::Printf(TEXT("%s %d"), *DAWData->GetTrackMetadata(i).TrackName, i));
-			MetaData.Color = DAWData->GetTrackMetadata(i).trackColor;
+			MetaData.Color = DAWData->GetTrackMetadata(i).TrackColor;
 
 			Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());
 		}

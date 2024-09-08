@@ -440,7 +440,7 @@ void UDAWSequencerData::AddTrack()
 	NewTrackMetaData.ChannelIndexRaw = 0;
 	NewTrackMetaData.TrackName = GetUniqueNameForTrack(TEXT("New Track"), *MidiFileCopy);
 
-	NewTrackMetaData.trackColor = FLinearColor::MakeRandomColor();
+	NewTrackMetaData.TrackColor = FLinearColor::MakeRandomColor();
 
 	auto NewTrack = MidiFileCopy->AddTrack(NewTrackMetaData.TrackName);
 
@@ -532,7 +532,7 @@ inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int
 			TrackColor = FLinearColor::MakeRandomSeededColor(ChannelID * 16 + TrackID);
 			break;
 		}
-		M2TrackMetadata[IndexOfNewTrack].trackColor = TrackColor;
+		M2TrackMetadata[IndexOfNewTrack].TrackColor = TrackColor;
 
 		//So actually here we can create the Midi Stream Core Nodes...
 
@@ -785,6 +785,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 							else {
 								FLinkedNotesClip NewClip;
 								FDawSequencerTrack NewTrack;
+								NewTrack.MetadataIndex = foundPair.TrackId;
 								NewClip.StartTick = foundPair.StartTick;
 								NewTrack.MetadataIndex = foundPair.TrackId;
 
@@ -889,7 +890,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		NewTrackMetaData.ChannelIndexInParentMidi = 0;
 		NewTrackMetaData.TrackIndexInParentMidi = 0;
 		NewTrackMetaData.TrackName = TEXT("Default Track");
-		NewTrackMetaData.trackColor = FLinearColor::Red;
+		NewTrackMetaData.TrackColor = FLinearColor::Red;
 		//
 
 		M2TrackMetadata.Add(NewTrackMetaData);

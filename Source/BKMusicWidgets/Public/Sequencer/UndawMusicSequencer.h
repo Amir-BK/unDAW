@@ -57,6 +57,7 @@ public:
 	{
 		Clip = InClip;
 		TrackColor = InArgs._TrackColor;
+		ParentTrack = InParentTrack;
 	}
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
@@ -96,7 +97,7 @@ public:
 
 			
 			SAssignNew(Section, SDawSequencerTrackSection, &Clip, &SequenceData->Tracks[TrackId])
-				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).trackColor; }));
+				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }));
 
 			Section->AssignParentWidget(SharedThis(this));
 			Sections.Add(Section);

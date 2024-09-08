@@ -424,8 +424,8 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
-	UPROPERTY()
-	UMidiDrivenLevelSequence* MidiDrivenLevelSequence;
+	//UPROPERTY()
+	//UMidiDrivenLevelSequence* MidiDrivenLevelSequence;
 
 	void EnsureLevelSequence();
 

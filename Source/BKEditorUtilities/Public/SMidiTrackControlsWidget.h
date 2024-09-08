@@ -83,13 +83,13 @@ public:
 	void SetColor(FLinearColor newColor)
 	{
 		//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor = newColor;
-		TrackData->trackColor = newColor;
+		TrackData->TrackColor = newColor;
 		if (ConnectedGraph) ConnectedGraph->NotifyGraphChanged();
 	}
 
 	void SelectionCancel(FLinearColor newColor)
 	{
-		TrackData->trackColor = newColor;
+		TrackData->TrackColor = newColor;
 		if (ConnectedGraph) ConnectedGraph->NotifyGraphChanged();
 	}
 
@@ -120,7 +120,7 @@ public:
 			PickerArgs.OnColorCommitted = FOnLinearColorValueChanged::CreateSP(this, &SMIDITrackControls::SetColor);
 
 			PickerArgs.OnColorPickerCancelled = FOnColorPickerCancelled::CreateSP(this, &SMIDITrackControls::SelectionCancel);
-			PickerArgs.InitialColor = TrackData->trackColor;
+			PickerArgs.InitialColor = TrackData->TrackColor;
 			OpenColorPicker(PickerArgs);
 		}
 
@@ -228,7 +228,7 @@ public:
 											[
 												SNew(SColorBlock)
 													.Color(TAttribute<FLinearColor>::Create(TAttribute<FLinearColor>::FGetter::CreateLambda([&]() {
-													return TrackData->trackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
+													return TrackData->TrackColor; //parentMidiEditor->GetTracksDisplayOptions(slotInParentID).trackColor;
 														})))
 	
 													.OnMouseButtonDown(this, &SMIDITrackControls::TrackOpenColorPicker)

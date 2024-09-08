@@ -30,33 +30,7 @@
 #include "Framework/Docking/TabManager.h"
 
 
-TSharedRef<ISequencer> FUnDAWSequenceEditorToolkit::CreateMusicSequencer()
-{
-	auto& SequencerModule = FModuleManager::Get().LoadModuleChecked<ISequencerModule>("Sequencer");
 
-	FSequencerInitParams SequencerInitParams;
-	{
-		SequencerInitParams.RootSequence = SequenceData->MidiDrivenLevelSequence;
-		SequencerInitParams.ViewParams.bShowPlaybackRangeInTimeSlider = false;
-	}
-
-	InstancedSequencer = SequencerModule.CreateSequencer(SequencerInitParams);
-	auto WidgetName =InstancedSequencer->GetTopTimeSliderWidget()->GetParentWidget()->GetWidgetClass().GetWidgetType();
-	UE_LOG(LogTemp, Warning, TEXT("Widget Name %s"), *WidgetName.ToString());
-
-	SBorder* StealBorder = static_cast<SBorder*>(InstancedSequencer->GetTopTimeSliderWidget()->GetParentWidget().Get());
-	StealBorder->SetContent(SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot()
-		.FillWidth(1.0f)
-		[
-			SNew(STextBlock)
-				.Text_Lambda([this]() { return FText::FromString(FString::Printf(TEXT("Bar: %d, Beat: %f"), SequenceData->CurrentTimestampData.Bar, SequenceData->CurrentTimestampData.Beat)); })
-		]);
-
-	//InstancedSequencer->Time
-
-	return InstancedSequencer.ToSharedRef();
-}
 
 void FUnDAWSequenceEditorToolkit::RenameSelectedNodes()
 {
@@ -141,7 +115,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			return SNew(SDockTab)
 				[
 
-					SAssignNew(MidiClipEditor, SMidiClipEditor)
+					SAssignNew(MidiClipEditor, SMidiClipEditor, SequenceData)
 				];
 		}))
 		.SetDisplayName(INVTEXT("Midi Clip Editor"))
