@@ -340,7 +340,7 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 			FLinkedMidiEvents newNote = FLinkedMidiEvents();
 			newNote.NoteVelocity = NewNoteVelocity;
-			auto TrackMetadata = SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex);
+			auto TrackMetadata = SessionData->GetTrackMetadata(SessionData->SelectedTrackIndex);
 			newNote.Pitch = HoveredPitch;
 			newNote.TrackId = SessionData->SelectedTrackIndex;
 			newNote.ChannelId = TrackMetadata.ChannelIndexRaw;
@@ -1135,7 +1135,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 
 	//mouse crosshairs
-	FLinearColor trackColor = SessionData->SelectedTrackIndex != INDEX_NONE ? SessionData->GetTracksDisplayOptions(SessionData->SelectedTrackIndex).trackColor : FLinearColor::White;
+	FLinearColor trackColor = SessionData->SelectedTrackIndex != INDEX_NONE ? SessionData->GetTrackMetadata(SessionData->SelectedTrackIndex).trackColor : FLinearColor::White;
 
 	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
 	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
@@ -1146,7 +1146,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 		//	FSlateDrawElement::bord
 
 		// get selected note color based on metadata and produce negative color
-		auto& SelectedNoteTrackColor = SessionData->GetTracksDisplayOptions(SelectedNote->TrackId).trackColor;
+		auto& SelectedNoteTrackColor = SessionData->GetTrackMetadata(SelectedNote->TrackId).trackColor;
 		auto colorNegative = FLinearColor::White.operator-(SelectedNoteTrackColor);
 
 		auto& note = SelectedNote;
@@ -1161,7 +1161,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	for (auto& note : CulledNotesArray)
 	{
-		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note->TrackId).trackColor) };
+		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTrackMetadata(note->TrackId).trackColor) };
 		FSlateDrawElement::MakeGradient(OutDrawElements,
 			LayerId + note->TrackId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note->Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note->StartTime * horizontalZoom, rowHeight * (127 - note->Pitch)))),
@@ -1172,7 +1172,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	for (const auto& note : SessionData->PendingLinkedMidiNotesMap)
 	{
-		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTracksDisplayOptions(note.TrackId).trackColor) };
+		TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), SessionData->GetTrackMetadata(note.TrackId).trackColor) };
 		FSlateDrawElement::MakeGradient(OutDrawElements,
 			LayerId + note.TrackId,
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(note.Duration * horizontalZoom, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(note.StartTime * horizontalZoom, rowHeight * (127 - note.Pitch)))),
@@ -1357,7 +1357,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			OffsetGeometryChild.ToPaintGeometry(FVector2D(MarginVector.X, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(-PaintPosVector.X, rowHeight * (127 - NoteNumber)))),
 			&gridBrush,
 			ESlateDrawEffect::None,
-			SessionData->GetTracksDisplayOptions(MetadataIndex).trackColor
+			SessionData->GetTrackMetadata(MetadataIndex).trackColor
 		);
 	}
 

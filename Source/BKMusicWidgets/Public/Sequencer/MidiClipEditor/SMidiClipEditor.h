@@ -7,6 +7,7 @@
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Input/Events.h"
 #include "Widgets/SCompoundWidget.h"
+#include "M2SoundGraphData.h"
 #include "SlateFwd.h"
 #include "Components/Widget.h"
 
@@ -22,8 +23,13 @@ public:
 	{}
 	SLATE_END_ARGS()
 
+	FText TrackMetaDataName = FText::GetEmpty();
+	UDAWSequencerData* SequenceData = nullptr;
+
 	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs);
+	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence);
+
+	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips);
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 

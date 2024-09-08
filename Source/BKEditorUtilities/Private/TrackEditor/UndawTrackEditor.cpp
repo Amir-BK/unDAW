@@ -173,7 +173,7 @@ FText FUndawSequencerSectionPainter::GetSectionTitle() const
 {
 	auto UDawSection = Cast<UUndawMidiMovieSceneTrackSection>(&Section);
 	auto SequencerData = UDawSection->DAWData;
-	auto TrackName = SequencerData ? SequencerData->GetTracksDisplayOptions(UDawSection->TrackIndexInParentSession).TrackName : "DAW Sequence";
+	auto TrackName = SequencerData ? SequencerData->GetTrackMetadata(UDawSection->TrackIndexInParentSession).TrackName : "DAW Sequence";
 	
 	return FText::FromString(TrackName);
 }
@@ -202,7 +202,7 @@ int32 FUndawSequencerSectionPainter::OnPaintSection(FSequencerSectionPainter& In
 		auto LinkedNotesTracks = SequencerData->LinkedNoteDataMap;
 		for (const auto& [Index,Track] : LinkedNotesTracks)
 		{
-			const auto& TrackColor = SequencerData->GetTracksDisplayOptions(Index).trackColor;
+			const auto& TrackColor = SequencerData->GetTrackMetadata(Index).trackColor;
 			auto StoredSectionHeight = GetSectionHeight();
 			for (const auto& Note : Track.LinkedNotes)
 			{

@@ -96,7 +96,7 @@ public:
 
 			
 			SAssignNew(Section, SDawSequencerTrackSection, &Clip, &SequenceData->Tracks[TrackId])
-				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTracksDisplayOptions(TrackId).trackColor; }));
+				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).trackColor; }));
 
 			Section->AssignParentWidget(SharedThis(this));
 			Sections.Add(Section);

@@ -384,7 +384,7 @@ inline FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const
 
 	if (Vertex && Vertex->TrackId != INDEX_NONE)
 	{
-		return GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackColor;
+		return GetSequencerData()->GetTrackMetadata(Vertex->TrackId).trackColor;
 	}
 
 	return FLinearColor::Gray;

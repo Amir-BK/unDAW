@@ -40,7 +40,7 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 	int i = 0;
 	for (auto& Track : SequenceData->M2TrackMetadata)
 	{
-		auto ColorLambda = TAttribute<FSlateColor>::CreateLambda([this, i]() { return SequenceData->GetTracksDisplayOptions(i).trackColor; });
+		auto ColorLambda = TAttribute<FSlateColor>::CreateLambda([this, i]() { return SequenceData->GetTrackMetadata(i).trackColor; });
 
 		TSharedPtr<SDawSequencerTrackRoot> TrackRoot;
 		Splitter->AddSlot(i)

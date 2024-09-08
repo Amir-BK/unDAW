@@ -523,7 +523,7 @@ void UM2SoundBuilderInputHandleVertex::BuildVertex()
 
 FLinearColor UM2SoundBuilderInputHandleVertex::GetVertexColor() const
 {
-	return SequencerData->GetTracksDisplayOptions(TrackId).trackColor;
+	return SequencerData->GetTrackMetadata(TrackId).trackColor;
 }
 
 void UM2SoundPatch::BuildVertex()

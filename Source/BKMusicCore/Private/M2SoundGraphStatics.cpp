@@ -87,7 +87,7 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData*
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
-	auto& TrackMetadata = InSequencerData->GetTracksDisplayOptions(Index);
+	auto& TrackMetadata = InSequencerData->GetTrackMetadata(Index);
 
 	UM2SoundMidiInputVertex* InputVertex = NewObject<UM2SoundMidiInputVertex>(InSequencerData, NAME_None, RF_Transactional);
 	InputVertex->SequencerData = InSequencerData;

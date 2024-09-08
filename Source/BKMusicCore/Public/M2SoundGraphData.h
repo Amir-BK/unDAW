@@ -683,7 +683,7 @@ public:
 	void InitMetadataFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);
 
 	UFUNCTION(BlueprintCallable, Category = "unDAW")
-	FTrackDisplayOptions& GetTracksDisplayOptions(const int& ID);
+	FTrackDisplayOptions& GetTrackMetadata(const int& ID);
 
 	UFUNCTION()
 	void CalculateSequenceDuration();

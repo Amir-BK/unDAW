@@ -544,7 +544,7 @@ inline void UDAWSequencerData::InitMetadataFromFoundMidiTracks(TArray<TTuple<int
 	}
 }
 
-FTrackDisplayOptions& UDAWSequencerData::GetTracksDisplayOptions(const int& ID)
+FTrackDisplayOptions& UDAWSequencerData::GetTrackMetadata(const int& ID)
 {
 	if (M2TrackMetadata.IsValidIndex(ID))
 	{
@@ -570,7 +570,7 @@ void UDAWSequencerData::AddLinkedMidiEvent(FLinkedMidiEvents PendingNote)
 	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(HarmonixMidiFile);
 
 	//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
-	auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
+	auto TrackMetaData = GetTrackMetadata(PendingNote.TrackId);
 
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexRaw)
 
@@ -1059,7 +1059,7 @@ void UDAWSequencerData::PushPendingNotesToNewMidiFile()
 	for (const auto& PendingNote : PendingLinkedMidiNotesMap)
 	{
 		//auto NewTrack = MidiFileCopy->AddTrack(FString::Printf(TEXT("Track %d"), TrackIndex++));
-		auto TrackMetaData = GetTracksDisplayOptions(PendingNote.TrackId);
+		auto TrackMetaData = GetTrackMetadata(PendingNote.TrackId);
 
 		UE_LOG(unDAWDataLogs, Verbose, TEXT("Pushing note to track %d, channel %d"), TrackMetaData.TrackIndexInParentMidi, TrackMetaData.ChannelIndexInParentMidi)
 
@@ -1187,7 +1187,7 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Creating Filter Node for Track %d"), TrackMetadataIndex)
 		EMetaSoundBuilderResult BuildResult;
 
-	FTrackDisplayOptions& TrackMetadata = SessionData->GetTracksDisplayOptions(TrackMetadataIndex);
+	FTrackDisplayOptions& TrackMetadata = SessionData->GetTrackMetadata(TrackMetadataIndex);
 	// ClassName=(Namespace="unDAW",Name="MidiStreamTrackIsolator")
 	auto NewNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("unDAW")), FName(TEXT("MidiStreamTrackIsolator"))), BuildResult, 1);
 	auto NewMidiStreamOutput = BuilderContext->FindNodeOutputByName(NewNode, FName(TEXT("MidiStream")), BuildResult);

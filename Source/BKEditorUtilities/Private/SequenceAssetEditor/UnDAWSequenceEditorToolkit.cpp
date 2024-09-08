@@ -26,6 +26,7 @@
 
 #include "Widgets/Layout/SScaleBox.h"
 #include "Sequencer/UndawMusicSequencer.h"
+#include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 #include "Framework/Docking/TabManager.h"
 
 
@@ -98,7 +99,8 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					->SetSizeCoefficient(0.8f)
 					->AddTab("DAWSequenceMixerTab", ETabState::OpenedTab)
 					->AddTab("PianoRollTab", ETabState::OpenedTab)
-					->AddTab("Sequencer", ETabState::OpenedTab)
+					->AddTab("MidiClipEditor", ETabState::OpenedTab)
+					
 					
 				)
 				->Split
@@ -106,6 +108,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					FTabManager::NewStack()
 					->SetSizeCoefficient(0.2f)
 					->AddTab("DAWSequenceDetailsTab", ETabState::OpenedTab)
+					->AddTab("Sequencer", ETabState::OpenedTab)
 				)
 			)
 			->Split
@@ -130,7 +133,22 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	//SequencerWidgets.CreateTimeSlider(TimelineTimeSliderController, false);
 	//InTabManager->GetPrivateApi().HideWindows();
 
-	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
+	//midi clip editor tab
+
+
+	InTabManager->RegisterTabSpawner("MidiClipEditor", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
+		{
+			return SNew(SDockTab)
+				[
+
+					SAssignNew(MidiClipEditor, SMidiClipEditor)
+				];
+		}))
+		.SetDisplayName(INVTEXT("Midi Clip Editor"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
 				//.TabRole(ETabRole::NomadTab)
@@ -312,6 +330,12 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 
 void FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> Clips)
 {
+	//focus on midi editor tab
+
+	GetTabManager()->TryInvokeTab(FTabId("MidiClipEditor"));
+
+	MidiClipEditor->OnClipsFocused(Clips);
+	
 	UE_LOG(LogTemp, Warning, TEXT("Clips Focused"));
 }
 
