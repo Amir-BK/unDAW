@@ -438,12 +438,13 @@ inline TOptional<EMouseCursor::Type> SPianoRollGraph::GetCursor() const
 void SPianoRollGraph::RecalcGrid()
 {
 	if (SessionData == nullptr) return;
+	using namespace UnDAW;
 
-	auto* MidiSongMap = MidiFile->GetSongMaps();
+	auto* SongsMap = MidiFile->GetSongMaps();
 	//after much figuring out, this is the code that generates the grid based on quantization size
 	VisibleBeats.Empty();
-	float LeftMostTick = MidiSongMap->MsToTick(-PositionOffset.X / horizontalZoom);
-	float RightMostTick = MidiSongMap->MsToTick((GetCachedGeometry().GetLocalSize().X - PositionOffset.X) / horizontalZoom);
+	float LeftMostTick = SongsMap->MsToTick(-PositionOffset.X / horizontalZoom);
+	float RightMostTick = SongsMap->MsToTick((GetCachedGeometry().GetLocalSize().X - PositionOffset.X) / horizontalZoom);
 	//int GridBeat = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Beat;
 	//int GridBars = MidiSongMap->GetBarMap().TickToMusicTimestamp(LeftMostTick).Bar;
 
@@ -453,28 +454,25 @@ void SPianoRollGraph::RecalcGrid()
 	//populate bar array
 // can probably just leave it as time, rather than calculate back and forth...
 	float barTick = LeftMostTick;
-	while (!MidiSongMap->GetBarMap().IsEmpty() && barTick <= RightMostTick)
+	while (!SongsMap->GetBarMap().IsEmpty() && barTick <= RightMostTick)
 	{
 		//MidiSongMap->GetBarMap()
-		auto BarTick = MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(barTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars));
+		auto BarTick = SongsMap->CalculateMidiTick(SongsMap->GetBarMap().TickToMusicTimestamp(barTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars));
 		VisibleBars.Add(BarTick);
 		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
 		FMusicalGridPoint BarGridPoint = { };
 		//GridPointMap.Add(BarTick, BarGridPoint);
 
-		barTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars), barTick);
+		barTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars), barTick);
 	}
 
 
 	//populate beats array
 	float subDivTick = LeftMostTick;
-	while (!MidiSongMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
+	while (!SongsMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
 	{
-		VisibleBeats.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats)));
-		//visibleBars.Add(MidiSongMap->GetBarMap().MusicTimestampBarToTick(bars));
-
-	
-		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats), subDivTick);
+		VisibleBeats.Add(SongsMap->CalculateMidiTick(SongsMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats)));
+		subDivTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats), subDivTick);
 	}
 
 	//print quantization grid unit 
@@ -485,7 +483,7 @@ void SPianoRollGraph::RecalcGrid()
 	if(QuantizationGridUnit != EMusicTimeSpanOffsetUnits::Beats)
 	{
 		int SubDivCount = 1;
-		while (!MidiSongMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
+		while (!SongsMap->GetBarMap().IsEmpty() && subDivTick <= RightMostTick)
 		{
 		//VisibleSubdivisions.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(subDivTick), TimeSpanToSubDiv(QuantizationGridUnit)));
 		if (GridPointMap.Contains(subDivTick))
@@ -496,7 +494,7 @@ void SPianoRollGraph::RecalcGrid()
 			//GridPointMap.Add(subDivTick, { EGridPointType::Subdivision, ++SubDivCount });
 		}
 		
-		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
+		subDivTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
 		
 
 		}
@@ -557,13 +555,14 @@ void SPianoRollGraph::RecalcGrid()
 void SPianoRollGraph::RecalcSubdivisions()
 {
 	if (SessionData == nullptr) return;
+	using namespace UnDAW;
 
-	const auto& MidiSongMap = SessionData->HarmonixMidiFile->GetSongMaps();
+	const auto& SongsMap = SessionData->HarmonixMidiFile->GetSongMaps();
 	UE_LOG(SPianoRollLog, Log, TEXT("Quantization Grid Unit: %s"), *UEnum::GetValueAsString(QuantizationGridUnit));
 	GridPointMap.Empty();
 
 	// this time we're populating the entire grid point map
-	const float FirstTickOfFirstBar = MidiSongMap->GetBarMap().BarBeatTickIncludingCountInToTick(1,1, 0);
+	const float FirstTickOfFirstBar = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(1,1, 0);
 	const float LastTickOfLastBar = SessionData->HarmonixMidiFile->GetLastEventTick();
 
 	int32 BarCount = 1;
@@ -572,7 +571,7 @@ void SPianoRollGraph::RecalcSubdivisions()
 	{
 		//VisibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(BarTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));
 		GridPointMap.Add(BarTick, { EGridPointType::Bar, BarCount++, 1, 1 });
-		BarTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars), BarTick);
+		BarTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars), BarTick);
 	}
 
 	int8 BeatCount = 0;
@@ -591,7 +590,7 @@ void SPianoRollGraph::RecalcSubdivisions()
 			GridPointMap.Add(BeatTick, { EGridPointType::Beat, CurrentBar, ++BeatCount });
 		}
 
-		BeatTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats), BeatTick);
+		BeatTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Beats), BeatTick);
 	}
 
 
@@ -620,7 +619,7 @@ void SPianoRollGraph::RecalcSubdivisions()
 			GridPointMap.Add(subDivTick, { EGridPointType::Subdivision,CurrentBar, CurrentBeat, ++subDivCount });
 		}
 
-		subDivTick += MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
+		subDivTick += SongsMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), subDivTick);
 	}
 
 
@@ -824,9 +823,7 @@ FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPoint
 		}
 
 		const FVector2D WidgetSpaceCursorPos = InMyGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-		//const int32 ZoomLevelDelta = FMath::FloorToInt(InMouseEvent.GetWheelDelta());
 
-		//parentMidiEditor->UpdateTemporalZoom(hZoomTarget, WidgetSpaceCursorPos);
 
 		absMousePosition = InMouseEvent.GetScreenSpacePosition();
 		return FReply::Handled();
@@ -1120,7 +1117,10 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	int toTickBar = MidiSongMap->GetBarMap().MusicTimestampBarBeatTickToTick(CurrentBarAtMouseCursor, CurrentBeatAtMouseCursor, 0);
 	int PrevBeatTick = toTickBar + (MidiSongMap->GetTicksPerQuarterNote() * (CurrentBeatAtMouseCursor - 1));//+ MidiSongMap->GetTicksPerQuarterNote() * MidiSongMap->SubdivisionToMidiTicks(TimeSpanToSubDiv(QuantizationGridUnit), toTickBar);
+	using namespace UnDAW;
+	{
 
+	}
 	LayerId++;
 	//draw subdivisions
 	for (const auto& [Tick, GridPoint] : GridPointMap)

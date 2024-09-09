@@ -8,6 +8,7 @@
 #include "Input/Events.h"
 #include "Widgets/SCompoundWidget.h"
 #include "M2SoundGraphData.h"
+#include "UndawMusicDrawingStatics.h"
 #include "SlateFwd.h"
 #include "Components/Widget.h"
 
@@ -34,6 +35,11 @@ public:
 	float VerticalOffset = 0.0f;
 	bool bIsPanActive = false;
 	bool bLockVerticalPan = false;
+	UnDAW::FGridPointMap GridPoints;
+	UnDAW::EGridPointType GridPointType = UnDAW::EGridPointType::Bar;
+	UnDAW::EMusicTimeLinePaintMode PaintMode = UnDAW::EMusicTimeLinePaintMode::Music;
+	UnDAW::ETimeDisplayMode TimeDisplayMode = UnDAW::ETimeDisplayMode::TimeLinear;
+
 	UDAWSequencerData* SequenceData = nullptr;
 
 	TRange<int> ContentRange;
@@ -103,7 +109,7 @@ public:
 	}
 
 
-	const float TransformTickToPixel(const float Tick) const
+	const float TickToPixel(const float Tick) const
 	{
 		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - HorizontalOffset) * HorizontalZoom;
 	}
@@ -121,7 +127,55 @@ public:
 		return OnZoom(MyGeometry, MouseEvent);
 	}
 
+	virtual void CacheDesiredSize(float InLayoutScaleMultiplier) override {
+		RecalculateGrid();
+	}
 	
+	void RecalculateGrid()
+	{
+		GridPoints.Empty();
+		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
+		const auto& BarMap = SongsMap->GetBarMap();
+		const auto& BeatMap = SongsMap->GetBeatMap();
+		//const auto& SubdivisionMap = SongsMap->GetSubdivisionMap();
+
+		const float FirstTickOfFirstBar = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(1, 1, 0);
+		const float LastTickOfLastBar = SequenceData->HarmonixMidiFile->GetLastEventTick();
+
+		using namespace UnDAW;
+
+
+		int32 BarCount = 1;
+		float BarTick = 0;
+
+		while (BarTick <= LastTickOfLastBar)
+		{
+			//VisibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(BarTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));
+			GridPoints.Add(BarTick, { EGridPointType::Bar, BarCount++, 1, 1 });
+			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+		}
+
+		//for (const auto& Beat : BeatMap)
+		//{
+		//	FMusicalGridPoint Point;
+		//	Point.Type = EGridPointType::Beat;
+		//	Point.Bar = Beat.Value.Bar;
+		//	Point.Beat = Beat.Value.Beat;
+		//	GridPoints.Add(Beat.Key, Point);
+		//}
+
+		//for (const auto& Subdivision : SubdivisionMap)
+		//{
+		//	FMusicalGridPoint Point;
+		//	Point.Type = EGridPointType::Subdivision;
+		//	Point.Bar = Subdivision.Value.Bar;
+		//	Point.Beat = Subdivision.Value.Beat;
+		//	Point.Subdivision = Subdivision.Value.Subdivision;
+		//	GridPoints.Add(Subdivision.Key, Point);
+		//}
+	}
+
+	int32 PaintTimelineMarks(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const;
 
 };
 
@@ -158,6 +212,7 @@ public:
 		const float Width = SongsMap->TickToMs(Clip->EndTick) - SongsMap->TickToMs(Clip->StartTick);
 
 		HorizontalZoom = CachedGeometry.Size.X / Width;
+		HorizontalOffset = -SongsMap->TickToMs(Clip->StartTick);
 
 		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
 

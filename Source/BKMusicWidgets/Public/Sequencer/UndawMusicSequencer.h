@@ -302,8 +302,6 @@ protected:
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - (GetGlobalScrollAmount() * ScrollAmount));
 	}
 
-	UDAWSequencerData* SequenceData = nullptr;
-
 	TSharedPtr<SScrollBox> ScrollBox;
 	TSharedPtr<SSplitter> Splitter;
 
@@ -313,7 +311,5 @@ protected:
 	float MajorTabAlpha = 0.0f;
 
 	TArray<TSharedPtr<SDawSequencerTrackRoot>> TrackRoots;
-
-	TMap<int32, FMusicalGridPoint> GridPointMap;
 	
 };
