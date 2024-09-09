@@ -22,7 +22,9 @@ namespace UnDAW
 	const TRange<int> MidiNoteRange{ 0, 127 };
 }
 
-class IMidiEditorPanelInterface
+
+
+class SMidiEditorPanelBase: public SCompoundWidget
 {
 public:
 
@@ -33,6 +35,20 @@ public:
 	bool bIsPanActive = false;
 	bool bLockVerticalPan = false;
 	UDAWSequencerData* SequenceData = nullptr;
+
+	TRange<int> ContentRange;
+
+	TOptional<EMouseCursor::Type> GetCursor() const override
+	{
+
+		if (bIsPanActive)
+		{
+			return EMouseCursor::GrabHand;
+		}
+
+		return TOptional<EMouseCursor::Type>();
+	}
+
 
 	FReply OnMousePan(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 	{
@@ -82,6 +98,7 @@ public:
 				OnVerticalScroll(MouseEvent.GetWheelDelta());
 			}
 		}
+
 		return FReply::Handled();
 	}
 
@@ -93,6 +110,17 @@ public:
 
 	virtual void OnVerticalScroll(float ScrollAmount) {};
 
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		return OnMousePan(MyGeometry, MouseEvent);
+	}
+
+	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+
+		return OnZoom(MyGeometry, MouseEvent);
+	}
+
 	
 
 };
@@ -100,7 +128,7 @@ public:
 /**
  * 
  */
-class BKMUSICWIDGETS_API SMidiClipEditor : public SCompoundWidget, public IMidiEditorPanelInterface
+class BKMUSICWIDGETS_API SMidiClipEditor : public SMidiEditorPanelBase
 {
 public:
 	SLATE_BEGIN_ARGS(SMidiClipEditor)
@@ -120,17 +148,7 @@ public:
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
-	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-			return OnMousePan(MyGeometry, MouseEvent);
-	}
 
-	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		//only temporal zoom for now I guess
-		
-		return OnZoom(MyGeometry, MouseEvent);
-	}
 
 	void ZoomToContent()
 	{
@@ -144,6 +162,9 @@ public:
 		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
 
 		VerticalZoom = CachedGeometry.Size.Y / (ClipNoteRange.Size<int8>() * UnDAW::MidiNoteRange.Size<int8>());
+
+		const float Height = (CachedGeometry.Size.Y / 127) / VerticalZoom;
+		VerticalOffset = -(127 - Clip->MaxNote) * Height;
 
 	}
 

@@ -670,11 +670,11 @@ void UDAWSequencerData::PopulateFromMidiFile(UMidiFile* inMidiFile)
 {
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Populating Sequencer Data from Midi File"))
 				//we need to create a new midi file copy, so we don't modify the original
-		auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
+	auto MidiFileCopy = NewObject<UEditableMidiFile>(this);
 	MidiFileCopy->LoadFromHarmonixMidiFileAndApplyModifiers(inMidiFile);
 	HarmonixMidiFile = MidiFileCopy;
 
-		TArray<TTuple<int, int>> FoundChannels;
+	TArray<TTuple<int, int>> FoundChannels;
 	//LinkedNoteDataMap.Empty();
 	//PendingLinkedMidiNotesMap.Empty();
 	//HarmonixMidiFile = inMidiFile;

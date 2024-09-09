@@ -12,6 +12,8 @@
 #include "Widgets/Layout/SSplitter.h"
 #include "Widgets/Layout/SBox.h"
 #include "UndawMusicDrawingStatics.h"
+#include "Types/SlateConstants.h"
+#include "MidiClipEditor/SMidiClipEditor.h"
 #include <M2SoundGraphData.h>
 
 
@@ -248,7 +250,7 @@ private:
 };
 
 
-class BKMUSICWIDGETS_API SUndawMusicSequencer: public SCompoundWidget
+class BKMUSICWIDGETS_API SUndawMusicSequencer: public SMidiEditorPanelBase
 {
 public:
 	SLATE_BEGIN_ARGS(SUndawMusicSequencer) {}
@@ -289,22 +291,16 @@ protected:
 	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 
 
-	TOptional<EMouseCursor::Type> GetCursor() const override;
-
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
-	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Mouse wheel"));
-		bool bIsCtrlPressed = MouseEvent.IsControlDown();
-	
-		return bIsCtrlPressed ? FReply::Handled() : FReply::Unhandled();
 
-	}
 
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-
+	void OnVerticalScroll(float ScrollAmount) override
+	{
+		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - (GetGlobalScrollAmount() * ScrollAmount));
+	}
 
 	UDAWSequencerData* SequenceData = nullptr;
 

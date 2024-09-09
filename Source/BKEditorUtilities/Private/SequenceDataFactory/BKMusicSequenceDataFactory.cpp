@@ -25,7 +25,7 @@ UObject* UBKMusicSequenceDataFactory::FactoryCreateNew(UClass* InClass, UObject*
 		NewSequence->PopulateFromMidiFile(NewMidiFile);
 	}
 
-	UMidiDrivenSequenceFactory* SequenceFactory = NewObject<UMidiDrivenSequenceFactory>();
+	//UMidiDrivenSequenceFactory* SequenceFactory = NewObject<UMidiDrivenSequenceFactory>();
 
 	//NewSequence->MidiDrivenLevelSequence = Cast<UMidiDrivenLevelSequence>(SequenceFactory->FactoryCreateNew(UMidiDrivenLevelSequence::StaticClass(), NewSequence, InName, Flags, Context, Warn));
 

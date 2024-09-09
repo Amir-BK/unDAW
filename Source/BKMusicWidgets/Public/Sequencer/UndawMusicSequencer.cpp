@@ -18,6 +18,7 @@ void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData
 
 	ChildSlot[
 		SAssignNew(ScrollBox, SScrollBox)
+			.ConsumeMouseWheel(EConsumeMouseWheel::Never)
 			+SScrollBox::Slot()
 			.AutoSize()
 			[
@@ -184,16 +185,6 @@ int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	return LayerId;
 }
 
-TOptional<EMouseCursor::Type> SUndawMusicSequencer::GetCursor() const
-{
-	
-	if (bIsPanning)
-	{
-		return EMouseCursor::GrabHand;
-	}
-	
-	return EMouseCursor::Default;
-}
 
 FReply SUndawMusicSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
