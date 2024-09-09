@@ -43,7 +43,7 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 			const float Start = TransformTickToPixel(Note.StartTick + Clip->StartTick);
 			const float End = TransformTickToPixel(Note.EndTick + Clip->StartTick);
 			const float Width = End - Start;
-			const float Y = (127 - Note.Pitch) * Height;
+			const float Y = (127 - Note.Pitch) * Height * VerticalZoom;
 
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,

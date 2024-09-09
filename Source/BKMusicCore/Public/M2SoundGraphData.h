@@ -221,6 +221,12 @@ struct FLinkedNotesClip
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FLinkedMidiEvents> LinkedNotes;
+
+	UPROPERTY()
+	int8 MaxNote = 0;
+
+	UPROPERTY()
+	int8 MinNote = 127;
 };
 
 USTRUCT(BlueprintType)

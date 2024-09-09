@@ -779,6 +779,10 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 								foundPair.StartTick -= Clip.StartTick;
 								foundPair.EndTick -= Clip.StartTick;
 
+								//check min/max note
+								if (foundPair.Pitch > Clip.MaxNote) Clip.MaxNote = foundPair.Pitch;
+								if (foundPair.Pitch < Clip.MinNote) Clip.MinNote = foundPair.Pitch;
+
 								Tracks[foundPair.TrackId].LinkedNotesClips[0].LinkedNotes.Add(foundPair);
 								if (foundPair.EndTick > Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick) Tracks[foundPair.TrackId].LinkedNotesClips[0].EndTick = foundPair.EndTick;
 							}
@@ -788,6 +792,9 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 								NewTrack.MetadataIndex = foundPair.TrackId;
 								NewClip.StartTick = foundPair.StartTick;
 								NewTrack.MetadataIndex = foundPair.TrackId;
+								NewClip.MaxNote = foundPair.Pitch;
+								NewClip.MinNote = foundPair.Pitch;
+
 
 								NewClip.LinkedNotes.Add(foundPair);
 								NewTrack.LinkedNotesClips.Add(NewClip);
@@ -972,6 +979,11 @@ void UDAWSequencerData::BeginDestroy()
 	UE_LOG(unDAWDataLogs, Verbose, TEXT("Destroying Sequencer Data"))
 
 		bool MarkedDelete = RootPackageHasAnyFlags(RF_MarkAsRootSet);
+
+	if (SavedMetaSound) SavedMetaSound->ConditionalBeginDestroy();
+	if (AuditionComponent) AuditionComponent->DestroyComponent();
+	if (BuilderContext) BuilderContext->ConditionalBeginDestroy();
+	SavedMetaSound = nullptr;
 
 	Super::BeginDestroy();
 }

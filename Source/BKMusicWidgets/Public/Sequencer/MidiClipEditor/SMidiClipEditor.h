@@ -17,11 +17,17 @@ implementations for panning and zooming
 
 */
 
+namespace UnDAW
+{
+	const TRange<int> MidiNoteRange{ 0, 127 };
+}
+
 class IMidiEditorPanelInterface
 {
 public:
 
-	float Zoom = 1.0f;
+	float HorizontalZoom = 1.0f;
+	float VerticalZoom = 1.0f;
 	float HorizontalOffset = 0.0f;
 	float VerticalOffset = 0.0f;
 	bool bIsPanActive = false;
@@ -43,13 +49,38 @@ public:
 
 	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 	{
+		
+		bool bIsCtrlPressed = MouseEvent.IsControlDown();
+		bool bIsShiftPressed = MouseEvent.IsShiftDown();
+		
+		
 		if (MouseEvent.GetWheelDelta() > 0)
-		{
-			Zoom += 0.1f;
+		{			
+			if (bIsShiftPressed)
+			{
+				VerticalZoom += 0.1f;
+			}
+			else if (bIsCtrlPressed)
+			{
+				HorizontalZoom *= 1.1f;
+			}
+			else {
+				OnVerticalScroll(MouseEvent.GetWheelDelta());
+			}
 		}
 		else
 		{
-			Zoom -= 0.1f;
+			if (bIsShiftPressed)
+			{
+				VerticalZoom -= 0.1f;
+			}
+			else if (bIsCtrlPressed)
+			{
+				HorizontalZoom *= 0.9f;
+			}
+			else {
+				OnVerticalScroll(MouseEvent.GetWheelDelta());
+			}
 		}
 		return FReply::Handled();
 	}
@@ -57,8 +88,12 @@ public:
 
 	const float TransformTickToPixel(const float Tick) const
 	{
-		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - HorizontalOffset) * Zoom;
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - HorizontalOffset) * HorizontalZoom;
 	}
+
+	virtual void OnVerticalScroll(float ScrollAmount) {};
+
+	
 
 };
 
@@ -95,6 +130,21 @@ public:
 		//only temporal zoom for now I guess
 		
 		return OnZoom(MyGeometry, MouseEvent);
+	}
+
+	void ZoomToContent()
+	{
+		const auto& CachedGeometry = GetCachedGeometry();
+		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
+
+		const float Width = SongsMap->TickToMs(Clip->EndTick) - SongsMap->TickToMs(Clip->StartTick);
+
+		HorizontalZoom = CachedGeometry.Size.X / Width;
+
+		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
+
+		VerticalZoom = CachedGeometry.Size.Y / (ClipNoteRange.Size<int8>() * UnDAW::MidiNoteRange.Size<int8>());
+
 	}
 
 };
