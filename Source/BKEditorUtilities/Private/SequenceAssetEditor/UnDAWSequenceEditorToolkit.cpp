@@ -127,9 +127,24 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			auto DockTab = SNew(SDockTab)
 				//.TabRole(ETabRole::NomadTab)
 				[
-					SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+					SNew(SOverlay)
+						+ SOverlay::Slot()
+						[
+							SNew(SAssetDropTarget)
+								.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetsDropped)
+								.OnAreAssetsAcceptableForDrop(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
+								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
+								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
+								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
 
+						]
+						+ SOverlay::Slot()
+						[
+							SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+
+						]
 				];
+
 
 			MusicSequencer->OnMidiClipsFocused.BindSP(this, &FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused);
 
@@ -150,26 +165,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			
 
 				[
-					SNew(SOverlay)
-						+SOverlay::Slot()
-						[
-							SNew(SAssetDropTarget)
-								.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
-								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
-								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
-								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
-								
-						]
+	
+					SAssignNew(PianoRollGraph, SPianoRollGraph)
+						.SessionData(SequenceData)
+						.Clipping(EWidgetClipping::ClipToBounds)
+						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
+						.OnSeekEvent(OnSeekEvent)
+						// .CurrentTimestamp(CurrentTimestamp)
 
-						+SOverlay::Slot()
-						[
-							SAssignNew(PianoRollGraph, SPianoRollGraph)
-								.SessionData(SequenceData)
-								.Clipping(EWidgetClipping::ClipToBounds)
-								//.CurrentTimestamp(SequenceData->CurrentTimestampData)
-								.OnSeekEvent(OnSeekEvent)
-								// .CurrentTimestamp(CurrentTimestamp)
-						]
 					
 
 				];
@@ -575,24 +578,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
 }
 
-void FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const
-{
-	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
 
-	//check if asset is wavasset
-	for (auto& Asset : InAssets)
-	{
-		if (Asset.GetClass()->IsChildOf(USoundWave::StaticClass()))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Asset is SoundWave %d"), PianoRollGraph->tickAtMouse);
-			//in theory this is where we can create a timestamped wav asset
-			//return true;
-			//return true;
-		}
-	}
-	
-	//return false;
-}
 
 void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
 {
@@ -620,6 +606,26 @@ FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& 
 {
 	UE_LOG(LogTemp, Warning, TEXT("Mouse Down"));
 	return FReply::Handled();
+}
+
+bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
+{
+	//accepts midi files, USoundWaves, UDAWSequencerData and UMetaSoundsource
+	for (const auto& Asset : InAssets)
+	{
+		if (Asset.GetClass()->IsChildOf(UMidiFile::StaticClass()) || Asset.GetClass()->IsChildOf(USoundWave::StaticClass()) ||
+			Asset.GetClass()->IsChildOf(UDAWSequencerData::StaticClass()))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void FUnDAWSequenceEditorToolkit::OnAssetsDropped(const FDragDropEvent&, TArrayView<FAssetData> InAssets)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Asset Dropped"));
 }
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)

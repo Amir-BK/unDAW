@@ -11,6 +11,7 @@
 #include "UndawMusicDrawingStatics.h"
 #include "SlateFwd.h"
 #include "Components/Widget.h"
+#include "Styling/AppStyle.h"
 
 
 /**
@@ -39,6 +40,10 @@ public:
 	UnDAW::EGridPointType GridPointType = UnDAW::EGridPointType::Bar;
 	UnDAW::EMusicTimeLinePaintMode PaintMode = UnDAW::EMusicTimeLinePaintMode::Music;
 	UnDAW::ETimeDisplayMode TimeDisplayMode = UnDAW::ETimeDisplayMode::TimeLinear;
+	float RowHeight = 10.0f;
+	float MajorTabWidth = 150.0f;
+	float MajorTabAlpha = 0.0f;
+	float TimelineHeight;
 
 	UDAWSequencerData* SequenceData = nullptr;
 
@@ -144,6 +149,7 @@ public:
 
 		using namespace UnDAW;
 
+		RowHeight = (GetCachedGeometry().Size.Y / 127) * VerticalZoom;
 
 		int32 BarCount = 1;
 		float BarTick = 0;
@@ -176,6 +182,47 @@ public:
 	}
 
 	int32 PaintTimelineMarks(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const;
+	
+	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
+	{
+		// first draw the timeline backgroumd a black box
+		//UE_LOG(LogTemp, Warning, TEXT("Painting timeline, timeline height: %f"), TimelineHeight);
+
+		FSlateDrawElement::MakeBox(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(FVector2D(MajorTabWidth, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
+			FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+			ESlateDrawEffect::None,
+			FLinearColor::Black
+		);
+
+		// draw 30 vertical lines for fun, 
+		TRange<float> DrawRange(HorizontalOffset, AllottedGeometry.Size.X + HorizontalOffset);
+		for (int i = 0; i < 30; i++)
+		{
+			const float X = i * 100;
+			if (!DrawRange.Contains(X))
+			{
+				continue;
+			}
+			const FVector2D Start(MajorTabWidth + X - HorizontalOffset, 0);
+			const FVector2D End(MajorTabWidth + X - HorizontalOffset, TimelineHeight);
+
+
+			FSlateDrawElement::MakeLines(
+				OutDrawElements,
+				LayerId,
+				AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
+				{ Start, End },
+				ESlateDrawEffect::None,
+				FLinearColor::White
+			);
+		}
+
+
+		return LayerId;
+	}
 
 };
 
@@ -187,6 +234,7 @@ class BKMUSICWIDGETS_API SMidiClipEditor : public SMidiEditorPanelBase
 public:
 	SLATE_BEGIN_ARGS(SMidiClipEditor)
 	{}
+		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 	SLATE_END_ARGS()
 
 	FText TrackMetaDataName = FText::GetEmpty();
@@ -209,17 +257,16 @@ public:
 		const auto& CachedGeometry = GetCachedGeometry();
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 
-		const float Width = SongsMap->TickToMs(Clip->EndTick) - SongsMap->TickToMs(Clip->StartTick);
+		const float Width = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
 
 		HorizontalZoom = CachedGeometry.Size.X / Width;
-		HorizontalOffset = -SongsMap->TickToMs(Clip->StartTick);
+		HorizontalOffset = -TickToPixel(Clip->StartTick);
 
 		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
 
-		VerticalZoom = CachedGeometry.Size.Y / (ClipNoteRange.Size<int8>() * UnDAW::MidiNoteRange.Size<int8>());
+		VerticalZoom = CachedGeometry.Size.Y / UnDAW::MidiNoteRange.Size<int8>();
 
-		const float Height = (CachedGeometry.Size.Y / 127) / VerticalZoom;
-		VerticalOffset = -(127 - Clip->MaxNote) * Height;
+		//VerticalOffset = -(127 - Clip->MaxNote) * RowHeight;
 
 	}
 

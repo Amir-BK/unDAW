@@ -100,6 +100,8 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 
 	
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+	LayerId++;
+	PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
@@ -144,47 +146,6 @@ int32 SUndawMusicSequencer::PaintBackgroundGrid(const FPaintArgs& Args, const FG
 	
 	return LayerId;
 }
-
-int32 SUndawMusicSequencer::PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
-{
-	// first draw the timeline backgroumd a black box
-
-	FSlateDrawElement::MakeBox(
-		OutDrawElements,
-		LayerId,
-		AllottedGeometry.ToPaintGeometry(FVector2D(MajorTabWidth, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
-		FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
-		ESlateDrawEffect::None,
-		FLinearColor::Black
-	);
-
-	// draw 30 vertical lines for fun, 
-	TRange<float> DrawRange(HorizontalOffset, AllottedGeometry.Size.X + HorizontalOffset);
-	for (int i = 0; i < 30; i++)
-	{
-		const float X = i * 100;
-		if (!DrawRange.Contains(X))
-		{
-			continue;
-		}
-		const FVector2D Start(MajorTabWidth + X - HorizontalOffset, 0);
-		const FVector2D End(MajorTabWidth + X - HorizontalOffset, TimelineHeight);
-
-
-		FSlateDrawElement::MakeLines(
-			OutDrawElements,
-			LayerId,
-			AllottedGeometry.ToPaintGeometry(FVector2D(0, 0), FVector2D(AllottedGeometry.Size.X, TimelineHeight)),
-			{ Start, End },
-			ESlateDrawEffect::None,
-			FLinearColor::White
-		);
-	}
-
-	
-	return LayerId;
-}
-
 
 FReply SUndawMusicSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {

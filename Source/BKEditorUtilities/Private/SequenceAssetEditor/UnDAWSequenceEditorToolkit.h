@@ -117,8 +117,6 @@ protected:
 
 	//UAudioComponent* AudioComponent = nullptr;
 
-	UFUNCTION()
-	void OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const;
 
 	UFUNCTION()
 	void OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
@@ -128,4 +126,7 @@ public:
 	//this requires changing SPianoRoll graph so that it exposes mouse and key down events to the asset editor
 
 	FReply OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+
+	bool OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const;
+	void OnAssetsDropped(const FDragDropEvent&, TArrayView<FAssetData> InAssets);
 };

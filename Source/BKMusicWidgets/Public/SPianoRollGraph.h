@@ -212,8 +212,8 @@ public:
 	int32 ValueAtMouseCursorPostSnapping;
 	int32 TickAtEndEvent;
 
-	float horizontalZoom = 0.1f;
-	float hZoomTarget = horizontalZoom;
+	float HorizontalZoom = 0.1f;
+	float hZoomTarget = HorizontalZoom;
 	float verticalZoom = 0.03f;
 	float vZoomTarget = verticalZoom;
 
@@ -272,8 +272,6 @@ public:
 
 	void AddHorizontalX(float inputX);
 
-	void UpdateSlotsZOrder();
-
 	void RecalcGrid();
 
 	void RecalcSubdivisions();
@@ -312,7 +310,7 @@ protected:
 	int32 tickAtMouse = 0;
 
 	double pixelsPerSecond = 1000;
-	double rowHeight = 200;
+	double RowHeight = 200;
 
 	//
 	float MaxWidth = 999999.0f;
