@@ -115,7 +115,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 			return SNew(SDockTab)
 				[
 
-					SAssignNew(MidiClipEditor, SMidiClipEditor, SequenceData)
+					SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
 				];
 		}))
 		.SetDisplayName(INVTEXT("Midi Clip Editor"))
@@ -311,9 +311,8 @@ void FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused(TArray<TTuple<FDawSequ
 
 	GetTabManager()->TryInvokeTab(FTabId("MidiClipEditor"));
 
-	MidiClipEditor->OnClipsFocused(Clips);
+	MidiClipLinkedWidgetContainer->OnClipsFocused(Clips);
 	
-	UE_LOG(LogTemp, Warning, TEXT("Clips Focused"));
 }
 
 void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)

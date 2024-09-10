@@ -101,7 +101,7 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId++;
-	PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
@@ -154,7 +154,7 @@ FReply SUndawMusicSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, cons
 
 	if (bIsRightButtonDown)
 	{
-		bIsPanning = true;
+		bIsPanActive = true;
 		return FReply::Handled().CaptureMouse(AsShared());
 	}
 	
@@ -167,9 +167,9 @@ FReply SUndawMusicSequencer::OnMouseButtonUp(const FGeometry& MyGeometry, const 
 
 	if (bIsRightButtonAffecting)
 	{
-		if (bIsPanning)
+		if (bIsPanActive)
 		{
-			bIsPanning = false;
+			bIsPanActive = false;
 			return FReply::Handled().ReleaseMouseCapture();
 		}
 	}

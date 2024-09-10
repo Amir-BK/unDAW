@@ -84,7 +84,7 @@ public:
 	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
 	TSharedPtr<SUndawMusicSequencer> MusicSequencer;
 	TSharedPtr<ISequencer> InstancedSequencer;
-	TSharedPtr<SMidiClipEditor> MidiClipEditor;
+	TSharedPtr<SMidiClipLinkedPanelsContainer> MidiClipLinkedWidgetContainer;
 
 	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 

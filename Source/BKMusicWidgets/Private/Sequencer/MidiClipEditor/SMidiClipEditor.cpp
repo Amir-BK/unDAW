@@ -42,7 +42,7 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	);
 
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-	PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//draw notes
 	TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), TrackColor) };
@@ -77,104 +77,6 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, HorizontalZoom, VerticalZoom, HorizontalOffset, VerticalOffset));
 	FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), ToPrint, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
-	return LayerId;
-}
-
-inline int32 SMidiEditorPanelBase::PaintTimelineMarks(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
-{
-	//paint some test text for sanity check
-	//auto ToPrint = FText::FromString("Hello World");
-	//::MakeText(OutDrawElements, LayerId++, AllottedGeometry, ToPrint, FAppStyle::GetFontStyle("Font.Large.Bold"), ESlateDrawEffect::None, FLinearColor::White);
-	auto OffsetGeometryChild = AllottedGeometry;
-	const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
-	using namespace UnDAW;
-	const float Height = (AllottedGeometry.Size.Y / 127) / VerticalZoom;
-
-	for (const auto& [Tick, GridPoint] : GridPoints)
-	{
-		FLinearColor LineColor;
-
-		//ugly as heck but probably ok for now
-		switch (GridPoint.Type)
-		{
-		case EGridPointType::Bar:
-			//draw bar number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset))),
-				FText::FromString(FString::FromInt(GridPoint.Bar)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-			//draw beat number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 18))),
-				FText::FromString(FString::FromInt(GridPoint.Beat)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-			//draw subdivision number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
-				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-
-			LineColor = FLinearColor::Gray;
-			break;
-
-		case EGridPointType::Subdivision:
-			//draw subdivision number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
-				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-			LineColor = FLinearColor::Black;
-			break;
-
-		case EGridPointType::Beat:
-			//draw beat number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 18))),
-				FText::FromString(FString::FromInt(GridPoint.Beat)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-			//draw subdivision number
-			FSlateDrawElement::MakeText(OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
-				FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-				FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-
-			LineColor = FLinearColor::Blue;
-			break;
-
-
-		}
-
-
-	}
 	return LayerId;
 }
 
