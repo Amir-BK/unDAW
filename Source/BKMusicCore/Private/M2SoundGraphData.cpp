@@ -767,6 +767,7 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 							unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].EventIndex, index);
 							foundPair.TrackId = FoundChannels.AddUnique(TTuple<int, int>(numTracksInternal, midiChannel));
 							foundPair.ChannelId = midiChannel;
+							foundPair.NoteVelocity = unlinkedNotesIndexed[MidiEvent.GetMsg().GetStdData1()].Event.GetMsg().GetStdData2();
 							foundPair.CalculateDuration(HarmonixMidiFile->GetSongMaps());
 							linkedNotes.Add(&foundPair);
 							// sort the tracks into channels

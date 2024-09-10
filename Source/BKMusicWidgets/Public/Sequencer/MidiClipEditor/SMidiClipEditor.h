@@ -406,6 +406,9 @@ public:
 		TimelineHeight = InArgs._TimelineHeight;
 	};
 
+	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+
 };
 
 class BKMUSICWIDGETS_API SMidiClipLinkedPanelsContainer : public SCompoundWidget
@@ -433,15 +436,18 @@ public:
 			[
 				SNew(SSplitter)
 					.ResizeMode(ESplitterResizeMode::Fill)
+					.Orientation(Orient_Vertical)
 					+ SSplitter::Slot()
-					.Value(0.5f)
+					.Value(0.75f)
 					[
 						SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
+							.Clipping(EWidgetClipping::ClipToBounds)
 					]
 					+ SSplitter::Slot()
-					.Value(0.5f)
+					.Value(0.25f)
 					[
 						SAssignNew(MidiClipVelocityEditor, SMidiClipVelocityEditor, InSequence)
+							.Clipping(EWidgetClipping::ClipToBounds)
 					]
 			];
 
