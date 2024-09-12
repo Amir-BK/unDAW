@@ -8,7 +8,7 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 {
-	SMidiEditorPanelBase::Construct(SMidiEditorPanelBase::FArguments(), InSequence);
+	SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequence);
 	SequenceData = InSequence;
 	MajorTabWidth = 0.0f;
 	TimelineHeight = InArgs._TimelineHeight;
@@ -35,7 +35,7 @@ void SMidiClipEditor::OnClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedN
 inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	auto ScreenCenterPaintGeometry = AllottedGeometry.ToOffsetPaintGeometry(FVector2D(AllottedGeometry.Size / 2.0f));
-	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(HorizontalOffset, VerticalOffset)));
+	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 
 	auto TrackAreaGeometry = AllottedGeometry.MakeChild(
 		FVector2f(0, TimelineHeight),
@@ -77,7 +77,7 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 
 	}
 
-	const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, HorizontalZoom, VerticalZoom, HorizontalOffset, VerticalOffset));
+	const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y));
 	FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), ToPrint, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
 	return LayerId;
@@ -89,7 +89,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 {
 	if (Clip != nullptr)
 	{
-		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(HorizontalOffset, VerticalOffset)));
+		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 		LayerId++;
 		for (const auto& Note : Clip->LinkedNotes)
 		{
@@ -139,7 +139,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 			//FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, Y)), FText::FromString(FString::Printf(TEXT("%d"), Note.Velocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::Black);
 		}
 
-		const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, HorizontalZoom, VerticalZoom, HorizontalOffset, VerticalOffset));
+		const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y));
 		FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), ToPrint, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
 	}

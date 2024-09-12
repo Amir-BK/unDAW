@@ -25,6 +25,10 @@ namespace UnDAW
 	const TRange<int> MidiNoteRange{ 0, 127 };
 }
 
+DECLARE_DELEGATE_OneParam(
+	FOnPanelPositionChangedByUser,
+	/** called when the spacer is hovered so we can change its color */
+	FVector2D);
 
 // Midi editor panel base class provides basic functionality for drawing a musical editor
 // this includes panning, zooming, providing methods to paint grid points and timeline
@@ -38,6 +42,8 @@ public:
 		{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 		SLATE_ATTRIBUTE(FVector2D, Position);
+		SLATE_EVENT(FOnPanelPositionChangedByUser, OnPanelPositionChangedByUser);
+		SLATE_EVENT(FOnPanelPositionChangedByUser, OnPanelZoomByUser);
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
@@ -46,18 +52,29 @@ public:
 		SequenceData = InSequence;
 		TimelineHeight = InArgs._TimelineHeight;
 		Position = InArgs._Position;
+		OnPanelPositionChangedByUser = InArgs._OnPanelPositionChangedByUser;
+		OnPanelZoomByUser = InArgs._OnPanelZoomByUser;
 
 	};
 
+	// called to set the position offset of the panel without firing the delegates, i.e when an external source changes the position
+	void SetPosition(FVector2D InPosition)
+	{
+		//ignore y component if bLockVerticalPan
 
-	float HorizontalZoom = 1.0f;
-	float VerticalZoom = 1.0f;
+		if (bLockVerticalPan) InPosition.Y = Position.Get().Y;
+		
+		Position.Set(InPosition);
+	}
+
 
 	FVector2D PositionOffset = FVector2D(0, 0);
 	TAttribute<FVector2D> Position = FVector2D(0, 0);
+	TAttribute<FVector2D> Zoom = FVector2D(1, 1);
+	FOnPanelPositionChangedByUser OnPanelPositionChangedByUser;
+	FOnPanelPositionChangedByUser OnPanelZoomByUser;
 
-	float HorizontalOffset = 0.0f;
-	float VerticalOffset = 0.0f;
+
 	bool bIsPanActive = false;
 	bool bLockVerticalPan = false;
 	UnDAW::FGridPointMap GridPoints;
@@ -89,8 +106,18 @@ public:
 	{
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
-			HorizontalOffset += MouseEvent.GetCursorDelta().X;
-			if(!bLockVerticalPan) VerticalOffset += MouseEvent.GetCursorDelta().Y;
+			auto& CurrentPos = Position.Get();
+			auto NewPosition = CurrentPos + MouseEvent.GetCursorDelta();
+
+			if (OnPanelPositionChangedByUser.IsBound())
+			{
+				OnPanelPositionChangedByUser.Execute(NewPosition);
+			}
+			else {
+				SetPosition(NewPosition);
+			}
+
+
 			bIsPanActive = true;
 			return FReply::Handled();
 		}
@@ -99,7 +126,12 @@ public:
 	}
 
 	const FVector2D GetLocalMousePosition(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-		return MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - PositionOffset;
+		return MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - Position.Get();
+	}
+
+	void SetZoom(const FVector2D NewZoom)
+	{
+		Zoom.Set(NewZoom);
 	}
 
 	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -107,35 +139,51 @@ public:
 		
 		bool bIsCtrlPressed = MouseEvent.IsControlDown();
 		bool bIsShiftPressed = MouseEvent.IsShiftDown();
-		
+		FVector2D NewZoom;
 
 		if (MouseEvent.GetWheelDelta() > 0)
 		{			
 			if (bIsShiftPressed)
 			{
-				VerticalZoom += 0.1f;
+				//VerticalZoom += 0.1f;
+				NewZoom = FVector2D(Zoom.Get().X, Zoom.Get().Y * 1.1f);
+
 			}
 			else if (bIsCtrlPressed)
 			{
-				HorizontalZoom *= 1.1f;
+				NewZoom = FVector2D(Zoom.Get().X * 1.1f, Zoom.Get().Y);
+
 			}
 			else {
 				OnVerticalScroll(MouseEvent.GetWheelDelta());
+				return FReply::Handled();
 			}
 		}
 		else
 		{
 			if (bIsShiftPressed)
 			{
-				VerticalZoom -= 0.1f;
+				NewZoom = FVector2D(Zoom.Get().X, Zoom.Get().Y * 0.9f);
+		
 			}
 			else if (bIsCtrlPressed)
 			{
-				HorizontalZoom *= 0.9f;
+				NewZoom = FVector2D(Zoom.Get().X * 0.9f, Zoom.Get().Y);
+			
 			}
 			else {
 				OnVerticalScroll(MouseEvent.GetWheelDelta());
+				return FReply::Handled();
 			}
+		}
+
+		if (OnPanelZoomByUser.IsBound())
+		{
+			OnPanelZoomByUser.Execute(NewZoom);
+		}
+		else {
+
+			SetZoom(NewZoom);
 		}
 
 		return FReply::Handled();
@@ -144,7 +192,7 @@ public:
 
 	const float TickToPixel(const float Tick) const
 	{
-		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - HorizontalOffset) * HorizontalZoom;
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X;
 	}
 
 	virtual void OnVerticalScroll(float ScrollAmount) {};
@@ -177,7 +225,7 @@ public:
 
 		using namespace UnDAW;
 
-		RowHeight = (GetCachedGeometry().Size.Y / 127) * VerticalZoom;
+		RowHeight = (GetCachedGeometry().Size.Y / 127) * Zoom.Get().Y;
 
 		int32 BarCount = 1;
 		float BarTick = 0;
@@ -236,7 +284,7 @@ public:
 		);
 
 		// draw 30 vertical lines for fun, 
-		TRange<float> DrawRange(HorizontalOffset, AllottedGeometry.Size.X + HorizontalOffset);
+		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
 		for (int i = 0; i < 30; i++)
 		{
 			const float X = i * 100;
@@ -244,8 +292,8 @@ public:
 			{
 				continue;
 			}
-			const FVector2D Start(X - HorizontalOffset, 0);
-			const FVector2D End(X - HorizontalOffset, TimelineHeight);
+			const FVector2D Start(X - Position.Get().X, 0);
+			const FVector2D End(X - Position.Get().X, TimelineHeight);
 
 
 			FSlateDrawElement::MakeLines(
@@ -261,7 +309,7 @@ public:
 		auto OffsetGeometryChild = AllottedGeometry;
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 		using namespace UnDAW;
-		const float Height = (AllottedGeometry.Size.Y / 127) / VerticalZoom;
+		const float Height = (AllottedGeometry.Size.Y / 127) / Zoom.Get().Y;
 
 		for (const auto& [Tick, GridPoint] : GridPoints)
 		{
@@ -274,7 +322,7 @@ public:
 				//draw bar number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 					FText::FromString(FString::FromInt(GridPoint.Bar)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
 					ESlateDrawEffect::None,
@@ -284,7 +332,7 @@ public:
 				//draw beat number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 18))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 18))),
 					FText::FromString(FString::FromInt(GridPoint.Beat)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
 					ESlateDrawEffect::None,
@@ -294,7 +342,7 @@ public:
 				//draw subdivision number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
 					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
 					ESlateDrawEffect::None,
@@ -309,7 +357,7 @@ public:
 				//draw subdivision number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
 					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
 					ESlateDrawEffect::None,
@@ -323,7 +371,7 @@ public:
 				//draw beat number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 18))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 18))),
 					FText::FromString(FString::FromInt(GridPoint.Beat)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
 					ESlateDrawEffect::None,
@@ -333,7 +381,7 @@ public:
 				//draw subdivision number
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -VerticalOffset + 30))),
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
 					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
 					ESlateDrawEffect::None,
@@ -389,14 +437,23 @@ public:
 
 		const float Width = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
 
-		HorizontalZoom = CachedGeometry.Size.X / Width;
-		HorizontalOffset = -TickToPixel(Clip->StartTick);
+		const auto& HorizontalZoom = CachedGeometry.Size.X / Width;
+		if (OnPanelPositionChangedByUser.IsBound())
+		{
+			OnPanelPositionChangedByUser.Execute(FVector2D(-TickToPixel(Clip->StartTick), 0));
+		}
+		else {
+			Position.Set(FVector2D(-TickToPixel(Clip->StartTick), 0));
+		}
+
 
 		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
 
-		VerticalZoom = CachedGeometry.Size.Y / UnDAW::MidiNoteRange.Size<int8>();
+		const auto& VerticalZoom = CachedGeometry.Size.Y / UnDAW::MidiNoteRange.Size<int8>();
 
-		//VerticalOffset = -(127 - Clip->MaxNote) * RowHeight;
+		SetZoom(FVector2D(HorizontalZoom, VerticalZoom));
+
+		//Position.Get().Y = -(127 - Clip->MaxNote) * RowHeight;
 
 	}
 
@@ -448,10 +505,15 @@ public:
 	SLATE_BEGIN_ARGS(SMidiClipLinkedPanelsContainer)
 		{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
+		SLATE_ARGUMENT_DEFAULT(FVector2D, Position) = FVector2D(0, 0);
+		SLATE_ARGUMENT_DEFAULT(FVector2D, Zoom) = FVector2D(1, 1);
 	SLATE_END_ARGS()
 
 	TSharedPtr<SMidiClipEditor> MidiClipEditor;
 	TSharedPtr<SMidiClipVelocityEditor> MidiClipVelocityEditor;
+
+	FVector2D Position = FVector2D(0, 0);
+	FVector2D Zoom = FVector2D(1, 1);
 
 	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) 
 	{
@@ -460,9 +522,28 @@ public:
 
 	}
 
+	void OnInternalPanelMovedByUser(FVector2D NewPosition)
+	{
+		MidiClipEditor->SetPosition(NewPosition);
+		MidiClipVelocityEditor->SetPosition(NewPosition);
+	}
+
+	void OnInternalPanelZoomByUser(FVector2D NewZoom)
+	{
+		MidiClipEditor->SetZoom(NewZoom);
+		MidiClipVelocityEditor->SetZoom(NewZoom);
+	}
+
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 	{
 
+		Position = InArgs._Position;
+
+		SMidiEditorPanelBase::FArguments BaseArgs;
+		//BaseArgs.Position(TAttribute<FVector2D>::Create(TAttribute<FVector2D>::FGetter::CreateLambda([this]() { return Position; })));
+		BaseArgs.OnPanelPositionChangedByUser(FOnPanelPositionChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelMovedByUser));
+		BaseArgs.OnPanelZoomByUser(FOnPanelPositionChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelZoomByUser));
+		
 		ChildSlot
 			[
 				SNew(SSplitter)
@@ -473,12 +554,14 @@ public:
 					[
 						SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
 							.Clipping(EWidgetClipping::ClipToBounds)
+							.ParentArgs(BaseArgs)
 					]
 					+ SSplitter::Slot()
 					.Value(0.25f)
 					[
 						SAssignNew(MidiClipVelocityEditor, SMidiClipVelocityEditor, InSequence)
 							.Clipping(EWidgetClipping::ClipToBounds)
+							.ParentArgs(BaseArgs)
 					]
 			];
 

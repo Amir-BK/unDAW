@@ -192,10 +192,10 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 
 	if (bIsPanning)
 	{
-		HorizontalOffset -= MouseEvent.GetCursorDelta().X;
+		//const float HorizontalOffset -= MouseEvent.GetCursorDelta().X;
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
-		HorizontalOffset = FMath::Max(0.0f, HorizontalOffset);
-		for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
+		//Position.Set(FMath::Max(0.0f, Position.Get().X - MouseEvent.GetCursorDelta().X));
+		//for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}
 	
