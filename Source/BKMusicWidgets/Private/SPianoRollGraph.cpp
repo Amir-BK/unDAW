@@ -418,7 +418,7 @@ void SPianoRollGraph::SetInputMode(EPianoRollEditorMouseMode newMode)
 void SPianoRollGraph::AddHorizontalX(float inputX)
 {
 	PositionOffset.X += inputX;
-	PositionOffset = FVector2f::Min(PositionOffset, FVector2f::ZeroVector);
+	PositionOffset = FVector2D::Min(PositionOffset, FVector2D::ZeroVector);
 
 	RecalcGrid();
 }
@@ -631,21 +631,20 @@ void SPianoRollGraph::RecalcSubdivisions()
 
 TSharedPtr<SWrapBox> SPianoRollGraph::GetQuantizationButtons()
 {
-	if (QuantizationButtons.IsValid()) return QuantizationButtons;
 
-	SAssignNew(QuantizationButtons, SWrapBox)
+	return SNew(SWrapBox)
 		//.PreferredSize(FVector2D(500.0f, 100.0f))
 		+ SWrapBox::Slot()
 		[
 			SNew(SButton)
 				.Text(FText::FromString("Ms"))
-				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Ms)
+				//.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Ms)
 		]
 		+ SWrapBox::Slot()
 		[
 			SNew(SButton)
 				.Text(FText::FromString("Bars"))
-				.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Bars)
+				//.OnClicked(this, &SPianoRollGraph::OnQuantizationButtonClicked, EMusicTimeSpanOffsetUnits::Bars)
 		]
 		+ SWrapBox::Slot()
 		[
@@ -1069,7 +1068,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 	float TimelineMargin = 42.0f;
 
-	auto MarginVector = FVector2f(PianoTabWidth.Get(), TimelineMargin);
+	auto MarginVector = FVector2D(PianoTabWidth.Get(), TimelineMargin);
 	auto PaintPosVector = PositionOffset + MarginVector;
 
 	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, (FVector2d)PaintPosVector));

@@ -8,6 +8,7 @@
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 {
+	SMidiEditorPanelBase::Construct(SMidiEditorPanelBase::FArguments(), InSequence);
 	SequenceData = InSequence;
 	MajorTabWidth = 0.0f;
 	TimelineHeight = InArgs._TimelineHeight;
@@ -65,11 +66,13 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 			//	TrackColor
 			//);
 
+			const float GradientStrength = Width < 10 ? 0.0f : 2.0f;
+
 			FSlateDrawElement::MakeGradient(OutDrawElements,
 				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Start, Y))),
 				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
-				FVector4f::One() * 2.0f);
+				FVector4f::One() * GradientStrength);
 		}
 
 	}
@@ -86,24 +89,41 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 {
 	if (Clip != nullptr)
 	{
-
+		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(HorizontalOffset, VerticalOffset)));
 		LayerId++;
 		for (const auto& Note : Clip->LinkedNotes)
 		{
 			const float Start = TickToPixel(Note.StartTick);
 			
-			const float Y = (127 - Note.NoteVelocity) * (127 / AllottedGeometry.GetLocalSize().Y);
+			const float Y = (Note.NoteVelocity / 127.0f) * AllottedGeometry.GetLocalSize().Y;
 
 			//paint a line extending from the bottom of the panel to the Y velocity value
 
-			FSlateDrawElement::MakeLines(
+			static const FSlateBrush* DottedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dotted");
+			static const FSlateBrush* DashedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dashed");
+
+			static const FSlateBrush* SolidKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Solid");
+
+			//FSlateDrawElement::MakeLines(
+			//	OutDrawElements,
+			//	LayerId,
+			//	AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, 0)),
+			//	{ FVector2D(Start, AllottedGeometry.GetLocalSize().Y), FVector2D(Start, Y) },
+			//	ESlateDrawEffect::None,
+			//	TrackColor
+			//);
+
+			FSlateDrawElement::MakeBox(
 				OutDrawElements,
 				LayerId,
-				AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, 0)),
-				{ FVector2D(Start, AllottedGeometry.GetLocalSize().Y), FVector2D(Start, Y) },
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(1, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(Start, 0))),
+				SolidKeyBarBrush,
 				ESlateDrawEffect::None,
 				TrackColor
 			);
+
+			//paint the velcity value as text
+			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, Y)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::Black);
 
 			//paint a small circle at the end of the line
 		/*	FSlateDrawElement::Make(

@@ -26,13 +26,36 @@ namespace UnDAW
 }
 
 
-
+// Midi editor panel base class provides basic functionality for drawing a musical editor
+// this includes panning, zooming, providing methods to paint grid points and timeline
+// and receiving play cursor, to sync two panels together provide a shared position offset attribute
+// also drawing the resizable 'major tab' 
 class SMidiEditorPanelBase: public SCompoundWidget
 {
 public:
 
+	SLATE_BEGIN_ARGS(SMidiEditorPanelBase)
+		{}
+		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
+		SLATE_ATTRIBUTE(FVector2D, Position);
+	SLATE_END_ARGS()
+
+	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Constructing SMidiEditorPanelBase"));
+		SequenceData = InSequence;
+		TimelineHeight = InArgs._TimelineHeight;
+		Position = InArgs._Position;
+
+	};
+
+
 	float HorizontalZoom = 1.0f;
 	float VerticalZoom = 1.0f;
+
+	FVector2D PositionOffset = FVector2D(0, 0);
+	TAttribute<FVector2D> Position = FVector2D(0, 0);
+
 	float HorizontalOffset = 0.0f;
 	float VerticalOffset = 0.0f;
 	bool bIsPanActive = false;
@@ -66,13 +89,17 @@ public:
 	{
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
-			HorizontalOffset -= MouseEvent.GetCursorDelta().X;
-			if(!bLockVerticalPan) VerticalOffset -= MouseEvent.GetCursorDelta().Y;
+			HorizontalOffset += MouseEvent.GetCursorDelta().X;
+			if(!bLockVerticalPan) VerticalOffset += MouseEvent.GetCursorDelta().Y;
 			bIsPanActive = true;
 			return FReply::Handled();
 		}
 		bIsPanActive = false;
 		return FReply::Unhandled();
+	}
+
+	const FVector2D GetLocalMousePosition(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+		return MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()) - PositionOffset;
 	}
 
 	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -337,6 +364,7 @@ public:
 	SLATE_BEGIN_ARGS(SMidiClipEditor)
 	{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
+		SLATE_ARGUMENT(SMidiEditorPanelBase::FArguments, ParentArgs);
 	SLATE_END_ARGS()
 
 	FText TrackMetaDataName = FText::GetEmpty();
@@ -380,6 +408,7 @@ public:
 	SLATE_BEGIN_ARGS(SMidiClipVelocityEditor)
 		{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 0.0f;
+		SLATE_ARGUMENT(SMidiEditorPanelBase::FArguments, ParentArgs);
 	SLATE_END_ARGS()
 
 
@@ -402,8 +431,10 @@ public:
 	};
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence) {
+		SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequence);
 		SequenceData = InSequence;
 		TimelineHeight = InArgs._TimelineHeight;
+		bLockVerticalPan = true;
 	};
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;

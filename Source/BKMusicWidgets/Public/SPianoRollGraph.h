@@ -179,7 +179,7 @@ public:
 
 	float DrawLength = 0;
 	FLinearColor NoteColor;
-	FVector2f PositionOffset = FVector2f(0, -125);
+	FVector2D PositionOffset = FVector2D(0, -125);
 	float LastTickTimelinePosition;
 	int32 HoveredPitch;
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
