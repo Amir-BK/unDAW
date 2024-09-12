@@ -399,7 +399,7 @@ public:
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,
 				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), 0))),
+				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 				{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
 				ESlateDrawEffect::None,
 				LineColor
@@ -430,6 +430,7 @@ public:
 	FText TrackMetaDataName = FText::GetEmpty();
 	int32 TrackIndex = INDEX_NONE;
 	FLinearColor TrackColor = FLinearColor::White;
+	FSlateBrush* NoteBrush = nullptr;
 	
 	FLinkedNotesClip* Clip = nullptr;
 

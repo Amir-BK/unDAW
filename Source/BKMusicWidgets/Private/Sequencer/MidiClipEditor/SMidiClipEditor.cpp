@@ -12,6 +12,11 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 	SequenceData = InSequence;
 	MajorTabWidth = 0.0f;
 	TimelineHeight = InArgs._TimelineHeight;
+
+	//FSoftClassPath NoteBrushPath = FSoftClassPath(TEXT("/unDAW/Brushes/MidiNoteBrush.MidiNoteBrush"));
+	//NoteBrush = NoteBrushPath.TryLoad();
+	
+
 	/*
 	ChildSlot
 	[
@@ -42,7 +47,7 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
 	);
 
-	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+	
 	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//draw notes
@@ -53,8 +58,15 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		for (const auto& Note : Clip->LinkedNotes)
 		{
 			const float Start = TickToPixel(Note.StartTick);
+			if (Start > AllottedGeometry.Size.X - Position.Get().X) continue;
+			
+
 			const float End = TickToPixel(Note.EndTick);
+			if (End < 0 - Position.Get().X) continue;
 			const float Width = End - Start;
+
+			if (Width < 0.1) continue;
+
 			const float Y = (127 - Note.Pitch) * RowHeight;
 
 			//FSlateDrawElement::MakeLines(
@@ -71,9 +83,27 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 			FSlateDrawElement::MakeGradient(OutDrawElements,
 				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Start, Y))),
-				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::None,
+				GradientStops, EOrientation::Orient_Horizontal, ESlateDrawEffect::NoGamma,
 				FVector4f::One() * GradientStrength);
+
+			//surround note with outline
+			FSlateDrawElement::MakeLines(
+				OutDrawElements,
+				LayerId,
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Start, Y))),
+				{ FVector2D(0, 0), FVector2D(Width, 0), FVector2D(Width, RowHeight), FVector2D(0, RowHeight), FVector2D(0, 0) },
+				ESlateDrawEffect::NoGamma,
+				FLinearColor::White, true, 2.0f
+			);
+
+			//FSlateDrawElement::MakeBox
+
+
+
+
 		}
+
+		PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, ++LayerId);
 
 	}
 

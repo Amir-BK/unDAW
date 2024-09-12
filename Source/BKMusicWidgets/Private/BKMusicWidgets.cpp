@@ -8,6 +8,7 @@
 #include "Fonts/CompositeFont.h"
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h"
 #include "Runtime/Engine/Classes/Engine/RendererSettings.h"
+#include "UnDAWStyle.h"
 #include "Fonts/FontMeasure.h"
 //#include <EngineFontServices.h>
 
@@ -40,6 +41,7 @@ FMeasuredGlyph FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(const int& codepoi
 void FBKMusicWidgetsModule::StartupModule()
 {
 	//GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
+	FUndawStyle::Get();
 }
 
 void FBKMusicWidgetsModule::ShutdownModule()
