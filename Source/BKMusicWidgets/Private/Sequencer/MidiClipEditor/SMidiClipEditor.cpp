@@ -101,7 +101,6 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 
 			static const FSlateBrush* DottedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dotted");
 			static const FSlateBrush* DashedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dashed");
-
 			static const FSlateBrush* SolidKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Solid");
 
 			//FSlateDrawElement::MakeLines(
@@ -113,17 +112,26 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 			//	TrackColor
 			//);
 
-			FSlateDrawElement::MakeBox(
+			FSlateDrawElement::MakeLines(
 				OutDrawElements,
 				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(1, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(Start, 0))),
-				SolidKeyBarBrush,
+				{ FVector2D(0, AllottedGeometry.GetLocalSize().Y), FVector2D(0, Y) },
 				ESlateDrawEffect::None,
 				TrackColor
 			);
 
+			//FSlateDrawElement::MakeBox(
+			//	OutDrawElements,
+			//	LayerId,
+			//	OffsetGeometryChild.ToPaintGeometry(FVector2D(1, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(Start, AllottedGeometry.GetLocalSize().Y - Y))),
+			//	SolidKeyBarBrush,
+			//	ESlateDrawEffect::None,
+			//	TrackColor
+			//);
+
 			//paint the velcity value as text
-			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, Y)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::Black);
+			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, OffsetGeometryChild.ToOffsetPaintGeometry(FVector2D(Start, Y)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, TrackColor);
 
 			//paint a small circle at the end of the line
 		/*	FSlateDrawElement::Make(

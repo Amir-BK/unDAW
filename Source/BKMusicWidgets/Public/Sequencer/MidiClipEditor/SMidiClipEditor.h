@@ -285,28 +285,28 @@ public:
 
 		// draw 30 vertical lines for fun, 
 		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
-		for (int i = 0; i < 30; i++)
-		{
-			const float X = i * 100;
-			if (!DrawRange.Contains(X))
-			{
-				continue;
-			}
-			const FVector2D Start(X - Position.Get().X, 0);
-			const FVector2D End(X - Position.Get().X, TimelineHeight);
+		//for (int i = 0; i < 30; i++)
+		//{
+		//	const float X = i * 100;
+		//	if (!DrawRange.Contains(X))
+		//	{
+		//		continue;
+		//	}
+		//	const FVector2D Start(X - Position.Get().X, 0);
+		//	const FVector2D End(X - Position.Get().X, TimelineHeight);
 
 
-			FSlateDrawElement::MakeLines(
-				OutDrawElements,
-				LayerId,
-				TimeLinePaintGeometry,
-				{ Start, End },
-				ESlateDrawEffect::None,
-				FLinearColor::White
-			);
-		}
+		//	FSlateDrawElement::MakeLines(
+		//		OutDrawElements,
+		//		LayerId,
+		//		TimeLinePaintGeometry,
+		//		{ Start, End },
+		//		ESlateDrawEffect::None,
+		//		FLinearColor::White
+		//	);
+		//}
 
-		auto OffsetGeometryChild = AllottedGeometry;
+		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 		using namespace UnDAW;
 		const float Height = (AllottedGeometry.Size.Y / 127) / Zoom.Get().Y;
@@ -392,7 +392,19 @@ public:
 				break;
 
 
+
+
 			}
+				
+			FSlateDrawElement::MakeLines(
+				OutDrawElements,
+				LayerId,
+				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), 0))),
+				{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
+				ESlateDrawEffect::None,
+				LineColor
+			);
+
 
 
 		}
