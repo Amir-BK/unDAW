@@ -114,8 +114,23 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 		{
 			return SNew(SDockTab)
 				[
-
-					SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
+					SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SAssignNew(ClipEditorToolbar, SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								[
+									SNew(STextBlock)
+										.Text(INVTEXT("Midi Clip Editor"))
+								]
+						]
+						+ SVerticalBox::Slot()
+						.FillHeight(0.9f)
+						[
+								SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
+									.PlayCursor(CurrentTimestamp)
+						]
 				];
 		}))
 		.SetDisplayName(INVTEXT("Midi Clip Editor"))
@@ -124,6 +139,9 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
 	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
 		{
+			SMidiEditorPanelBase::FArguments BaseArgs;
+			BaseArgs.PlayCursor(CurrentTimestamp);
+			
 			auto DockTab = SNew(SDockTab)
 				//.TabRole(ETabRole::NomadTab)
 				[
@@ -133,16 +151,19 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 							SNew(SAssetDropTarget)
 								.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetsDropped)
 								.OnAreAssetsAcceptableForDrop(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
+								[
+
+										SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+											.ParentArgs(BaseArgs)
+
+								]
 								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
 								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
 								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
 
 						]
-						+ SOverlay::Slot()
-						[
-							SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+		
 
-						]
 				];
 
 
@@ -203,14 +224,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
 	InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
-			return SAssignNew(MetasoundGraphEditorBox, SDockTab)
+			return SAssignNew(M2SoundGraphEditorBox, SDockTab)
 				.Content()
 				[
 					SNew(SOverlay)
 
 						+SOverlay::Slot()
 						[
-							MetasoundGraphEditor.ToSharedRef()
+							M2SoundGraphEditor.ToSharedRef()
 						]
 						+SOverlay::Slot()
 						.VAlign(VAlign_Bottom)
@@ -357,7 +378,7 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete, FExecuteAction::CreateLambda([this]() { DeleteSelectedNodes(); }));
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Rename, FExecuteAction::CreateLambda([this]() { UE_LOG(LogTemp, Warning, TEXT("Rename Node")); }));
 
-	SAssignNew(MetasoundGraphEditor, SGraphEditor)
+	SAssignNew(M2SoundGraphEditor, SGraphEditor)
 		.AssetEditorToolkit(SharedThis(this))
 		.AdditionalCommands(AdditionalGraphCommands)
 		.Appearance(AppearanceInfo)

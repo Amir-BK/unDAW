@@ -26,9 +26,12 @@ namespace UnDAW
 }
 
 DECLARE_DELEGATE_OneParam(
-	FOnPanelPositionChangedByUser,
-	/** called when the spacer is hovered so we can change its color */
+	FOnPanelZoomChangedByUser,
 	FVector2D);
+
+DECLARE_DELEGATE_TwoParams(
+	FOnPanelPositionChangedByUser,
+	FVector2D, bool);
 
 // Midi editor panel base class provides basic functionality for drawing a musical editor
 // this includes panning, zooming, providing methods to paint grid points and timeline
@@ -42,8 +45,9 @@ public:
 		{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 		SLATE_ATTRIBUTE(FVector2D, Position);
+		SLATE_ATTRIBUTE(FMusicTimestamp, PlayCursor);
 		SLATE_EVENT(FOnPanelPositionChangedByUser, OnPanelPositionChangedByUser);
-		SLATE_EVENT(FOnPanelPositionChangedByUser, OnPanelZoomByUser);
+		SLATE_EVENT(FOnPanelZoomChangedByUser, OnPanelZoomByUser);
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
@@ -54,15 +58,16 @@ public:
 		Position = InArgs._Position;
 		OnPanelPositionChangedByUser = InArgs._OnPanelPositionChangedByUser;
 		OnPanelZoomByUser = InArgs._OnPanelZoomByUser;
+		PlayCursor = InArgs._PlayCursor;
 
 	};
 
 	// called to set the position offset of the panel without firing the delegates, i.e when an external source changes the position
-	void SetPosition(FVector2D InPosition)
+	void SetPosition(FVector2D InPosition, bool bIgnoreVertical = false)
 	{
 		//ignore y component if bLockVerticalPan
 
-		if (bLockVerticalPan) InPosition.Y = Position.Get().Y;
+		if (bIgnoreVertical || bLockVerticalPan) InPosition.Y = Position.Get().Y;
 		
 		Position.Set(InPosition);
 	}
@@ -70,9 +75,10 @@ public:
 
 	FVector2D PositionOffset = FVector2D(0, 0);
 	TAttribute<FVector2D> Position = FVector2D(0, 0);
+	TAttribute<FMusicTimestamp> PlayCursor = FMusicTimestamp();
 	TAttribute<FVector2D> Zoom = FVector2D(1, 1);
 	FOnPanelPositionChangedByUser OnPanelPositionChangedByUser;
-	FOnPanelPositionChangedByUser OnPanelZoomByUser;
+	FOnPanelZoomChangedByUser OnPanelZoomByUser;
 
 
 	bool bIsPanActive = false;
@@ -111,7 +117,7 @@ public:
 
 			if (OnPanelPositionChangedByUser.IsBound())
 			{
-				OnPanelPositionChangedByUser.Execute(NewPosition);
+				OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
 			}
 			else {
 				SetPosition(NewPosition);
@@ -131,6 +137,8 @@ public:
 
 	void SetZoom(const FVector2D NewZoom)
 	{
+		
+		
 		Zoom.Set(NewZoom);
 	}
 
@@ -430,7 +438,7 @@ public:
 	FText TrackMetaDataName = FText::GetEmpty();
 	int32 TrackIndex = INDEX_NONE;
 	FLinearColor TrackColor = FLinearColor::White;
-	FSlateBrush* NoteBrush = nullptr;
+	//FSlateBrush* NoteBrush = nullptr;
 	
 	FLinkedNotesClip* Clip = nullptr;
 
@@ -453,7 +461,7 @@ public:
 		const auto& HorizontalZoom = CachedGeometry.Size.X / Width;
 		if (OnPanelPositionChangedByUser.IsBound())
 		{
-			OnPanelPositionChangedByUser.Execute(FVector2D(-TickToPixel(Clip->StartTick), 0));
+			OnPanelPositionChangedByUser.Execute(FVector2D(-TickToPixel(Clip->StartTick), 0), bLockVerticalPan);
 		}
 		else {
 			Position.Set(FVector2D(-TickToPixel(Clip->StartTick), 0));
@@ -519,11 +527,13 @@ public:
 		{}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 		SLATE_ARGUMENT_DEFAULT(FVector2D, Position) = FVector2D(0, 0);
+		SLATE_ATTRIBUTE(FMusicTimestamp, PlayCursor);
 		SLATE_ARGUMENT_DEFAULT(FVector2D, Zoom) = FVector2D(1, 1);
 	SLATE_END_ARGS()
 
 	TSharedPtr<SMidiClipEditor> MidiClipEditor;
 	TSharedPtr<SMidiClipVelocityEditor> MidiClipVelocityEditor;
+	TAttribute<FMusicTimestamp> PlayCursor = FMusicTimestamp();
 
 	FVector2D Position = FVector2D(0, 0);
 	FVector2D Zoom = FVector2D(1, 1);
@@ -535,10 +545,10 @@ public:
 
 	}
 
-	void OnInternalPanelMovedByUser(FVector2D NewPosition)
+	void OnInternalPanelMovedByUser(FVector2D NewPosition, bool bIgnoreVerticalPan)
 	{
-		MidiClipEditor->SetPosition(NewPosition);
-		MidiClipVelocityEditor->SetPosition(NewPosition);
+		MidiClipEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
+		MidiClipVelocityEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
 	}
 
 	void OnInternalPanelZoomByUser(FVector2D NewZoom)
@@ -551,11 +561,13 @@ public:
 	{
 
 		Position = InArgs._Position;
+		PlayCursor = InArgs._PlayCursor;
 
 		SMidiEditorPanelBase::FArguments BaseArgs;
 		//BaseArgs.Position(TAttribute<FVector2D>::Create(TAttribute<FVector2D>::FGetter::CreateLambda([this]() { return Position; })));
 		BaseArgs.OnPanelPositionChangedByUser(FOnPanelPositionChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelMovedByUser));
-		BaseArgs.OnPanelZoomByUser(FOnPanelPositionChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelZoomByUser));
+		BaseArgs.OnPanelZoomByUser(FOnPanelZoomChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelZoomByUser));
+		BaseArgs.PlayCursor(PlayCursor);
 		
 		ChildSlot
 			[
@@ -568,6 +580,7 @@ public:
 						SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
 							.Clipping(EWidgetClipping::ClipToBounds)
 							.ParentArgs(BaseArgs)
+
 					]
 					+ SSplitter::Slot()
 					.Value(0.25f)

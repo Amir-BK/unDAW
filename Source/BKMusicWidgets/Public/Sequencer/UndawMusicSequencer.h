@@ -254,6 +254,7 @@ class BKMUSICWIDGETS_API SUndawMusicSequencer: public SMidiEditorPanelBase
 {
 public:
 	SLATE_BEGIN_ARGS(SUndawMusicSequencer) {}
+		SLATE_ARGUMENT(SMidiEditorPanelBase::FArguments, ParentArgs);
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 	SLATE_END_ARGS()
 

@@ -80,11 +80,12 @@ public:
 
 	void CreateGraphEditorWidget();
 
-	TSharedPtr<SDockTab> MetasoundGraphEditorBox;
-	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
+	TSharedPtr<SDockTab> M2SoundGraphEditorBox;
+	TSharedPtr<SGraphEditor> M2SoundGraphEditor;
 	TSharedPtr<SUndawMusicSequencer> MusicSequencer;
-	TSharedPtr<ISequencer> InstancedSequencer;
 	TSharedPtr<SMidiClipLinkedPanelsContainer> MidiClipLinkedWidgetContainer;
+	TSharedPtr<SHorizontalBox> ClipEditorToolbar;
+	TSharedPtr<SHorizontalBox> SequencerToolbar;
 
 	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 

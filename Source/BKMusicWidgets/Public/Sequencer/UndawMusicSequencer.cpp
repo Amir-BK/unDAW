@@ -10,6 +10,7 @@
 
 void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit)
 {
+	SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequenceToEdit);
 	SequenceData = InSequenceToEdit;
 
 	const auto& SequenceName = SequenceData->GetFName();
