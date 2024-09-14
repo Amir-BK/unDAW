@@ -271,6 +271,31 @@ public:
 		return LayerId;
 	
 	}
+
+	virtual float GetStartOffset() const
+	{
+		return 0.0f;
+	}
+
+	int32 PaintPlayCursor(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
+	{
+		const auto& PlayCursorTick = SequenceData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None) - GetStartOffset();
+		
+	
+
+		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
+
+		FSlateDrawElement::MakeLines(
+			OutDrawElements,
+			LayerId,
+			OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
+			{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
+			ESlateDrawEffect::None,
+			FLinearColor::Red
+		);
+
+		return LayerId;
+	}
 	
 	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 	{
@@ -293,35 +318,17 @@ public:
 
 		// draw 30 vertical lines for fun, 
 		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
-		//for (int i = 0; i < 30; i++)
-		//{
-		//	const float X = i * 100;
-		//	if (!DrawRange.Contains(X))
-		//	{
-		//		continue;
-		//	}
-		//	const FVector2D Start(X - Position.Get().X, 0);
-		//	const FVector2D End(X - Position.Get().X, TimelineHeight);
-
-
-		//	FSlateDrawElement::MakeLines(
-		//		OutDrawElements,
-		//		LayerId,
-		//		TimeLinePaintGeometry,
-		//		{ Start, End },
-		//		ESlateDrawEffect::None,
-		//		FLinearColor::White
-		//	);
-		//}
 
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 		using namespace UnDAW;
 		const float Height = (AllottedGeometry.Size.Y / 127) / Zoom.Get().Y;
+		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
 
-		for (const auto& [Tick, GridPoint] : GridPoints)
+		for (const auto& [OriginTick, GridPoint] : GridPoints)
 		{
 			FLinearColor LineColor;
+			const float Tick = OriginTick - GetStartOffset();
 
 			//ugly as heck but probably ok for now
 			switch (GridPoint.Type)
@@ -334,7 +341,7 @@ public:
 					FText::FromString(FString::FromInt(GridPoint.Bar)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
 					ESlateDrawEffect::None,
-					FLinearColor::White
+					BarLineColor
 				);
 
 				//draw beat number
@@ -358,7 +365,7 @@ public:
 				);
 
 
-				LineColor = FLinearColor::Gray;
+				LineColor = BarLineColor;
 				break;
 
 			case EGridPointType::Subdivision:
@@ -441,14 +448,32 @@ public:
 	//FSlateBrush* NoteBrush = nullptr;
 	
 	FLinkedNotesClip* Clip = nullptr;
+	float ClipStartOffset = 0.0f;
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence);
 
-	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips);
+	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips)
+	{
+		if (!Clips.IsEmpty())
+		{
+			TrackIndex = Clips[0].Key->MetadataIndex;
+			TrackMetaDataName = FText::FromString(SequenceData->GetTrackMetadata(TrackIndex).TrackName);
+			Clip = Clips[0].Value;
+			TrackColor = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
+
+			ClipStartOffset = Clip->StartTick;
+			//ZoomToContent();
+
+		}
+	}
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
+	float GetStartOffset() const override
+	{
+		return ClipStartOffset;
+	}
 
 
 	void ZoomToContent()
@@ -494,6 +519,7 @@ public:
 	int32 TrackIndex = INDEX_NONE;
 	FLinearColor TrackColor = FLinearColor::White;
 	FLinkedNotesClip* Clip = nullptr;
+	float ClipStartOffset = 0.0f;
 
 	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) {
 		if (!Clips.IsEmpty())
@@ -502,11 +528,17 @@ public:
 			TrackMetaDataName = FText::FromString(SequenceData->GetTrackMetadata(TrackIndex).TrackName);
 			Clip = Clips[0].Value;
 			TrackColor = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
+			ClipStartOffset = Clip->StartTick;
 
 			//ZoomToContent();
 
 		}
 	};
+
+	float GetStartOffset() const override
+	{
+		return ClipStartOffset;
+	}
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence) {
 		SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequence);

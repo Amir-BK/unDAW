@@ -130,6 +130,8 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	);
 
 	
+	PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+
 	return LayerId;
 }
 
