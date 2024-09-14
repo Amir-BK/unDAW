@@ -233,7 +233,7 @@ public:
 
 		using namespace UnDAW;
 
-		RowHeight = (GetCachedGeometry().Size.Y / 127) * Zoom.Get().Y;
+		//RowHeight = (GetCachedGeometry().Size.Y / 127) * Zoom.Get().Y;
 
 		int32 BarCount = 1;
 		float BarTick = 0;
@@ -322,7 +322,8 @@ public:
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 		using namespace UnDAW;
 		const float Height = (AllottedGeometry.Size.Y / 127) / Zoom.Get().Y;
-		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
+		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
+		const FLinearColor BarTextColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
 
 		for (const auto& [OriginTick, GridPoint] : GridPoints)
 		{
@@ -340,7 +341,7 @@ public:
 					FText::FromString(FString::FromInt(GridPoint.Bar)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
 					ESlateDrawEffect::None,
-					BarLineColor
+					BarTextColor
 				);
 
 				//draw beat number
@@ -412,11 +413,11 @@ public:
 				
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,
-				LayerId,
+				LayerId - 2,
 				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 				{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
 				ESlateDrawEffect::None,
-				LineColor
+				LineColor, false, 4.0f
 			);
 
 

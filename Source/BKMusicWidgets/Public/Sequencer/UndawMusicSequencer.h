@@ -88,6 +88,8 @@ public:
 	bool bIsHoveringOverSectionResizeArea = false;
 	int32 HoveringOverSectionIndex = INDEX_NONE;
 	int32 SelectedSectionIndex = INDEX_NONE;
+	TAttribute<FVector2D> Position;
+	TAttribute<FVector2D> Zoom;
 
 	float HorizontalOffset = 0.0f;
 
@@ -95,6 +97,8 @@ public:
 	{
 		SequenceData = InSequenceToEdit;
 		TrackId = InTrackId;
+		Position = InArgs._Position;
+		Zoom = InArgs._Zoom;
 
 		//PopulateSections();
 

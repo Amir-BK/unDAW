@@ -195,11 +195,11 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 		MajorTabAlpha = 0.0f;
 	}
 
-	if (bIsPanning)
+	if (bIsPanActive)
 	{
 		//const float HorizontalOffset -= MouseEvent.GetCursorDelta().X;
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
-		//Position.Set(FMath::Max(0.0f, Position.Get().X - MouseEvent.GetCursorDelta().X));
+		Position.Set(FVector2D{ FMath::Max(0.0f, Position.Get().X - MouseEvent.GetCursorDelta().X), 0.0f });
 		//for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}
@@ -341,7 +341,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 {
 	//print section height cause wtf
 	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
-	const float SectionDuration = (Clip->EndTick - Clip->StartTick);
+	const float SectionDuration = (Clip->EndTick - Clip->StartTick) * Zoom.Get().X;
 	//just fill the background with a gray box
 
 	const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
@@ -363,8 +363,8 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = (Note.StartTick);
-		const float Width = (Note.EndTick - Note.StartTick);
+		const float X = (Note.StartTick) * Zoom.Get().X;
+		const float Width = (Note.EndTick - Note.StartTick) * Zoom.Get().X;
 		const float Y = (127 - Note.Pitch) * Height;
 
 		FSlateDrawElement::MakeLines(
@@ -396,12 +396,18 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	
 	for (const auto& Section : Sections)
 	{
-		auto LayoutTransform = FSlateLayoutTransform(FVector2D(0, 0));
-		
-		const float SectionDuration = (Section->Clip->EndTick - Section->Clip->StartTick) / 200;
+		//auto LayoutTransform = FSlateLayoutTransform(FVector2D(0, 0));
+		const float ZoomX = Zoom.Get().X;
+		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
+		const auto& SectionStartTime = SongsMap->TickToMs(Section->Clip->StartTick);
+		const auto& SectionEndTime = SongsMap->TickToMs(Section->Clip->EndTick);
+
+
+
+		const float SectionDuration = (SectionEndTime - SectionStartTime) * ZoomX;
 		//UE_LOG(LogTemp, Warning, TEXT("Section Duration %f"), SectionDuration);
 		auto SectionGeometry = AllottedGeometry.MakeChild(
-			FVector2f((Section->Clip->StartTick / 200) - HorizontalOffset, 0),
+			FVector2f((SectionStartTime - Position.Get().X) * ZoomX, 0),
 			FVector2f(SectionDuration, AllottedGeometry.Size.Y)
 		);
 			
