@@ -88,7 +88,7 @@ public:
 	UnDAW::EMusicTimeLinePaintMode PaintMode = UnDAW::EMusicTimeLinePaintMode::Music;
 	UnDAW::ETimeDisplayMode TimeDisplayMode = UnDAW::ETimeDisplayMode::TimeLinear;
 	float RowHeight = 10.0f;
-	float MajorTabWidth = 150.0f;
+	float MajorTabWidth = 0.0f;
 	float MajorTabAlpha = 0.0f;
 	float TimelineHeight;
 
@@ -200,7 +200,7 @@ public:
 
 	const float TickToPixel(const float Tick) const
 	{
-		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X;
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X + MajorTabWidth;
 	}
 
 	virtual void OnVerticalScroll(float ScrollAmount) {};
@@ -316,7 +316,6 @@ public:
 			FLinearColor::Black
 		);
 
-		// draw 30 vertical lines for fun, 
 		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
 
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
@@ -484,13 +483,6 @@ public:
 		const float Width = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
 
 		const auto& HorizontalZoom = CachedGeometry.Size.X / Width;
-		if (OnPanelPositionChangedByUser.IsBound())
-		{
-			OnPanelPositionChangedByUser.Execute(FVector2D(-TickToPixel(Clip->StartTick), 0), bLockVerticalPan);
-		}
-		else {
-			Position.Set(FVector2D(-TickToPixel(Clip->StartTick), 0));
-		}
 
 
 		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
@@ -500,6 +492,16 @@ public:
 		SetZoom(FVector2D(HorizontalZoom, VerticalZoom));
 
 		//Position.Get().Y = -(127 - Clip->MaxNote) * RowHeight;
+		FVector2D NewPosition{ -TickToPixel(Clip->StartTick), -(127 - Clip->MaxNote) * RowHeight };
+
+		if (OnPanelPositionChangedByUser.IsBound())
+		{
+			OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
+		}
+		else {
+			SetPosition(NewPosition, true);
+		};
+		
 
 	}
 

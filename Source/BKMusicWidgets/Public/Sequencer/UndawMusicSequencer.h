@@ -45,12 +45,17 @@ class SDawSequencerTrackSection : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SDawSequencerTrackSection) {}
 		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
+		SLATE_ATTRIBUTE(FVector2D, Position)
+		SLATE_ATTRIBUTE(FVector2D, Zoom)
 	SLATE_END_ARGS()
 
 	FLinkedNotesClip* Clip = nullptr;
 	FDawSequencerTrack* ParentTrack = nullptr;
 	bool bIsHovered = false;
 	bool bIsSelected = false;
+
+	TAttribute<FVector2D> Position;
+	TAttribute<FVector2D> Zoom;
 
 
 	TAttribute<FLinearColor> TrackColor;
@@ -60,6 +65,8 @@ public:
 		Clip = InClip;
 		TrackColor = InArgs._TrackColor;
 		ParentTrack = InParentTrack;
+		Position = InArgs._Position;
+		Zoom = InArgs._Zoom;
 	}
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
@@ -70,6 +77,8 @@ class SDawSequencerTrackLane : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SDawSequencerTrackLane) {}
+		SLATE_ATTRIBUTE(FVector2D, Position)
+		SLATE_ATTRIBUTE(FVector2D, Zoom)
 	SLATE_END_ARGS()
 
 	UDAWSequencerData* SequenceData = nullptr;
@@ -87,24 +96,28 @@ public:
 		SequenceData = InSequenceToEdit;
 		TrackId = InTrackId;
 
-		PopulateSections();
+		//PopulateSections();
 
-	}
-
-	void PopulateSections()
-	{
 		for (auto& Clip : SequenceData->Tracks[TrackId].LinkedNotesClips)
 		{
 			TSharedPtr<SDawSequencerTrackSection> Section;
 
-			
+
 			SAssignNew(Section, SDawSequencerTrackSection, &Clip, &SequenceData->Tracks[TrackId])
-				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }));
+				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }))
+				.Position(InArgs._Position)
+				.Zoom(InArgs._Zoom);
 
 			Section->AssignParentWidget(SharedThis(this));
 			Sections.Add(Section);
 		}
+
 	}
+
+	//void PopulateSections()
+	//{
+
+	//}
 
 	TOptional<EMouseCursor::Type> GetCursor() const override {
 		if (bIsHoveringOverSectionResizeArea)
@@ -225,6 +238,8 @@ public:
 class SDawSequencerTrackRoot : public SCompoundWidget
 {
 	SLATE_BEGIN_ARGS(SDawSequencerTrackRoot) {}
+		SLATE_ATTRIBUTE(FVector2D, Position)
+		SLATE_ATTRIBUTE(FVector2D, Zoom)
 		//SLATE_ARGUMENT(SBorder::FArguments, ParentArgs)
 	SLATE_END_ARGS()
 

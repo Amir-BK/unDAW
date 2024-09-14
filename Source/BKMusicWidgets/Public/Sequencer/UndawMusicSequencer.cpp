@@ -12,7 +12,7 @@ void SUndawMusicSequencer::Construct(const FArguments& InArgs, UDAWSequencerData
 {
 	SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequenceToEdit);
 	SequenceData = InSequenceToEdit;
-
+	MajorTabWidth = 150.0f;
 	const auto& SequenceName = SequenceData->GetFName();
 
 	TimelineHeight = InArgs._TimelineHeight;
@@ -48,6 +48,8 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 		Splitter->AddSlot(i)
 			[
 				SAssignNew(TrackRoot, SDawSequencerTrackRoot, SequenceData, i)
+					.Zoom_Lambda([this]() { return Zoom.Get(); })
+					.Position_Lambda([this]() { return Position.Get(); })
 
 
 			];
@@ -223,6 +225,8 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerDa
 						[
 							SAssignNew(Lane, SDawSequencerTrackLane, InSequenceToEdit, TrackId)
 								.Clipping(EWidgetClipping::ClipToBounds)
+								.Zoom(InArgs._Zoom)
+								.Position(InArgs._Position)
 								
 						]
 
@@ -337,7 +341,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 {
 	//print section height cause wtf
 	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
-	const float SectionDuration = (Clip->EndTick - Clip->StartTick) / 200;
+	const float SectionDuration = (Clip->EndTick - Clip->StartTick);
 	//just fill the background with a gray box
 
 	const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
@@ -359,8 +363,8 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = (Note.StartTick)/ 200;
-		const float Width = (Note.EndTick - Note.StartTick) / 200;
+		const float X = (Note.StartTick);
+		const float Width = (Note.EndTick - Note.StartTick);
 		const float Y = (127 - Note.Pitch) * Height;
 
 		FSlateDrawElement::MakeLines(
@@ -378,7 +382,7 @@ int32 SDawSequencerTrackSection::OnPaint(const FPaintArgs& Args, const FGeometry
 		OutDrawElements,
 		LayerId++,
 		AllottedGeometry.ToPaintGeometry(),
-		FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d"), Clip->StartTick, Clip->EndTick)),
+		FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d\n Position: %s, Zoom: %s"), Clip->StartTick, Clip->EndTick, *Position.Get().ToString(), *Zoom.Get().ToString())),
 		FAppStyle::GetFontStyle("NormalFont"),
 		ESlateDrawEffect::None,
 		FLinearColor::White
