@@ -463,7 +463,7 @@ public:
 			TrackColor = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
 
 			ClipStartOffset = Clip->StartTick;
-			//ZoomToContent();
+			ZoomToContent();
 
 		}
 	}
@@ -493,7 +493,7 @@ public:
 		SetZoom(FVector2D(HorizontalZoom, VerticalZoom));
 
 		//Position.Get().Y = -(127 - Clip->MaxNote) * RowHeight;
-		FVector2D NewPosition{ -TickToPixel(Clip->StartTick), -(127 - Clip->MaxNote) * RowHeight };
+		FVector2D NewPosition{ -TickToPixel(Clip->StartTick), -127  * RowHeight / 2 };
 
 		if (OnPanelPositionChangedByUser.IsBound())
 		{
