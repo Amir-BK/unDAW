@@ -59,11 +59,7 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	);
 
 	static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
-	//static const FSlateBrush* NoBrush = FUndawStyle::Get().GetBrush("NoBrush");
-	
-	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
-	//draw notes
 
 	//draw the piano grid
 	LayerId++;
@@ -73,7 +69,7 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		FSlateDrawElement::MakeBox(
 			OutDrawElements,
 			LayerId,
-			AllottedGeometry.ToPaintGeometry(FVector2D((AllottedGeometry.Size.X), RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Position.Get().X, Y))),
+			AllottedGeometry.ToPaintGeometry(FVector2D((AllottedGeometry.Size.X), RowHeight), FSlateLayoutTransform(1.0f, FVector2D(0, Y))),
 			NoteBrush,
 			ESlateDrawEffect::None,
 			PianoGridColors[i]
