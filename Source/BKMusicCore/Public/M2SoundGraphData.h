@@ -205,6 +205,8 @@ struct FLinkedMidiEvents
 	}
 };
 
+struct FDawSequencerTrack;
+
 USTRUCT(BlueprintType)
 struct FLinkedNotesClip
 {
@@ -227,6 +229,11 @@ struct FLinkedNotesClip
 
 	UPROPERTY()
 	int8 MinNote = 127;
+
+	//Not much reason to insist on struct pointers if unreal doesn't like them, we can use the indices as handles
+	UPROPERTY()
+	int32 TrackId = INDEX_NONE;
+
 };
 
 USTRUCT(BlueprintType)

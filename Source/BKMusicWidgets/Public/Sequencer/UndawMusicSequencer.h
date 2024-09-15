@@ -17,7 +17,7 @@
 #include <M2SoundGraphData.h>
 
 
-class SDawSequencerTrackSection;
+class SDawSequencerTrackMidiSection;
 
 DECLARE_DELEGATE_OneParam(
 	FOnVerticalMajorSlotResized,
@@ -32,7 +32,7 @@ DECLARE_DELEGATE_OneParam(
 DECLARE_DELEGATE_OneParam(
 	FOnSectionSelected,
 	/** called when the spacer is hovered so we can change its color */
-	TSharedPtr<SDawSequencerTrackSection>);
+	TSharedPtr<SDawSequencerTrackMidiSection>);
 
 typedef TTuple<FDawSequencerTrack*, FLinkedNotesClip*> ClipTrackTuple;
 
@@ -40,10 +40,32 @@ DECLARE_DELEGATE_OneParam(
 	FOnMidiClipsFocused,
 	TArray<ClipTrackTuple>);
 
-class SDawSequencerTrackSection : public SCompoundWidget
+template<typename T>
+class SDawSequencerSection : public SLeafWidget
+{
+	T* ContentClip = nullptr;
+	int32 TrackId = INDEX_NONE;
+	UDAWSequencerData* SequenceData = nullptr;
+	TAttribute<float> HorizontalZoom;
+
+public:
+	
+	virtual FVector2D ComputeDesiredSize(float) const override
+	{
+		return FVector2D(0.0f, 0.0f);
+	}
+
+private:
+	double SectionTickDuration = 0.0;
+	double SectionStartTick = 0.0;
+	double SectionEndTick = 0.0;
+
+};
+
+class SDawSequencerTrackMidiSection : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SDawSequencerTrackSection) {}
+	SLATE_BEGIN_ARGS(SDawSequencerTrackMidiSection) {}
 		SLATE_ATTRIBUTE(FLinearColor, TrackColor)
 		SLATE_ATTRIBUTE(FVector2D, Position)
 		SLATE_ATTRIBUTE(FVector2D, Zoom)
@@ -63,7 +85,7 @@ public:
 	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack)
 	{
 		Clip = InClip;
-		TrackColor = InArgs._TrackColor;
+		TrackColor =  InArgs._TrackColor;
 		ParentTrack = InParentTrack;
 		Position = InArgs._Position;
 		Zoom = InArgs._Zoom;
@@ -83,7 +105,7 @@ public:
 
 	UDAWSequencerData* SequenceData = nullptr;
 	int32 TrackId = INDEX_NONE;
-	TArray<TSharedPtr<SDawSequencerTrackSection>> Sections;
+	TArray<TSharedPtr<SDawSequencerTrackMidiSection>> Sections;
 	bool bIsHoveringOverSectionDragArea = false;
 	bool bIsHoveringOverSectionResizeArea = false;
 	int32 HoveringOverSectionIndex = INDEX_NONE;
@@ -104,10 +126,10 @@ public:
 
 		for (auto& Clip : SequenceData->Tracks[TrackId].LinkedNotesClips)
 		{
-			TSharedPtr<SDawSequencerTrackSection> Section;
+			TSharedPtr<SDawSequencerTrackMidiSection> Section;
 
 
-			SAssignNew(Section, SDawSequencerTrackSection, &Clip, &SequenceData->Tracks[TrackId])
+			SAssignNew(Section, SDawSequencerTrackMidiSection, &Clip, &SequenceData->Tracks[TrackId])
 				.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }))
 				.Position(InArgs._Position)
 				.Zoom(InArgs._Zoom);
@@ -285,11 +307,11 @@ protected:
 	
 	bool bIsPanning = false;
 
-	TSharedPtr<SDawSequencerTrackSection> SelectedSection;
+	TSharedPtr<SDawSequencerTrackMidiSection> SelectedSection;
 
 
 	void PopulateSequencerFromDawData();
-	void OnSectionSelected(TSharedPtr<SDawSequencerTrackSection> InSelectedSection)
+	void OnSectionSelected(TSharedPtr<SDawSequencerTrackMidiSection> InSelectedSection)
 	{
 		if(SelectedSection.IsValid())	SelectedSection->bIsSelected = false;
 		SelectedSection = InSelectedSection;

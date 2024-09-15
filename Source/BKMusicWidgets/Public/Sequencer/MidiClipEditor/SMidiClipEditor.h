@@ -294,6 +294,26 @@ public:
 			FLinearColor::Red
 		);
 
+		if (TimelineHeight > 0.0f)
+		{
+			//paint a red box at the top of the timeline
+			constexpr float PlayCursorWidth = 5.0f;
+			constexpr float PlayCursorHalfWidth = PlayCursorWidth / 2.0f;
+
+			FSlateDrawElement::MakeLines(
+				OutDrawElements,
+				LayerId,
+				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
+				{ FVector2D(0, 0), FVector2D(0, TimelineHeight) },
+				ESlateDrawEffect::None,
+				FLinearColor::Red,
+				false,
+				PlayCursorWidth * 2
+
+			);
+			
+		}
+
 		return LayerId;
 	}
 	
@@ -302,22 +322,27 @@ public:
 		// first draw the timeline backgroumd a black box
 		//UE_LOG(LogTemp, Warning, TEXT("Painting timeline, timeline height: %f"), TimelineHeight);
 
+		const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
+
 		const auto& TimeLinePaintGeometry = AllottedGeometry.ToPaintGeometry(
 			FVector2f(MajorTabWidth, 0),
 			FVector2f(AllottedGeometry.Size.X, TimelineHeight)
 		);
 
 		//static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
+		if (bShouldPaintTimelineBar)
+		{
+			FSlateDrawElement::MakeBox(
+				OutDrawElements,
+				LayerId,
+				TimeLinePaintGeometry,
+				FAppStyle::GetBrush("Graph.Panel.SolidBackground"), 
+				ESlateDrawEffect::None,
+				FLinearColor::Black
+			);
 
-		FSlateDrawElement::MakeBox(
-			OutDrawElements,
-			LayerId,
-			TimeLinePaintGeometry,
-			FAppStyle::GetBrush("Graph.Panel.SolidBackground"), 
-			ESlateDrawEffect::None,
-			FLinearColor::Black
-		);
 
+		}
 		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
 
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
@@ -337,6 +362,8 @@ public:
 			{
 			case EGridPointType::Bar:
 				//draw bar number
+			if(bShouldPaintTimelineBar)
+			{
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
 					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
@@ -366,6 +393,7 @@ public:
 					FLinearColor::White
 				);
 
+			}
 				//bar is even, draw a faint gray box from origin tick of this bar until next bar tick
 				if (GridPoint.Bar % 2 == 0)
 				{
@@ -381,7 +409,7 @@ public:
 						OffsetGeometryChild.ToPaintGeometry(FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 						ESlateDrawEffect::None,
-						FLinearColor::Red.CopyWithNewOpacity(0.4f)
+						FLinearColor::Gray.CopyWithNewOpacity(0.4f)
 					);
 
 					
@@ -393,20 +421,21 @@ public:
 
 			case EGridPointType::Subdivision:
 				//draw subdivision number
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId - 2,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
-					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-					ESlateDrawEffect::None,
-					FLinearColor::White
-				);
+				//FSlateDrawElement::MakeText(OutDrawElements,
+				//	LayerId - 2,
+				//	OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
+				//	FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+				//	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				//	ESlateDrawEffect::None,
+				//	FLinearColor::White
+				//);
 
 				LineColor = FLinearColor::Black;
 				break;
 
 			case EGridPointType::Beat:
 				//draw beat number
+				/*
 				FSlateDrawElement::MakeText(OutDrawElements,
 					LayerId,
 					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 18))),
@@ -425,6 +454,7 @@ public:
 					ESlateDrawEffect::None,
 					FLinearColor::White
 				);
+				*/
 
 				LineColor = FLinearColor::Blue;
 				break;

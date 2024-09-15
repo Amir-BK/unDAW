@@ -124,10 +124,12 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	return LayerId;
 }
 
-END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
 
 int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+	
 	if (Clip != nullptr)
 	{
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
@@ -146,14 +148,6 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 			static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush.Selected");
 			const float Rotate = FMath::DegreesToRadians(45.f);
 
-			//FSlateDrawElement::MakeLines(
-			//	OutDrawElements,
-			//	LayerId,
-			//	AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, 0)),
-			//	{ FVector2D(Start, AllottedGeometry.GetLocalSize().Y), FVector2D(Start, Y) },
-			//	ESlateDrawEffect::None,
-			//	TrackColor
-			//);
 
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,
@@ -177,30 +171,10 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 				TrackColor
 			);
 
-			//FSlateDrawElement::MakeBox(
-			//	OutDrawElements,
-			//	LayerId,
-			//	OffsetGeometryChild.ToPaintGeometry(FVector2D(1, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(Start, AllottedGeometry.GetLocalSize().Y - Y))),
-			//	SolidKeyBarBrush,
-			//	ESlateDrawEffect::None,
-			//	TrackColor
-			//);
 
 			//paint the velcity value as text
-			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, OffsetGeometryChild.ToOffsetPaintGeometry(FVector2D(Start, Y - 10)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
+			//FSlateDrawElement::MakeText(OutDrawElements, LayerId++, OffsetGeometryChild.ToOffsetPaintGeometry(FVector2D(Start, Y - 10)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
-			//paint a small circle at the end of the line
-		/*	FSlateDrawElement::Make(
-				OutDrawElements,
-				LayerId,
-				AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, Y)),
-				5.0f,
-				12,
-				ESlateDrawEffect::None,
-				TrackColor
-			);*/
-
-			//FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(Start, Y)), FText::FromString(FString::Printf(TEXT("%d"), Note.Velocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::Black);
 		}
 
 		PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
@@ -214,3 +188,4 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 	
 	return LayerId;
 }
+END_SLATE_FUNCTION_BUILD_OPTIMIZATION

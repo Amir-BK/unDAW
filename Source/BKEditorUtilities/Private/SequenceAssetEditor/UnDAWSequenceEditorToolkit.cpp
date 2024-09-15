@@ -121,8 +121,9 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 							SAssignNew(ClipEditorToolbar, SHorizontalBox)
 								+ SHorizontalBox::Slot()
 								[
-									SNew(STextBlock)
-										.Text(INVTEXT("Midi Clip Editor"))
+									SNew(SButton)
+										.Text(INVTEXT("Test"))
+										//.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); }
 								]
 						]
 						+ SVerticalBox::Slot()
@@ -153,8 +154,25 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 								.OnAreAssetsAcceptableForDrop(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
 								[
 
-										SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
-											.ParentArgs(BaseArgs)
+									SNew(SVerticalBox)
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										[
+											SNew(SHorizontalBox)
+												+ SHorizontalBox::Slot()
+												[
+													SNew(SButton)
+														.Text(INVTEXT("Add Track"))
+														.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); })
+												]
+										]
+										+ SVerticalBox::Slot()
+										.FillHeight(0.9f)
+										[
+											SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+													.ParentArgs(BaseArgs)
+
+										]
 
 								]
 								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
