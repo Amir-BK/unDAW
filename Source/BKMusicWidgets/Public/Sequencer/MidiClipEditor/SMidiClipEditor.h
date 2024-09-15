@@ -371,11 +371,14 @@ public:
 				{
 					//get bar duration in ticks
 					const float BarDuration = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, OriginTick);
+					const float BarStartPixel = TickToPixel(Tick);
+					const float BarEndPixel = TickToPixel(Tick + BarDuration);
+					const float BarWidth = BarEndPixel - BarStartPixel;
 					// draw a box from origin tick to next bar tick
 					FSlateDrawElement::MakeBox(
 						OutDrawElements,
 						LayerId - 2,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(TickToPixel(BarDuration), AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
+						OffsetGeometryChild.ToPaintGeometry(FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 						ESlateDrawEffect::None,
 						FLinearColor::Red.CopyWithNewOpacity(0.4f)

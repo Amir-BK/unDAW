@@ -150,20 +150,20 @@ public:
 		//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
 		//check if hovering over section
 		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + Position.Get().X;
-		const float MouseToPixel = MouseLocalX * Zoom.Get().X;
+		const float MouseToPixel = MouseLocalX; //* Zoom.Get().X;
 		constexpr int32 SectionResizeAreaWidth = 5;
 
 		bool bAnySectionHovered = false;
 		for (int32 i = 0; i < Sections.Num(); i++)
 		{
-			TRange<int32> SectionRange{ Sections[i]->Clip->StartTick, Sections[i]->Clip->EndTick };
-			if (SectionRange.Contains((FMath::FloorToInt32(MouseToPixel))))
+			TRange<double> SectionRange{ Sections[i]->Clip->StartTick * Zoom.Get().X, Sections[i]->Clip->EndTick * Zoom.Get().X };
+			if (SectionRange.Contains(MouseToPixel))
 			{
 				HoveringOverSectionIndex = i;
 				Sections[i]->bIsHovered = true;
 				bAnySectionHovered = true;
-				TRange<int32> NonResizeRange{ Sections[i]->Clip->StartTick + SectionResizeAreaWidth * 200, Sections[i]->Clip->EndTick - SectionResizeAreaWidth * 200 };
-				if (NonResizeRange.Contains((FMath::FloorToInt32(MouseToPixel))))
+				TRange<double> NonResizeRange{ Sections[i]->Clip->StartTick + SectionResizeAreaWidth * Zoom.Get().X, Sections[i]->Clip->EndTick - SectionResizeAreaWidth * Zoom.Get().X };
+				if (NonResizeRange.Contains(MouseToPixel))
 				{
 					bIsHoveringOverSectionDragArea = true;
 					bIsHoveringOverSectionResizeArea = false;

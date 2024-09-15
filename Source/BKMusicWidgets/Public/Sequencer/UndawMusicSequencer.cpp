@@ -202,7 +202,7 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 	{
 		//const float HorizontalOffset -= MouseEvent.GetCursorDelta().X;
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
-		Position.Set(FVector2D{ FMath::Max(0.0f, Position.Get().X - MouseEvent.GetCursorDelta().X), 0.0f });
+		Position.Set(FVector2D{ FMath::Max(0.0f, Position.Get().X + MouseEvent.GetCursorDelta().X), 0.0f });
 		//for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}
