@@ -307,11 +307,13 @@ public:
 			FVector2f(AllottedGeometry.Size.X, TimelineHeight)
 		);
 
+		//static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
+
 		FSlateDrawElement::MakeBox(
 			OutDrawElements,
 			LayerId,
 			TimeLinePaintGeometry,
-			FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+			FAppStyle::GetBrush("Graph.Panel.SolidBackground"), 
 			ESlateDrawEffect::None,
 			FLinearColor::Black
 		);
@@ -364,6 +366,24 @@ public:
 					FLinearColor::White
 				);
 
+				//bar is even, draw a faint gray box from origin tick of this bar until next bar tick
+				if (GridPoint.Bar % 2 == 0)
+				{
+					//get bar duration in ticks
+					const float BarDuration = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, OriginTick);
+					// draw a box from origin tick to next bar tick
+					FSlateDrawElement::MakeBox(
+						OutDrawElements,
+						LayerId - 2,
+						OffsetGeometryChild.ToPaintGeometry(FVector2D(TickToPixel(BarDuration), AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
+						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+						ESlateDrawEffect::None,
+						FLinearColor::Red.CopyWithNewOpacity(0.4f)
+					);
+
+					
+				}
+
 
 				LineColor = BarLineColor;
 				break;
@@ -371,7 +391,7 @@ public:
 			case EGridPointType::Subdivision:
 				//draw subdivision number
 				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
+					LayerId - 2,
 					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
 					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
 					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
@@ -417,7 +437,7 @@ public:
 				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
 				{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
 				ESlateDrawEffect::None,
-				LineColor, false, 4.0f
+				LineColor, false, 1.0f
 			);
 
 
@@ -446,6 +466,8 @@ public:
 	int32 TrackIndex = INDEX_NONE;
 	FLinearColor TrackColor = FLinearColor::White;
 	//FSlateBrush* NoteBrush = nullptr;
+
+	TArray<FLinearColor> PianoGridColors;
 	
 	FLinkedNotesClip* Clip = nullptr;
 	float ClipStartOffset = 0.0f;

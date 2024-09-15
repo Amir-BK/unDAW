@@ -24,6 +24,29 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 		// Populate the widget
 	];
 	*/
+
+	//populate piano grid colors 
+	auto GridColor = FLinearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	auto AccidentalColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.1f);
+	auto CNoteGridColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.1f);
+
+	for (int i = 0; i < 128; i++)
+	{
+		if (i % 12 == 1 || i % 12 == 3 || i % 12 == 6 || i % 12 == 8 || i % 12 == 10)
+		{
+			PianoGridColors.Add(AccidentalColor);
+		}
+		else if (i % 12 == 0)
+		{
+			PianoGridColors.Add(CNoteGridColor);
+		}
+		else
+		{
+			PianoGridColors.Add(GridColor);
+		}
+	}
+
+
 }
 inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
@@ -41,7 +64,25 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//draw notes
-	TArray<FSlateGradientStop> GradientStops = { FSlateGradientStop(FVector2D(0,0), TrackColor) };
+
+	//draw the piano grid
+	LayerId++;
+	for (int i = 0; i < 128; i++)
+	{
+		const float Y = (127 - i) * RowHeight + Position.Get().Y;
+		FSlateDrawElement::MakeBox(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(FVector2D((AllottedGeometry.Size.X), RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Position.Get().X, Y))),
+			NoteBrush,
+			ESlateDrawEffect::None,
+			PianoGridColors[i]
+		);
+	}
+
+
+
+
 	if (Clip != nullptr)
 	{
 		LayerId++;

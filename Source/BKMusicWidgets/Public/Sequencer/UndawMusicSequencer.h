@@ -149,8 +149,8 @@ public:
 
 		//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
 		//check if hovering over section
-		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + HorizontalOffset;
-		const float MouseToPixel = MouseLocalX * 200;
+		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + Position.Get().X;
+		const float MouseToPixel = MouseLocalX * Zoom.Get().X;
 		constexpr int32 SectionResizeAreaWidth = 5;
 
 		bool bAnySectionHovered = false;

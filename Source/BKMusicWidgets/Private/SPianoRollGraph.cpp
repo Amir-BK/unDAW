@@ -250,31 +250,14 @@ void SPianoRollGraph::Tick(const FGeometry& AllottedGeometry, const double InCur
 
 	if (bFollowCursor && SessionData->PlayState == EBKPlayState::TransportPlaying)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("Updating Timestamp! New Time Stamp bar %f new timeline position %f"), newTimestamp, CurrentTimelinePosition);
 
 		float DesiredCursorPosition = (GetCachedGeometry().GetLocalSize().X - PianoTabWidth.Get()) * CursorFollowAnchorPosition - PositionOffset.X;
 		float LocalSpacePlayBackPosition = CurrentTimeMiliSeconds * HorizontalZoom; //+ positionOffset.X;
 
 		PositionOffset.X = -LocalSpacePlayBackPosition;// + DesiredCursorPosition;
-		//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), DesiredCursorPosition, LocalSpacePlayBackPosition);
-
-		//if (LocalSpacePlayBackPosition > DesiredCursorPosition)
-		//{
-		//	float DeltaPos = LocalSpacePlayBackPosition - DesiredCursorPosition;
-		//	positionOffset.X = CurrentTimelinePosition;
-		//}
-
-		//check if we're ahead of the cursor and lerp to it
 
 		float BeginningOfScreen = -PositionOffset.X;
 
-		//UE_LOG(SPIANOROLLLOG, Log, TEXT("Display is ahead of playback. Beginning of screen %f, LocalSpacePlayBackPosition %f"), BeginningOfScreen, LocalSpacePlayBackPosition);
-		//if (LocalSpacePlayBackPosition < BeginningOfScreen)
-		//{
-		//	float DeltaPos = LocalSpacePlayBackPosition - BeginningOfScreen;
-		//	positionOffset.X = CurrentTimeMiliSeconds;
-
-		//}
 	}
 
 	//this is the zoom smoothing function, it is not stable.
