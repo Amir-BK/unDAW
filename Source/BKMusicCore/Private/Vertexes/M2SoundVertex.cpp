@@ -92,6 +92,8 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 					}
 
 					break;
+
+
 				}
 
 
@@ -552,10 +554,6 @@ void UM2SoundPatch::BuildVertex()
 
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
-	//OutBuiltData.NodeHandle = NodeHandle;
-	//BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
-	//InPins = BuilderContext->FindNodeInputs(NodeHandle, BuildResult);
-	//OutPins = BuilderContext->FindNodeOutputs(NodeHandle, BuildResult);
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 

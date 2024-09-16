@@ -13,6 +13,7 @@
 #include "Components/Widget.h"
 #include "Widgets/Layout/SSplitter.h"
 #include "Styling/AppStyle.h"
+#include <AudioWidgetsSlateTypes.h>
 
 
 /**
@@ -60,6 +61,9 @@ public:
 		OnPanelZoomByUser = InArgs._OnPanelZoomByUser;
 		PlayCursor = InArgs._PlayCursor;
 
+
+
+
 	};
 
 	// called to set the position offset of the panel without firing the delegates, i.e when an external source changes the position
@@ -79,6 +83,7 @@ public:
 	TAttribute<FVector2D> Zoom = FVector2D(1, 1);
 	FOnPanelPositionChangedByUser OnPanelPositionChangedByUser;
 	FOnPanelZoomChangedByUser OnPanelZoomByUser;
+	FSlateBrush* PlayCursorHandleBrush = nullptr;
 
 
 	bool bIsPanActive = false;
@@ -233,7 +238,7 @@ public:
 
 		using namespace UnDAW;
 
-		//RowHeight = (GetCachedGeometry().Size.Y / 127) * Zoom.Get().Y;
+		RowHeight = 10.0f * Zoom.Get().Y;
 
 		int32 BarCount = 1;
 		float BarTick = 0;
@@ -284,6 +289,7 @@ public:
 	
 
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
+		
 
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
@@ -297,20 +303,37 @@ public:
 		if (TimelineHeight > 0.0f)
 		{
 			//paint a red box at the top of the timeline
-			constexpr float PlayCursorWidth = 5.0f;
+			constexpr float PlayCursorWidth = 10.0f;
 			constexpr float PlayCursorHalfWidth = PlayCursorWidth / 2.0f;
+			const FFixedSampleSequenceRulerStyle TimeRulerStyle = FAppStyle::GetWidgetStyle<FFixedSampleSequenceRulerStyle>("WaveformEditorRuler.Style");
 
-			FSlateDrawElement::MakeLines(
+			//const FSlateBrush& PlayCursorBrush = TimeRulerStyle.HandleBrush;
+			
+
+			//use play cursor brush to paint box
+
+			FSlateDrawElement::MakeBox(
 				OutDrawElements,
 				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
-				{ FVector2D(0, 0), FVector2D(0, TimelineHeight) },
+				OffsetGeometryChild.ToPaintGeometry(FVector2D(PlayCursorWidth, TimelineHeight), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick) - PlayCursorHalfWidth, -Position.Get().Y))),
+				&TimeRulerStyle.HandleBrush,
 				ESlateDrawEffect::None,
-				FLinearColor::Red,
-				false,
-				PlayCursorWidth * 2
-
+				FLinearColor(255.f, 0.1f, 0.2f, 1.f)
 			);
+
+
+
+			//FSlateDrawElement::MakeLines(
+			//	OutDrawElements,
+			//	LayerId,
+			//	OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
+			//	{ FVector2D(0, 0), FVector2D(0, TimelineHeight) },
+			//	ESlateDrawEffect::None,
+			//	FLinearColor::Red,
+			//	false,
+			//	PlayCursorWidth * 2
+
+			//);
 			
 		}
 
@@ -518,7 +541,7 @@ public:
 			TrackColor = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
 
 			ClipStartOffset = Clip->StartTick;
-			ZoomToContent();
+			//ZoomToContent();
 
 		}
 	}

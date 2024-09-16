@@ -26,8 +26,9 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 	*/
 
 	//populate piano grid colors 
-	auto GridColor = FLinearColor(0.1f, 0.1f, 0.1f, 0.1f);
-	auto AccidentalColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.1f);
+	auto GridColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.1f);
+		
+	auto AccidentalColor = FLinearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	auto CNoteGridColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.1f);
 
 	for (int i = 0; i < 128; i++)
@@ -74,6 +75,13 @@ inline int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& A
 			ESlateDrawEffect::None,
 			PianoGridColors[i]
 		);
+
+		//if note is C (i % 12 == 0) write the note name
+		if (i % 12 == 0)
+		{
+			const auto NoteName = FText::FromString(FString::Printf(TEXT("C (%d)"), (i / 12) - 2));
+			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(0, Y)), NoteName, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
+		}
 	}
 
 
