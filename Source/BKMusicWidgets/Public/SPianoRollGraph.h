@@ -28,13 +28,14 @@
 #include "HarmonixMidi/MusicTimeSpan.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Types/SlateAttribute.h"
+#include "UndawMusicDrawingStatics.h"
 #include <Pianoroll/MarqueeOperation.h>
 
 //#include "SMidiNoteContainer.h"
 
 //#define PIANO_ROLL_DEBUG
 
-BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPIANOROLLLOG, Verbose, All);
+BKMUSICWIDGETS_API DECLARE_LOG_CATEGORY_EXTERN(SPianoRollLog, Verbose, All);
 
 struct FLinkedMidiEvents;
 
@@ -98,21 +99,6 @@ public:
 
 DECLARE_DELEGATE(FOnInitComplete)
 DECLARE_DELEGATE_RetVal_TwoParams(FReply, FOnMouseButtonDown, const FGeometry&, const FPointerEvent&);
-
-enum class EGridPointType : uint8
-{
-	Bar,
-	Beat,
-	Subdivision
-};
-
-struct FMusicalGridPoint
-{
-	EGridPointType Type = EGridPointType::Bar;
-	int32 Bar = 0;
-	int8 Beat = 1;
-	int8 Subdivision = 1;
-};
 
 class ITimeSliderController;
 
@@ -193,7 +179,7 @@ public:
 
 	float DrawLength = 0;
 	FLinearColor NoteColor;
-	FVector2f PositionOffset = FVector2f(0, -125);
+	FVector2D PositionOffset = FVector2D(0, -125);
 	float LastTickTimelinePosition;
 	int32 HoveredPitch;
 	//TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
@@ -205,8 +191,11 @@ public:
 	TArray<int32> VisibleBeats;
 	TArray<int32> VisibleBars;
 	TArray<int32> VisibleSubdivisions;
-	TArray<FMusicalGridPoint> GridPoints;
-	TMap<int32, FMusicalGridPoint> GridPointMap;
+
+
+
+	TArray<UnDAW::FMusicalGridPoint> GridPoints;
+	TMap<int32, UnDAW::FMusicalGridPoint> GridPointMap;
 	FVector2D ComputeDesiredSize(float) const override { return FVector2D(1000, 1000); };
 
 	//TEnumAsByte<EPianoRollEditorMouseMode> inputMode;
@@ -223,8 +212,8 @@ public:
 	int32 ValueAtMouseCursorPostSnapping;
 	int32 TickAtEndEvent;
 
-	float horizontalZoom = 0.1f;
-	float hZoomTarget = horizontalZoom;
+	float HorizontalZoom = 0.1f;
+	float hZoomTarget = HorizontalZoom;
 	float verticalZoom = 0.03f;
 	float vZoomTarget = verticalZoom;
 
@@ -254,7 +243,7 @@ public:
 	TArray<FMidiEvent> TimeSignatureEvents;
 	TArray<int> FoundChannels;
 
-	TMap<int, FLinkedNotesTrack>* LinkedNoteDataMap;
+	TMap<int, FLinkedNotesClip>* LinkedNoteDataMap;
 	TArray<FLinkedMidiEvents*> CulledNotesArray;
 
 	FLinkedMidiEvents TemporaryNote;
@@ -282,8 +271,6 @@ public:
 	void SetInputMode(EPianoRollEditorMouseMode newMode);
 
 	void AddHorizontalX(float inputX);
-
-	void UpdateSlotsZOrder();
 
 	void RecalcGrid();
 
@@ -323,7 +310,7 @@ protected:
 	int32 tickAtMouse = 0;
 
 	double pixelsPerSecond = 1000;
-	double rowHeight = 200;
+	double RowHeight = 200;
 
 	//
 	float MaxWidth = 999999.0f;

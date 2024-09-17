@@ -135,7 +135,21 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				.Padding(5)
 				[
 					SAssignNew(VolumeSlider, SAudioSlider)
-					//	.SliderBackgroundColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
+						.SliderBackgroundColor_Lambda([this]() -> FLinearColor {
+						if (Pin->LinkedPin && Pin->LinkedPin->ParentVertex)
+						{
+							const UM2Pins* ColorSource = Pin->LinkedPin->ParentVertex->ColorSourcePin;
+							if (ColorSource)
+							{
+								return FLinearColor::Blue;
+							}
+			
+		
+						}
+								return FLinearColor::Gray;
+					
+							})
+
 					//	.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
 						.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
 						.OnValueChanged(this, &SMixerChannelWidget::UpdateVolumeSliderValue)

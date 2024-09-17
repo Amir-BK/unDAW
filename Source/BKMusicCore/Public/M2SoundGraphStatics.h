@@ -18,6 +18,7 @@ struct FAssignableAudioOutput;
 struct FMetaSoundBuilderNodeInputHandle;
 struct FMetaSoundBuilderNodeOutputHandle;
 struct FMetaSoundNodeHandle;
+struct FLinkedNotesClip;
 
 //
 //USTRUCT()
@@ -107,6 +108,14 @@ public:
 	static TArray<UMetaSoundPatch*> GetAllMetasoundPatchesWithInsertInterface();
 
 	static bool DoesPatchImplementInterface(UMetaSoundPatch* Patch, UClass* InterfaceClass);
+
+
+	//splits one midi clip into two clips at a given tick
+	static FLinkedNotesClip SplitClipAtTick(FLinkedNotesClip& InClip, const int32 Tick, bool& bOutSuccess);
+
+	static void AutoTrimClipToDuration(FLinkedNotesClip& InClip);
+
+	static void MoveAudioClipToTick(FLinkedNotesClip& InClip, const int32 Tick);
 };
 
 

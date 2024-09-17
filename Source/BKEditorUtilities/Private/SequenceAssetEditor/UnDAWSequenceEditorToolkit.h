@@ -6,6 +6,7 @@
 #include "EditorUndoClient.h"
 #include "M2SoundGraphData.h"
 #include "SPianoRollGraph.h"
+#include "Sequencer/UndawMusicSequencer.h"
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
 #include "GlyphButton.h"
@@ -14,7 +15,10 @@
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
 #include "MidiDeviceManager.h"
+#include "ISequencer.h"
+#include "ISequencerModule.h"
 #include "GraphEditor.h"
+#include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 
 class FSequenceAssetDetails : public IDetailCustomization
 {
@@ -55,6 +59,7 @@ public:
 	TSharedRef<SButton> GetConfiguredTransportButton(EBKTransportCommands InCommand);
 
 	void OnSelectionChanged(const TSet<UObject*>& SelectedNodes);
+	void OnSequencerClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> Clips);
 
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
@@ -75,8 +80,12 @@ public:
 
 	void CreateGraphEditorWidget();
 
-	TSharedPtr<SDockTab> MetasoundGraphEditorBox;
-	TSharedPtr<SGraphEditor> MetasoundGraphEditor;
+	TSharedPtr<SDockTab> M2SoundGraphEditorBox;
+	TSharedPtr<SGraphEditor> M2SoundGraphEditor;
+	TSharedPtr<SUndawMusicSequencer> MusicSequencer;
+	TSharedPtr<SMidiClipLinkedPanelsContainer> MidiClipLinkedWidgetContainer;
+	TSharedPtr<SHorizontalBox> ClipEditorToolbar;
+	TSharedPtr<SHorizontalBox> SequencerToolbar;
 
 	void OnPerformerTimestampUpdated(const FMusicTimestamp& NewTimestamp);
 
@@ -109,8 +118,6 @@ protected:
 
 	//UAudioComponent* AudioComponent = nullptr;
 
-	UFUNCTION()
-	void OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const;
 
 	UFUNCTION()
 	void OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
@@ -120,4 +127,7 @@ public:
 	//this requires changing SPianoRoll graph so that it exposes mouse and key down events to the asset editor
 
 	FReply OnPianoRollMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+
+	bool OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const;
+	void OnAssetsDropped(const FDragDropEvent&, TArrayView<FAssetData> InAssets);
 };

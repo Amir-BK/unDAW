@@ -25,7 +25,12 @@
 #include "Widgets/Docking/SDockTab.h"
 
 #include "Widgets/Layout/SScaleBox.h"
+#include "Sequencer/UndawMusicSequencer.h"
+#include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 #include "Framework/Docking/TabManager.h"
+
+
+
 
 void FUnDAWSequenceEditorToolkit::RenameSelectedNodes()
 {
@@ -68,6 +73,8 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					->SetSizeCoefficient(0.8f)
 					->AddTab("DAWSequenceMixerTab", ETabState::OpenedTab)
 					->AddTab("PianoRollTab", ETabState::OpenedTab)
+					->AddTab("MidiClipEditor", ETabState::OpenedTab)
+					
 					
 				)
 				->Split
@@ -75,6 +82,7 @@ void FUnDAWSequenceEditorToolkit::InitEditor(const TArray<UObject*>& InObjects)
 					FTabManager::NewStack()
 					->SetSizeCoefficient(0.2f)
 					->AddTab("DAWSequenceDetailsTab", ETabState::OpenedTab)
+					->AddTab("Sequencer", ETabState::OpenedTab)
 				)
 			)
 			->Split
@@ -94,39 +102,116 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(INVTEXT("unDAW Sequence Editor"));
 	ISequencerWidgetsModule& SequencerWidgets = FModuleManager::Get().LoadModuleChecked<ISequencerWidgetsModule>("SequencerWidgets");
 	//TSharedRef<ITimeSliderController> TimelineTimeSliderController = MakeShared<FSequencerCurveEditorTimeSliderController>(TimeSliderArgs, SequencerPtr, InSequencer->GetCurveEditor().ToSharedRef());
+	//CreateMusicSequencer();
 
 	//SequencerWidgets.CreateTimeSlider(TimelineTimeSliderController, false);
 	//InTabManager->GetPrivateApi().HideWindows();
+
+	//midi clip editor tab
+
+
+	InTabManager->RegisterTabSpawner("MidiClipEditor", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
+		{
+			return SNew(SDockTab)
+				[
+					SNew(SVerticalBox)
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SAssignNew(ClipEditorToolbar, SHorizontalBox)
+								+ SHorizontalBox::Slot()
+								[
+									SNew(SButton)
+										.Text(INVTEXT("Test"))
+										//.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); }
+								]
+						]
+						+ SVerticalBox::Slot()
+						.FillHeight(0.9f)
+						[
+								SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
+									.PlayCursor(CurrentTimestamp)
+						]
+				];
+		}))
+		.SetDisplayName(INVTEXT("Midi Clip Editor"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+	InTabManager->RegisterTabSpawner("Sequencer", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
+		{
+			SMidiEditorPanelBase::FArguments BaseArgs;
+			BaseArgs.PlayCursor(CurrentTimestamp);
+			
+			auto DockTab = SNew(SDockTab)
+				//.TabRole(ETabRole::NomadTab)
+				[
+					SNew(SOverlay)
+						+ SOverlay::Slot()
+						[
+							SNew(SAssetDropTarget)
+								.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetsDropped)
+								.OnAreAssetsAcceptableForDrop(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
+								[
+
+									SNew(SVerticalBox)
+										+ SVerticalBox::Slot()
+										.AutoHeight()
+										[
+											SNew(SHorizontalBox)
+												+ SHorizontalBox::Slot()
+												[
+													SNew(SButton)
+														.Text(INVTEXT("Add Track"))
+														.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); })
+												]
+										]
+										+ SVerticalBox::Slot()
+										.FillHeight(0.9f)
+										[
+											SAssignNew(MusicSequencer, SUndawMusicSequencer, SequenceData)
+													.ParentArgs(BaseArgs)
+
+										]
+
+								]
+								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
+								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
+								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
+
+						]
+		
+
+				];
+
+
+			MusicSequencer->OnMidiClipsFocused.BindSP(this, &FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused);
+
+			return DockTab;
+		}))
+		.SetDisplayName(INVTEXT("Sequencer"))
+		.SetIcon(FSlateIcon("LiveLinkStyle", "LiveLinkClient.Common.Icon.Small"))
+		.SetGroup(WorkspaceMenuCategory.ToSharedRef());
+
+	
 	
 	InTabManager->RegisterTabSpawner("PianoRollTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
 			auto DockTab = SNew(SDockTab)
-				.TabRole(ETabRole::NomadTab)
+				//.TabRole(ETabRole::NomadTab)
 				//.TabColorScale
 	
 			
 
 				[
-					SNew(SOverlay)
-						+SOverlay::Slot()
-						[
-							SNew(SAssetDropTarget)
-								.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
-								//.OnAssetDropped_Lambda([this](const FAssetData& AssetData) { UE_LOG(LogTemp, Log, TEXT("That's something")); })
-								//.OnAreAssetsAcceptableForDrop_Lambda([this](const TArray<FAssetData>& Assets) { return true; })
-								//.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
-								
-						]
+	
+					SAssignNew(PianoRollGraph, SPianoRollGraph)
+						.SessionData(SequenceData)
+						.Clipping(EWidgetClipping::ClipToBounds)
+						//.CurrentTimestamp(SequenceData->CurrentTimestampData)
+						.OnSeekEvent(OnSeekEvent)
+						// .CurrentTimestamp(CurrentTimestamp)
 
-						+SOverlay::Slot()
-						[
-							SAssignNew(PianoRollGraph, SPianoRollGraph)
-								.SessionData(SequenceData)
-								.Clipping(EWidgetClipping::ClipToBounds)
-								//.CurrentTimestamp(SequenceData->CurrentTimestampData)
-								.OnSeekEvent(OnSeekEvent)
-								// .CurrentTimestamp(CurrentTimestamp)
-						]
 					
 
 				];
@@ -157,14 +242,14 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 
 	InTabManager->RegisterTabSpawner("DAWSequenceMixerTab", FOnSpawnTab::CreateLambda([&](const FSpawnTabArgs&)
 		{
-			return SAssignNew(MetasoundGraphEditorBox, SDockTab)
+			return SAssignNew(M2SoundGraphEditorBox, SDockTab)
 				.Content()
 				[
 					SNew(SOverlay)
 
 						+SOverlay::Slot()
 						[
-							MetasoundGraphEditor.ToSharedRef()
+							M2SoundGraphEditor.ToSharedRef()
 						]
 						+SOverlay::Slot()
 						.VAlign(VAlign_Bottom)
@@ -259,6 +344,16 @@ void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& Selec
 	}
 }
 
+void FUnDAWSequenceEditorToolkit::OnSequencerClipsFocused(TArray<TTuple<FDawSequencerTrack*, FLinkedNotesClip*>> Clips)
+{
+	//focus on midi editor tab
+
+	GetTabManager()->TryInvokeTab(FTabId("MidiClipEditor"));
+
+	MidiClipLinkedWidgetContainer->OnClipsFocused(Clips);
+	
+}
+
 void FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged)
 {
 	//const FScopedTransaction Transaction(TEXT(""), INVTEXT("Rename Node"), NodeBeingChanged);
@@ -282,15 +377,6 @@ void FUnDAWSequenceEditorToolkit::DeleteSelectedNodes()
 
 void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 {
-	//if (Performer && Performer->AuditionComponentRef)
-	//{
-	   // auto Metasound = Performer->AuditionComponentRef->GetSound();
-		//FMetasoundAssetBase* MetasoundAsset = Metasound::IMetasoundUObjectRegistry::Get().GetObjectAsAssetBase(Metasound);
-		//check(MetasoundAsset);
-
-	//AdditionalGraphCommands = MakeShared<FUICommandList>();
-
-	//AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete,)
 
 	FGraphAppearanceInfo AppearanceInfo;
 	FString CornerText = TEXT("M");
@@ -300,8 +386,6 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AppearanceInfo.PIENotifyText = FText::FromString(TEXT("PIE is active"));
 
 	SGraphEditor::FGraphEditorEvents GraphEvents;
-	// GraphEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FEditor::OnCreateGraphActionMenu);
-	// GraphEvents.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FEditor::ExecuteNode);
 
 	GraphEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnSelectionChanged);
 	GraphEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FUnDAWSequenceEditorToolkit::OnNodeTitleCommitted);
@@ -312,8 +396,7 @@ void FUnDAWSequenceEditorToolkit::CreateGraphEditorWidget()
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Delete, FExecuteAction::CreateLambda([this]() { DeleteSelectedNodes(); }));
 	AdditionalGraphCommands->MapAction(FGenericCommands::Get().Rename, FExecuteAction::CreateLambda([this]() { UE_LOG(LogTemp, Warning, TEXT("Rename Node")); }));
 
-	SAssignNew(MetasoundGraphEditor, SGraphEditor)
-		//   // .OnGraphModuleReloaded_Lambda([this]() { TryAttachGraphsToPerformer(); })
+	SAssignNew(M2SoundGraphEditor, SGraphEditor)
 		.AssetEditorToolkit(SharedThis(this))
 		.AdditionalCommands(AdditionalGraphCommands)
 		.Appearance(AppearanceInfo)
@@ -533,24 +616,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 	PianoRollGraph->OnSeekEvent.BindUObject(SequenceData, &UDAWSequencerData::SendSeekCommand);
 }
 
-void FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets) const
-{
-	UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over"));
 
-	//check if asset is wavasset
-	for (auto& Asset : InAssets)
-	{
-		if (Asset.GetClass()->IsChildOf(USoundWave::StaticClass()))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Asset is SoundWave %d"), PianoRollGraph->tickAtMouse);
-			//in theory this is where we can create a timestamped wav asset
-			//return true;
-			//return true;
-		}
-	}
-	
-	//return false;
-}
 
 void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
 {
@@ -559,6 +625,7 @@ void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> N
 	UMIDIDeviceManager::GetMIDIInputDeviceIDByName(*NewSelection.Get(), DeviceID);
 	SelectedInputDeviceName =NewSelection;
 	MidiDeviceController = UMIDIDeviceManager::CreateMIDIDeviceInputController(DeviceID, 512);
+	//UMIDIDeviceManager::
 
 	MidiDeviceController->OnMIDINoteOn.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOn);
 	MidiDeviceController->OnMIDINoteOff.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOff);
@@ -578,6 +645,26 @@ FReply FUnDAWSequenceEditorToolkit::OnPianoRollMouseButtonDown(const FGeometry& 
 {
 	UE_LOG(LogTemp, Warning, TEXT("Mouse Down"));
 	return FReply::Handled();
+}
+
+bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAssets) const
+{
+	//accepts midi files, USoundWaves, UDAWSequencerData and UMetaSoundsource
+	for (const auto& Asset : InAssets)
+	{
+		if (Asset.GetClass()->IsChildOf(UMidiFile::StaticClass()) || Asset.GetClass()->IsChildOf(USoundWave::StaticClass()) ||
+			Asset.GetClass()->IsChildOf(UDAWSequencerData::StaticClass()))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void FUnDAWSequenceEditorToolkit::OnAssetsDropped(const FDragDropEvent&, TArrayView<FAssetData> InAssets)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Asset Dropped"));
 }
 
 void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)

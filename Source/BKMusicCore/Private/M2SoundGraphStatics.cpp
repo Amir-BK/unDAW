@@ -87,7 +87,7 @@ void UM2SoundGraphStatics::CreateDefaultVertexesFromInputData(UDAWSequencerData*
 	UE_LOG(LogTemp, Warning, TEXT("CreateDefaultVertexesFromInputVertex"));
 
 	auto DefaultPatchTest = FSoftObjectPath(TEXT("'/unDAW/Patches/System/unDAW_Fusion_Piano.unDAW_Fusion_Piano'"));
-	auto& TrackMetadata = InSequencerData->GetTracksDisplayOptions(Index);
+	auto& TrackMetadata = InSequencerData->GetTrackMetadata(Index);
 
 	UM2SoundMidiInputVertex* InputVertex = NewObject<UM2SoundMidiInputVertex>(InSequencerData, NAME_None, RF_Transactional);
 	InputVertex->SequencerData = InSequencerData;
@@ -213,3 +213,54 @@ bool UM2SoundGraphStatics::DoesPatchImplementInterface(UMetaSoundPatch* Patch, U
 
 	return false;
 }
+
+FLinkedNotesClip UM2SoundGraphStatics::SplitClipAtTick(FLinkedNotesClip& InClip, const int32 Tick, bool& bOutSuccess)
+{
+	bOutSuccess = false;
+
+	TRange<int32> ClipRange = TRange<int32>(InClip.StartTick, InClip.EndTick);
+	if (ClipRange.Contains(Tick))
+	{
+		FLinkedNotesClip NewClip = InClip;
+		NewClip.StartTick = Tick;
+		NewClip.EndTick = InClip.EndTick;
+		InClip.EndTick = Tick;
+		AutoTrimClipToDuration(InClip);
+		AutoTrimClipToDuration(NewClip);
+
+		bOutSuccess = true;
+		return NewClip;
+	}
+
+
+	return FLinkedNotesClip();
+}
+
+void UM2SoundGraphStatics::AutoTrimClipToDuration(FLinkedNotesClip& InClip)
+{
+	//remove all notes that are outside the duration of the clip
+	//this is used when splitting clips
+
+	//TODO : rethink this, we may want to keep all the notes and just adjust the start and end ticks of the clip to allow slipping and resizing clips
+
+	TArray<FLinkedMidiEvents> TrimmedClip;
+
+	for (auto& Note : InClip.LinkedNotes)
+	{
+		if (Note.EndTick >= InClip.StartTick && Note.StartTick <= InClip.EndTick)
+		{
+			TrimmedClip.Add(Note);
+		}
+	}
+
+	InClip.LinkedNotes = TrimmedClip;
+
+
+}
+
+void UM2SoundGraphStatics::MoveAudioClipToTick(FLinkedNotesClip& InClip, const int32 Tick)
+{
+
+}
+
+

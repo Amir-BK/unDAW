@@ -8,7 +8,9 @@
 #include "Fonts/CompositeFont.h"
 #include "Runtime/Engine/Classes/Engine/UserInterfaceSettings.h"
 #include "Runtime/Engine/Classes/Engine/RendererSettings.h"
+#include "UnDAWStyle.h"
 #include "Fonts/FontMeasure.h"
+#include "Styling/SlateStyleRegistry.h"
 //#include <EngineFontServices.h>
 
 #define LOCTEXT_NAMESPACE "FBKMusicWidgetsModule"
@@ -40,12 +42,17 @@ FMeasuredGlyph FBKMusicWidgetsModule::GetMeasuredGlyphFromHex(const int& codepoi
 void FBKMusicWidgetsModule::StartupModule()
 {
 	//GlyphsJSON.Get()->TryGetField(TEXT("noteheadBlack")).Get()->AsObject()->TryGetField(TEXT("codepoint")).Get()->AsString();
+	;
+
+	FSlateStyleRegistry::RegisterSlateStyle(FUndawStyle::Get());
 }
 
 void FBKMusicWidgetsModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+
+	FSlateStyleRegistry::UnRegisterSlateStyle(FUndawStyle::Get());
 }
 
 #undef LOCTEXT_NAMESPACE

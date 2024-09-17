@@ -180,9 +180,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FName Category;
 
-	//allows user to cofigure which pin will determine the color of the vertex
-	UPROPERTY()
-	bool  bPinIsColorSource;
 };
 
 UCLASS()

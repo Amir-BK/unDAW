@@ -384,7 +384,7 @@ inline FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const
 
 	if (Vertex && Vertex->TrackId != INDEX_NONE)
 	{
-		return GetSequencerData()->GetTracksDisplayOptions(Vertex->TrackId).trackColor;
+		return GetSequencerData()->GetTrackMetadata(Vertex->TrackId).TrackColor;
 	}
 
 	return FLinearColor::Gray;
@@ -422,14 +422,22 @@ inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
 			CreatePin(EGPD_Input, FName(TEXT("MetasoundLiteral")), Cast<UM2MetasoundLiteralPin>(Pin)->DataType, PinName);
 			Pins.Last()->PinToolTip = Cast<UM2MetasoundLiteralPin>(Pin)->DataType.ToString();
 		}
+		
+		Pins.Last()->PinType.PinSubCategoryObject = Pin;
+		
 		if (Pin->bIsColorSource)
 		{
 			ColorSourcePin = Pins.Last();
+			//if color source pin is not first, swap it with the first pin
+			if (Pins.Num() > 1)
+			{
+				Swap(Pins[0], Pins.Last());
+			}
 		}
 
-		Pins.Last()->PinType.PinSubCategoryObject = Pin;
+	
 
-		if(Pin->bPinIsColorSource) ColorSourcePin = Pins.Last();
+		//if(Pin->bPinIsColorSource) ColorSourcePin = Pins.Last();
 	}
 	if (CurrIndexOfAudioTrack != INDEX_NONE && CurrIndexOfAudioTrack != 0)	Swap(Pins[0], Pins[CurrIndexOfAudioTrack]);
 

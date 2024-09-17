@@ -135,7 +135,7 @@ public:
 		{
 			FTrackDisplayOptions newTrack;
 			newTrack.ChannelIndexInParentMidi = InTracks[i];
-			newTrack.trackColor = FLinearColor::MakeRandomSeededColor(i);
+			newTrack.TrackColor = FLinearColor::MakeRandomSeededColor(i);
 			TrackDisplayOptionsMap.Add(InTracks[i], newTrack);
 		}
 	};
