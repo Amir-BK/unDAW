@@ -625,6 +625,7 @@ void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> N
 	UMIDIDeviceManager::GetMIDIInputDeviceIDByName(*NewSelection.Get(), DeviceID);
 	SelectedInputDeviceName =NewSelection;
 	MidiDeviceController = UMIDIDeviceManager::CreateMIDIDeviceInputController(DeviceID, 512);
+	//UMIDIDeviceManager::
 
 	MidiDeviceController->OnMIDINoteOn.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOn);
 	MidiDeviceController->OnMIDINoteOff.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOff);

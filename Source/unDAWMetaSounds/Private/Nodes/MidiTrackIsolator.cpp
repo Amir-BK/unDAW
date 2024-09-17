@@ -68,3 +68,22 @@ namespace unDAWMetasounds::TrackIsolatorOP
 		IncludeConductorTrack = false;
 	}
 }
+
+namespace unDAWMetasounds::MidiStreamEventTrackMergeOp
+{
+
+	void FMidiStreamEventTrackMerge::Process(const HarmonixMetasound::FMidiStream& InStream, TArray<TTuple<int32, FMidiMsg>> InEvents, HarmonixMetasound::FMidiStream& OutStream)
+	{
+		const auto& BlockStartTick = 0;
+		for (const auto& [tick, msg] : InEvents)
+		{
+			HarmonixMetasound::FMidiStreamEvent Event = HarmonixMetasound::FMidiStreamEvent(BlockStartTick, msg);
+			//Event.MidiMessage = msg;
+			Event.AuthoredMidiTick = tick;
+			Event.TrackIndex = 1;
+			OutStream.AddMidiEvent(Event);
+		}
+	}
+
+}
+

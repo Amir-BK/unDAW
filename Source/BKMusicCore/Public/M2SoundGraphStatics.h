@@ -114,6 +114,8 @@ public:
 	static FLinkedNotesClip SplitClipAtTick(FLinkedNotesClip& InClip, const int32 Tick, bool& bOutSuccess);
 
 	static void AutoTrimClipToDuration(FLinkedNotesClip& InClip);
+
+	static void MoveAudioClipToTick(FLinkedNotesClip& InClip, const int32 Tick);
 };
 
 

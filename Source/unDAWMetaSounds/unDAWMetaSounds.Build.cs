@@ -58,7 +58,8 @@ public class unDAWMetaSounds : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "MetasoundGenerator",
-                "AudioMixer"
+                "AudioMixer",
+				"MIDIDevice" //MidiDevice should be Mac PC only
 
 				// ... add other public dependencies that you statically link with here ...
 			}

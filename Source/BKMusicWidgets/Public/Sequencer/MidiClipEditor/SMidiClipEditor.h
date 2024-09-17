@@ -305,7 +305,7 @@ public:
 			//paint a red box at the top of the timeline
 			constexpr float PlayCursorWidth = 10.0f;
 			constexpr float PlayCursorHalfWidth = PlayCursorWidth / 2.0f;
-			const FFixedSampleSequenceRulerStyle TimeRulerStyle = FAppStyle::GetWidgetStyle<FFixedSampleSequenceRulerStyle>("WaveformEditorRuler.Style");
+			//const FFixedSampleSequenceRulerStyle TimeRulerStyle = FAppStyle::GetWidgetStyle<FFixedSampleSequenceRulerStyle>();
 
 			//const FSlateBrush& PlayCursorBrush = TimeRulerStyle.HandleBrush;
 			
@@ -316,7 +316,7 @@ public:
 				OutDrawElements,
 				LayerId,
 				OffsetGeometryChild.ToPaintGeometry(FVector2D(PlayCursorWidth, TimelineHeight), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick) - PlayCursorHalfWidth, -Position.Get().Y))),
-				&TimeRulerStyle.HandleBrush,
+				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 				ESlateDrawEffect::None,
 				FLinearColor(255.f, 0.1f, 0.2f, 1.f)
 			);

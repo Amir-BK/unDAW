@@ -38,3 +38,19 @@ namespace unDAWMetasounds::TrackIsolatorOP
 		Harmonix::Midi::Ops::FStuckNoteGuard StuckNoteGuard;
 	};
 }
+
+namespace unDAWMetasounds::MidiStreamEventTrackMergeOp
+{
+	/**
+	Adds notes from a TArray<TTupe<uint32, FMidiMsg>> to a FMidiStream
+
+	*/
+	class UNDAWMETASOUNDS_API FMidiStreamEventTrackMerge
+	{
+	public:
+		void Process(const HarmonixMetasound::FMidiStream& InStream, TArray<TTuple<int32, FMidiMsg>> InEvents, HarmonixMetasound::FMidiStream& OutStream);;
+
+	};
+
+
+};
