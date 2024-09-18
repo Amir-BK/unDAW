@@ -46,6 +46,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 		DEFINE_INPUT_METASOUND_PARAM(MidiStream, "MidiStream", "MidiStream");
 		DEFINE_INPUT_METASOUND_PARAM(MinTrackIndex, "Track Index", "Track");
 		DEFINE_INPUT_METASOUND_PARAM(MaxTrackIndex, "Channel Index", "Channel");
+		DEFINE_INPUT_METASOUND_PARAM(MidiDeviceName, "Midi Device Name", "The name of the midi input device we want to receive with this node")
 		//DEFINE_INPUT_METASOUND_PARAM(IncludeConductorTrack, "Include Conductor Track", "Enable to include the conductor track (AKA track 0)");
 	}
 
@@ -86,7 +87,8 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 					TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::Enable), true),
 					TInputDataVertex<FMidiStream>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MidiStream)),
 					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MinTrackIndex), 0),
-					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MaxTrackIndex), 0)
+					TInputDataVertex<int32>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MaxTrackIndex), 0),
+					TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::MidiDeviceName))
 					//TInputDataVertex<bool>(METASOUND_GET_PARAM_NAME_AND_METADATA(Inputs::IncludeConductorTrack), false)
 				),
 				FOutputVertexInterface(
@@ -103,6 +105,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 			FMidiStreamReadRef MidiStream;
 			FInt32ReadRef MinTrackIndex;
 			FInt32ReadRef MaxTrackIndex;
+			FStringReadRef MidiDeviceName;
 			//FBoolReadRef IncludeConductorTrack;
 		};
 
@@ -121,6 +124,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 				InputData.GetOrConstructDataReadReference<FMidiStream>(Inputs::MidiStreamName),
 				InputData.GetOrCreateDefaultDataReadReference<int32>(Inputs::MinTrackIndexName, InParams.OperatorSettings),
 				InputData.GetOrCreateDefaultDataReadReference<int32>(Inputs::MaxTrackIndexName, InParams.OperatorSettings),
+				InputData.GetOrCreateDefaultDataReadReference<FString>(Inputs::MidiDeviceNameName, InParams.OperatorSettings)
 				//InputData.GetOrCreateDefaultDataReadReference<bool>(Inputs::IncludeConductorTrackName, InParams.OperatorSettings)
 			};
 
@@ -145,6 +149,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 			InVertexData.BindReadVertex(Inputs::MidiStreamName, Inputs.MidiStream);
 			InVertexData.BindReadVertex(Inputs::MinTrackIndexName, Inputs.MinTrackIndex);
 			InVertexData.BindReadVertex(Inputs::MaxTrackIndexName, Inputs.MaxTrackIndex);
+			InVertexData.BindReadVertex(Inputs::MidiDeviceNameName, Inputs.MidiDeviceName);
 			//InVertexData.BindReadVertex(Inputs::IncludeConductorTrackName, Inputs.IncludeConductorTrack);
 		}
 
@@ -155,7 +160,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 
 		void Reset(const FResetParams&)
 		{
-			OnMidiInputDeviceChanged(TEXT("Impulse"));
+			OnMidiInputDeviceChanged(*Inputs.MidiDeviceName.Get());
 		}
 
 
