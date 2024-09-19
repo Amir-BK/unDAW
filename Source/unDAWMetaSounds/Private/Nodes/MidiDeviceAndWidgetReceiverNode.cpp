@@ -187,7 +187,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 				if (!IsValid(MidiDeviceController)) return;
 
 				RawEventDelegateHandle = MidiDeviceController->OnMIDIRawEvent.AddRaw(this, &FMidiDeviceAndWidgetReceiverOperator::OnReceiveRawMidiMessage);
-				TickOffset = Inputs.MidiStream->GetClock()->GetCurrentMidiTick();
+				//TickOffset = Inputs.MidiStream->GetClock()->GetCurrentMidiTick();
 			}
 			else {
 				UE_LOG(LogTemp, Log, TEXT("MIDI Device not found"));
@@ -204,23 +204,22 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 			switch (MIDIEventType)
 			{
 			case EMIDIEventType::NoteOn:
-				UE_LOG(LogTemp, Warning, TEXT("Note On"));
-				//FMidiMsg NewNoteOn = ;
 				PendingMessages.Add(TTuple<int32, FMidiMsg>(Timestamp, FMidiMsg::CreateNoteOn(Channel, MessageData1, MessageData2)));
 				break;
 			case EMIDIEventType::NoteOff:
-				UE_LOG(LogTemp, Warning, TEXT("Note Off"));
-				//FMidiMsg NewMidiMsg = ;
 				PendingMessages.Add(TTuple<int32, FMidiMsg>(Timestamp, FMidiMsg::CreateNoteOff(Channel, MessageData1)));
 				break;
 			case EMIDIEventType::ControlChange:
 				UE_LOG(LogTemp, Warning, TEXT("Control Change"));
+				PendingMessages.Add(TTuple<int32, FMidiMsg>(Timestamp, FMidiMsg::CreateControlChange(Channel, MessageData1, MessageData2)));
 				break;
 			case EMIDIEventType::ProgramChange:
 				UE_LOG(LogTemp, Warning, TEXT("Program Change"));
+				//PendingMessages.Add(TTuple<int32, FMidiMsg>(Timestamp, FMidiMsg::CreateProgramChange(Channel, MessageData1)));
 				break;
 			case EMIDIEventType::PitchBend:
 				UE_LOG(LogTemp, Warning, TEXT("Pitch Bend"));
+				//PendingMessages.Add(TTuple<int32, FMidiMsg>(Timestamp, FMidiMsg(uint8(0b1110), MessageData1, MessageData2)));
 				break;
 			case EMIDIEventType::NoteAfterTouch:
 				UE_LOG(LogTemp, Warning, TEXT("Aftertouch"));
