@@ -4,6 +4,9 @@ https://youtube.com/playlist?list=PLnC4434gGyWHi6OtNmQmJqOdjTMzaERWO&si=weaAYodd
 Please join the discord server - https://discord.gg/hTKjSfcbEn
 
 # Features/News/Latest (partial list) 
+https://www.youtube.com/watch?v=CySVXuokqSc
+
+
 https://www.youtube.com/watch?v=EMmy645WRiI
 
 ### DAWSession/Midi Level Sequencer Custom Tracks
