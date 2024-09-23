@@ -16,6 +16,7 @@ https://github.com/Amir-BK/Sfizz4Unreal - a metasound node that uses Sfizz (http
 
 https://github.com/Amir-BK/EpicSynth1Metasounds - a metasound node that uses the EpicSynth1 (UModularSynthComponent) to synthesize audio from midi data. 
 
+Both these plugins can be easily used with unDAW using the unDAW Instrument Renderer metasound interface. 
 
 
 
