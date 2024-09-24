@@ -105,7 +105,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 			FMidiStreamReadRef MidiStream;
 			FInt32ReadRef MinTrackIndex;
 			FInt32ReadRef MaxTrackIndex;
-			FStringReadRef MidiDeviceName;
+			FStringReadRef SfzLibPathName;
 			//FBoolReadRef IncludeConductorTrack;
 		};
 
@@ -149,7 +149,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 			InVertexData.BindReadVertex(Inputs::MidiStreamName, Inputs.MidiStream);
 			InVertexData.BindReadVertex(Inputs::MinTrackIndexName, Inputs.MinTrackIndex);
 			InVertexData.BindReadVertex(Inputs::MaxTrackIndexName, Inputs.MaxTrackIndex);
-			InVertexData.BindReadVertex(Inputs::MidiDeviceNameName, Inputs.MidiDeviceName);
+			InVertexData.BindReadVertex(Inputs::MidiDeviceNameName, Inputs.SfzLibPathName);
 			//InVertexData.BindReadVertex(Inputs::IncludeConductorTrackName, Inputs.IncludeConductorTrack);
 		}
 
@@ -160,7 +160,7 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 
 		void Reset(const FResetParams&)
 		{
-			OnMidiInputDeviceChanged(*Inputs.MidiDeviceName.Get());
+			OnMidiInputDeviceChanged(*Inputs.SfzLibPathName.Get());
 		}
 
 
