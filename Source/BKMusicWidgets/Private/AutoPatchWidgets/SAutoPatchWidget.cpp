@@ -108,25 +108,6 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 	ChildSlot
 		[
 			SAssignNew(MainHorizontalBox, SHorizontalBox)
-				//.IsEnabled(this, &SM2LiteralControllerWidget::IsControlEnabled)
-
-				//+ SHorizontalBox::Slot()
-				//[
-				//	SNew(STextBlock)
-				//		.Text(FText::FromName(InLiteralPin.Name))
-				//		.ColorAndOpacity_Lambda([this]() -> FSlateColor { return PinColor; })
-				//		.MinDesiredWidth(150)
-				//		.WrapTextAt(200)
-				//		.AutoWrapText(true)
-				//		.ToolTipText(FText::FromString(FString::Printf(TEXT("%s %s"), *Info.DataTypeDisplayText.ToString(), LiteralPin->IsConstructorPin() ? TEXT(", Construcor Pin") : TEXT(""))))
-				//]
-				////a spacer
-				//+ SHorizontalBox::Slot()
-				//[
-				//	SNew(SSpacer)
-				//		.Size(FVector2D(10, 0))
-				//]
-
 		];
 	
 	//if direction is output, we're done
@@ -146,7 +127,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 				[
 					SNew(SButton)
 						.Text(FText::FromString(TEXT("Trigger")))
-						.TextStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
+						//.TextStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
 						.OnClicked(this, &SM2LiteralControllerWidget::ExecuteTriggerParameter)
 						
 				];
@@ -228,7 +209,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 					SNew(SComboBox<TSharedPtr<FString>>)
 					.OptionsSource(&EnumOptions)
 					.InitiallySelectedItem(MakeShared<FString>(GetEnumValue().ToString()))
-					.ComboBoxStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
+					//.ComboBoxStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
 					.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption) { return MakeWidgetForEnumValue(InOption); })
 						[
 							SNew(STextBlock)
@@ -266,7 +247,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			[
 				SNew(SEditableTextBox)
 					.Text_Lambda([this]() -> FText { return FText::FromString(LiteralStringValue); })
-					.Style(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
+					//.Style(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
 					.OnTextCommitted(this, &SM2LiteralControllerWidget::OnLiteralValueChanged)
 					.MinDesiredWidth(300)
 				//.Text_Lambda([this, &InLiteralPin]() -> FText { return FText::FromString(InLiteralPin.GetStringValue()); })
@@ -304,7 +285,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 				[
 					SNew(STextBlock)
 						.Text_Lambda([this]() -> FText { return FText::FromString(LiteralObjectValue ? LiteralObjectValue->GetName() : TEXT("None")); })
-						.TextStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
+						//.TextStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
 				]
 				//	.OnSelectionChanged_Lambda([this](TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo) { LiteralObjectValue = Objects[0]; })
 					.OnSelectionChanged(this, &SM2LiteralControllerWidget::OnSelectObject)
