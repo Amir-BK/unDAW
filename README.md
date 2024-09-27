@@ -18,7 +18,7 @@ https://github.com/Amir-BK/EpicSynth1Metasounds - a metasound node that uses the
 
 https://github.com/Amir-BK/chunreal - My fork of the ChucK for Unreal plugin, revamps the origin plugin a bit and makes it compatible with unDAW, you can use the ChucK language to create custom instruments and effects and play them with unDAW using the provided ChunDAW metasound patch instrument. 
 
-Both these plugins can be easily used with unDAW using the unDAW Instrument Renderer metasound interface. 
+These plugins can be easily used with unDAW using the unDAW Instrument Renderer metasound interface. 
 
 
 
