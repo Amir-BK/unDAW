@@ -39,6 +39,8 @@ namespace M2Sound
 			//unreal interface outputs, for now stereo only
 			static const FName StereoLeft("UE.OutputFormat.Stereo.Audio:0");
 			static const FName StereoRight("UE.OutputFormat.Stereo.Audio:1");
+			static const FName StereoInLeft("UE.InputFormat.Stereo.Audio:0");
+			static const FName StereoInRight("UE.InputFormat.Stereo.Audio:1");
 		}
 
 		UENUM(BlueprintType)
@@ -73,7 +75,9 @@ namespace M2Sound
 			{FName(TEXT("unDAW Insert.Audio In L")), EVertexAutoConnectionPinCategory::AudioStreamL},
 			{FName(TEXT("unDAW Insert.Audio In R")), EVertexAutoConnectionPinCategory::AudioStreamR},
 			{AutoDiscovery::StereoLeft, EVertexAutoConnectionPinCategory::AudioStreamL},
-			{AutoDiscovery::StereoRight, EVertexAutoConnectionPinCategory::AudioStreamR}
+			{AutoDiscovery::StereoRight, EVertexAutoConnectionPinCategory::AudioStreamR},
+			{AutoDiscovery::StereoInLeft, EVertexAutoConnectionPinCategory::AudioStreamL},
+			{AutoDiscovery::StereoInRight, EVertexAutoConnectionPinCategory::AudioStreamR}
 		};
 
 		struct FVariWidthAudioOutput

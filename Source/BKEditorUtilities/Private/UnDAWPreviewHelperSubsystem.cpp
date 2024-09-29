@@ -2,17 +2,37 @@
 
 #include "UnDAWPreviewHelperSubsystem.h"
 #include "Editor.h"
+#include "MetasoundSource.h"
 #include "Components/AudioComponent.h"
 
-void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview)
+void UUnDAWPreviewHelperSubsystem::CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview, bool bForceReinit)
 {
-	// if (ActivePreviewPerformer.ActiveSession && InSessionToPreview != ActivePreviewPerformer.ActiveSession)
-	 //{
-			 //ActivePreviewPerformer.PreviewPerformer->SendTransportCommand(EBKTransportCommands::Stop);
-			// ActivePreviewPerformer.ActiveSession->EditorPreviewPerformer = nullptr;
-			// ActivePreviewPerformer.PreviewPerformer->RemoveFromParent();
-			// ActivePreviewPerformer.PreviewPerformer->ConditionalBeginDestroy();
-	 //}
+
+	if (InSessionToPreview->AuditionComponent && InSessionToPreview->AuditionComponent->IsPlaying())
+	{
+		//ugh it was already setup? 
+		if (InSessionToPreview->AuditionComponent->Sound.Get() == Cast<USoundBase>(InSessionToPreview->SavedMetaSound.Get()))
+		{
+			//we are already playing the correct sound
+			if (bForceReinit) InSessionToPreview->AuditionComponent->Stop();
+			//else
+		}
+		else
+		{
+			//we are playing the wrong sound
+
+			//try to delete, kill with fire the transient metasound
+			delete InSessionToPreview->AuditionComponent->Sound.Get();
+
+			InSessionToPreview->AuditionComponent->Stop();
+			InSessionToPreview->AuditionBuilder(InSessionToPreview->AuditionComponent, true);
+			InSessionToPreview->AuditionComponent->SetSound(Cast<USoundBase>(InSessionToPreview->SavedMetaSound.Get()));
+			InSessionToPreview->AuditionComponent->Play();
+			return;
+		}
+	}
+		
+	
 
 	if (!hasAlreadyPrimed)
 	{

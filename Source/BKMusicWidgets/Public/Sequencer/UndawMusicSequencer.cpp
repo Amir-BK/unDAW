@@ -366,8 +366,8 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = (Note.StartTick) * Zoom.Get().X;
-		const float Width = (Note.EndTick - Note.StartTick) * Zoom.Get().X;
+		const float X = (Note.StartTick);
+		const float Width = (Note.EndTick - Note.StartTick);
 		const float Y = (127 - Note.Pitch) * Height;
 
 		FSlateDrawElement::MakeLines(
@@ -396,6 +396,17 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 
 int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	
+	//print zoom values at top right corner
+	FSlateDrawElement::MakeText(
+		OutDrawElements,
+		LayerId++,
+		AllottedGeometry.ToPaintGeometry(FVector2D(AllottedGeometry.Size.X - 300, 0), FVector2D(100, 20)),
+		FText::FromString(FString::Printf(TEXT("Position: %s\nZoom: %s"), *Position.Get().ToString(), *Zoom.Get().ToString())),
+		FAppStyle::GetFontStyle("NormalFont"),
+		ESlateDrawEffect::None,
+		FLinearColor::White
+	);
 	
 	for (const auto& Section : Sections)
 	{

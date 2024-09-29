@@ -27,7 +27,7 @@ public:
 	FSoftClassPreviewHolder ActivePreviewPerformer;
 
 	UFUNCTION()
-	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview);
+	void CreateAndPrimePreviewBuilderForDawSequence(UDAWSequencerData* InSessionToPreview, bool bForceReinit = false);
 
 private:
 	bool hasAlreadyPrimed = false;
