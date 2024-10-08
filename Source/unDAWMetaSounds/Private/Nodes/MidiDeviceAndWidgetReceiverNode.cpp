@@ -15,6 +15,8 @@
 #include "MidiDeviceManager.h"
 
 #include "MidiDeviceAndWidgetReceiverNode.h"
+#include "MusicDeviceControllerSubsystem.h"
+
 #include "MidiTrackIsolator.h"
 
 #define LOCTEXT_NAMESPACE "unDAWMetasounds_MidiDeviceAndWidgetReceiverNode"
@@ -167,31 +169,21 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 		void OnMidiInputDeviceChanged(FString NewSelection)
 		{
 			//int32 DeviceID;
-			TArray<FMIDIDeviceInfo> InputDevices, OutputDevices;
-			UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
+			
+				MidiDeviceController = UMusicDeviceControllerSubsystem::GetOrCreateMidiInputDeviceController(NewSelection);
 
-			//Find input device with 'Impulse' in its name
-			FMIDIDeviceInfo* MyImpulseDevice = InputDevices.FindByPredicate([NewSelection](const FMIDIDeviceInfo& DeviceInfo)
+				if (MidiDeviceController != nullptr)
 				{
-					return DeviceInfo.DeviceName.Contains(NewSelection);
-				});
+					RawEventDelegateHandle = MidiDeviceController->OnMIDIRawEvent.AddRaw(this, &FMidiDeviceAndWidgetReceiverOperator::OnReceiveRawMidiMessage);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Could not create MIDI device controller"));
+				}
 
-			//UMIDIDeviceManager::GetDevice
-			//print name and device ID
-			if (MyImpulseDevice != nullptr)
-			{
-				UE_LOG(LogTemp, Log, TEXT("MIDI Device Name: %s, Device ID: %d"), *MyImpulseDevice->DeviceName, MyImpulseDevice->DeviceID);
-				MidiDeviceController = UMIDIDeviceManager::CreateMIDIDeviceInputController(MyImpulseDevice->DeviceID, 512);
-
-
-				if (!IsValid(MidiDeviceController)) return;
-
-				RawEventDelegateHandle = MidiDeviceController->OnMIDIRawEvent.AddRaw(this, &FMidiDeviceAndWidgetReceiverOperator::OnReceiveRawMidiMessage);
+			
 				//TickOffset = Inputs.MidiStream->GetClock()->GetCurrentMidiTick();
-			}
-			else {
-				UE_LOG(LogTemp, Log, TEXT("MIDI Device not found"));
-			}
+			
 
 
 		}
@@ -239,15 +231,15 @@ namespace unDAWMetasounds::MidiDeviceAndWidgetReceiverNode
 		virtual ~FMidiDeviceAndWidgetReceiverOperator()
 		{
 			UE_LOG(LogTemp, Log, TEXT("MidiDeviceAndWidgetReceiverOperator Destructor"));
-			if (MidiDeviceController != nullptr)
-			{
-				MidiDeviceController->OnMIDIRawEvent.Remove(RawEventDelegateHandle);
-				UMIDIDeviceManager::ShutDownAllMIDIDevices();
-				//MidiDeviceController->
-				//UMIDIDeviceManager::MidiIn
-				//MidiDeviceController->ShutdownDevice();
-				MidiDeviceController = nullptr;
-			}
+			//if (MidiDeviceController != nullptr)
+			//{
+			//	MidiDeviceController->OnMIDIRawEvent.Remove(RawEventDelegateHandle);
+			//	UMIDIDeviceManager::ShutDownAllMIDIDevices();
+			//	//MidiDeviceController->
+			//	//UMIDIDeviceManager::MidiIn
+			//	//MidiDeviceController->ShutdownDevice();
+			//	MidiDeviceController = nullptr;
+			//}
 		}
 
 
