@@ -59,6 +59,7 @@ public class unDAWMetaSounds : ModuleRules
                 "MetasoundFrontend",
                 "MetasoundGenerator",
                 "AudioMixer",
+				"BKMusicCore",
 				"MIDIDevice" //MidiDevice should be Mac PC only
 
 				// ... add other public dependencies that you statically link with here ...

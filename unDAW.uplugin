@@ -18,12 +18,12 @@
 		{
 			"Name": "BKMusicWidgets",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "BKMusicCore",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible"
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "unDAWMetaSounds",

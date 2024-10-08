@@ -15,7 +15,7 @@
  * perhaps we will allow allow injecting midi and custom events on these endpoints
  */
 UCLASS()
-class UNDAWMETASOUNDS_API UMusicDeviceControllerSubsystem : public UEngineSubsystem
+class BKMUSICCORE_API UMusicDeviceControllerSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
 

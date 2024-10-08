@@ -25,7 +25,7 @@ namespace unDAW::Metasounds
 {
 
 
-	class UNDAWMETASOUNDS_API FunDAWInstrumentRendererInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWInstrumentRendererInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
@@ -69,7 +69,7 @@ namespace unDAW::Metasounds
 		};
 	};
 
-	class UNDAWMETASOUNDS_API FunDAWMidiInsertInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWMidiInsertInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
@@ -114,7 +114,7 @@ namespace unDAW::Metasounds
 
 	//graph action patches are patches that can be inserted into the from the game thread, their main purpose is to perform some logic on the audio thread
 	//and fire back a trigger that will be passed back to the registring actor when they are performed
-	class UNDAWMETASOUNDS_API FunDAWMusicalActionInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWMusicalActionInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
@@ -159,7 +159,7 @@ namespace unDAW::Metasounds
 	};
 
 
-	class UNDAWMETASOUNDS_API FunDAWAudibleActionInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWAudibleActionInterface : public Audio::FParameterInterface
 	{
 
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
@@ -211,7 +211,7 @@ namespace unDAW::Metasounds
 	};
 
 
-	class UNDAWMETASOUNDS_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWCustomInsertInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
@@ -256,7 +256,7 @@ namespace unDAW::Metasounds
 		};
 	};
 
-	class UNDAWMETASOUNDS_API FunDAWMasterGraphInterface : public Audio::FParameterInterface
+	class BKMUSICCORE_API FunDAWMasterGraphInterface : public Audio::FParameterInterface
 	{
 		inline static Audio::FParameterInterfacePtr InstancePointer = nullptr;
 
