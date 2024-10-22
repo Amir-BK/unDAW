@@ -64,7 +64,7 @@ void UEditableMidiFile::LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* Bas
 		PopulateTempoCurve();
 	}
 
-	Curve->OnUpdateCurve.AddUObject(this, &UEditableMidiFile::OnTempoCurveChanged);
+	//Curve->OnUpdateCurve.AddUObject(this, &UEditableMidiFile::OnTempoCurveChanged);
 	//TheMidiData.SongMaps.GetTempoMap().AddTempoInfoPoint(Harmonix::Midi::Constants::BPMToMidiTempo(75), 0);
 
 	//print the track names

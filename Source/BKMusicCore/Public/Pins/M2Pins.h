@@ -17,6 +17,8 @@
 #include "WaveTable.h"
 #include "M2Pins.generated.h"
 
+class UM2SoundVertex;
+
 UENUM()
 enum class EVertexAutoConnectionPinCategory : uint8
 {
