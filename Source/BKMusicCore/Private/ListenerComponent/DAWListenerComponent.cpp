@@ -90,6 +90,7 @@ void UDAWListenerComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	// ...
 }
 
+#if WITH_EDITOR
 void UDAWListenerComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -105,3 +106,4 @@ void UDAWListenerComponent::PostEditChangeProperty(FPropertyChangedEvent& Proper
 		}
 	}
 }
+#endif
