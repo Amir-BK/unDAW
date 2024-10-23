@@ -16,6 +16,7 @@
 #include "HarmonixMetasound/DataTypes/MidiClock.h"
 #include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
 #include "HarmonixMetasound/DataTypes/MidiAsset.h"
+#include "MetasoundDataReference.h"
 #include "MetasoundWave.h"
 
 
