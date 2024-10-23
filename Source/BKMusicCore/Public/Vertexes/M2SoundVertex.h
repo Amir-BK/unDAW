@@ -191,9 +191,8 @@ public:
 
 	void RemoveAllStalePins();
 
-private:
 	template<typename T>
-	T* CreatePin()
+	inline T* CreatePin()
 	{
 		T* NewPin = NewObject<T>(this);
 		NewPin->ParentVertex = this;
