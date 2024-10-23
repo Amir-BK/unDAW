@@ -235,7 +235,7 @@ void AMusicScenePlayerActor::ResetAudioComponentAndBuilder()
 
 //hmmm
 
-inline UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
+UDAWSequencerData* AMusicScenePlayerActor::GetDAWSequencerData() const {
 	return SessionData;
 }
 
