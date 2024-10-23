@@ -39,7 +39,7 @@ TSharedPtr<SGraphNode> UM2SoundGraphInputNode::CreateVisualWidget()
 	return SNew(SM2MidiTrackGraphNode, this);
 }
 
-inline TSharedPtr<SGraphNode> UM2SoundPatchContainerNode::CreateVisualWidget()
+TSharedPtr<SGraphNode> UM2SoundPatchContainerNode::CreateVisualWidget()
 {
 	return SNew(SM2SoundPatchContainerGraphNode<unDAW::Metasounds::FunDAWInstrumentRendererInterface>, this);
 }
@@ -167,7 +167,7 @@ const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: SplitPin, %s"), *Pin->GetName());
 }
 
-inline void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin)
+void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin)
 {
 	auto CurrentColorSourcePin = ColorSourcePin;
 	M2Pin->bIsColorSource = true;
@@ -372,7 +372,7 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 	}
 }
 
-inline FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const
+FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const
 {
 	if (ColorSourcePin)
 	{
@@ -390,7 +390,7 @@ inline FLinearColor UM2SoundEdGraphNode::GetNodeTitleColor() const
 	return FLinearColor::Gray;
 }
 
-inline void UM2SoundEdGraphNode::AllocateDefaultPins() {
+void UM2SoundEdGraphNode::AllocateDefaultPins() {
 	//okay so in theory, we should check if the pins are stale in order to preserve connections, for now let's just empty pins.
 
 	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: AllocateDefaultPins, %s"), *GetName());
