@@ -19,7 +19,7 @@ const EBKPlayState IBK_MusicSceneManagerInterface::GetCurrentPlaybackState()
 	}
 }
 
-inline UDAWSequencerData* IBK_MusicSceneManagerInterface::GetDAWSequencerData() const {
+UDAWSequencerData* IBK_MusicSceneManagerInterface::GetDAWSequencerData() const {
 	return SequenceData;
 }
 

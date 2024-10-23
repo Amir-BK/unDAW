@@ -85,13 +85,26 @@ public:
 	 */
 
 	
-	static TArray<UObject*> GetAllObjectsOfClass(UClass* Class);
+	inline static TArray<UObject*> GetAllObjectsOfClass(UClass* Class)
+	{
+		TArray<UObject*> OutArray;
+
+		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		TArray<FAssetData> AssetData;
+		AssetRegistryModule.Get().GetAssetsByClass(Class->GetClassPathName(), AssetData, true);
+		for (int i = 0; i < AssetData.Num(); i++) {
+			UObject* Object = AssetData[i].GetAsset();
+			OutArray.Add(Object);
+		}
+
+		return OutArray;
+	}
 
 	static TArray<UM2SoundVertex*> GetAllVertexesInSequencerData(UDAWSequencerData* SequencerData);
 
 	//can be used to get all assets of certain class
 	template<typename T>
-	static void GetObjectsOfClass(TArray<T*>& OutArray);
+	inline static void GetObjectsOfClass(TArray<T*>& OutArray);
 
 	static UMetaSoundPatch* GetPatchByName(FString Name);
 
@@ -125,21 +138,6 @@ public:
 	static void MoveAudioClipToTick(FLinkedNotesClip& InClip, const int32 Tick);
 };
 
-
-inline TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class)
-{
-	TArray<UObject*> OutArray;
-	
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	TArray<FAssetData> AssetData;
-	AssetRegistryModule.Get().GetAssetsByClass(Class->GetClassPathName(), AssetData, true);
-	for (int i = 0; i < AssetData.Num(); i++) {
-		UObject* Object = AssetData[i].GetAsset();
-		OutArray.Add(Object);
-	}
-
-	return OutArray;
-}
 
 template<typename T>
 inline void UM2SoundGraphStatics::GetObjectsOfClass(TArray<T*>& OutArray)

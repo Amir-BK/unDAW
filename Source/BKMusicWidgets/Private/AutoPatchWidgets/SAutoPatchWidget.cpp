@@ -111,7 +111,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		];
 	
 	//if direction is output, we're done
-	if (InLiteralPin.Direction == EGPD_Output)
+	if (InLiteralPin.Direction == M2Sound::Pins::EPinDirection::Output)
 	{
 		return;
 	}

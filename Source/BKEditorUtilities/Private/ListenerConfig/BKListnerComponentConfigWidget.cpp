@@ -4,7 +4,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SNumericEntryBox.h"
 
-inline void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedObject)
+void UBKListnerComponentConfigWidget::OnObjectSlected(UObject* SelectedObject)
 {
 	if (SelectedObject) {
 		UE_LOG(LogTemp, Log, TEXT("Object Selected, Object Name Is: %s"), *SelectedObject->GetName())

@@ -52,7 +52,7 @@ public class BK_EditorUtilities : ModuleRules
                 "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "ToolMenus", "MIDIDevice", "MovieSceneTools", "MovieScene", "Sequencer", "EditorStyle", "SequencerCore",
-				"MovieSceneTracks", "PropertyEditor"
+				"MovieSceneTracks", "PropertyEditor", "HarmonixMetasound"
 
                 // ... add other public dependencies that you statically link with here ...
 			}

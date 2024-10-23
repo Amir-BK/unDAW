@@ -55,7 +55,7 @@ void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
 	GetSequencerData()->Mixers.Add(MixerAlias, this);
 }
 
-inline void UM2VariMixerVertex::UpdateMuteAndSoloStates()
+void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 {
 
 	//probably a bit costly, check if ANY channel has solo active, we should probably only do this when changing solo states
@@ -170,7 +170,7 @@ void UM2VariMixerVertex::SetChannelSoloState(int ChannelIndex, ECheckBoxState In
 	UpdateMuteAndSoloStates();
 }
 
-inline void UM2VariMixerVertex::BuildVertex()
+void UM2VariMixerVertex::BuildVertex()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
 
@@ -268,7 +268,7 @@ inline void UM2VariMixerVertex::BuildVertex()
 	UpdateMuteAndSoloStates();
 }
 
-inline FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
+FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
 {
 	//if (!MixerChannels.IsValidIndex(ChannelIndex))
 	//{
@@ -282,7 +282,7 @@ inline FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
 	return FLinearColor::Gray;
 }
 
-inline FAssignableAudioOutput UM2VariMixerVertex::CreateChannel()
+ FAssignableAudioOutput UM2VariMixerVertex::CreateChannel()
 {
 	FAssignableAudioOutput NewChannel;
 	//MixerChannels.Add(NewChannel);
@@ -290,13 +290,13 @@ inline FAssignableAudioOutput UM2VariMixerVertex::CreateChannel()
 	return NewChannel;
 }
 
-inline void UM2VariMixerVertex::ReleaseChannel(FAssignableAudioOutput Channel)
+ void UM2VariMixerVertex::ReleaseChannel(FAssignableAudioOutput Channel)
 {
 	//MixerChannels.Remove(Channel);
 	NumConnectedChannels--;
 }
 
-inline void UM2VariMixerVertex::ResizeOutputMixer()
+ void UM2VariMixerVertex::ResizeOutputMixer()
 {
 	EMetaSoundBuilderResult BuildResult;
 	const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
