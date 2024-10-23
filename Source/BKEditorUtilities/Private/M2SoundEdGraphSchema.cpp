@@ -218,7 +218,7 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 	}
 }
 
-inline bool UM2SoundEdGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
+bool UM2SoundEdGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B) const
 {
 	bool success = UEdGraphSchema::TryCreateConnection(A, B);
 	if (success)
@@ -236,7 +236,7 @@ inline bool UM2SoundEdGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphP
 
 //set pin type colors
 
-inline FLinearColor UM2SoundEdGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
+FLinearColor UM2SoundEdGraphSchema::GetPinTypeColor(const FEdGraphPinType& PinType) const
 {
 	//if wild card and connected to something get the color of that something
 	//if(PinType.PinCategory == "WildCard")
