@@ -581,19 +581,19 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 					InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
 				}
 
-				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
-					.OptionsSource(&InputDeviceNames)
-					.OnSelectionChanged(this, &FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged)
-					.InitiallySelectedItem(InputDeviceNames[0])
-					.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
-						{
-							return SNew(STextBlock).Text(FText::FromString(*InItem));
-						})
-					.Content()
-					[
-						SNew(STextBlock).Text(INVTEXT("MIDI Input Device"))
-					]);
-
+//				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
+//					.OptionsSource(&InputDeviceNames)
+//					.OnSelectionChanged(this, &FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged)
+//					.InitiallySelectedItem(InputDeviceNames[0])
+//					.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
+//						{
+//							return SNew(STextBlock).Text(FText::FromString(*InItem));
+//						})
+//					.Content()
+//					[
+//						SNew(STextBlock).Text(INVTEXT("MIDI Input Device"))
+//					]);
+//
 
 
 			}));

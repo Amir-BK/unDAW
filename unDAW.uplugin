@@ -28,7 +28,7 @@
 		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "PostDefault"
 		},
 		{
 			"Name": "BK_EditorUtilities",
