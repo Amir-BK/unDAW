@@ -349,7 +349,7 @@ public:
 
 		const auto& TimeLinePaintGeometry = AllottedGeometry.ToPaintGeometry(
 			FVector2f(MajorTabWidth, 0),
-			FVector2f(AllottedGeometry.Size.X, TimelineHeight)
+			FSlateLayoutTransform(1.0, FVector2D(AllottedGeometry.Size.X, TimelineHeight))
 		);
 
 		//static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");

@@ -15,9 +15,18 @@ UMIDIDeviceInputController* UMusicDeviceControllerSubsystem::GetOrCreateMidiInpu
 	//if the registry already contains device name, return it from registry, otherwise create a new one and add it to the registry
 	if (MusicDeviceRegistry::MidiDeviceControllers.Contains(MidiDeviceName))
 	{
-		return MusicDeviceRegistry::MidiDeviceControllers[MidiDeviceName];
+		auto FoundDevice = MusicDeviceRegistry::MidiDeviceControllers[MidiDeviceName];
+		if (FoundDevice != nullptr)
+		{
+			return FoundDevice;
+			
+		}
+		UE_LOG(LogTemp, Error, TEXT("Found MIDI device in registry, but it was null!"));
+	
 	}
-	else
+	
+	//if the device is not in the registry, or the registry contained a nullptr for the device, create a new one
+	
 	{
 		TArray<FMIDIDeviceInfo> InputDevices, OutputDevices;
 		UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
@@ -34,7 +43,7 @@ UMIDIDeviceInputController* UMusicDeviceControllerSubsystem::GetOrCreateMidiInpu
 			return nullptr;
 		}
 		
-		UMIDIDeviceInputController* NewController = UMIDIDeviceManager::CreateMIDIDeviceInputController(NewDeviceToCreate->DeviceID, 512);
+		UMIDIDeviceInputController* NewController = UMIDIDeviceManager::CreateMIDIDeviceInputController(NewDeviceToCreate->DeviceID, 64);
 	
 		MusicDeviceRegistry::MidiDeviceControllers.Add(MidiDeviceName, NewController);
 		return NewController;

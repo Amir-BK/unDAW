@@ -12,6 +12,10 @@
 
 void BKMusicCoreModule::StartupModule()
 {
+#ifdef WITH_CHUNREAL_PLUGIN
+	UE_LOG(LogTemp, Warning, TEXT("WE SEE CHUNREAL!"));
+#endif 
+
 
 }
 

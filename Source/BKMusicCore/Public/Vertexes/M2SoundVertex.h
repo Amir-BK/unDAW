@@ -103,6 +103,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
 
+	UPROPERTY()
+	TOptional<FLinearColor> VertexColor;
+
 	virtual FLinearColor GetVertexColor() const;
 
 	bool bIsRebuilding = false; //we can use this one to know when we also need to update all connected pins rather than just the input as we do when building the graph, only relevant for nodes that expose patches to the user

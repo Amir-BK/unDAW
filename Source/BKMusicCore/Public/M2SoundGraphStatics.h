@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Metasound.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "MetasoundBuilderSubsystem.h"
 
 #include "M2SoundGraphStatics.generated.h"
 
@@ -47,6 +48,12 @@ class BKMUSICCORE_API UM2SoundGraphStatics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+
+	UFUNCTION(BlueprintCallable, Category = "MetaSound Builder Helper")
+	UMetaSoundPatch* CreatePatchFromBuilder(UMetaSoundPatchBuilder* InPatchBuilder, FMetaSoundBuilderOptions InOptions)
+	{
+		return Cast<UMetaSoundPatch>(InPatchBuilder->Build(nullptr, InOptions).GetObject());
+	}
 
 
 	static FName CheckIfInputNameIsUniqueAndMakeItSo(UDAWSequencerData* InGraph, FName Name = NAME_None);

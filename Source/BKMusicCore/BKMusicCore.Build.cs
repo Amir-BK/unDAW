@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using EpicGames.Core;
 using System.IO;
+
 using UnrealBuildTool;
 
 public class BKMusicCore : ModuleRules
@@ -58,12 +60,27 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-                ,"MIDIDevice", "LevelSequence", "MovieScene", "MovieSceneTracks"
+                , "LevelSequence", "MovieScene", "MovieSceneTracks"
 			}
 
             );
 
-        PrivateDependencyModuleNames.AddRange(
+		// Win or Macos support MIDI device
+		if(Target.Platform == UnrealTargetPlatform.Win64 ||
+			Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			PublicDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"MIDIDevice",
+			}
+			);
+
+			PublicDefinitions.Add("WITH_MIDI_DEVICE");
+
+		}
+
+			PrivateDependencyModuleNames.AddRange(
             new string[]
             {
                 "CoreUObject",
@@ -82,4 +99,30 @@ public class BKMusicCore : ModuleRules
 			}
             );
     }
+
+	static public void ConfigurePlugins(ModuleRules Rules, ReadOnlyTargetRules Target)
+	{
+		JsonObject RawObject;
+		if (JsonObject.TryRead(Target.ProjectFile, out RawObject))
+		{
+			JsonObject[] pluginObjects;
+			if (RawObject.TryGetObjectArrayField("Plugins", out pluginObjects))
+			{
+				foreach (JsonObject pluginObject in pluginObjects)
+				{
+					string pluginName;
+					pluginObject.TryGetStringField("Name", out pluginName);
+
+					bool pluginEnabled;
+					pluginObject.TryGetBoolField("Enabled", out pluginEnabled);
+
+					if (pluginName == "Chunreal" && pluginEnabled)
+					{
+
+							Rules.PublicDefinitions.Add("WITH_CHUNREAL_PLUGIN");
+					}
+				}
+			}
+		}
+	}
 }

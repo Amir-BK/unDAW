@@ -257,3 +257,19 @@ public:
 	bool bIsSet = false;
 
 };
+
+template <typename T>
+class TNumericPinController
+{
+public:
+	TNumericPinController(T InMin, T InMax) : Min(InMin), Max(InMax) {};
+
+	T Min;
+	T Max;
+	TRange<T> Range;
+
+	TOptional<int> MidiControlNumber;
+
+	TOptional<TRange<float>> MappingRange; // this is the transformation value for the cc input into the relevant param range
+
+};

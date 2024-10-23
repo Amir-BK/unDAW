@@ -401,7 +401,7 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	FSlateDrawElement::MakeText(
 		OutDrawElements,
 		LayerId++,
-		AllottedGeometry.ToPaintGeometry(FVector2D(AllottedGeometry.Size.X - 300, 0), FVector2D(100, 20)),
+		AllottedGeometry.ToPaintGeometry(FVector2D(AllottedGeometry.Size.X - 300, 0),FSlateLayoutTransform(1.0, FVector2D(100, 20))),
 		FText::FromString(FString::Printf(TEXT("Position: %s\nZoom: %s"), *Position.Get().ToString(), *Zoom.Get().ToString())),
 		FAppStyle::GetFontStyle("NormalFont"),
 		ESlateDrawEffect::None,

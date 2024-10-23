@@ -3,6 +3,8 @@
 #include "EditableMidiFile.h"
 #include "Curves/CurveFloat.h"
 
+//constexpr FVector MyTestVector = FVector(1.0f, 2.0f, 3.0f);
+
 void UEditableMidiFile::LoadFromHarmonixMidiFileAndApplyModifiers(UMidiFile* BaseFile, UCurveFloat* InTempoCurve, int32 InOffsetTicks)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UEditableMidiFile::LoadFromHarmonixBaseFile"));
