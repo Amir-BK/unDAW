@@ -233,7 +233,7 @@ public:
 	template<typename T>
 	T* CreateInputPin(FMetaSoundBuilderNodeInputHandle InHandle)
 	{
-		T* NewPin = CreatePin();
+		T* NewPin = CreatePin<T>();
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Input;
 		NewPin->SetHandle(InHandle);
 		//NewPin->CreateCompositePin(GetBuilderContext());
@@ -244,7 +244,7 @@ public:
 	template<typename T>
 	T* CreateOutputPin(FMetaSoundBuilderNodeOutputHandle InHandle)
 	{
-		T* NewPin = CreatePin();
+		T* NewPin = CreatePin<T>();
 		NewPin->Direction = M2Sound::Pins::EPinDirection::Output;
 
 		NewPin->SetHandle(InHandle);
