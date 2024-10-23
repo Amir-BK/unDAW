@@ -849,7 +849,7 @@ public:
 };
 
 template<>
-inline bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
+bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
 {
 
 	//so we need to check if output is wildcard, if it is wildcard we check if the builder already has a graph input for this pin, if it does we connect it,

@@ -377,7 +377,7 @@ private:
 };
 
 template<typename T>
-inline void UFKSFZAsset::GetObjectsOfClass(TArray<T*>& OutArray)
+void UFKSFZAsset::GetObjectsOfClass(TArray<T*>& OutArray)
 {
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;
@@ -389,7 +389,7 @@ inline void UFKSFZAsset::GetObjectsOfClass(TArray<T*>& OutArray)
 }
 
 template<typename T>
-inline T* UFKSFZAsset::GetPropertyValueWithinStruct(UObject* Target, const FName& StructPropertyName, const FName& PropertyNameWithinStruct)
+T* UFKSFZAsset::GetPropertyValueWithinStruct(UObject* Target, const FName& StructPropertyName, const FName& PropertyNameWithinStruct)
 {
 	// Get the reflected struct property
 	FStructProperty* StructProp = (FStructProperty*)Target->GetClass()->FindPropertyByName(StructPropertyName);

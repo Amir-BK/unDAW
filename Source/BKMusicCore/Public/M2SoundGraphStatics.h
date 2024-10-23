@@ -126,7 +126,7 @@ public:
 };
 
 
-inline TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class)
+TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class)
 {
 	TArray<UObject*> OutArray;
 	
@@ -142,7 +142,7 @@ inline TArray<UObject*> UM2SoundGraphStatics::GetAllObjectsOfClass(UClass* Class
 }
 
 template<typename T>
-inline void UM2SoundGraphStatics::GetObjectsOfClass(TArray<T*>& OutArray)
+void UM2SoundGraphStatics::GetObjectsOfClass(TArray<T*>& OutArray)
 {
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	TArray<FAssetData> AssetData;

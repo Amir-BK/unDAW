@@ -53,7 +53,7 @@ bool UK2Node_SwitchOnIntRanges::IsIntNotWithinRange(int& A, FSwitchIntRange& B)
 
 
 
-inline FText UK2Node_SwitchOnIntRanges::GetTooltipText() const
+FText UK2Node_SwitchOnIntRanges::GetTooltipText() const
 {
     return INVTEXT("Switch statement using integer ranges, \nany execution path that matches the equality condition will execute \nif none do then default will execute");
 }

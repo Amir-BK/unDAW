@@ -170,7 +170,7 @@ void UM2VariMixerVertex::SetChannelSoloState(int ChannelIndex, ECheckBoxState In
 	UpdateMuteAndSoloStates();
 }
 
-inline void UM2VariMixerVertex::BuildVertex()
+void UM2VariMixerVertex::BuildVertex()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
 
