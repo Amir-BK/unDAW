@@ -529,7 +529,7 @@ public:
 
 	//this templating is a stupid confusing waste of time doesn't save any effort and makes the code harder to read, can just make these plain ole methods
 	template<typename T>
-	bool ConnectPins(T* InInput, T* InOutput)
+	inline bool ConnectPins(T* InInput, T* InOutput)
 	{
 		UE_LOG(unDAWDataLogs, Warning, TEXT("ConnectPins not implemented for this type - UNSPECIALIZED"));
 
@@ -538,7 +538,7 @@ public:
 
 
 	template<>
-	bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput);;
+	inline bool ConnectPins<UM2MetasoundLiteralPin>(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput);;
 
 	template<>
 	bool ConnectPins<UM2AudioTrackPin>(UM2AudioTrackPin* InInput, UM2AudioTrackPin* InOutput)
@@ -849,7 +849,7 @@ public:
 };
 
 template<>
-bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
+inline bool UDAWSequencerData::ConnectPins(UM2MetasoundLiteralPin* InInput, UM2MetasoundLiteralPin* InOutput)
 {
 
 	//so we need to check if output is wildcard, if it is wildcard we check if the builder already has a graph input for this pin, if it does we connect it,
