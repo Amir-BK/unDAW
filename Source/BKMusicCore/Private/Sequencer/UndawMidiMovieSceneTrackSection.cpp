@@ -30,7 +30,7 @@ void UUndawMidiMovieSceneTrackSection::MarkBars()
 
 		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
 		MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), ++i);
-		MarkedFrameTest.Color = FLinearColor::Green;
+		//MarkedFrameTest.Color = FLinearColor::Green;
 		MovieScene->AddMarkedFrame(MarkedFrameTest);
 
 		BarTick += DAWData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
@@ -86,7 +86,7 @@ void UUndawMidiMovieSceneTrackSection::MarkSubdivisionsInRange()
 
 		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(SubdivisionFrameTime.FrameNumber));
 		MarkedFrameTest.Label = FString::Printf(TEXT("Subdivision %d"), FirstSubdivisionInSelectionRange);
-		MarkedFrameTest.Color = FLinearColor::Gray;
+		//MarkedFrameTest.Color = FLinearColor::Gray;
 		MovieScene->AddMarkedFrame(MarkedFrameTest);
 
 		FirstSubdivisionInSelectionRange += DAWData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
@@ -145,7 +145,7 @@ void UUndawMidiMovieSceneTrackSection::MarkNotesInRange()
 		{
 			auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(NoteFrameTime.FrameNumber));
 			MarkedFrameTest.Comment = FString::Printf(TEXT("Note %d"), Note.Pitch);
-			MarkedFrameTest.Color = TrackColor;
+			//MarkedFrameTest.Color = TrackColor;
 			MovieScene->AddMarkedFrame(MarkedFrameTest);
 		}
 	}

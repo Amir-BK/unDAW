@@ -1493,7 +1493,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 		FSlateDrawElement::MakeBox(OutDrawElements,
 			timelineLayerID,
-			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, rowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSignaturePoint->StartTick) * horizontalZoom, -PaintPosVector.Y + 42))),
+			OffsetGeometryChild.ToPaintGeometry(FVector2D(5.0f, RowHeight), FSlateLayoutTransform(1.0f, FVector2D(MidiSongMap->TickToMs(TimeSignaturePoint->StartTick) * HorizontalZoom, -PaintPosVector.Y + 42))),
 			&gridBrush,
 			ESlateDrawEffect::None,
 			FLinearColor::White

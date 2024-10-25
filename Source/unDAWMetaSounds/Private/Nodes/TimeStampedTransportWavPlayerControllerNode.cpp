@@ -11,6 +11,7 @@
 #include "HarmonixMetasound/DataTypes/MidiClock.h"
 #include "HarmonixMetasound/DataTypes/MusicTransport.h"
 #include "HarmonixMetasound/DataTypes/MusicTimeStamp.h"
+#include "Misc/EngineVersionComparison.h"
 #include "MetasoundNodeInterface.h"
 //#include "HarmonixMetasound/DataTypes"
 
@@ -25,7 +26,11 @@ namespace unDAWMetasound
 		METASOUND_PARAM(OutputStartTime, "Start Time", "Time into the wave asset to start (seek) the wave asset.")
 	}
 
-	class FTimeStampedTransportWavePlayerControllerOperator : public TExecutableOperator<FTimeStampedTransportWavePlayerControllerOperator>, public HarmonixMetasound::FMusicTransportControllable, public FMidiPlayCursor
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
+	class FTimeStampedTransportWavePlayerControllerOperator : public TExecutableOperator<FTimeStampedTransportWavePlayerControllerOperator>, public HarmonixMetasound::FMusicTransportControllable , public FMidiPlayCursor
+#else
+	class FTimeStampedTransportWavePlayerControllerOperator : public TExecutableOperator<FTimeStampedTransportWavePlayerControllerOperator>, public HarmonixMetasound::FMusicTransportControllable
+#endif
 	{
 	public:
 		FTimeStampedTransportWavePlayerControllerOperator(const FOperatorSettings& InSettings,
@@ -164,6 +169,7 @@ namespace unDAWMetasound
 						timeStampBlockFrameIndex = Span.BlockFrameIndex;
 						//this means we hit the timestamp, we need to check if we're before it or after it
 						UE_LOG(LogTemp, Log, TEXT("TimeStamp Hit? blockFrameIndex %d"), timeStampBlockFrameIndex)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 							if (CurrentTick < Span.BlockFrameIndex)
 							{
 								AfterStartTimeStamp = false;
@@ -172,17 +178,19 @@ namespace unDAWMetasound
 							else {
 								AfterStartTimeStamp = true;
 							}
+#endif
 
 						break;
 					}
 				}
 			}
-
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 			if (CurrentTick < TriggerTick && bPlaying == true)
 			{
 				//bPlaying = false;
 				timeStampBlockFrameIndex = -1;
 			}
+#endif
 
 			TickSpans.Empty(8);
 
@@ -218,8 +226,10 @@ namespace unDAWMetasound
 
 					case EMusicPlayerTransportState::Seeking:
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 						if (ReceivedSeekWhileStopped())
 						{
+							
 							// Assumes the MidiClock is stopped for the remainder of the block.
 							*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
 							if (CurrentTick < TriggerTick) return EMusicPlayerTransportState::Pausing;
@@ -244,6 +254,7 @@ namespace unDAWMetasound
 						}
 						// Here we will return that we want to be in the same state we were in before this request to
 						// seek since we can seek "instantaneously"...
+#endif
 						return GetTransportState();
 
 					case EMusicPlayerTransportState::Continuing:
@@ -255,9 +266,10 @@ namespace unDAWMetasound
 					case EMusicPlayerTransportState::Pausing:
 						bPlaying = false;
 						StopOutPin->TriggerFrame(StartFrameIndex);
-
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 						// Assumes the MidiClock is paused for the remainder of the block.
 						*StartTimeOutPin = FTime(MidiClockInPin->GetCurrentHiResMs() * 0.001f);
+#endif
 						return EMusicPlayerTransportState::Paused;
 
 					case EMusicPlayerTransportState::Paused:
@@ -286,11 +298,12 @@ namespace unDAWMetasound
 			PlayOutPin->Reset();
 			StopOutPin->Reset();
 			*StartTimeOutPin = FTime();
-
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 			FMidiPlayCursor::Reset(true);
 
 			SetMessageFilter(FMidiPlayCursor::EFilterPassFlags::None);
 			MidiClockInPin->RegisterHiResPlayCursor(this);
+#endif
 
 			CurrentTimestamp = *TimestampInPin;
 
@@ -307,8 +320,10 @@ namespace unDAWMetasound
 
 		void CalculateAndInvalidateTriggerTick()
 		{
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 			const FSongMaps& SongMaps = MidiClockInPin->GetSongMaps();
 			TriggerTick = SongMaps.CalculateMidiTick(CurrentTimestamp, Quantize);
+#endif
 		}
 
 	private:
@@ -350,7 +365,8 @@ namespace unDAWMetasound
 		EMidiClockSubdivisionQuantization Quantize = EMidiClockSubdivisionQuantization::None;
 
 		int32 TriggerTick = 0;
-
+		//Harmonix changed the API for FMidiPlayCursor in 5.5, so we need to check the engine version
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 		//** BEGIN FMidiPlayCursor
 		virtual void SeekToTick(int32 Tick) override { SeekThruTick(Tick - 1); }
 		virtual void SeekThruTick(int32 Tick) override {
@@ -379,8 +395,10 @@ namespace unDAWMetasound
 			TickSpans.Emplace(TickProceedingThisAdvance, CurrentTick, MidiClockInPin->GetCurrentBlockFrameIndex(), false);
 		}
 		// We have to override this to disambiguate the FMidiPlayCursor Reset and the MS operator Reset
-		virtual void Reset(bool ForceNoBroadcast) override { FMidiPlayCursor::Reset(ForceNoBroadcast); }
+	//	virtual void Reset(bool ForceNoBroadcast) override { FMidiPlayCursor::Reset(ForceNoBroadcast); }
 		//** END FMidiPlayCursor
+
+#endif
 	};
 
 	class FTimeStampedTransportWavePlayerControllerNode : public FNodeFacade
