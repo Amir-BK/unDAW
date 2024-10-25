@@ -23,12 +23,12 @@
 		{
 			"Name": "BKMusicCore",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "PostEngineInit"
 		},
 		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
-			"LoadingPhase": "PostDefault"
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "BK_EditorUtilities",
