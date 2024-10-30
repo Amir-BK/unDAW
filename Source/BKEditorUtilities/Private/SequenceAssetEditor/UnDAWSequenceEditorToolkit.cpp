@@ -27,7 +27,7 @@
 #include "Widgets/Layout/SScaleBox.h"
 #include "Sequencer/UndawMusicSequencer.h"
 #include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
-#include "MusicDeviceControllerSubsystem.h"
+//#include "MusicDeviceControllerSubsystem.h"
 #include "Framework/Docking/TabManager.h"
 
 
@@ -625,13 +625,13 @@ void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> N
 	//int32 DeviceID;
 	//UMIDIDeviceManager::GetMIDIInputDeviceIDByName(*NewSelection.Get(), DeviceID);
 	SelectedInputDeviceName =NewSelection;
-	MidiDeviceController = UMusicDeviceControllerSubsystem::GetOrCreateMidiInputDeviceController(*NewSelection.Get());
+	//MidiDeviceController = UMusicDeviceControllerSubsystem::GetOrCreateMidiInputDeviceController(*NewSelection.Get());
 	//UMIDIDeviceManager::
 
-	MidiDeviceController->OnMIDINoteOn.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOn);
-	MidiDeviceController->OnMIDINoteOff.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOff);
+	//MidiDeviceController->OnMIDINoteOn.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOn);
+	//MidiDeviceController->OnMIDINoteOff.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiNoteOff);
 	//control change
-	MidiDeviceController->OnMIDIControlChange.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiControlChange);
+	//MidiDeviceController->OnMIDIControlChange.AddDynamic(SequenceData, &UDAWSequencerData::OnMidiControlChange);
 
 	//MidiDeviceController->OnMIDINoteOn.
 	//	{
