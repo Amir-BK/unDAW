@@ -7,19 +7,12 @@
 #include "Misc/AssetRegistryInterface.h"
 #include "MetasoundSource.h"
 #include "MetasoundNodeRegistrationMacro.h"
-#include "Interfaces/unDAWMetasoundInterfaces.h"
 #include "MetasoundDataTypeRegistrationMacro.h"
 
 #define LOCTEXT_NAMESPACE "unDAWMetaSoundsModule"
 
 void unDAWMetaSoundsModule::StartupModule()
 {
-	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
-	unDAW::Metasounds::FunDAWCustomInsertInterface::RegisterInterface();
-	unDAW::Metasounds::FunDAWMasterGraphInterface::RegisterInterface();
-	unDAW::Metasounds::FunDAWMidiInsertInterface::RegisterInterface();
-	unDAW::Metasounds::FunDAWMusicalActionInterface::RegisterInterface();
-	unDAW::Metasounds::FunDAWAudibleActionInterface::RegisterInterface();
 
 }
 

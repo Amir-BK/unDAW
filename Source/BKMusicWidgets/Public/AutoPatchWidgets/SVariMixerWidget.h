@@ -9,6 +9,7 @@
 #include "SAudioSlider.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
 #include "Widgets/Input/SCheckBox.h"
 
 class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
@@ -29,6 +30,7 @@ public:
 
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
 	TSharedPtr<SAudioSlider> VolumeSlider;
+	TSharedPtr<SAudioMaterialLabeledSlider> VolumeLabeledSlider;
 
 	float GetVolumeSliderValue() const
 	{

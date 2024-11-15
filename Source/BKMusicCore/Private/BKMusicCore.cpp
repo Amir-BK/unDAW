@@ -3,6 +3,7 @@
 #include "BKMusicCore.h"
 #include "UObject/UObjectArray.h"
 #include "Serialization/JsonSerializer.h"
+#include "Interfaces/unDAWMetasoundInterfaces.h"
 //#include "MetasoundUObjectRegistry.h"
 
 #include "MetasoundDataTypeRegistrationMacro.h"
@@ -15,6 +16,14 @@ void BKMusicCoreModule::StartupModule()
 #ifdef WITH_CHUNREAL_PLUGIN
 	UE_LOG(LogTemp, Warning, TEXT("WE SEE CHUNREAL!"));
 #endif 
+
+	unDAW::Metasounds::FunDAWInstrumentRendererInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWCustomInsertInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWMasterGraphInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWMidiInsertInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWMusicalActionInterface::RegisterInterface();
+	unDAW::Metasounds::FunDAWAudibleActionInterface::RegisterInterface();
+
 
 
 }

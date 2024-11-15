@@ -106,8 +106,12 @@ void UM2VariMixerVertex::UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin,
 	FName FloatName;
 	EMetaSoundBuilderResult BuildResult;
 
-	auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
-	BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
+	if (InPin->GainParameter)
+	{
+		auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
+		BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
+	}
+
 }
 
 UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()

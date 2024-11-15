@@ -21,29 +21,29 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "BKMusicCore",
-			"Type": "Runtime",
-			"LoadingPhase": "PostEngineInit"
-		},
-		{
 			"Name": "unDAWMetaSounds",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault"
 		},
 		{
+			"Name": "BKMusicCore",
+			"Type": "Runtime",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
 			"Name": "BK_EditorUtilities",
 			"Type": "Editor",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "PostEngineInit"
 		},
 		{
 			"Name": "unPatchwork",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostEngineInit"
 		},
 		{
 			"Name": "unDAWK2_Nodes",
 			"Type": "UncookedOnly",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostEngineInit"
 		}
 
 	],
@@ -58,10 +58,6 @@
 		},
 		{
 			"Name": "WaveformEditor",
-			"Enabled": true
-		},
-		{
-			"Name": "MIDIDevice",
 			"Enabled": true
 		},
 		{

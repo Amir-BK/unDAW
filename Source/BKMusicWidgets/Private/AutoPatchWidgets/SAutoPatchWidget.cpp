@@ -11,6 +11,8 @@
 #include "Widgets/Input/SButton.h"
 #include "SlateOptMacros.h"
 #include "MetasoundBuilderSubsystem.h"
+
+
 #include "M2SoundGraphStatics.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -23,59 +25,77 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 			SAssignNew(ContentBox, SVerticalBox)
 		];
 
-	//for (const auto& [Name, Pin] : Vertex->InputM2SoundPins)
-	//{
-	//	if (Pin->IsA<UM2MetasoundLiteralPin>())
-	//	{
-	//		ContentBox->AddSlot()
-	//			[
-	//				//SNew(SM2LiteralControllerWidget, *Cast<UM2MetasoundLiteralPin>(Pin))
-	//			];
-	//	}
-	//	//else if (Pin->IsA<UM2MetasoundWaveTablePin>())
-	//	//{
-	//	//	ContentBox->AddSlot()
-	//	//	[
-	//	//		SNew(SM2WaveTableControllerWidget, *Cast<UM2MetasoundWaveTablePin>(Pin))
-	//	//	];
-	//	//}
-	//	//else if (Pin->IsA<UM2MetasoundTriggerPin>())
-	//	//{
-	//	//	ContentBox->AddSlot()
-	//	//	[
-	//	//		SNew(SM2TriggerControllerWidget, *Cast<UM2MetasoundTriggerPin>(Pin))
-	//	//	];
-	//	//}
-	//	//else if (Pin->IsA<UM2MetasoundDataReferencePin>())
-	//	//{
-	//	//	ContentBox->AddSlot()
-	//	//	[
-	//	//		SNew(SM2DataReferenceControllerWidget, *Cast<UM2MetasoundDataReferencePin>(Pin))
-	//	//	];
-	//	//}
-	//	//else if (Pin->IsA<UM2MetasoundAudioBufferPin>())
-	//	//{
-	//	//	ContentBox->AddSlot()
-	//	//	[
-	//	//		SNew(SM2AudioBufferControllerWidget, *Cast<UM2MetasoundAudioBufferPin>(Pin))
-	//	//	];
-	//	//}
-	//	//else if (Pin->IsA<UM2MetasoundTimePin>())
-	//	//{
-	//	//	ContentBox->AddSlot()
-	//	//	[
-	//	//		SNew(SM2TimeControllerWidget, *Cast<UM2MetasoundTimePin>(Pin))
-	//	//	];
-	//	//}
-	//	else
-	//	{
-	//		ContentBox->AddSlot()
-	//			[
-	//				SNew(STextBlock)
-	//					.Text(FText::FromString(Pin->GetName()))
-	//			];
-	//	}
-	//}
+	//traverse the input pins, if we have a float literal, create a knob for it.
+
+	auto UndawWidgetSettings = GetMutableDefault<UndawWidgetsSettings>();
+	auto UndawSettings = GetMutableDefault<UUNDAWSettings>();
+
+	//cache for vertex
+	//auto* Settings = GetDefault<UUNDAWSettings>();
+	auto* WidgetSettings = GetDefault<UndawWidgetsSettings>();
+	FName VertexName = Vertex->GetFName();
+
+	if (!UndawSettings->Cache.Contains(VertexName))
+	{
+		FCachedVertexPinInfo NewInfo;
+		UndawSettings->Cache.Add(VertexName, NewInfo);
+	}
+
+
+	for (const auto& [Name, Pin] : Vertex->InputM2SoundPins)
+	{
+	//cache for pin
+	
+
+		if (Pin->IsA<UM2MetasoundLiteralPin>())
+		{
+
+			
+			
+			auto LiteralPin = Cast<UM2MetasoundLiteralPin>(Pin);
+			if (LiteralPin->DataType == "Float")
+			{
+				if (!UndawSettings->Cache[VertexName].FloatPinConfigs.Contains(Name))
+				{
+					FM2SoundFloatPinConfig NewConfig;
+					NewConfig.MinValue = 0.0f;
+					NewConfig.MaxValue = 1.0f;
+					UndawSettings->Cache[VertexName].FloatPinConfigs.Add(Name, NewConfig);
+				}
+
+				Config = &UndawSettings->Cache[VertexName].FloatPinConfigs[Name];
+
+
+				ContentBox->AddSlot()
+					[
+						SNew(SMaterialControllerFloatWidget, LiteralPin, Config)
+					];
+
+			}
+
+			if (LiteralPin->DataType == "Bool")
+			{
+				ContentBox->AddSlot()
+					[
+						SNew(SAudioMaterialButton)
+							//.OnClicked_Lambda([LiteralPin]() { LiteralPin->ExecuteTriggerParameter(); })
+							.AudioMaterialButtonStyle(UndawWidgetSettings->GetButtonStyle())
+							.OnBooleanValueChanged_Lambda([LiteralPin](bool NewValue) {
+							EMetaSoundBuilderResult BuildResult;
+							auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
+							NonConstLiteralPin->LiteralValue.Set(NewValue);
+							NonConstLiteralPin->ParentVertex->GetSequencerData()->BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NonConstLiteralPin->LiteralValue, BuildResult);
+							
+								})
+
+					];
+			}
+		
+		
+		}
+
+	}
+
 }
 UM2SoundPatch* SAutoPatchWidget::GetSelectedPatch() const
 {

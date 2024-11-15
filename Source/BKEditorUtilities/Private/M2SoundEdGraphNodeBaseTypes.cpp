@@ -14,9 +14,11 @@
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 #include "PinConfigWidget/SPinConfigWidget.h"
+#include "unDAWSettings.h"
 #include "ToolMenu.h"
 //#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
+#include <UndawWidgetsSettings.h>
 
 TSharedPtr<class SGraphNode> FM2SoundGraphPanelNodeFactory::CreateNode(UEdGraphNode* InNode) const
 {
@@ -221,6 +223,14 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 
 		auto& DynamicSection = Menu->AddSection(FName("Pin Controls"));
 		DynamicSection.AddDynamicEntry("PinControls", FNewToolMenuSectionDelegate::CreateLambda([this, Context](FToolMenuSection& InSection) {
+			//check if we already have defaults for this pin in unDAWsettings, otherwise create a new struct
+
+			
+
+			//add property viewer or whatever works for the struct
+
+
+
 			InSection.AddEntry(FToolMenuEntry::InitWidget(
 				"ControlSettings",
 				SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject)),

@@ -18,7 +18,7 @@
 #include "MetasoundBuilderSubsystem.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
-#include "MidiDeviceManager.h"
+//#include "MidiDeviceManager.h"
 #include "MidiDrivenSequence/MidiDrivenLevelSequence.h"
 
 #include <Pins/M2Pins.h>
@@ -444,14 +444,14 @@ public:
 
 	bool bJustReceivedMessage = false;
 
-	UFUNCTION()
-	void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+	//UFUNCTION()
+	//void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
 
-	UFUNCTION()
-	void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+	//UFUNCTION()
+	//void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
 
-	UFUNCTION()
-	void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
+	//UFUNCTION()
+	//void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
 
 	float MetasoundCpuUtilization = 0.0f;
 

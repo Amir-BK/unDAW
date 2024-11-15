@@ -53,14 +53,12 @@ public class unDAWMetaSounds : ModuleRules
                 "Harmonix",
                 "HarmonixMetasound",
                 "AudioExtensions",
-                "SignalProcessing",
                 "MetasoundEngine",
-                "MetasoundGraphCore",
+               "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "MetasoundGenerator",
-                "AudioMixer",
-				"BKMusicCore",
-				"MIDIDevice" //MidiDevice should be Mac PC only
+                "AudioMixer"
+				//"MIDIDevice" //MidiDevice should be Mac PC only
 
 				// ... add other public dependencies that you statically link with here ...
 			}

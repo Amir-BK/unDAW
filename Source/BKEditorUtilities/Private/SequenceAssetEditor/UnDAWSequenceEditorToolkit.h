@@ -14,7 +14,7 @@
 
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
-#include "MidiDeviceManager.h"
+//#include "MidiDeviceManager.h"
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "GraphEditor.h"
@@ -110,7 +110,7 @@ protected:
 
 	TArray<TSharedPtr<FString>> InputDeviceNames;
 	TSharedPtr<FString> SelectedInputDeviceName;
-	UMIDIDeviceInputController* MidiDeviceController = nullptr;
+	//UMIDIDeviceInputController* MidiDeviceController = nullptr;
 
 	void SetupPreviewPerformer();
 	//void PlayAudioComponent();

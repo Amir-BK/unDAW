@@ -256,6 +256,8 @@ public:
 
 	bool bIsSet = false;
 
+
+
 };
 
 template <typename T>

@@ -31,28 +31,28 @@ void UDAWSequencerData::EnsureLevelSequence()
 
 }
 
-void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
-{
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
-		//if we have a track for this channel, add the note to the track
-		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
-		bJustReceivedMessage = true;
-	//FWorldContext* WorldContext = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
-	//WorldContext->World
-
-}
-
-void UDAWSequencerData::OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
-{
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note Off %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
-		//if we have a track for this channel, remove the note from the track
-		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
-}
-
-void UDAWSequencerData::OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value)
-{
-	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Control Change %d, %d, %d, %d"), Timestamp, Channel, Type, Value)
-}
+//void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+//{
+//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+//		//if we have a track for this channel, add the note to the track
+//		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+//		bJustReceivedMessage = true;
+//	//FWorldContext* WorldContext = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
+//	//WorldContext->World
+//
+//}
+//
+//void UDAWSequencerData::OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
+//{
+//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note Off %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
+//		//if we have a track for this channel, remove the note from the track
+//		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
+//}
+//
+//void UDAWSequencerData::OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value)
+//{
+//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Control Change %d, %d, %d, %d"), Timestamp, Channel, Type, Value)
+//}
 
 bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {
@@ -849,42 +849,42 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 
 	TempoCurve = NewObject<UCurveFloat>(this);
 
-	//TempoCurve->
+	////TempoCurve->
 
-	TempoCurve->OnUpdateCurve.AddLambda([this](UCurveBase* Curve, EPropertyChangeType::Type Type) {
+	//TempoCurve->OnUpdateCurve.AddLambda([this](UCurveBase* Curve, EPropertyChangeType::Type Type) {
 
-		//print enum type just for funsies
-		UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Change Type %d"), (uint32)Type)
-			auto TicksPerQuarterNote = HarmonixMidiFile->GetSongMaps()->GetTicksPerQuarterNote();
-		switch (Type)
-		{
-			case EPropertyChangeType::ValueSet:
-			UE_LOG(unDAWDataLogs, Verbose, TEXT("Value Set"))
-			//can we find the relevant tempo point from the tick?
-			//basically let's try changing the tempo for each point in the midi...
-			HarmonixMidiFile->GetTrack(0)->GetRawEvents().Empty();
-				for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
-				{
-					//HarmonixMidiFile->GetTrack(0)->GetRawEvents().Add(FMidiEvent(CurvePoint.Time, FMidiMsg(Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value))));
-						//GetTempoInfoForTick(CurvePoint.Time)->MidiTempo = Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value);
-				}
-				HarmonixMidiFile->SortAllTracks();
-				//HarmonixMidiFile->GetSongMaps()->Init(TicksPerQuarterNote);
-				HarmonixMidiFile->GetSongMaps()->GetTempoMap().Finalize(HarmonixMidiFile->GetLastEventTick());
-				//HarmonixMidiFile->GetSongMaps()->Set
-				break;
+	//	//print enum type just for funsies
+	//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Property Change Type %d"), (uint32)Type)
+	//		auto TicksPerQuarterNote = HarmonixMidiFile->GetSongMaps()->GetTicksPerQuarterNote();
+	//	switch (Type)
+	//	{
+	//		case EPropertyChangeType::ValueSet:
+	//		UE_LOG(unDAWDataLogs, Verbose, TEXT("Value Set"))
+	//		//can we find the relevant tempo point from the tick?
+	//		//basically let's try changing the tempo for each point in the midi...
+	//		HarmonixMidiFile->GetTrack(0)->GetRawEvents().Empty();
+	//			for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
+	//			{
+	//				//HarmonixMidiFile->GetTrack(0)->GetRawEvents().Add(FMidiEvent(CurvePoint.Time, FMidiMsg(Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value))));
+	//					//GetTempoInfoForTick(CurvePoint.Time)->MidiTempo = Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value);
+	//			}
+	//			HarmonixMidiFile->SortAllTracks();
+	//			//HarmonixMidiFile->GetSongMaps()->Init(TicksPerQuarterNote);
+	//			HarmonixMidiFile->GetSongMaps()->GetTempoMap().Finalize(HarmonixMidiFile->GetLastEventTick());
+	//			//HarmonixMidiFile->GetSongMaps()->Set
+	//			break;
 
 
-		default:
-			break;
-		}
-
-		//for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
-		//{
-		//	//HarmonixMidiFile->GetSongMaps()-> SetTempoAtTick(CurvePoint.Time, Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value));
-		//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Curve Point %f, %f"), CurvePoint.Time, CurvePoint.Value)
+		//default:
+		//	break;
 		//}
-		});
+
+		////for (const auto& CurvePoint : TempoCurve->FloatCurve.GetCopyOfKeys())
+		////{
+		////	//HarmonixMidiFile->GetSongMaps()-> SetTempoAtTick(CurvePoint.Time, Harmonix::Midi::Constants::BPMToMidiTempo(CurvePoint.Value));
+		////	UE_LOG(unDAWDataLogs, Verbose, TEXT("Curve Point %f, %f"), CurvePoint.Time, CurvePoint.Value)
+		////}
+		//});
 
 	for (const auto& TempoEvent : TempoEvents)
 	{

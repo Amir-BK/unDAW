@@ -2,8 +2,61 @@
 
 #include "Engine/DeveloperSettings.h"
 #include "M2SoundGraphStatics.h"
+#include "AudioMaterialSlate/AudioMaterialSlateTypes.h"
+#include "AudioWidgetsEnums.h"
+
 
 #include "unDAWSettings.generated.h"
+
+UENUM()
+enum class EFloatPinWidgetType :  uint8 
+{
+	Slider,
+	Knob,
+	NoWidget,
+};
+
+USTRUCT()
+struct FM2SoundFloatPinConfig
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	EFloatPinWidgetType WidgetType = EFloatPinWidgetType::Knob;
+
+	//unit type
+	UPROPERTY(EditAnywhere)
+	EAudioUnitsValueType UnitType = EAudioUnitsValueType::Linear;
+
+
+	/**Override the Knob Style used in the Metasound Editor.*/
+	UPROPERTY(EditAnywhere, config, Category = "Widget Styling (Experimental)", meta = (AllowedClasses = "/Script/SlateCore.SlateWidgetStyleAsset", DisplayName = "Knob Style"))
+	FSoftObjectPath KnobStyleOverride;
+
+	/**Override the Slider Style used in the Metasound Editor.*/
+	UPROPERTY(EditAnywhere, config, Category = "Widget Styling (Experimental)", meta = (AllowedClasses = "/Script/SlateCore.SlateWidgetStyleAsset", DisplayName = "Slider Style"))
+	FSoftObjectPath SliderStyleOverride;
+
+	//knob style, slider style
+	//UPROPERTY()
+
+	UPROPERTY(EditAnywhere)
+	TEnumAsByte<EOrientation> SliderOrientation = EOrientation::Orient_Horizontal;
+
+	UPROPERTY(EditAnywhere)
+	float MinValue = 0.0f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxValue = 1.0f;
+
+
+};
+
+USTRUCT()
+struct FCachedM2SoundVertex
+{
+	GENERATED_BODY()
+};
 
 USTRUCT()
 struct FCachedVertexPinInfo
@@ -12,6 +65,9 @@ struct FCachedVertexPinInfo
 
 	UPROPERTY(EditAnywhere)
 	TMap<FName, FFloatRange> PinRanges;
+
+	UPROPERTY(EditAnywhere)
+	TMap<FName, FM2SoundFloatPinConfig> FloatPinConfigs;
 };
 
 UCLASS(config = Game, meta = (DisplayName = "unDAW Settings"))
@@ -73,6 +129,7 @@ public:
 	/** WaveTable pin type color */
 	UPROPERTY(EditAnywhere, config, Category = PinColors)
 	FLinearColor WaveTablePinTypeColor;
+
 
 
 };

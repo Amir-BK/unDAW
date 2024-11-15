@@ -568,18 +568,18 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 				ToolbarBuilder.EndSection();
 				//now a new section, combobox for midi input 
 
-				ToolbarBuilder.BeginSection("MIDI Input");
-				TArray<FMIDIDeviceInfo> InputDevices;
-				TArray<FMIDIDeviceInfo> OutputDevices;
+				//ToolbarBuilder.BeginSection("MIDI Input");
+				//TArray<FMIDIDeviceInfo> InputDevices;
+				//TArray<FMIDIDeviceInfo> OutputDevices;
 
-				UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
+				//UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
 
-				InputDeviceNames.Empty();
-				
-				for (auto& Device : InputDevices)
-				{
-					InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
-				}
+				//InputDeviceNames.Empty();
+				//
+				//for (auto& Device : InputDevices)
+				//{
+				//	InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
+				//}
 
 //				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
 //					.OptionsSource(&InputDeviceNames)
@@ -607,6 +607,8 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
+	if (!PianoRollGraph) return;
+
 	PianoRollGraph->OnSeekEvent.Unbind();
 	auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 	PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);
