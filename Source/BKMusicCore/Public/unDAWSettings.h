@@ -70,7 +70,7 @@ struct FCachedVertexPinInfo
 	TMap<FName, FM2SoundFloatPinConfig> FloatPinConfigs;
 };
 
-UCLASS(config = Game, meta = (DisplayName = "unDAW Settings"))
+UCLASS(config = EditorPerProjectUserSettings, meta = (DisplayName = "unDAW Settings"))
 class BKMUSICCORE_API UUNDAWSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
@@ -130,6 +130,8 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = PinColors)
 	FLinearColor WaveTablePinTypeColor;
 
-
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 };

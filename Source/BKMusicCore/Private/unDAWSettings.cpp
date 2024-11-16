@@ -17,4 +17,13 @@ UUNDAWSettings::UUNDAWSettings()
 	TriggerPinTypeColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);					// white
 	WaveTablePinTypeColor = FLinearColor(0.580392f, 0.0f, 0.827450f, 1.0f);		// purple
 }
-
+#if WITH_EDITOR
+void UUNDAWSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	if (PropertyChangedEvent.ChangeType != EPropertyChangeType::Interactive)
+	{
+		// Dragging spinboxes causes this to be called every frame so we wait until they've finished dragging before saving.
+		SaveConfig();
+	}
+}
+#endif

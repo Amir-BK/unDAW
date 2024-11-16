@@ -11,6 +11,7 @@
 #include "Widgets/Input/SButton.h"
 #include "SlateOptMacros.h"
 #include "MetasoundBuilderSubsystem.h"
+#include "SSearchableComboBox.h"
 
 
 #include "M2SoundGraphStatics.h"
@@ -33,7 +34,12 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 	//cache for vertex
 	//auto* Settings = GetDefault<UUNDAWSettings>();
 	auto* WidgetSettings = GetDefault<UndawWidgetsSettings>();
-	FName VertexName = Vertex->GetFName();
+
+	//cast parent to patch vertex and get name
+	auto* VertexFromPin = Cast<UM2SoundPatch>(Vertex);
+	PatchName = VertexFromPin->Patch->GetFName();
+
+	const FName& VertexName = PatchName;
 
 	if (!UndawSettings->Cache.Contains(VertexName))
 	{
@@ -226,7 +232,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			MainHorizontalBox->AddSlot()
 				.MaxWidth(200)
 				[
-					SNew(SComboBox<TSharedPtr<FString>>)
+					SNew(SSearchableComboBox)
 					.OptionsSource(&EnumOptions)
 					.InitiallySelectedItem(MakeShared<FString>(GetEnumValue().ToString()))
 					//.ComboBoxStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
@@ -297,7 +303,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		MainHorizontalBox->AddSlot()
 			.MaxWidth(200)
 			[
-				SNew(SComboBox<TSharedPtr<FString>>)
+				SNew(SSearchableComboBox)
 				.OptionsSource(&UObjectOptions)
 				.InitiallySelectedItem(CurrentSelection)
 

@@ -114,24 +114,6 @@ public:
 
 DECLARE_DELEGATE_TwoParams(FOnInnerWidgetDragged, const FVector2D, const SWidget*)
 
-//template<typename T>
-//class BKMUSICWIDGETS_API SMaterialControllerWidget : public SCompoundWidget
-//{
-//public:
-//	SLATE_BEGIN_ARGS(SMaterialControllerWidget<T>)
-//		{}
-//	SLATE_END_ARGS()
-//
-//	//virtual void Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin& InMaterialPin) = 0;
-//
-//	virtual T GetValue() = 0;
-//
-//	virtual void SetValue(T NewValue) = 0;
-//
-//	const UM2MetasoundLiteralPin* LiteralPin;
-//
-//	FOnInnerWidgetDragged OnInnerWidgetDragged;
-//};
 
 class BKMUSICWIDGETS_API SMaterialControllerFloatWidget : public SCompoundWidget
 {
@@ -213,9 +195,6 @@ public:
 		break;
 		}
 
-		
-
-
 	}
 
 	float GetValue() const {
@@ -227,12 +206,16 @@ public:
 		return 0.0f;
 		 }
 
-	void SetValue(float NewValue) {};
+	void SetValue(float NewValue) 
+	{
+		EMetaSoundBuilderResult BuildResult;
+		auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
+		NonConstLiteralPin->LiteralValue.Set(InputWidget->GetOutputValue(NewValue));
+		NonConstLiteralPin->ParentVertex->GetSequencerData()->BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NonConstLiteralPin->LiteralValue, BuildResult);
+	};
 
 	void OnValueChanged(float NewValue) {
 		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), InputWidget->GetOutputValue(NewValue));
-
-		
 
 		EMetaSoundBuilderResult BuildResult;
 		auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
@@ -273,6 +256,8 @@ public:
 	UM2SoundPatch* GetSelectedPatch() const;
 
 	FM2SoundFloatPinConfig* Config = nullptr;
+
+	FName PatchName = NAME_None;
 
 	private:
 		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;

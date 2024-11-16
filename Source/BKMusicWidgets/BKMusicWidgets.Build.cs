@@ -43,7 +43,7 @@ public class BKMusicWidgets : ModuleRules
                 "AudioMixer",
                 "AppFramework", "Boost", "Harmonix", "HarmonixMidi", "HarmonixDsp", "MetasoundFrontend",
                 "BKMusicCore", "CommonUI", "MetasoundEngine", "HarmonixMetasound", "MetasoundGraphCore",
-                "DeveloperSettings",
+                "DeveloperSettings", "ToolWidgets"
             }
             );
 

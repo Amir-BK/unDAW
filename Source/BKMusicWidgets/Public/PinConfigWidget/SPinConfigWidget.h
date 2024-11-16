@@ -7,7 +7,11 @@
 #include "Vertexes/M2SoundVertex.h"
 #include "Widgets/SBoxPanel.h"
 #include "unDAWSettings.h"
+#include "M2SoundGraphStatics.h"
+#include "Styling/SlateWidgetStyleAsset.h"
 #include "Widgets/SCompoundWidget.h"
+
+
 
 /**
  * 
@@ -17,6 +21,7 @@ class BKMUSICWIDGETS_API SPinConfigWidget : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SPinConfigWidget)
 	{}
+		SLATE_EVENT(FSimpleDelegate, OnConfigChanged)
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -26,27 +31,54 @@ public:
 
 	float MaxValue = 1.0f;
 
+	FName PatchName = NAME_None;
+
 	//the laziest...
 	TArray<TSharedPtr<FString>> WidgetTypes;
 
+	TArray<TSharedPtr<FString>> OritentationTypes;
+
 	TArray<TSharedPtr<FString>> UnitTypes;
 
+	TArray<TSharedPtr<FString>> StylesStrings;
+
+	FSimpleDelegate OnConfigChanged;
+
 	void UpdateMinMax(float InMin, float InMax);
+
+	TArray<UObject*> KnobStyleObjects;
+	TArray<UObject*> SliderStyleObjects;
 
 	const UM2Pins* Pin;
 
 	TSharedPtr<SVerticalBox> MainCotentArea;
+
+	TArray<TSharedPtr<FString>> GetAllKnobStyles()
+	{
+		TArray<TSharedPtr<FString>> Styles;
+		Styles.Add(MakeShareable(new FString("Default")));
+
+		KnobStyleObjects = UM2SoundGraphStatics::GetAllObjectsOfClass(USlateWidgetStyleAsset::StaticClass());
+
+		for (auto* Style : KnobStyleObjects)
+		{
+			Styles.Add(MakeShareable(new FString(Style->GetName())));
+		}
+
+		return Styles;
+	}
+
 
 	TSharedPtr<FString> GetCurentWidgetType() const
 	{
 		//this is only called for float so, get value from settings
 		auto* Settings = GetDefault<UUNDAWSettings>();
 
-		if (Settings->Cache.Contains(Pin->ParentVertex->GetFName()))
+		if (Settings->Cache.Contains(PatchName))
 		{
-			if (Settings->Cache[Pin->ParentVertex->GetFName()].FloatPinConfigs.Contains(Pin->Name))
+			if (Settings->Cache[PatchName].FloatPinConfigs.Contains(Pin->Name))
 			{
-				auto& Config = Settings->Cache[Pin->ParentVertex->GetFName()].FloatPinConfigs[Pin->Name];
+				auto& Config = Settings->Cache[PatchName].FloatPinConfigs[Pin->Name];
 				if (Config.WidgetType == EFloatPinWidgetType::Slider)
 				{
 					return WidgetTypes[1];
@@ -67,11 +99,11 @@ public:
 		auto* Settings = GetDefault<UUNDAWSettings>();
 
 		//there are only three types...
-		if (Settings->Cache.Contains(Pin->ParentVertex->GetFName()))
+		if (Settings->Cache.Contains(PatchName))
 		{
-			if (Settings->Cache[Pin->ParentVertex->GetFName()].FloatPinConfigs.Contains(Pin->Name))
+			if (Settings->Cache[PatchName].FloatPinConfigs.Contains(Pin->Name))
 			{
-				auto& Config = Settings->Cache[Pin->ParentVertex->GetFName()].FloatPinConfigs[Pin->Name];
+				auto& Config = Settings->Cache[PatchName].FloatPinConfigs[Pin->Name];
 				if (Config.UnitType == EAudioUnitsValueType::Linear)
 				{
 					return UnitTypes[0];
@@ -92,6 +124,31 @@ public:
 
 
 	}
+
+	TSharedPtr<FString> GetCurrentOrientation()
+	{
+
+		auto* Settings = GetDefault<UUNDAWSettings>();
+
+		if (Settings->Cache.Contains(PatchName))
+		{
+			if (Settings->Cache[PatchName].FloatPinConfigs.Contains(Pin->Name))
+			{
+				auto& Config = Settings->Cache[PatchName].FloatPinConfigs[Pin->Name];
+				if (Config.SliderOrientation == EOrientation::Orient_Horizontal)
+				{
+					return OritentationTypes[0];
+				}
+				else if (Config.SliderOrientation == EOrientation::Orient_Vertical)
+				{
+					return OritentationTypes[1];
+				}
+			}
+		}
+
+		return OritentationTypes[0];
+	}
+
 
 	TSharedRef<SWidget> OnGenerateValueTypeEnumWidget(TSharedPtr<FString> InItem);
 

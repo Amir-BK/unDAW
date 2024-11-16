@@ -9,6 +9,7 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Input/SComboButton.h"
 #include "Widgets/Input/SComboBox.h"
+#include "SSearchableComboBox.h"
 #include "unDAWSettings.h"
 #include "UndawWidgetsSettings.h"
 #include "AudioMaterialSlate/SAudioMaterialLabeledKnob.h"
@@ -20,6 +21,10 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 {
 
 	Pin = InPin;
+	//cast parent to patch vertex and get name
+	OnConfigChanged = InArgs._OnConfigChanged;
+	auto* VertexFromPin = Cast<UM2SoundPatch>(InPin->ParentVertex);
+	PatchName = VertexFromPin->Patch->GetFName();
 
 	ChildSlot
 		[
@@ -43,25 +48,25 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 			
 			auto* Settings = GetMutableDefault<UUNDAWSettings>();
 			auto* WidgetSettings = GetDefault<UndawWidgetsSettings>();
-			auto* VertexFromPin = Cast<UM2SoundVertex>(AsLiteralPin->ParentVertex);
-			FName VertexName = FName(VertexFromPin->GetName());
+			//auto* VertexFromPin = Cast<UM2SoundPatch>(AsLiteralPin->ParentVertex);
+			//FName VertexName = VertexFromPin->Patch->GetFName();
 
-			if (!Settings->Cache.Contains(VertexName))
+			if (!Settings->Cache.Contains(PatchName))
 			{
 				FCachedVertexPinInfo NewInfo;
-				Settings->Cache.Add(VertexName, NewInfo);
+				Settings->Cache.Add(PatchName, NewInfo);
 			}
 
 			//if we're float pin, check if config contains reference to us, otherwise create new
 
-			if (!Settings->Cache[VertexName].FloatPinConfigs.Contains(AsLiteralPin->Name))
+			if (!Settings->Cache[PatchName].FloatPinConfigs.Contains(AsLiteralPin->Name))
 			{
 				FM2SoundFloatPinConfig NewConfig;
 				NewConfig.MinValue = 0.0f;
 				NewConfig.MaxValue = 1.0f;
 				NewConfig.KnobStyleOverride = WidgetSettings->KnobStyleOverride;
 				NewConfig.SliderStyleOverride = WidgetSettings->SliderStyleOverride;
-				Settings->Cache[VertexName].FloatPinConfigs.Add(AsLiteralPin->Name, NewConfig);
+				Settings->Cache[PatchName].FloatPinConfigs.Add(AsLiteralPin->Name, NewConfig);
 			}
 
 			//knob style option source
@@ -91,34 +96,34 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 								.OptionsSource(&WidgetTypes)
 								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateValueTypeEnumWidget)
 								.InitiallySelectedItem(GetCurentWidgetType())
-								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin, WidgetSettings, VertexName](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin, WidgetSettings](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
 									{
 										if (InItem->Equals("Knob"))
 										{
-											//->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = WidgetSettings->KnobStyleOverride;
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::Knob;
+											//->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = WidgetSettings->KnobStyleOverride;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::Knob;
 										}
 										else if (InItem->Equals("Slider"))
 										{
-											//Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = WidgetSettings->SliderStyleOverride;
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::Slider;
+											//Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = WidgetSettings->SliderStyleOverride;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::Slider;
 										}
 										else if (InItem->Equals("None"))
 										{
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = FSoftObjectPath();
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::NoWidget;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = FSoftObjectPath();
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].WidgetType = EFloatPinWidgetType::NoWidget;
 
 										}
 
 										Settings->SaveConfig();
+
+										OnConfigChanged.ExecuteIfBound();
 									})
 								[
 									SNew(STextBlock)
 										.Text_Lambda([this]() { return FText::FromString(*GetCurentWidgetType()); })
 								]
-
 						]
-
 				];
 
 			//unit type combobox
@@ -146,22 +151,24 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 								.OptionsSource(&UnitTypes)
 								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateUnitTypeEnumWidget)
 								.InitiallySelectedItem(GetCurrentUnitType())
-								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin, VertexName](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
 									{
 										if (InItem->Equals("Linear"))
 										{
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Linear;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Linear;
 										}
 										else if (InItem->Equals("Volume"))
 										{
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Volume;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Volume;
 										}
 										else if (InItem->Equals("Frequency"))
 										{
-											Settings->Cache[VertexName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Frequency;
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].UnitType = EAudioUnitsValueType::Frequency;
 										}
 
 										Settings->SaveConfig();
+
+										OnConfigChanged.ExecuteIfBound();
 									})
 								[
 									SNew(STextBlock)
@@ -170,6 +177,131 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 
 						]
 
+				];
+
+			StylesStrings = GetAllKnobStyles();
+
+			//style selection
+			MainCotentArea->AddSlot()
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(FString::Printf(TEXT("Knob Style:"))))
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SSearchableComboBox)
+								.OptionsSource(&StylesStrings)
+								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateUnitTypeEnumWidget)
+								//.InitiallySelectedItem(GetCurrentStyle())
+								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+									{
+										for (const auto& KnobStyleObject : KnobStyleObjects)
+										{
+											if (KnobStyleObject->GetName().Equals(*InItem))
+											{
+												Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].KnobStyleOverride = FSoftObjectPath(KnobStyleObject);
+												Settings->SaveConfig();
+												OnConfigChanged.ExecuteIfBound();
+											}
+
+										}
+
+
+									})
+								[
+									SNew(STextBlock)
+										.Text_Lambda([this]() { return FText::FromString("Test"); })
+								]
+						]
+						
+				];
+
+			//now the same for slider styles
+
+			MainCotentArea->AddSlot()
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(FString::Printf(TEXT("Slider Style:"))))
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SSearchableComboBox)
+								.OptionsSource(&StylesStrings)
+								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateUnitTypeEnumWidget)
+								//.InitiallySelectedItem(GetCurrentStyle())
+								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+									{
+										for (const auto& SliderStyleObject : KnobStyleObjects)
+										{
+											if (SliderStyleObject->GetName().Equals(*InItem))
+											{
+												Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].SliderStyleOverride = FSoftObjectPath(SliderStyleObject);
+												Settings->SaveConfig();
+												OnConfigChanged.ExecuteIfBound();
+											}
+
+										}
+									})
+								[
+									SNew(STextBlock)
+										.Text_Lambda([this]() { return FText::FromString("Test"); })
+								]
+						]
+				];
+
+			OritentationTypes.Add(MakeShareable(new FString("Horizontal")));
+			OritentationTypes.Add(MakeShareable(new FString("Vertical")));
+
+			//slider orientation
+			MainCotentArea->AddSlot()
+				.AutoHeight()
+				[
+					SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(FString::Printf(TEXT("Slider Orientation:"))))
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SComboBox<TSharedPtr<FString>>)
+								.OptionsSource(&OritentationTypes)
+								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateValueTypeEnumWidget)
+							//	.InitiallySelectedItem(GetCurrentOrientation())
+								.OnSelectionChanged_Lambda([this, Settings, AsLiteralPin](TSharedPtr<FString> InItem, ESelectInfo::Type SelectInfo)
+									{
+										if (InItem->Equals("Horizontal"))
+										{
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].SliderOrientation = EOrientation::Orient_Horizontal;
+										}
+										else if (InItem->Equals("Vertical"))
+										{
+											Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].SliderOrientation = EOrientation::Orient_Vertical;
+										}
+
+										Settings->SaveConfig();
+
+										OnConfigChanged.ExecuteIfBound();
+									})
+								[
+									SNew(STextBlock)
+										.Text_Lambda([this]() { return FText::FromString(*GetCurrentOrientation()); })
+								]
+						]
 				];
 
 

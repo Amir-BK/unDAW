@@ -73,15 +73,6 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 	{
 		if (PinLinkedTo == 0)
 		{
-			//if pin had a connection and now doesn't, we need to break the connection
-			//UM2Pins* UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName());
-			//
-			//auto* CurrentConnection = UnderlyingPin->LinkedPin;
-			//if (CurrentConnection)
-			//{
-			//	//break the connection
-			//	//CurrentConnection->LinkedPin = nullptr;
-			//}
 
 			if (auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin->PinType.PinSubCategoryObject))
 			{
@@ -229,12 +220,18 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 
 			//add property viewer or whatever works for the struct
 
+			if (IsA<UM2SoundPatchContainerNode>())
+			{
 
+				InSection.AddEntry(FToolMenuEntry::InitWidget(
+					"ControlSettings",
+					SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject))
+					.OnConfigChanged_Lambda([this]() { 
+						UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConfigChanged"))
+						GetGraph()->NotifyNodeChanged(this); }),
+					FText::GetEmpty()));
+			}
 
-			InSection.AddEntry(FToolMenuEntry::InitWidget(
-				"ControlSettings",
-				SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject)),
-				FText::GetEmpty()));
 		}));
 
 	
