@@ -19,7 +19,8 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 {
-
+	auto* Settings = GetMutableDefault<UUNDAWSettings>();
+	auto* WidgetSettings = GetDefault<UndawWidgetsSettings>();
 	Pin = InPin;
 	//cast parent to patch vertex and get name
 	OnConfigChanged = InArgs._OnConfigChanged;
@@ -43,11 +44,10 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 			];
 
 		//if float, show min max
-		if (AsLiteralPin->DataType == "Float")
+		if (AsLiteralPin->DataType == "Float" || AsLiteralPin->DataType == "Bool")
 		{
 			
-			auto* Settings = GetMutableDefault<UUNDAWSettings>();
-			auto* WidgetSettings = GetDefault<UndawWidgetsSettings>();
+
 			//auto* VertexFromPin = Cast<UM2SoundPatch>(AsLiteralPin->ParentVertex);
 			//FName VertexName = VertexFromPin->Patch->GetFName();
 
@@ -304,6 +304,61 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 						]
 				];
 
+			MainCotentArea->AddSlot()
+				.AutoHeight()
+				.Padding(5)
+				[
+					SNew(STextBlock)
+						.Text(INVTEXT("Grid Position"))
+				];
+
+			//get GridX and GridY from settings
+
+			MainCotentArea->AddSlot()
+				.AutoHeight()
+				.Padding(5)
+				[
+					SNew(SHorizontalBox)
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(FString::Printf(TEXT("Grid X:"))))
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SNumericEntryBox<int32>)
+								.AllowSpin(true)
+								.Value_Lambda([this, Settings, AsLiteralPin]() {return Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].GridX; })
+								.OnValueChanged_Lambda([this, Settings, AsLiteralPin](int32 InValue) {
+								Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].GridX = InValue;
+								Settings->SaveConfig();
+
+								OnConfigChanged.ExecuteIfBound(); })
+						]
+						//Y...
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(FString::Printf(TEXT("Grid Y:"))))
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SNumericEntryBox<int32>)
+								.AllowSpin(true)
+								.Value_Lambda([this, Settings, AsLiteralPin]() {return Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].GridY; })
+								.OnValueChanged_Lambda([this, Settings, AsLiteralPin](int32 InValue) {
+								Settings->Cache[PatchName].FloatPinConfigs[AsLiteralPin->Name].GridY = InValue;
+								Settings->SaveConfig();
+
+								OnConfigChanged.ExecuteIfBound(); })
+						]
+				];
+
+
 
 			MainCotentArea->AddSlot()
 				.AutoHeight()
@@ -383,7 +438,7 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 				];
 		}
 
-
+		
 	}
 
 }

@@ -5,6 +5,10 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Layout/SWrapBox.h"
+#include "Widgets/Layout/SGridPanel.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Layout/SConstraintCanvas.h"
+#include "Widgets/Layout/SUniformGridPanel.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Pins/M2Pins.h"
 #include "MetasoundFrontendController.h"
@@ -251,7 +255,7 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, const UM2SoundVertex* InVertex);
 
-	void OnVertexUpdated();
+	//void OnVertexUpdated();
 
 	UM2SoundPatch* GetSelectedPatch() const;
 
@@ -262,7 +266,7 @@ public:
 	private:
 		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;
 		TArray<TSharedPtr<FString>> PatchOptions;
-		TSharedPtr<SVerticalBox> ContentBox;
+		TSharedPtr<SConstraintCanvas> ContentBox;
 		const UM2SoundVertex* Vertex;
 		UM2SoundPatch* SelectedPatch;
 

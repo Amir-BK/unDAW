@@ -23,8 +23,11 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 
 	ChildSlot
 		[
-			SAssignNew(ContentBox, SVerticalBox)
+			SAssignNew(ContentBox, SConstraintCanvas)
+
 		];
+
+
 
 	//traverse the input pins, if we have a float literal, create a knob for it.
 
@@ -55,35 +58,52 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 
 		if (Pin->IsA<UM2MetasoundLiteralPin>())
 		{
+			if (!UndawSettings->Cache[VertexName].FloatPinConfigs.Contains(Name))
+			{
+				FM2SoundFloatPinConfig NewConfig;
+				NewConfig.MinValue = 0.0f;
+				NewConfig.MaxValue = 1.0f;
+				NewConfig.GridX = UndawSettings->Cache[VertexName].FloatPinConfigs.Num();
+				UndawSettings->Cache[VertexName].FloatPinConfigs.Add(Name, NewConfig);
+			}
 
+			Config = &UndawSettings->Cache[VertexName].FloatPinConfigs[Name];
 			
 			
 			auto LiteralPin = Cast<UM2MetasoundLiteralPin>(Pin);
 			if (LiteralPin->DataType == "Float")
 			{
-				if (!UndawSettings->Cache[VertexName].FloatPinConfigs.Contains(Name))
-				{
-					FM2SoundFloatPinConfig NewConfig;
-					NewConfig.MinValue = 0.0f;
-					NewConfig.MaxValue = 1.0f;
-					UndawSettings->Cache[VertexName].FloatPinConfigs.Add(Name, NewConfig);
-				}
 
-				Config = &UndawSettings->Cache[VertexName].FloatPinConfigs[Name];
 
 
 				ContentBox->AddSlot()
+					.AutoSize(true)
+					.Alignment(FVector2D(0.0f, 0.0f))
+					.Offset(FMargin(Config->GridX * 10.0f, Config->GridY * 10.0f, 0.0f, 0.0f))
+
 					[
+
 						SNew(SMaterialControllerFloatWidget, LiteralPin, Config)
+							.ToolTipText(FText::FromName(Name))
+
 					];
 
+
+				//ContentBox->SetColumnFill(Config->GridX, 1.0f);
+				//ContentBox->SetRowFill(Config->GridY, 1.0f);
 			}
 
 			if (LiteralPin->DataType == "Bool")
 			{
 				ContentBox->AddSlot()
+					.AutoSize(true)
+					.Offset(FMargin(Config->GridX * 10.0f, Config->GridY * 10.0f, 0.0f, 0.0f))
+					.Alignment(FVector2D(0.0f, 0.0f))
+
+				//	.Alignment(FVector2D(Config->GridX * 10.0f, Config->GridY * 10.0f))
 					[
 						SNew(SAudioMaterialButton)
+							.ToolTipText(FText::FromName(Name))
 							//.OnClicked_Lambda([LiteralPin]() { LiteralPin->ExecuteTriggerParameter(); })
 							.AudioMaterialButtonStyle(UndawWidgetSettings->GetButtonStyle())
 							.OnBooleanValueChanged_Lambda([LiteralPin](bool NewValue) {
@@ -95,6 +115,9 @@ void SAutoPatchWidget::Construct(const FArguments& InArgs, const UM2SoundVertex*
 								})
 
 					];
+
+				//ContentBox->SetColumnFill(Config->GridX, 1.0f);
+				//ContentBox->SetRowFill(Config->GridY, 1.0f);
 			}
 		
 		

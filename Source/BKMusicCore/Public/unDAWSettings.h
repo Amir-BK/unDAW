@@ -49,6 +49,15 @@ struct FM2SoundFloatPinConfig
 	UPROPERTY(EditAnywhere)
 	float MaxValue = 1.0f;
 
+	UPROPERTY(EditAnywhere)
+	int GridX = 0;
+
+	UPROPERTY(EditAnywhere)
+	int GridY = 0;
+
+	UPROPERTY(EditAnywhere)
+	bool bShowLabel = true;
+
 
 };
 
