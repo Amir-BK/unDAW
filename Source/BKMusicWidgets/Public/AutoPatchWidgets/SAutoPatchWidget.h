@@ -125,7 +125,10 @@ class BKMUSICWIDGETS_API SMaterialControllerFloatWidget : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(SMaterialControllerFloatWidget)
 		{}
+		SLATE_EVENT(FOnInnerWidgetDragged, OnInnerWidgetDragged)
 	SLATE_END_ARGS()
+
+	bool bIsInit = false;
 
 	void Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin* InMaterialPin, const FM2SoundFloatPinConfig* InConfig)
 	{
@@ -136,6 +139,7 @@ public:
 		const FAudioMaterialSliderStyle* Style = nullptr;
 		const FAudioMaterialKnobStyle* KnobStyleAsset = nullptr;
 
+		OnInnerWidgetDragged = InArgs._OnInnerWidgetDragged;
 
 
 
@@ -158,12 +162,16 @@ public:
 
 			ChildSlot
 				[
-					SAssignNew(InputWidget, SAudioMaterialLabeledSlider)
-						.SliderValue(this, &SMaterialControllerFloatWidget::GetValue)
-						.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
-						.Style(Style)
-						.AudioUnitsValueType(Config->UnitType)
-						.Orientation(Config->SliderOrientation)
+					SNew(SBorder)
+						[
+							SAssignNew(InputWidget, SAudioMaterialLabeledSlider)
+								.SliderValue(this, &SMaterialControllerFloatWidget::GetValue)
+								.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
+								.Style(Style)
+								.AudioUnitsValueType(Config->UnitType)
+								.Orientation(Config->SliderOrientation)
+						]
+			
 				];
 
 		break;
@@ -185,11 +193,14 @@ public:
 
 			ChildSlot
 				[
-					SAssignNew(InputWidget, SAudioMaterialLabeledKnob)
-						.Value(this, &SMaterialControllerFloatWidget::GetValue)
-						.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
-						.AudioUnitsValueType(Config->UnitType)
-						.Style(KnobStyleAsset)
+					SNew(SBorder)
+						[
+						SAssignNew(InputWidget, SAudioMaterialLabeledKnob)
+							.Value(this, &SMaterialControllerFloatWidget::GetValue)
+							.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
+							.AudioUnitsValueType(Config->UnitType)
+							.Style(KnobStyleAsset)
+						]
 				];
 
 			break;
@@ -199,14 +210,18 @@ public:
 		break;
 		}
 
+		bIsInit = true;
+
 	}
 
 	float GetValue() const {
 		float Value;
 		if (LiteralPin->LiteralValue.TryGet(Value))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Get Value: %f, Pin Name: %s"), Value, *LiteralPin->Name.ToString());
 			return Value;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Get Value: 0.0f, Pin Name: %s"), *LiteralPin->Name.ToString());
 		return 0.0f;
 		 }
 
@@ -219,13 +234,41 @@ public:
 	};
 
 	void OnValueChanged(float NewValue) {
-		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f"), InputWidget->GetOutputValue(NewValue));
+		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f, Pin Name: %s"), InputWidget->GetOutputValue(NewValue), *LiteralPin->Name.ToString());
+
+		if (!bIsInit) return;
 
 		EMetaSoundBuilderResult BuildResult;
 		auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
 		NonConstLiteralPin->LiteralValue.Set(InputWidget->GetOutputValue(NewValue));
 		NonConstLiteralPin->ParentVertex->GetSequencerData()->BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NonConstLiteralPin->LiteralValue, BuildResult);
 	};
+
+	FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+	{
+		//OnInnerWidgetDragged.ExecuteIfBound(MouseEvent.GetScreenSpacePosition(), this);
+		UE_LOG(LogTemp, Warning, TEXT("Drag Detected"));
+		return FReply::Handled();
+	}
+
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		
+		const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton;
+		//is left mouse button down?
+		if (bIsLeftMouseButtonEffecting)
+		{
+			//if so, drag
+			
+			OnInnerWidgetDragged.ExecuteIfBound(MouseEvent.GetScreenSpacePosition(), this);
+			//print drag delta
+			UE_LOG(LogTemp, Warning, TEXT("Drag Delta: %f"), MouseEvent.GetCursorDelta().X);
+			//return handled capture mouse
+			return FReply::Handled().CaptureMouse(SharedThis(this));
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Mouse Drag, Unhandled"));
+		return FReply::Unhandled();
+	}
 
 	const FM2SoundFloatPinConfig* Config = nullptr;
 

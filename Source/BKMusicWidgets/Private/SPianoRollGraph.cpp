@@ -1282,7 +1282,7 @@ int32 SPianoRollGraph::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 	}
 
 	//draw piano roll, overlayed on the original geometry (not the offset geometry), let's start with drawing a big gray background rectangle
-	auto PianorollLayerId = PostNotesLayerID++;
+	auto PianorollLayerId = PostNotesLayerID++ + 30; //lazy...
 	
 	for (int i = 0; i <= 127; i++)
 	{

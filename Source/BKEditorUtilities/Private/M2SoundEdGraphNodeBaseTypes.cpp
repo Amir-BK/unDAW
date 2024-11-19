@@ -228,7 +228,8 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 					SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject))
 					.OnConfigChanged_Lambda([this]() { 
 						UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConfigChanged"))
-						GetGraph()->NotifyNodeChanged(this); }),
+							GetGraph()->NotifyNodeChanged(this); 
+						}),
 					FText::GetEmpty()));
 			}
 
@@ -363,19 +364,7 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 			LinkedToPin->LinkedTo.AddUnique(Pin);
 		}
 
-		//if(Pin->Direction == EGPD_Input)
-		//{
-		//	if(Pin->LinkedTo.Num() > 0)
-		//	{
-		//		for(auto LinkedPin : Pin->LinkedTo)
-		//		{
-		//			if(LinkedPin->GetOwningNode()->IsA<UM2SoundEdGraphNode>())
-		//			{
-		//				//GetGraph()->GetSchema()->TryCreateConnection(Pin, LinkedPin);
-		//			}
-		//		}
-		//	}
-		//}
+
 	}
 }
 

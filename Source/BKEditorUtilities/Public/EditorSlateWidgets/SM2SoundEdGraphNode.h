@@ -75,7 +75,7 @@ public:
 		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
 		RegenPatchOptions();
-		AsM2SoundPatchContainerNode->OnNodeUpdated.BindRaw(this, &SM2SoundPatchContainerGraphNode::UpdateAudioKnobs);
+		//AsM2SoundPatchContainerNode->OnNodeUpdated.BindRaw(this, &SM2SoundPatchContainerGraphNode::UpdateAudioKnobs);
 		UpdateGraphNode();
 	}
 
