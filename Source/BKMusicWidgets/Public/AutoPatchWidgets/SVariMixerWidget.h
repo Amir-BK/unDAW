@@ -19,8 +19,6 @@ public:
 		{}
 	SLATE_END_ARGS()
 
-	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex);
 
 	void Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin);
 
@@ -91,28 +89,5 @@ public:
 
 	TArray<TSharedPtr<SMixerChannelWidget>> ChannelWidgets;
 
-	void AddChannelWidget(int ChannelIndex)
-	{
-		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
-
-		MainHorizontalBox->AddSlot()
-			[
-				SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
-			];
-
-		ChannelWidgets.Add(NewChannelWidget);
-	}
-
-	void AddChannelWidget(UM2AudioTrackPin* InPin)
-	{
-
-		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
-
-		MainHorizontalBox->AddSlot()
-			[
-				SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
-			];
-
-		ChannelWidgets.Add(NewChannelWidget);
-	}
+	void AddChannelWidget(UM2AudioTrackPin* InPin);
 };

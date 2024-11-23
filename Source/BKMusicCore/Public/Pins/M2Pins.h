@@ -174,7 +174,7 @@ public:
 	bool bIsStale = false;
 
 	UPROPERTY()
-	bool bIsColorSource = false;
+	bool bIsMetadataSource = false;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

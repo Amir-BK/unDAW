@@ -22,7 +22,7 @@ class BKMUSICCORE_API UM2VariMixerVertex : public UM2SoundVertex
 public:
 
 	//Mixer aliases are the connection point for anything we add to the graph in runtime, the vari mixer will create and remove input channels per request
-	UPROPERTY(EditAnywhere, Category = "Mixer")
+	UPROPERTY(EditAnywhere, Category = "M2Sound | Mixer")
 	FName MixerAlias = NAME_None;
 
 	uint8 NumConnectedChannels = 0;
@@ -41,7 +41,7 @@ public:
 
 	//TArray<FAssignableAudioOutput*> FreeChannels;
 
-	UFUNCTION(BlueprintCallable, Category = "Mixer")
+	UFUNCTION(BlueprintCallable, Category = "M2Sound | Mixer")
 	int AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, float InVolume);
 
 	UFUNCTION()

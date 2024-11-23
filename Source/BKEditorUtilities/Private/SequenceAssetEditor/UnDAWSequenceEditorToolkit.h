@@ -67,6 +67,7 @@ public:
 	FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
 	FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
 	FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
+	TSharedPtr<IDetailsView> DetailsView;
 
 	void DeleteSelectedNodes();
 

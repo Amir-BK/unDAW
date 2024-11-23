@@ -100,13 +100,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "M2Sound")
 	bool bIsTransient = false;
 
-	UPROPERTY()
-	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TObjectPtr<UM2Pins> VertexMetadataProviderPin = nullptr;
 
 	UPROPERTY()
 	TOptional<FLinearColor> VertexColor;
 
 	virtual FLinearColor GetVertexColor() const;
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TOptional<FString> VertexDisplayName;
+
+	virtual FString GetVertexDisplayName() const;;
 
 	bool bIsRebuilding = false; //we can use this one to know when we also need to update all connected pins rather than just the input as we do when building the graph, only relevant for nodes that expose patches to the user
 
@@ -408,6 +413,7 @@ class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandl
 
 public:
 
+
 	//Represents the index of the track in the sequencer data, to get the actual midi metadata use this index to get the track from the sequencer data
 };
 
@@ -434,4 +440,6 @@ public:
 	//void UpdateConnections() override;
 
 	void TryFindVertexDefaultRangesInCache() override;
+
+
 };

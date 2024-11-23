@@ -163,17 +163,17 @@ const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
 void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin)
 {
 	auto CurrentColorSourcePin = ColorSourcePin;
-	M2Pin->bIsColorSource = true;
+	M2Pin->bIsMetadataSource = true;
 	ColorSourcePin = *Pins.FindByPredicate([M2Pin](UEdGraphPin* Pin) { return Pin->PinType.PinSubCategoryObject == M2Pin; });
 
 	if (CurrentColorSourcePin == ColorSourcePin)
 	{
 		ColorSourcePin = nullptr;
-		M2Pin->bIsColorSource = false;
-		Vertex->ColorSourcePin = nullptr;
+		M2Pin->bIsMetadataSource = false;
+		Vertex->VertexMetadataProviderPin = nullptr;
 	}
 	else {
-		Vertex->ColorSourcePin = M2Pin;
+		Vertex->VertexMetadataProviderPin = M2Pin;
 	}
 }
 
@@ -421,7 +421,7 @@ void UM2SoundEdGraphNode::AllocateDefaultPins() {
 		
 		Pins.Last()->PinType.PinSubCategoryObject = Pin;
 		
-		if (Pin->bIsColorSource)
+		if (Pin->bIsMetadataSource)
 		{
 			ColorSourcePin = Pins.Last();
 			//if color source pin is not first, swap it with the first pin

@@ -19,16 +19,28 @@ void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* I
 		];
 }
 
-void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex)
+void SVariMixerWidget::AddChannelWidget(UM2AudioTrackPin* InPin)
 {
-	checkNoEntry();
 
+	TSharedPtr<SMixerChannelWidget> NewChannelWidget;
+
+	MainHorizontalBox->AddSlot()
+		[
+			SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
+		];
+
+	ChannelWidgets.Add(NewChannelWidget);
 }
+
+
 
 void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin)
 {
 	Pin = InPin;
 	MixerVertex = Cast<UM2VariMixerVertex>(Pin->ParentVertex);
+
+	FString LinkedToChannelName = Pin->LinkedPin ? Pin->LinkedPin->ParentVertex->GetVertexDisplayName() : FString("None");
+
 	//settings for style
 	const UndawWidgetsSettings* Settings = GetDefault<UndawWidgetsSettings>();
 	
@@ -43,7 +55,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				[
 
 					SNew(STextBlock)
-						.Text(FText::FromString(FString::Printf(TEXT("Channel %d"), ChannelIndex)))
+						.Text(FText::FromString(LinkedToChannelName))
 				]
 
 				+ SVerticalBox::Slot()

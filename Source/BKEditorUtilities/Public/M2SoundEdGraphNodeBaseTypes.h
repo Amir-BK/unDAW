@@ -68,7 +68,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Node")
 	FName Name;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ShowInnerProperties), Instanced)
 	TObjectPtr<UM2SoundVertex> Vertex;
 
 	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override { return FText::FromName(Name); }
