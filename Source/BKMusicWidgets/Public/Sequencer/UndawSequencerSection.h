@@ -31,13 +31,21 @@ public:
 	bool bIsHovered = false;
 	bool bIsSelected = false;
 
+	//needed for songs map the such 
+	TObjectPtr<UDAWSequencerData> SequenceData;
+
 	TAttribute<FVector2D> Position;
 	TAttribute<FVector2D> Zoom;
 
 	TAttribute<FLinearColor> TrackColor;
 
-	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack);
+	void Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack, UDAWSequencerData* InSequenceToEdit);
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+
+	const float TickToPixel(const float Tick) const
+	{
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X;
+	}
 
 };

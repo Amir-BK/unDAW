@@ -141,6 +141,10 @@ void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerDa
 		];
 }
 
+void SDawSequencerTrackRoot::ResizeSplitter(float InNewSize) {
+	ControlsArea->ResizeControlsBox(InNewSize);
+}
+
 
 
 void SDawSequencerTrackLane::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId)
@@ -157,7 +161,7 @@ void SDawSequencerTrackLane::Construct(const FArguments& InArgs, UDAWSequencerDa
 		TSharedPtr<SDawSequencerTrackMidiSection> Section;
 
 
-		SAssignNew(Section, SDawSequencerTrackMidiSection, &Clip, &SequenceData->Tracks[TrackId])
+		SAssignNew(Section, SDawSequencerTrackMidiSection, &Clip, &SequenceData->Tracks[TrackId], SequenceData)
 			.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }))
 			.Position(InArgs._Position)
 			.Zoom(InArgs._Zoom);
@@ -225,4 +229,67 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	}
 
 	return LayerId;
+}
+
+inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+
+	//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
+	//check if hovering over section
+	const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + Position.Get().X;
+	const float MouseToPixel = MouseLocalX; //* Zoom.Get().X;
+	constexpr int32 SectionResizeAreaWidth = 5;
+
+	bool bAnySectionHovered = false;
+	for (int32 i = 0; i < Sections.Num(); i++)
+	{
+		TRange<double> SectionRange{ Sections[i]->Clip->StartTick * Zoom.Get().X, Sections[i]->Clip->EndTick * Zoom.Get().X };
+		if (SectionRange.Contains(MouseToPixel))
+		{
+			HoveringOverSectionIndex = i;
+			Sections[i]->bIsHovered = true;
+			bAnySectionHovered = true;
+			TRange<double> NonResizeRange{ Sections[i]->Clip->StartTick + SectionResizeAreaWidth * Zoom.Get().X, Sections[i]->Clip->EndTick - SectionResizeAreaWidth * Zoom.Get().X };
+			if (NonResizeRange.Contains(MouseToPixel))
+			{
+				bIsHoveringOverSectionDragArea = true;
+				bIsHoveringOverSectionResizeArea = false;
+			}
+			else {
+				bIsHoveringOverSectionDragArea = false;
+				bIsHoveringOverSectionResizeArea = true;
+			}
+
+		}
+		else {
+			Sections[i]->bIsHovered = false;
+		}
+	}
+
+	if (!bAnySectionHovered)
+	{
+		HoveringOverSectionIndex = INDEX_NONE;
+		bIsHoveringOverSectionDragArea = false;
+		bIsHoveringOverSectionResizeArea = false;
+	}
+	else {
+		bIsHoveringOverSectionDragArea = true;
+	}
+
+
+	return FReply::Unhandled();
+
+}
+
+inline FReply SDawSequencerTrackLane::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+
+	const bool bIsLeftMoustButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+
+	if (bIsLeftMoustButtonEffecting && bIsHoveringOverSectionDragArea)
+	{
+		OnSectionSelected.ExecuteIfBound(Sections[HoveringOverSectionIndex]);
+		SelectedSectionIndex = HoveringOverSectionIndex;
+		return FReply::Handled();
+	};
+
+	return FReply::Unhandled();
 }

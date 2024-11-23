@@ -88,79 +88,15 @@ public:
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId);
 
-	//void PopulateSections()
-	//{
-
-	//}
-
 	TOptional<EMouseCursor::Type> GetCursor() const override;
 
 	FOnSectionSelected OnSectionSelected;
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
-	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override {
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-		//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
-		//check if hovering over section
-		const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + Position.Get().X;
-		const float MouseToPixel = MouseLocalX; //* Zoom.Get().X;
-		constexpr int32 SectionResizeAreaWidth = 5;
-
-		bool bAnySectionHovered = false;
-		for (int32 i = 0; i < Sections.Num(); i++)
-		{
-			TRange<double> SectionRange{ Sections[i]->Clip->StartTick * Zoom.Get().X, Sections[i]->Clip->EndTick * Zoom.Get().X };
-			if (SectionRange.Contains(MouseToPixel))
-			{
-				HoveringOverSectionIndex = i;
-				Sections[i]->bIsHovered = true;
-				bAnySectionHovered = true;
-				TRange<double> NonResizeRange{ Sections[i]->Clip->StartTick + SectionResizeAreaWidth * Zoom.Get().X, Sections[i]->Clip->EndTick - SectionResizeAreaWidth * Zoom.Get().X };
-				if (NonResizeRange.Contains(MouseToPixel))
-				{
-					bIsHoveringOverSectionDragArea = true;
-					bIsHoveringOverSectionResizeArea = false;
-				}
-				else {
-					bIsHoveringOverSectionDragArea = false;
-					bIsHoveringOverSectionResizeArea = true;
-				}
-
-			}
-			else {
-				Sections[i]->bIsHovered = false;
-			}
-		}
-
-		if (!bAnySectionHovered)
-		{
-			HoveringOverSectionIndex = INDEX_NONE;
-			bIsHoveringOverSectionDragArea = false;
-			bIsHoveringOverSectionResizeArea = false;
-		}
-		else {
-			bIsHoveringOverSectionDragArea = true;
-		}
-
-
-		return FReply::Unhandled();
-
-	}
-
-	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override {
-
-		const bool bIsLeftMoustButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
-
-		if (bIsLeftMoustButtonEffecting && bIsHoveringOverSectionDragArea)
-		{
-			OnSectionSelected.ExecuteIfBound(Sections[HoveringOverSectionIndex]);
-			SelectedSectionIndex = HoveringOverSectionIndex;
-			return FReply::Handled();
-		};
-
-		return FReply::Unhandled();
-	}
+	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 };
 
 
@@ -184,9 +120,7 @@ class SDawSequencerTrackRoot : public SCompoundWidget
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId);
 
-	void ResizeSplitter(float InNewSize) {
-		ControlsArea->ResizeControlsBox(InNewSize);
-	}
+	void ResizeSplitter(float InNewSize);
 
 
 private:

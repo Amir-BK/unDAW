@@ -9,20 +9,23 @@
 
 
 
-void SDawSequencerTrackMidiSection::Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack)
+void SDawSequencerTrackMidiSection::Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack, UDAWSequencerData* InSequenceToEdit)
 {
 	Clip = InClip;
 	TrackColor = InArgs._TrackColor;
 	ParentTrack = InParentTrack;
 	Position = InArgs._Position;
 	Zoom = InArgs._Zoom;
+	SequenceData = InSequenceToEdit;
 }
 
 int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	//print section height cause wtf
 	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
-	const float SectionDuration = (Clip->EndTick - Clip->StartTick) * Zoom.Get().X;
+	const float EndPixel = TickToPixel(Clip->EndTick);
+	const float StartPixel = TickToPixel(Clip->StartTick);
+	const float SectionLength = EndPixel - StartPixel;
 	//just fill the background with a gray box
 
 	const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
@@ -31,7 +34,7 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId++,
-		AllottedGeometry.ToPaintGeometry(FVector2D(SectionDuration, AllottedGeometry.Size.Y), 1.0f),
+		AllottedGeometry.ToPaintGeometry(FVector2D(SectionLength, AllottedGeometry.Size.Y), 1.0f),
 		FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
 		ESlateDrawEffect::None,
 		ColorToUse
@@ -44,8 +47,8 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = (Note.StartTick);
-		const float Width = (Note.EndTick - Note.StartTick);
+		const float X = TickToPixel(Note.StartTick + Clip->OffsetTick);
+		const float Width = (TickToPixel(Note.EndTick + +Clip->OffsetTick) - X);
 		const float Y = (127 - Note.Pitch) * Height;
 
 		FSlateDrawElement::MakeLines(
