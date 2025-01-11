@@ -197,11 +197,11 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 	FSlateDrawElement::MakeText(
 		OutDrawElements,
 		LayerId++,
-		AllottedGeometry.ToPaintGeometry(FVector2D(AllottedGeometry.Size.X - 300, 0), FSlateLayoutTransform(1.0, FVector2D(100, 20))),
+		AllottedGeometry.ToPaintGeometry(FVector2D(AllottedGeometry.Size.X - 500, 200), FSlateLayoutTransform(1.0, FVector2D(100, 20))),
 		FText::FromString(FString::Printf(TEXT("Position: %s\nZoom: %s"), *Position.Get().ToString(), *Zoom.Get().ToString())),
 		FAppStyle::GetFontStyle("NormalFont"),
 		ESlateDrawEffect::None,
-		FLinearColor::White
+		FLinearColor::Red
 	);
 
 	for (const auto& Section : Sections)
@@ -209,21 +209,21 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		//auto LayoutTransform = FSlateLayoutTransform(FVector2D(0, 0));
 		const float ZoomX = Zoom.Get().X;
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
-		const auto& SectionStartTime = SongsMap->TickToMs(Section->Clip->StartTick);
-		const auto& SectionEndTime = SongsMap->TickToMs(Section->Clip->EndTick);
+		const auto& SectionStartTime = SongsMap->TickToMs(Section->Clip->StartTick) * Zoom.Get().X;// - Position.Get().X;
+		const auto& SectionEndTime = SongsMap->TickToMs(Section->Clip->EndTick) * Zoom.Get().X;// - Position.Get().X ;
 
 
 
-		const float SectionDuration = (SectionEndTime - SectionStartTime) * ZoomX;
+		const float SectionDuration = (SectionEndTime - SectionStartTime);
 		//UE_LOG(LogTemp, Warning, TEXT("Section Duration %f"), SectionDuration);
 		auto SectionGeometry = AllottedGeometry.MakeChild(
-			FVector2f((SectionStartTime - Position.Get().X) * ZoomX, 0),
+			FVector2f((SectionStartTime), 0),
 			FVector2f(SectionDuration, AllottedGeometry.Size.Y)
 		);
 
 
 
-		auto SectionCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(SectionGeometry.LocalToAbsolute(FVector2D(0, 0)), SectionGeometry.Size));
+		//auto SectionCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(SectionGeometry.LocalToAbsolute(FVector2D(0, 0)), SectionGeometry.Size));
 
 		LayerId = Section->OnPaint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	}

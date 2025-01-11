@@ -109,7 +109,7 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	LayerId++;
 	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
-	LayerId = ScrollBox->Paint(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
 	//paint the major tab line on top of everything
 	FSlateDrawElement::MakeLines(
@@ -202,7 +202,7 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 	{
 		//const float HorizontalOffset -= MouseEvent.GetCursorDelta().X;
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
-		Position.Set(FVector2D{ FMath::Max(0.0f, Position.Get().X + MouseEvent.GetCursorDelta().X), 0.0f });
+		Position.Set(FVector2D{ FMath::Min(0.0f, Position.Get().X + MouseEvent.GetCursorDelta().X), 0.0f });
 		//for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}

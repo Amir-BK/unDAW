@@ -28,22 +28,22 @@
 		{
 			"Name": "BKMusicCore",
 			"Type": "Runtime",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "BK_EditorUtilities",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "unPatchwork",
 			"Type": "Runtime",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "unDAWK2_Nodes",
 			"Type": "UncookedOnly",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		}
 
 	],

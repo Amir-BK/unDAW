@@ -118,7 +118,10 @@ public:
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
 			auto& CurrentPos = Position.Get();
-			auto NewPosition = CurrentPos + MouseEvent.GetCursorDelta();
+			const auto NewPositionX = FMath::Min(0, CurrentPos.X + MouseEvent.GetCursorDelta().X);
+			const auto NewPositionY = FMath::Min(0, CurrentPos.Y + MouseEvent.GetCursorDelta().Y);
+			const FVector2D NewPosition = FVector2D(NewPositionX, NewPositionY);
+
 
 			if (OnPanelPositionChangedByUser.IsBound())
 			{

@@ -23,10 +23,11 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 {
 	//print section height cause wtf
 	//UE_LOG(LogTemp, Warning, TEXT("Section Height %f"), AllottedGeometry.Size.Y);
-	const float EndPixel = TickToPixel(Clip->EndTick);
-	const float StartPixel = TickToPixel(Clip->StartTick);
-	const float SectionLength = EndPixel - StartPixel;
-	//just fill the background with a gray box
+	//const float ZoomX = Zoom.Get().X;
+	//const float EndPixel = TickToPixel(Clip->EndTick);
+	//const float StartPixel = TickToPixel(Clip->StartTick);
+	//const float SectionLength = EndPixel - StartPixel;
+	////just fill the background with a gray box
 
 	const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
 	const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
@@ -34,7 +35,8 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId++,
-		AllottedGeometry.ToPaintGeometry(FVector2D(SectionLength, AllottedGeometry.Size.Y), 1.0f),
+		//AllottedGeometry.ToPaintGeometry(FVector2D(SectionLength, AllottedGeometry.Size.Y), 1.0f),
+		AllottedGeometry.ToPaintGeometry(),
 		FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
 		ESlateDrawEffect::None,
 		ColorToUse
@@ -47,7 +49,7 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 	LayerId++;
 	for (const auto& Note : Clip->LinkedNotes)
 	{
-		const float X = TickToPixel(Note.StartTick + Clip->OffsetTick);
+		const float X = TickToPixel(Note.StartTick + Clip->OffsetTick) ;
 		const float Width = (TickToPixel(Note.EndTick + +Clip->OffsetTick) - X);
 		const float Y = (127 - Note.Pitch) * Height;
 

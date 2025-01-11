@@ -49,6 +49,8 @@ public:
 
 	void UpdateMuteAndSoloStates();
 
+	void SetExclusiveSoloForPin(UM2AudioTrackPin* InPin);
+
 private:
 	void UpdateGainParam_Internal(int ChannelIndex, float newGain);
 

@@ -9,6 +9,7 @@
 #include "M2SoundGraphData.h"
 
 #include <Pins/M2Pins.h>
+#include "BKMusicCore.h"
 
 #include "M2SoundVertex.generated.h"
 
@@ -419,9 +420,10 @@ public:
 
 //vertex container for user created metasound patch assets, of course this one is a literal node.
 UCLASS()
-class BKMUSICCORE_API UM2SoundPatch : public UM2SoundLiteralNodeVertex
+class BKMUSICCORE_API UM2SoundPatch : public UM2SoundLiteralNodeVertex, public UnDAW::IMetasoundAssetListener
 {
 	GENERATED_BODY()
+
 public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
@@ -440,6 +442,12 @@ public:
 	//void UpdateConnections() override;
 
 	void TryFindVertexDefaultRangesInCache() override;
+
+	~UM2SoundPatch();
+
+	// Inherited via IMetasoundAssetListener
+	virtual void MetasoundDocumentUpdated() override;
+
 
 
 };

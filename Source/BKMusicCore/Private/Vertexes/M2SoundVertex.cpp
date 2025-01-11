@@ -3,6 +3,7 @@
 #include "M2SoundGraphStatics.h"
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
+#include "MetasoundFrontendDocumentModifyDelegates.h"
 
 #include "unDAWSettings.h"
 
@@ -519,6 +520,7 @@ void UM2SoundAudioOutput::BuildVertex()
 
 void UM2SoundAudioOutput::DestroyVertex()
 {
+
 }
 
 void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
@@ -556,6 +558,8 @@ void UM2SoundPatch::BuildVertex()
 	if (BuilderContext && NodeHandle.IsSet())
 	{
 		BuilderContext->RemoveNode(NodeHandle, BuildResult);
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Removing Existing Node, Result %s"), *UEnum::GetValueAsString(BuildResult))
+
 		//BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
 		bIsRebuildingExistingNode = true;
 		bIsRebuilding = true;
@@ -568,10 +572,23 @@ void UM2SoundPatch::BuildVertex()
 	
 	}
 
+	// get patch document and bind to asset updates
+
+		const auto& PatchDocument = Patch->GetConstDocument();
+		SetMetasoundAsset(&PatchDocument);
+		BKMusicCoreModule::RegisterMetasoundAssetListener(this);
+
+
+
+
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
+
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Adding Patch Node, Result %s"), *UEnum::GetValueAsString(BuildResult))
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
+
+	bIsRebuilding = false;
 
 }
 
@@ -587,6 +604,29 @@ void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 	else {
 		//BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
 	}
+}
+
+inline UM2SoundPatch::~UM2SoundPatch()
+{
+	BKMusicCoreModule::UnregisterMetasoundAssetListener(this);
+}
+
+void UM2SoundPatch::MetasoundDocumentUpdated()
+{
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Metasound Document Updated"))
+	
+	//current patch version number?
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Current Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
+
+		// so maybe patch is stale? let's reaquire a pointer 
+	Patch =	UM2SoundGraphStatics::GetPatchByName(Patch->GetName());
+
+	//new version number?
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("New Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
+		//rebuild the vertex
+		VertexNeedsBuilderUpdates();
+
+
 }
 
 

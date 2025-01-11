@@ -805,18 +805,44 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 							}
 
 
-							//TODO: REMOVE - OLD IMPLEMENTATION
-							//if (LinkedNoteDataMap.Contains(foundPair.TrackId))
-							//{
-							//	LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
-							//}
-							//else {
-							//	LinkedNoteDataMap.Add(TTuple<int, TArray<FLinkedMidiEvents>>(foundPair.TrackId, TArray<FLinkedMidiEvents>()));
-							//	LinkedNoteDataMap[foundPair.TrackId].LinkedNotes.Add(foundPair);
-							//}
+
+						}
+						else {
+							//add the note to the unlinked notes for now
+							unlinkedNotesIndexed.Add(MidiEvent.GetMsg().GetStdData1(), FEventsWithIndex{ MidiEvent, index });
 						}
 					}
+					else {	
+						UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find note to link!"))
+					}
 				};
+
+				// is sustain pedal?
+				if (MidiEvent.GetMsg().GetStdData1() == 64)
+				{
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Sustain Pedal Event %d"), MidiEvent.GetMsg().GetStdData2())
+					// is sustain on? (velocity > 64)
+					UE_LOG(unDAWDataLogs, Verbose, TEXT("Sustain Pedal Event %s"), MidiEvent.GetMsg().GetStdData2() > 64 ? TEXT("On") : TEXT("Off"))
+					//we'd like to add to the map of the sutain pedal events for the given track
+						if (Tracks.IsValidIndex(TrackMainChannel))
+						{
+							//find the clip that contains the event
+							auto& Clip = Tracks[TrackMainChannel].LinkedNotesClips[0];
+							//create the event and add it to the clip
+							FMidiSustainPedalEvent SustainEvent;
+
+							SustainEvent.StartTick = MidiEvent.GetTick();
+							SustainEvent.bIsSustainPedalDown = MidiEvent.GetMsg().GetStdData2() > 64;
+							Clip.SustainPedalEvents.Add(SustainEvent);
+
+						}
+						else {
+							UE_LOG(unDAWDataLogs, Error, TEXT("Couldn't find track to add sustain pedal event!"))
+
+						}
+
+
+				}
 
 				break;
 			case FMidiMsg::EType::Tempo:
@@ -843,6 +869,17 @@ void UDAWSequencerData::UpdateNoteDataFromMidiFile(TArray<TTuple<int, int>>& Out
 		// if we couldn't find any linked notes this track is a control track, contains no notes.
 
 		//if (LinkedNoteDataMap.IsEmpty()) continue;
+
+		//if unlinked notes has not been emptied print the notes
+		if (!unlinkedNotesIndexed.IsEmpty())
+		{
+			//search for notes in the unlinkeds
+			for (auto& [NoteNumber, EventWithIndex] : unlinkedNotesIndexed)
+			{
+				UE_LOG(unDAWDataLogs, Verbose, TEXT("Unlinked Note %d, Channel %d, Start %d, End %d"), NoteNumber, EventWithIndex.Event.GetMsg().GetStdChannel(), EventWithIndex.Event.GetTick(), EventWithIndex.Event.GetTick())
+			}
+
+		}
 
 		//CreateBuilderHelper();
 	}
@@ -1193,7 +1230,7 @@ void FM2SoundCoreNodesComposite::InitCoreNodes(UMetaSoundSourceBuilder* InBuilde
 	if (InMasterOutBus != nullptr)
 	{
 		MasterOutputBus = InMasterOutBus;
-		CreateBusTransmitterAndStrealMainOutput();
+		CreateBusTransmitterAndStreamMainOutput();
 	}
 	//CreateMainMixer();
 }
@@ -1235,7 +1272,7 @@ FMetaSoundBuilderNodeOutputHandle FM2SoundCoreNodesComposite::CreateFilterNodeFo
 	return NewMidiStreamOutput;
 }
 
-void FM2SoundCoreNodesComposite::CreateBusTransmitterAndStrealMainOutput()
+void FM2SoundCoreNodesComposite::CreateBusTransmitterAndStreamMainOutput()
 {
 	EMetaSoundBuilderResult Result;
 

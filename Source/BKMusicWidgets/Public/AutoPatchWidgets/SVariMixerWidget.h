@@ -10,6 +10,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Widgets/Input/SCheckBox.h"
 
 class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
@@ -51,6 +52,13 @@ public:
 
 	void UpdateSoloCheckBoxState(ECheckBoxState NewState)
 	{
+		// if control is pressed, set exclusive solo
+		if (FSlateApplication::Get().GetModifierKeys().IsControlDown())
+		{
+			MixerVertex->SetExclusiveSoloForPin(Pin);
+			return;
+		}
+		
 		Pin->bSolo = NewState == ECheckBoxState::Checked;
 
 		MixerVertex->UpdateMuteAndSoloStates();

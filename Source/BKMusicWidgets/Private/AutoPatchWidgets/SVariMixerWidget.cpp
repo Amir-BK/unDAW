@@ -108,7 +108,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 										.OnCheckStateChanged(this, &SMixerChannelWidget::UpdateSoloCheckBoxState)
 										//.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
 										.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
-										.ToolTipText(FText::FromString("Solo"))
+										.ToolTipText(FText::FromString("Solo \n Exclusive Solo - Ctrl + Click"))
 
 								]
 

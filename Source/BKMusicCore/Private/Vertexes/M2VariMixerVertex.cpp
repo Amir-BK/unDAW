@@ -50,6 +50,7 @@ void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
 	}
 
 	MixerAlias = InAlias;
+	VertexDisplayName.Emplace(MixerAlias.ToString());
 
 	//add the mixer alias to the sequencer data
 	GetSequencerData()->Mixers.Add(MixerAlias, this);
@@ -90,6 +91,28 @@ void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 
 	}
 
+}
+
+void UM2VariMixerVertex::SetExclusiveSoloForPin(UM2AudioTrackPin* InPin)
+{
+	for (auto& [Name, Pin] : InputM2SoundPins)
+	{
+		auto* AudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+		if (AudioTrackPin == nullptr)
+		{
+			continue;
+		}
+		if (AudioTrackPin == InPin)
+		{
+			AudioTrackPin->bSolo = true;
+			continue;
+		}
+		AudioTrackPin->bSolo = false;
+		
+	}
+
+
+	UpdateMuteAndSoloStates();
 }
 
 inline void UM2VariMixerVertex::UpdateGainParam_Internal(int ChannelIndex, float newGain)
