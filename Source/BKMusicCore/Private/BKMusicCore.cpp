@@ -94,8 +94,13 @@ inline void BKMusicCoreModule::OnMetasoundAssetUpdated(UObject* AssetObject)
 	{
 		if (IMetaSoundDocumentInterface* CastedAsset = Cast<IMetaSoundDocumentInterface>(AssetObject))
 		{
-			Listener->SetMetasoundAsset(&CastedAsset->GetConstDocument());
-			Listener->MetasoundDocumentUpdated();
+			//does document match?!?! I guess I forgot about that
+			if (Listener->GetMetasound() == &CastedAsset->GetConstDocument())
+			{
+				Listener->SetMetasoundAsset(&CastedAsset->GetConstDocument());
+				Listener->MetasoundDocumentUpdated();
+			}
+
 		}
 
 	}

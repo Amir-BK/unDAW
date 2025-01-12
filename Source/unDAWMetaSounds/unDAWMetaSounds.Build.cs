@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class unDAWMetaSounds : ModuleRules
 {
-    private bool bStrictIncludesCheck = true;
+    private bool bStrictIncludesCheck = false;
 
     public unDAWMetaSounds(ReadOnlyTargetRules Target) : base(Target)
     {

@@ -611,18 +611,20 @@ inline UM2SoundPatch::~UM2SoundPatch()
 
 void UM2SoundPatch::MetasoundDocumentUpdated()
 {
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Metasound Document Updated"))
-	
+
 	//current patch version number?
-		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Current Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Received Metasound Document Updated. Vertex Name: %s. Patch Name: %s"), *GetName(), *Patch->GetName())
 
 		// so maybe patch is stale? let's reaquire a pointer 
-	Patch =	UM2SoundGraphStatics::GetPatchByName(Patch->GetName());
+	//Patch =	UM2SoundGraphStatics::GetPatchByName(Patch->GetName());
 
-	//new version number?
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("New Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
-		//rebuild the vertex
-		VertexNeedsBuilderUpdates();
+
+	//	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex needs builder updates!"))
+	//BuildVertex();
+	//CollectParamsForAutoConnect();
+	//UpdateConnections();
+
+	VertexNeedsBuilderUpdates();
 
 
 }

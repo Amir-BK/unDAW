@@ -10,7 +10,6 @@ public class BKMusicWidgets : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        bUseUnity = false;
 
         // This is to emulate engine installation and verify includes during development
         // Gives effect similar to BuildPlugin with -StrictIncludes

@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class BK_EditorUtilities : ModuleRules
 {
-    private bool bStrictIncludesCheck = true;
+    private bool bStrictIncludesCheck = false;
 
     public BK_EditorUtilities(ReadOnlyTargetRules Target) : base(Target)
     {
