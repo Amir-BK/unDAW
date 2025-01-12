@@ -11,6 +11,7 @@
 #include "M2SoundEdGraphNodeBaseTypes.h"
 #include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/Input/SComboBox.h"
+#include "SSearchableComboBox.h"
 #include "AutoPatchWidgets/SAutoPatchWidget.h"
 #include "ScopedTransaction.h"
 #include "M2SoundEdGraphSchema.h"
@@ -74,7 +75,7 @@ public:
 		Version = { Interface.GetName(), { Interface.GetVersion().Major, Interface.GetVersion().Minor } };
 
 		RegenPatchOptions();
-		AsM2SoundPatchContainerNode->OnNodeUpdated.BindRaw(this, &SM2SoundPatchContainerGraphNode::UpdateAudioKnobs);
+		//AsM2SoundPatchContainerNode->OnNodeUpdated.BindRaw(this, &SM2SoundPatchContainerGraphNode::UpdateAudioKnobs);
 		UpdateGraphNode();
 	}
 
@@ -100,19 +101,19 @@ private:
 	{
 		SAssignNew(MainAudioKnobsBox, SWrapBox)
 			.FlowDirectionPreference(EFlowDirectionPreference::LeftToRight)
-			.Orientation(EOrientation::Orient_Horizontal)
-			.UseAllottedSize(true)
-			.PreferredSize(300);
+			.Orientation(EOrientation::Orient_Horizontal);
+			//.UseAllottedSize(true)
+			//.PreferredSize(300);
 
-		UpdateAudioKnobs();
+		//UpdateAudioKnobs();
 
 		SAssignNew(AutoPatchWidget, SAutoPatchWidget, PatchVertex);
 
 		// NODE CONTENT AREA
 		return SNew(SBorder)
 			.BorderImage(FAppStyle::GetBrush("NoBorder"))
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
+			//.HAlign(HAlign_Fill)
+			//.VAlign(VAlign_Fill)
 
 			.Padding(FMargin(0, 3))
 			[
@@ -137,7 +138,7 @@ private:
 
 							.AutoHeight()
 							[
-								SNew(SComboBox<TSharedPtr<FString>>)
+								SNew(SSearchableComboBox)
 									.OptionsSource(&PatchOptions)
 									.OnComboBoxOpening(this, &SM2SoundPatchContainerGraphNode::RegenPatchOptions)
 									.OnGenerateWidget(this, &SM2SoundPatchContainerGraphNode::MakePatchComboWidget)

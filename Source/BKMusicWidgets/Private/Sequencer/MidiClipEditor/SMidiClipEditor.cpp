@@ -142,6 +142,38 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 	{
 		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 		LayerId++;
+
+		FMidiSustainPedalEvent CurrentSustainOnEvent;
+
+		for (const auto& SustainEvent : Clip->SustainPedalEvents)
+		{
+			//we draw a transparent box for the sustain pedal events from event to the next event
+			//if is pedal on, we store the event
+
+			if (SustainEvent.bIsSustainPedalDown)
+			{
+				CurrentSustainOnEvent = SustainEvent;
+			}
+			else
+			{
+				const float Start = TickToPixel(CurrentSustainOnEvent.StartTick);
+				const float End = TickToPixel(SustainEvent.StartTick);
+				const float Width = End - Start;
+				const float Y = AllottedGeometry.GetLocalSize().Y;
+				FSlateDrawElement::MakeBox(
+					OutDrawElements,
+					LayerId,
+					OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, Y), FSlateLayoutTransform(1.0f, FVector2D(Start, 0))),
+					FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+					ESlateDrawEffect::None,
+					FLinearColor(0.1f, 0.1f, 0.1f, 0.01f)
+				);
+			}	
+
+		}
+		
+		LayerId++;
+		
 		for (const auto& Note : Clip->LinkedNotes)
 		{
 			const float Start = TickToPixel(Note.StartTick);
@@ -184,6 +216,8 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 			//FSlateDrawElement::MakeText(OutDrawElements, LayerId++, OffsetGeometryChild.ToOffsetPaintGeometry(FVector2D(Start, Y - 10)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 
 		}
+
+	
 
 		PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 

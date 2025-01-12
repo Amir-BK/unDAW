@@ -7,7 +7,7 @@ using UnrealBuildTool;
 
 public class BKMusicCore : ModuleRules
 {
-    private bool bStrictIncludesCheck = true;
+    private bool bStrictIncludesCheck = false;
 
     public BKMusicCore(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -60,7 +60,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-                , "LevelSequence", "MovieScene", "MovieSceneTracks"
+                , "LevelSequence", "MovieScene", "MovieSceneTracks", "AudioWidgets", "AssetRegistry"
 			}
 
             );
@@ -72,7 +72,8 @@ public class BKMusicCore : ModuleRules
 			PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"MIDIDevice",
+			
+                //"MIDIDevice",
 			}
 			);
 

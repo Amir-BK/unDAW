@@ -50,6 +50,7 @@ void UM2VariMixerVertex::SetMixerAlias(FName InAlias)
 	}
 
 	MixerAlias = InAlias;
+	VertexDisplayName.Emplace(MixerAlias.ToString());
 
 	//add the mixer alias to the sequencer data
 	GetSequencerData()->Mixers.Add(MixerAlias, this);
@@ -92,6 +93,28 @@ void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 
 }
 
+void UM2VariMixerVertex::SetExclusiveSoloForPin(UM2AudioTrackPin* InPin)
+{
+	for (auto& [Name, Pin] : InputM2SoundPins)
+	{
+		auto* AudioTrackPin = Cast<UM2AudioTrackPin>(Pin);
+		if (AudioTrackPin == nullptr)
+		{
+			continue;
+		}
+		if (AudioTrackPin == InPin)
+		{
+			AudioTrackPin->bSolo = true;
+			continue;
+		}
+		AudioTrackPin->bSolo = false;
+		
+	}
+
+
+	UpdateMuteAndSoloStates();
+}
+
 inline void UM2VariMixerVertex::UpdateGainParam_Internal(int ChannelIndex, float newGain)
 {
 	FName FloatName;
@@ -106,8 +129,12 @@ void UM2VariMixerVertex::UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin,
 	FName FloatName;
 	EMetaSoundBuilderResult BuildResult;
 
-	auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
-	BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
+	if (InPin->GainParameter)
+	{
+		auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
+		BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
+	}
+
 }
 
 UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()

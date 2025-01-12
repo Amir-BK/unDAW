@@ -3,6 +3,7 @@
 #include "M2SoundGraphStatics.h"
 #include "Metasound.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
+#include "MetasoundFrontendDocumentModifyDelegates.h"
 
 #include "unDAWSettings.h"
 
@@ -24,11 +25,17 @@ void UM2SoundPatch::SaveDefaultsToVertexCache()
 FLinearColor UM2SoundVertex::GetVertexColor() const
 {
 	// should override in subclasses
-	if(ColorSourcePin && ColorSourcePin->LinkedPin)
+	if(VertexMetadataProviderPin && VertexMetadataProviderPin->LinkedPin)
 	{
-		return ColorSourcePin->LinkedPin->ParentVertex->GetVertexColor();
+		return VertexMetadataProviderPin->LinkedPin->ParentVertex->GetVertexColor();
 	}
 	return FLinearColor::Blue;
+}
+
+FString UM2SoundVertex::GetVertexDisplayName() const { 
+
+	return VertexDisplayName.IsSet() ? VertexDisplayName.GetValue() : FString("None"); 
+
 }
 
 void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilderNodeInputHandle>& InHandles, const TArray<FMetaSoundBuilderNodeOutputHandle>& OutHandles)
@@ -97,9 +104,10 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 				}
 
 
-				if(ColorSourcePin == nullptr)
+				if(VertexMetadataProviderPin == nullptr)
 				{
-					ColorSourcePin = AsAudioTrackPin;
+					VertexMetadataProviderPin = AsAudioTrackPin;
+					VertexDisplayName = VertexMetadataProviderPin->ParentVertex->GetVertexDisplayName();
 				}
 
 				continue;
@@ -116,9 +124,10 @@ void UM2SoundVertex::PopulatePinsFromMetasoundData(const TArray<FMetaSoundBuilde
 		{
 			auto PinLiteralObject = CreateInputPin<UM2MetasoundLiteralPin>(Handle);
 			PinLiteralObject->bIsConstructorPin = bIsConstructorPin;
-			if(!ColorSourcePin && DataType == FName("MIDIStream"))
+			if(!VertexMetadataProviderPin && DataType == FName("MIDIStream"))
 			{
-				ColorSourcePin = PinLiteralObject;
+				VertexMetadataProviderPin = PinLiteralObject;
+				VertexDisplayName = VertexMetadataProviderPin->ParentVertex->GetVertexDisplayName();
 			}
 
 			//if Pin is a trigger or a timestamp we need to create a graph input
@@ -250,19 +259,8 @@ void UM2SoundVertex::VertexNeedsBuilderUpdates()
 
 void UM2SoundVertex::VertexConnectionsChanged()
 {
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Vertex connections changed!"))
-	UpdateConnections();
 
-	bool bBuildCyclicalDownstreamTree = true;
-	if (bBuildCyclicalDownstreamTree)
-	{
-		//need to inform downstream vertexes to reconnect to our output
-		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Building cyclical downstream tree"))
-			//OnVertexUpdated.Broadcast();
-			//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
-		//OnVertexUpdated.Broadcast();
-	}
-	//OnVertexNeedsBuilderConnectionUpdates.Broadcast(this);
+	UpdateConnections();
 }
 
 void UM2SoundVertex::TransmitAudioParameter(FAudioParameter Parameter)
@@ -314,7 +312,18 @@ void UM2SoundVertex::UpdateConnections()
 	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Updating Connections"))
 		for (const auto& [Name, Pin] : InputM2SoundPins)
 		{
+			if (Pin->bIsMetadataSource)
+			{
+				//we need to update this vertex's display name and color from the pin
+				VertexDisplayName = Pin->ParentVertex->GetVertexDisplayName();
+				VertexColor = Pin->ParentVertex->GetVertexColor();
+
+			}
+			
 			auto AsLiteral = Cast<UM2MetasoundLiteralPin>(Pin);
+
+
+
 			if (AsLiteral)
 			{
 				EMetaSoundBuilderResult BuildResult;
@@ -369,7 +378,13 @@ void UM2SoundVertex::UpdateConnections()
 			}
 		}
 
-	
+	//update vertex display name and color from metadata pin
+	if (VertexMetadataProviderPin && VertexMetadataProviderPin->LinkedPin)
+	{
+		VertexDisplayName = VertexMetadataProviderPin->LinkedPin->ParentVertex->GetVertexDisplayName();
+		VertexColor = VertexMetadataProviderPin->LinkedPin->ParentVertex->GetVertexColor();
+		VertexMetadataProviderPin->bIsMetadataSource = true;
+	}
 
 	if (!bIsRebuilding) return;
 
@@ -505,6 +520,7 @@ void UM2SoundAudioOutput::BuildVertex()
 
 void UM2SoundAudioOutput::DestroyVertex()
 {
+
 }
 
 void UM2SoundAudioOutput::CollectAndTransmitAudioParameters()
@@ -518,6 +534,8 @@ void UM2SoundBuilderInputHandleVertex::BuildVertex()
 	TArray<FMetaSoundBuilderNodeOutputHandle> MappedOutput;
 	//auto MidiTrackName = SequencerData->GetTracksDisplayOptions(TrackId).trackName + ".MidiStream";
 	MappedOutput.Add(SequencerData->CoreNodes.MemberInputMap[FName(MemberName)].MemberInputOutputHandle);
+
+	VertexDisplayName = MemberName.ToString();
 
 	TArray<FMetaSoundBuilderNodeInputHandle> MappedInputs;
 	PopulatePinsFromMetasoundData(MappedInputs, MappedOutput);
@@ -540,6 +558,8 @@ void UM2SoundPatch::BuildVertex()
 	if (BuilderContext && NodeHandle.IsSet())
 	{
 		BuilderContext->RemoveNode(NodeHandle, BuildResult);
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Removing Existing Node, Result %s"), *UEnum::GetValueAsString(BuildResult))
+
 		//BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
 		bIsRebuildingExistingNode = true;
 		bIsRebuilding = true;
@@ -552,8 +572,19 @@ void UM2SoundPatch::BuildVertex()
 	
 	}
 
+	// get patch document and bind to asset updates
+
+		const auto& PatchDocument = Patch->GetConstDocument();
+		SetMetasoundAsset(&PatchDocument);
+		BKMusicCoreModule::RegisterMetasoundAssetListener(this);
+
+
+
+
 	NodeHandle = BuilderContext->AddNode(Patch, BuildResult);
+
 	BuilderResults.Add(FName(TEXT("Add Patch Node")), BuildResult);
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Adding Patch Node, Result %s"), *UEnum::GetValueAsString(BuildResult))
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 
@@ -572,6 +603,30 @@ void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 		//BuilderResults.Add(FName(TEXT("No cache entry for patch, please save one!")), EMetaSoundBuilderResult::Failed);
 	}
 }
+
+inline UM2SoundPatch::~UM2SoundPatch()
+{
+	BKMusicCoreModule::UnregisterMetasoundAssetListener(this);
+}
+
+void UM2SoundPatch::MetasoundDocumentUpdated()
+{
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Metasound Document Updated"))
+	
+	//current patch version number?
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Current Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
+
+		// so maybe patch is stale? let's reaquire a pointer 
+	Patch =	UM2SoundGraphStatics::GetPatchByName(Patch->GetName());
+
+	//new version number?
+	UE_LOG(unDAWVertexLogs, Verbose, TEXT("New Patch Version: %s"), *Patch->GetDocumentChecked().Metadata.Version.ToString())
+		//rebuild the vertex
+		VertexNeedsBuilderUpdates();
+
+
+}
+
 
 void UM2SoundLiteralNodeVertex::DestroyVertex()
 {
@@ -597,6 +652,8 @@ void UM2SoundDynamicGraphInputVertex::BuildVertex()
 	EMetaSoundBuilderResult BuildResult;
 	//auto& BuilderSubsystems = SequencerData->MSBuilderSystem;
 	//auto& BuilderContext = SequencerData->BuilderContext;
+
+	VertexDisplayName = MemberName.ToString();
 
 	//if (OutputM2SoundPins.IsEmpty())
 	//{

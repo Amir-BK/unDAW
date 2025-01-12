@@ -271,19 +271,26 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	FDetailsViewArgs DetailsViewArgs;
 	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
-	TSharedRef<IDetailsView> DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
-	DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
+	DetailsViewArgs.bAllowMultipleTopLevelObjects = true;
+	DetailsViewArgs.bAllowSearch = true;
+	DetailsViewArgs.bShowSectionSelector = true;
+	DetailsViewArgs.bAllowFavoriteSystem = true;
+	DetailsViewArgs.bShowOptions = true;
+	DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs).ToSharedPtr();
+	//DetailsView->
+	//DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
 
 	// FDetailsViewArgs NodeDetailsViewArgs;
    //  NodeDetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
 
 	 //NodeDetailsView = PropertyEditorModule.CreateDetailView(NodeDetailsViewArgs);
 
-	InTabManager->RegisterTabSpawner("DAWSequenceDetailsTab", FOnSpawnTab::CreateLambda([=](const FSpawnTabArgs&)
+	InTabManager->RegisterTabSpawner("DAWSequenceDetailsTab", FOnSpawnTab::CreateLambda([this](const FSpawnTabArgs&)
 		{
 			return SNew(SDockTab)
 				[
-					DetailsView
+					DetailsView.ToSharedRef()
+
 
 				];
 		}))
@@ -331,6 +338,8 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
 {
 	UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
+
+	DetailsView->SetObjects(SelectedNodes.Array());
 
 	Graph->SelectedNodes.Empty();
 	Graph->SelectedVertices.Empty();
@@ -568,18 +577,18 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 				ToolbarBuilder.EndSection();
 				//now a new section, combobox for midi input 
 
-				ToolbarBuilder.BeginSection("MIDI Input");
-				TArray<FMIDIDeviceInfo> InputDevices;
-				TArray<FMIDIDeviceInfo> OutputDevices;
+				//ToolbarBuilder.BeginSection("MIDI Input");
+				//TArray<FMIDIDeviceInfo> InputDevices;
+				//TArray<FMIDIDeviceInfo> OutputDevices;
 
-				UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
+				//UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
 
-				InputDeviceNames.Empty();
-				
-				for (auto& Device : InputDevices)
-				{
-					InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
-				}
+				//InputDeviceNames.Empty();
+				//
+				//for (auto& Device : InputDevices)
+				//{
+				//	InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
+				//}
 
 //				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
 //					.OptionsSource(&InputDeviceNames)
@@ -607,6 +616,8 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 
 void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 {
+	if (!PianoRollGraph) return;
+
 	PianoRollGraph->OnSeekEvent.Unbind();
 	auto PreviewHelper = GEditor->GetEditorSubsystem<UUnDAWPreviewHelperSubsystem>();
 	PreviewHelper->CreateAndPrimePreviewBuilderForDawSequence(SequenceData);

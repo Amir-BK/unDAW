@@ -14,9 +14,11 @@
 #include "EditorSlateWidgets/SM2AudioOutputNode.h"
 #include "SequenceAssetEditor/DAWEditorCommands.h"
 #include "PinConfigWidget/SPinConfigWidget.h"
+#include "unDAWSettings.h"
 #include "ToolMenu.h"
 //#include "Framework/Commands/UICommandList.h"
 #include "EditorSlateWidgets/SM2MidiTrackGraphNode.h"
+#include <UndawWidgetsSettings.h>
 
 TSharedPtr<class SGraphNode> FM2SoundGraphPanelNodeFactory::CreateNode(UEdGraphNode* InNode) const
 {
@@ -71,15 +73,6 @@ void UM2SoundEdGraphNode::PinConnectionListChanged(UEdGraphPin* Pin)
 	{
 		if (PinLinkedTo == 0)
 		{
-			//if pin had a connection and now doesn't, we need to break the connection
-			//UM2Pins* UnderlyingPin = Vertex->InputM2SoundPins.FindRef(Pin->GetFName());
-			//
-			//auto* CurrentConnection = UnderlyingPin->LinkedPin;
-			//if (CurrentConnection)
-			//{
-			//	//break the connection
-			//	//CurrentConnection->LinkedPin = nullptr;
-			//}
 
 			if (auto* AsAudioTrackPin = Cast<UM2AudioTrackPin>(Pin->PinType.PinSubCategoryObject))
 			{
@@ -170,17 +163,17 @@ const void UM2SoundEdGraphNode::SplitPin(const UEdGraphPin* Pin) const
 void UM2SoundEdGraphNode::SetPinAsColorSource(UM2Pins* M2Pin)
 {
 	auto CurrentColorSourcePin = ColorSourcePin;
-	M2Pin->bIsColorSource = true;
+	M2Pin->bIsMetadataSource = true;
 	ColorSourcePin = *Pins.FindByPredicate([M2Pin](UEdGraphPin* Pin) { return Pin->PinType.PinSubCategoryObject == M2Pin; });
 
 	if (CurrentColorSourcePin == ColorSourcePin)
 	{
 		ColorSourcePin = nullptr;
-		M2Pin->bIsColorSource = false;
-		Vertex->ColorSourcePin = nullptr;
+		M2Pin->bIsMetadataSource = false;
+		Vertex->VertexMetadataProviderPin = nullptr;
 	}
 	else {
-		Vertex->ColorSourcePin = M2Pin;
+		Vertex->VertexMetadataProviderPin = M2Pin;
 	}
 }
 
@@ -221,10 +214,25 @@ void UM2SoundEdGraphNode::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 
 		auto& DynamicSection = Menu->AddSection(FName("Pin Controls"));
 		DynamicSection.AddDynamicEntry("PinControls", FNewToolMenuSectionDelegate::CreateLambda([this, Context](FToolMenuSection& InSection) {
-			InSection.AddEntry(FToolMenuEntry::InitWidget(
-				"ControlSettings",
-				SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject)),
-				FText::GetEmpty()));
+			//check if we already have defaults for this pin in unDAWsettings, otherwise create a new struct
+
+			
+
+			//add property viewer or whatever works for the struct
+
+			if (IsA<UM2SoundPatchContainerNode>())
+			{
+
+				InSection.AddEntry(FToolMenuEntry::InitWidget(
+					"ControlSettings",
+					SNew(SPinConfigWidget, Cast<UM2Pins>(Context->Pin->PinType.PinSubCategoryObject))
+					.OnConfigChanged_Lambda([this]() { 
+						UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: PinConfigChanged"))
+							GetGraph()->NotifyNodeChanged(this); 
+						}),
+					FText::GetEmpty()));
+			}
+
 		}));
 
 	
@@ -356,19 +364,7 @@ void UM2SoundEdGraphNode::SyncVertexConnections() const
 			LinkedToPin->LinkedTo.AddUnique(Pin);
 		}
 
-		//if(Pin->Direction == EGPD_Input)
-		//{
-		//	if(Pin->LinkedTo.Num() > 0)
-		//	{
-		//		for(auto LinkedPin : Pin->LinkedTo)
-		//		{
-		//			if(LinkedPin->GetOwningNode()->IsA<UM2SoundEdGraphNode>())
-		//			{
-		//				//GetGraph()->GetSchema()->TryCreateConnection(Pin, LinkedPin);
-		//			}
-		//		}
-		//	}
-		//}
+
 	}
 }
 
@@ -425,7 +421,7 @@ void UM2SoundEdGraphNode::AllocateDefaultPins() {
 		
 		Pins.Last()->PinType.PinSubCategoryObject = Pin;
 		
-		if (Pin->bIsColorSource)
+		if (Pin->bIsMetadataSource)
 		{
 			ColorSourcePin = Pins.Last();
 			//if color source pin is not first, swap it with the first pin

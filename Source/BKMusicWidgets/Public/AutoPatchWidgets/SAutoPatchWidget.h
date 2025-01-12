@@ -5,11 +5,21 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Layout/SWrapBox.h"
+#include "Widgets/Layout/SGridPanel.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Layout/SConstraintCanvas.h"
+#include "Widgets/Layout/SUniformGridPanel.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Pins/M2Pins.h"
 #include "MetasoundFrontendController.h"
 #include "MetasoundFrontendDataTypeRegistry.h"
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
+#include "unDAWSettings.h"
+#include "UndawWidgetsSettings.h"
+#include "AudioMaterialSlate/SAudioMaterialButton.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledKnob.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
+
 
 #include "Vertexes/M2SoundVertex.h"
 
@@ -106,6 +116,175 @@ public:
 
 };
 
+DECLARE_DELEGATE_TwoParams(FOnInnerWidgetDragged, const FVector2D, const SWidget*)
+
+
+class BKMUSICWIDGETS_API SMaterialControllerFloatWidget : public SCompoundWidget
+{
+
+public:
+	SLATE_BEGIN_ARGS(SMaterialControllerFloatWidget)
+		{}
+		SLATE_EVENT(FOnInnerWidgetDragged, OnInnerWidgetDragged)
+	SLATE_END_ARGS()
+
+	bool bIsInit = false;
+
+	void Construct(const FArguments& InArgs, const UM2MetasoundLiteralPin* InMaterialPin, const FM2SoundFloatPinConfig* InConfig)
+	{
+		LiteralPin = InMaterialPin;
+		Config = InConfig;
+		UObject* SliderStyle = nullptr;
+		UObject* KnobStyle = nullptr;
+		const FAudioMaterialSliderStyle* Style = nullptr;
+		const FAudioMaterialKnobStyle* KnobStyleAsset = nullptr;
+
+		OnInnerWidgetDragged = InArgs._OnInnerWidgetDragged;
+
+
+
+		switch (InConfig->WidgetType)
+		{
+		case EFloatPinWidgetType::Slider:
+
+			SliderStyle = InConfig->SliderStyleOverride.TryLoad();
+	
+
+			if (SliderStyle)
+			{
+				Style = CastChecked<USlateWidgetStyleAsset>(SliderStyle)->GetStyle<FAudioMaterialSliderStyle>();
+			}
+			else
+			{
+				Style = &FAudioWidgetsStyle::Get().GetWidgetStyle<FAudioMaterialSliderStyle>("AudioMaterialSlider.Style");
+			}
+
+
+			ChildSlot
+				[
+					SNew(SBorder)
+						[
+							SAssignNew(InputWidget, SAudioMaterialLabeledSlider)
+								.SliderValue(this, &SMaterialControllerFloatWidget::GetValue)
+								.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
+								.Style(Style)
+								.AudioUnitsValueType(Config->UnitType)
+								.Orientation(Config->SliderOrientation)
+						]
+			
+				];
+
+		break;
+
+		case EFloatPinWidgetType::Knob:
+
+			KnobStyle = InConfig->KnobStyleOverride.TryLoad();
+	
+
+			if (KnobStyle)
+			{
+				KnobStyleAsset = CastChecked<USlateWidgetStyleAsset>(KnobStyle)->GetStyle<FAudioMaterialKnobStyle>();
+			}
+			else
+			{
+				KnobStyleAsset = &FAudioWidgetsStyle::Get().GetWidgetStyle<FAudioMaterialKnobStyle>("AudioMaterialKnob.Style");
+			}
+
+
+			ChildSlot
+				[
+					SNew(SBorder)
+						[
+						SAssignNew(InputWidget, SAudioMaterialLabeledKnob)
+							.Value(this, &SMaterialControllerFloatWidget::GetValue)
+							.OnValueChanged(this, &SMaterialControllerFloatWidget::OnValueChanged)
+							.AudioUnitsValueType(Config->UnitType)
+							.Style(KnobStyleAsset)
+						]
+				];
+
+			break;
+
+		default:
+		
+		break;
+		}
+
+		bIsInit = true;
+
+	}
+
+	float GetValue() const {
+		float Value;
+		if (LiteralPin->LiteralValue.TryGet(Value))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Get Value: %f, Pin Name: %s"), Value, *LiteralPin->Name.ToString());
+			return Value;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Get Value: 0.0f, Pin Name: %s"), *LiteralPin->Name.ToString());
+		return 0.0f;
+		 }
+
+	void SetValue(float NewValue) 
+	{
+		EMetaSoundBuilderResult BuildResult;
+		auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
+		NonConstLiteralPin->LiteralValue.Set(InputWidget->GetOutputValue(NewValue));
+		NonConstLiteralPin->ParentVertex->GetSequencerData()->BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NonConstLiteralPin->LiteralValue, BuildResult);
+	};
+
+	void OnValueChanged(float NewValue) {
+		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f, Pin Name: %s"), InputWidget->GetOutputValue(NewValue), *LiteralPin->Name.ToString());
+
+		if (!bIsInit) return;
+
+		EMetaSoundBuilderResult BuildResult;
+		auto NonConstLiteralPin = const_cast<UM2MetasoundLiteralPin*>(LiteralPin);
+		NonConstLiteralPin->LiteralValue.Set(InputWidget->GetOutputValue(NewValue));
+		NonConstLiteralPin->ParentVertex->GetSequencerData()->BuilderContext->SetNodeInputDefault(LiteralPin->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NonConstLiteralPin->LiteralValue, BuildResult);
+	};
+
+	FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+	{
+		//OnInnerWidgetDragged.ExecuteIfBound(MouseEvent.GetScreenSpacePosition(), this);
+		UE_LOG(LogTemp, Warning, TEXT("Drag Detected"));
+		return FReply::Handled();
+	}
+
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		
+		const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton;
+		//is left mouse button down?
+		if (bIsLeftMouseButtonEffecting)
+		{
+			//if so, drag
+			
+			OnInnerWidgetDragged.ExecuteIfBound(MouseEvent.GetScreenSpacePosition(), this);
+			//print drag delta
+			UE_LOG(LogTemp, Warning, TEXT("Drag Delta: %f"), MouseEvent.GetCursorDelta().X);
+			//return handled capture mouse
+			return FReply::Handled().CaptureMouse(SharedThis(this));
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Mouse Drag, Unhandled"));
+		return FReply::Unhandled();
+	}
+
+	const FM2SoundFloatPinConfig* Config = nullptr;
+
+	const UM2MetasoundLiteralPin* LiteralPin;
+//
+	FOnInnerWidgetDragged OnInnerWidgetDragged;
+
+	TSharedPtr<SAudioInputWidget> InputWidget;
+
+	//void OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+
+	//TSharedPtr<SAudioRadialSlider> Slider;
+
+};
+
+
 /**
  *
  */
@@ -119,16 +298,18 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs, const UM2SoundVertex* InVertex);
 
-	void OnVertexUpdated();
+	//void OnVertexUpdated();
 
 	UM2SoundPatch* GetSelectedPatch() const;
 
+	FM2SoundFloatPinConfig* Config = nullptr;
 
+	FName PatchName = NAME_None;
 
 	private:
 		TSharedPtr<SComboBox<TSharedPtr<FString>>> PatchComboBox;
 		TArray<TSharedPtr<FString>> PatchOptions;
-		TSharedPtr<SVerticalBox> ContentBox;
+		TSharedPtr<SConstraintCanvas> ContentBox;
 		const UM2SoundVertex* Vertex;
 		UM2SoundPatch* SelectedPatch;
 

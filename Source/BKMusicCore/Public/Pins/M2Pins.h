@@ -174,7 +174,7 @@ public:
 	bool bIsStale = false;
 
 	UPROPERTY()
-	bool bIsColorSource = false;
+	bool bIsMetadataSource = false;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -255,6 +255,8 @@ public:
 	FMusicTimestamp Timestamp;
 
 	bool bIsSet = false;
+
+
 
 };
 

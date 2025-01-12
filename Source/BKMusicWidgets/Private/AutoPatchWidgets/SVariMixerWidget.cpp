@@ -4,6 +4,8 @@
 #include "SlateOptMacros.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBorder.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
+#include "UndawWidgetsSettings.h"
 #include "Widgets/SBoxPanel.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -14,107 +16,33 @@ void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* I
 	ChildSlot
 		[
 			SAssignNew(MainHorizontalBox, SHorizontalBox)
-				/*+ SHorizontalBox::Slot()
-				[
-					SNew(SMixerChannelWidget, InMixerVertex, INDEX_NONE)
-						.IsEnabled(false)
-						.Visibility_Lambda([this]() -> EVisibility { return ChannelWidgets.Num() > 0 ? EVisibility::Collapsed : EVisibility::Visible; })
-				]*/
-
 		];
 }
 
-void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex)
+void SVariMixerWidget::AddChannelWidget(UM2AudioTrackPin* InPin)
 {
-	checkNoEntry();
-	
-	MixerVertex = InMixerVertex;
-	ChannelIndex = InChannelIndex;
 
-	ChildSlot
+	TSharedPtr<SMixerChannelWidget> NewChannelWidget;
+
+	MainHorizontalBox->AddSlot()
 		[
-			SNew(SVerticalBox)
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(5)
-
-				[
-
-					SNew(STextBlock)
-						.Text(FText::FromString(FString::Printf(TEXT("Channel %d"), ChannelIndex)))
-				]
-
-				+ SVerticalBox::Slot()
-				.MaxHeight(175)
-				.Padding(5)
-				[
-					SAssignNew(VolumeSlider, SAudioSlider)
-						.SliderBackgroundColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
-						.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
-						.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
-						.OnValueChanged_Lambda([this](float NewValue) { MixerVertex->UpdateGainParameter(ChannelIndex, NewValue); })
-				]
-				//+ SVerticalBox::Slot()
-				//[
-				//	SAssignNew(RadialSlider, SAudioRadialSlider)
-
-				//		//.Value(this, &SMixerChannelWidget::GetRadialSliderValue)
-				//]
-
-				+SVerticalBox::Slot()
-				.AutoHeight()
-				.Padding(5)
-
-				[
-					SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-						.HAlign(HAlign_Center)
-						[
-							SNew(SBorder)
-								.BorderBackgroundColor(FLinearColor::Yellow)
-								.BorderImage(FCoreStyle::Get().GetBrush("Menu.Background"))
-
-								[
-									SAssignNew(MuteCheckBox, SCheckBox)
-										.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelMuteState(ChannelIndex, NewState); })
-										.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
-										.ToolTipText(FText::FromString("Mute"))
-								]
-
-								//	.IsChecked(this, &SMixerChannelWidget::GetMuteCheckBoxState)
-						]
-
-						+ SHorizontalBox::Slot()
-						.HAlign(HAlign_Center)
-
-						[
-							SNew(SBorder)
-								.BorderBackgroundColor(FLinearColor::Green)
-								.BorderImage(FCoreStyle::Get().GetBrush("Menu.Background"))
-
-								[
-									SAssignNew(SoloCheckBox, SCheckBox)
-										.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
-										.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
-										.ToolTipText(FText::FromString("Solo"))
-
-								]
-
-								//	.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
-						]
-
-				]
-
+			SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
 		];
 
-	//RadialSlider->SetOutputRange(FVector2D(-1, 1));
+	ChannelWidgets.Add(NewChannelWidget);
 }
+
+
 
 void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin)
 {
 	Pin = InPin;
 	MixerVertex = Cast<UM2VariMixerVertex>(Pin->ParentVertex);
+
+	FString LinkedToChannelName = Pin->LinkedPin ? Pin->LinkedPin->ParentVertex->GetVertexDisplayName() : FString("None");
+
+	//settings for style
+	const UndawWidgetsSettings* Settings = GetDefault<UndawWidgetsSettings>();
 	
 	ChildSlot
 		[
@@ -127,39 +55,21 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				[
 
 					SNew(STextBlock)
-						.Text(FText::FromString(FString::Printf(TEXT("Channel %d"), ChannelIndex)))
+						.Text(FText::FromString(LinkedToChannelName))
 				]
 
 				+ SVerticalBox::Slot()
-				.MaxHeight(175)
-				.Padding(5)
+				//.MaxHeight(175)
+				//.Padding(5)
 				[
-					SAssignNew(VolumeSlider, SAudioSlider)
-						.SliderBackgroundColor_Lambda([this]() -> FLinearColor {
-						if (Pin->LinkedPin && Pin->LinkedPin->ParentVertex)
-						{
-							const UM2Pins* ColorSource = Pin->LinkedPin->ParentVertex->ColorSourcePin;
-							if (ColorSource)
-							{
-								return FLinearColor::Blue;
-							}
-			
-		
-						}
-								return FLinearColor::Gray;
-					
-							})
-
-					//	.SliderThumbColor_Lambda([this]() -> FLinearColor { return MixerVertex->GetChannelColor(ChannelIndex); })
+					SAssignNew(VolumeLabeledSlider, SAudioMaterialLabeledSlider)
+					//	.LabelText(FText::FromString("Volume"))
 						.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
 						.OnValueChanged(this, &SMixerChannelWidget::UpdateVolumeSliderValue)
+						.Style(Settings->GetSliderStyle())
+						.Orientation(EOrientation::Orient_Vertical)	
+						.AudioUnitsValueType(EAudioUnitsValueType::Volume)
 				]
-				//+ SVerticalBox::Slot()
-				//[
-				//	SAssignNew(RadialSlider, SAudioRadialSlider)
-
-				//		//.Value(this, &SMixerChannelWidget::GetRadialSliderValue)
-				//]
 
 				+SVerticalBox::Slot()
 				.AutoHeight()
@@ -198,7 +108,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 										.OnCheckStateChanged(this, &SMixerChannelWidget::UpdateSoloCheckBoxState)
 										//.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { MixerVertex->SetChannelSoloState(ChannelIndex, NewState); })
 										.IsChecked(this, &SMixerChannelWidget::GetSoloCheckBoxState)
-										.ToolTipText(FText::FromString("Solo"))
+										.ToolTipText(FText::FromString("Solo \n Exclusive Solo - Ctrl + Click"))
 
 								]
 

@@ -18,7 +18,7 @@
 #include "MetasoundBuilderSubsystem.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
-#include "MidiDeviceManager.h"
+//#include "MidiDeviceManager.h"
 #include "MidiDrivenSequence/MidiDrivenLevelSequence.h"
 
 #include <Pins/M2Pins.h>
@@ -140,6 +140,22 @@ struct FM2SoundMetasoundBuilderPinData
 };
 
 USTRUCT(BlueprintType)
+struct FMidiSustainPedalEvent
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 StartTick = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	int32 velocity = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW|Midi Data")
+	bool bIsSustainPedalDown = false;
+		
+};
+
+USTRUCT(BlueprintType)
 struct FLinkedMidiEvents
 {
 	GENERATED_BODY()
@@ -223,6 +239,9 @@ struct FLinkedNotesClip
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FLinkedMidiEvents> LinkedNotes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<FMidiSustainPedalEvent> SustainPedalEvents;
 
 	UPROPERTY()
 	int8 MaxNote = 0;
@@ -414,7 +433,7 @@ protected:
 
 	FMetaSoundBuilderNodeOutputHandle CreateFilterNodeForTrack(int32 TrackMetadataIndex);
 
-	void CreateBusTransmitterAndStrealMainOutput();
+	void CreateBusTransmitterAndStreamMainOutput();
 
 private:
 
@@ -444,14 +463,14 @@ public:
 
 	bool bJustReceivedMessage = false;
 
-	UFUNCTION()
-	void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+	//UFUNCTION()
+	//void OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
 
-	UFUNCTION()
-	void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
+	//UFUNCTION()
+	//void OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity);
 
-	UFUNCTION()
-	void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
+	//UFUNCTION()
+	//void OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value);
 
 	float MetasoundCpuUtilization = 0.0f;
 

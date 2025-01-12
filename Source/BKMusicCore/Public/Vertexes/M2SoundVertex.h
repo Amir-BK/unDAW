@@ -9,6 +9,7 @@
 #include "M2SoundGraphData.h"
 
 #include <Pins/M2Pins.h>
+#include "BKMusicCore.h"
 
 #include "M2SoundVertex.generated.h"
 
@@ -100,13 +101,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "M2Sound")
 	bool bIsTransient = false;
 
-	UPROPERTY()
-	TObjectPtr<UM2Pins> ColorSourcePin = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TObjectPtr<UM2Pins> VertexMetadataProviderPin = nullptr;
 
 	UPROPERTY()
 	TOptional<FLinearColor> VertexColor;
 
 	virtual FLinearColor GetVertexColor() const;
+
+	UPROPERTY(VisibleAnywhere, Category = "M2Sound")
+	TOptional<FString> VertexDisplayName;
+
+	virtual FString GetVertexDisplayName() const;;
 
 	bool bIsRebuilding = false; //we can use this one to know when we also need to update all connected pins rather than just the input as we do when building the graph, only relevant for nodes that expose patches to the user
 
@@ -408,14 +414,16 @@ class BKMUSICCORE_API UM2SoundMidiInputVertex : public UM2SoundBuilderInputHandl
 
 public:
 
+
 	//Represents the index of the track in the sequencer data, to get the actual midi metadata use this index to get the track from the sequencer data
 };
 
 //vertex container for user created metasound patch assets, of course this one is a literal node.
 UCLASS()
-class BKMUSICCORE_API UM2SoundPatch : public UM2SoundLiteralNodeVertex
+class BKMUSICCORE_API UM2SoundPatch : public UM2SoundLiteralNodeVertex, public UnDAW::IMetasoundAssetListener
 {
 	GENERATED_BODY()
+
 public:
 
 	UPROPERTY(EditAnywhere, Category = "M2Sound")
@@ -434,4 +442,12 @@ public:
 	//void UpdateConnections() override;
 
 	void TryFindVertexDefaultRangesInCache() override;
+
+	~UM2SoundPatch();
+
+	// Inherited via IMetasoundAssetListener
+	virtual void MetasoundDocumentUpdated() override;
+
+
+
 };

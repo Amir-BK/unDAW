@@ -14,7 +14,7 @@
 
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
-#include "MidiDeviceManager.h"
+//#include "MidiDeviceManager.h"
 #include "ISequencer.h"
 #include "ISequencerModule.h"
 #include "GraphEditor.h"
@@ -67,6 +67,7 @@ public:
 	FText GetBaseToolkitName() const override { return INVTEXT("unDAW Sequence Editor"); }
 	FString GetWorldCentricTabPrefix() const override { return "unDAW "; }
 	FLinearColor GetWorldCentricTabColorScale() const override { return {}; }
+	TSharedPtr<IDetailsView> DetailsView;
 
 	void DeleteSelectedNodes();
 
@@ -110,7 +111,7 @@ protected:
 
 	TArray<TSharedPtr<FString>> InputDeviceNames;
 	TSharedPtr<FString> SelectedInputDeviceName;
-	UMIDIDeviceInputController* MidiDeviceController = nullptr;
+	//UMIDIDeviceInputController* MidiDeviceController = nullptr;
 
 	void SetupPreviewPerformer();
 	//void PlayAudioComponent();

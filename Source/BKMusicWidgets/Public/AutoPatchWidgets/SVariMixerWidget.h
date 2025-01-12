@@ -9,6 +9,8 @@
 #include "SAudioSlider.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Widgets/Input/SCheckBox.h"
 
 class BKMUSICWIDGETS_API SMixerChannelWidget : public SCompoundWidget
@@ -18,8 +20,6 @@ public:
 		{}
 	SLATE_END_ARGS()
 
-	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs, UM2VariMixerVertex* InMixerVertex, uint8 InChannelIndex);
 
 	void Construct(const FArguments& InArgs, UM2AudioTrackPin* InPin);
 
@@ -29,6 +29,7 @@ public:
 
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
 	TSharedPtr<SAudioSlider> VolumeSlider;
+	TSharedPtr<SAudioMaterialLabeledSlider> VolumeLabeledSlider;
 
 	float GetVolumeSliderValue() const
 	{
@@ -51,6 +52,13 @@ public:
 
 	void UpdateSoloCheckBoxState(ECheckBoxState NewState)
 	{
+		// if control is pressed, set exclusive solo
+		if (FSlateApplication::Get().GetModifierKeys().IsControlDown())
+		{
+			MixerVertex->SetExclusiveSoloForPin(Pin);
+			return;
+		}
+		
 		Pin->bSolo = NewState == ECheckBoxState::Checked;
 
 		MixerVertex->UpdateMuteAndSoloStates();
@@ -89,28 +97,5 @@ public:
 
 	TArray<TSharedPtr<SMixerChannelWidget>> ChannelWidgets;
 
-	void AddChannelWidget(int ChannelIndex)
-	{
-		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
-
-		MainHorizontalBox->AddSlot()
-			[
-				SAssignNew(NewChannelWidget, SMixerChannelWidget, MixerVertex, ChannelIndex)
-			];
-
-		ChannelWidgets.Add(NewChannelWidget);
-	}
-
-	void AddChannelWidget(UM2AudioTrackPin* InPin)
-	{
-
-		TSharedPtr<SMixerChannelWidget> NewChannelWidget;
-
-		MainHorizontalBox->AddSlot()
-			[
-				SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
-			];
-
-		ChannelWidgets.Add(NewChannelWidget);
-	}
+	void AddChannelWidget(UM2AudioTrackPin* InPin);
 };
