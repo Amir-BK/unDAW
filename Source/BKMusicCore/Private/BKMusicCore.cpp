@@ -74,44 +74,31 @@ void BKMusicCoreModule::OnAssetsChanged(TConstArrayView<FAssetData> InUpdatedAss
 		UE_LOG(LogBKMusicCore, Warning, TEXT("Asset Changed: %s, Class: %s"), *AssetData.AssetName.ToString(), *AssetClass->GetName());
 
 		using namespace UnDAW;
-		if (AssetClass == UMetaSoundPatch::StaticClass())
+		if (AssetClass == UMetaSoundPatch::StaticClass() || AssetClass == UMetaSoundSource::StaticClass())
 		{
-			UE_LOG(LogBKMusicCore, Warning, TEXT("Asset is a patch"));
-
-
-			IMetasoundAssetListener** Listener = MetasoundAssetListeners.FindByPredicate([&](IMetasoundAssetListener* Listener)
-				{
-					return Listener->GetMetasound() == &Cast<UMetaSoundPatch>(AssetData.GetAsset())->GetConstDocument();
-				});
-
-			if (Listener)
-			{
-				(*Listener)->MetasoundDocumentUpdated();
-			}
-
+			//get the asset object
+			OnMetasoundAssetUpdated(AssetData.GetAsset());
 		}
-		else if (AssetClass == UMetaSoundSource::StaticClass())
-		{
 
-			UE_LOG(LogBKMusicCore, Warning, TEXT("Asset is a source"));
-
-			IMetasoundAssetListener** Listener = MetasoundAssetListeners.FindByPredicate([&](IMetasoundAssetListener* Listener)
-				{
-					return Listener->GetMetasound() == &Cast<UMetaSoundSource>(AssetData.GetAsset())->GetConstDocument();
-				});
-
-			if (Listener)
-			{
-				(*Listener)->MetasoundDocumentUpdated();
-			}
-
-
-		}
+		
 	}
 
 
 
 
+}
+
+inline void BKMusicCoreModule::OnMetasoundAssetUpdated(UObject* AssetObject)
+{
+	for (auto Listener : MetasoundAssetListeners)
+	{
+		if (IMetaSoundDocumentInterface* CastedAsset = Cast<IMetaSoundDocumentInterface>(AssetObject))
+		{
+			Listener->SetMetasoundAsset(&CastedAsset->GetConstDocument());
+			Listener->MetasoundDocumentUpdated();
+		}
+
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

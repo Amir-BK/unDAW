@@ -53,6 +53,8 @@ public:
 
 	void OnAssetsChanged(TConstArrayView<FAssetData> InUpdatedAssets);
 
+	void OnMetasoundAssetUpdated(UObject* AssetObject);
+
 private:
 	TArray<UnDAW::IMetasoundAssetListener*> MetasoundAssetListeners;
 };

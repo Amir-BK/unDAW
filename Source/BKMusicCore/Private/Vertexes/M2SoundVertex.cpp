@@ -588,8 +588,6 @@ void UM2SoundPatch::BuildVertex()
 
 	PopulatePinsFromMetasoundData(BuilderContext->FindNodeInputs(NodeHandle, BuildResult), BuilderContext->FindNodeOutputs(NodeHandle, BuildResult));
 
-	bIsRebuilding = false;
-
 }
 
 void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
