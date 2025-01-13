@@ -4,12 +4,11 @@ using UnrealBuildTool;
 
 public class unPatchwork : ModuleRules
 {
-    private bool bStrictIncludesCheck = true;
+    private bool bStrictIncludesCheck = false;
 
     public unPatchwork(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-        bUseUnity = false;
 
         // This is to emulate engine installation and verify includes during development
         // Gives effect similar to BuildPlugin with -StrictIncludes

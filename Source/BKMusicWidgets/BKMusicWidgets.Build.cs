@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class BKMusicWidgets : ModuleRules
 {
-    private bool bStrictIncludesCheck = true;
+    private bool bStrictIncludesCheck = false;
 
     public BKMusicWidgets(ReadOnlyTargetRules Target) : base(Target)
     {

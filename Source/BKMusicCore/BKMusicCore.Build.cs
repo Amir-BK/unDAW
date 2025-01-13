@@ -12,7 +12,7 @@ public class BKMusicCore : ModuleRules
     public BKMusicCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-        bUseUnity = false;
+
         CppStandard = CppStandardVersion.Cpp20;
 
         PrivateIncludePaths.AddRange(

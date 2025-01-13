@@ -34,6 +34,9 @@ namespace UnDAW
 
 	private:
 		const FMetasoundFrontendDocument* Metasound;
+
+		// can be used by editor modules that want to receive updates for any metasound asset change.
+		bool bGlobalListener = false;
 	};
 
 }
@@ -57,4 +60,6 @@ public:
 
 private:
 	TArray<UnDAW::IMetasoundAssetListener*> MetasoundAssetListeners;
+
+	bool bMetasoundRegistryNeedsRebuilding = true;
 };

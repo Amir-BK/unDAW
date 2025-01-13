@@ -115,13 +115,13 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 
 	if (auto& FromPin = ContextMenuBuilder.FromPin)
 	{
-		if (FromPin->SubPins.Num() > 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: FromPin has subpins"));
-			auto TestAction = MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>();
-			TestAction->UpdateSearchData(FText::FromString("Test"), INVTEXT("Test"), INVTEXT("Test"), INVTEXT("Test"));
-			ContextMenuBuilder.AddAction(TestAction);
-		}
+		//if (FromPin->SubPins.Num() > 0)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("m2sound graph schema: FromPin has subpins"));
+		//	auto TestAction = MakeShared<FM2SoundGraphAddNodeAction_NewAudioInsert>();
+		//	TestAction->UpdateSearchData(FText::FromString("Test"), INVTEXT("Test"), INVTEXT("Test"), INVTEXT("Test"));
+		//	ContextMenuBuilder.AddAction(TestAction);
+		//}
 
 		if (FromPin->PinType.PinSubCategory == "MidiStream")
 		{
@@ -173,10 +173,12 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 				FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
 				FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
 
-				auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+				//auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+				auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>(CatergoryName, FText::FromName(InputName), ToolTip, 0, 0, 0);
+
 				UE_LOG(LogTemp, Warning, TEXT("Metadata Index: %d"), Input.MetadataIndex);
 				NewAction->MetadataIndex = Input.MetadataIndex;
-				NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
+				//NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
 
 				ContextMenuBuilder.AddAction(NewAction);
 
@@ -209,10 +211,9 @@ void UM2SoundEdGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Con
 			FText CatergoryName = FText::FromString(Input.DataType.ToString() + (" Inputs"));
 			FText ToolTip = FText::FromString("Input Type: " + Input.DataType.ToString());
 
-			auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>();
+			//NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
+			auto NewAction = MakeShared<FM2SoundGraphAddNodeAction_NewGraphInputNode>(CatergoryName, FText::FromName(InputName), ToolTip, 0, 0, 0);
 			NewAction->MetadataIndex = Input.MetadataIndex;
-			NewAction->UpdateSearchData(FText::FromName(InputName), ToolTip, CatergoryName, FText::FromName(Input.DataType));
-
 			ContextMenuBuilder.AddAction(NewAction);
 		}
 	}

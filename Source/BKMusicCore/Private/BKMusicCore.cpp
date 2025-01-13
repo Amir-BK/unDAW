@@ -42,6 +42,8 @@ void BKMusicCoreModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+	//FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	//AssetRegistryModule.Get().OnAssetsUpdatedOnDisk().RemoveAll(this);
 }
 
 void BKMusicCoreModule::RegisterMetasoundAssetListener(UnDAW::IMetasoundAssetListener* Listener)
@@ -51,14 +53,16 @@ void BKMusicCoreModule::RegisterMetasoundAssetListener(UnDAW::IMetasoundAssetLis
 
 	//add the listener to the array
 	Module.MetasoundAssetListeners.AddUnique(Listener);
+
 }
 
 void BKMusicCoreModule::UnregisterMetasoundAssetListener(UnDAW::IMetasoundAssetListener* Listener)
 {
 	//get static access to the module
-	BKMusicCoreModule& Module = FModuleManager::LoadModuleChecked<BKMusicCoreModule>("BKMusicCore");
+	//BKMusicCoreModule& Module = FModuleManager::LoadModuleChecked<BKMusicCoreModule>("BKMusicCore");
 	//remove the listener from the array
-	Module.MetasoundAssetListeners.Remove(Listener);
+	//Module.MetasoundAssetListeners.Remove(Listener);
+
 }
 
 
@@ -95,7 +99,7 @@ inline void BKMusicCoreModule::OnMetasoundAssetUpdated(UObject* AssetObject)
 		if (IMetaSoundDocumentInterface* CastedAsset = Cast<IMetaSoundDocumentInterface>(AssetObject))
 		{
 			//does document match?!?! I guess I forgot about that
-			if (Listener->GetMetasound() == &CastedAsset->GetConstDocument())
+			if (Listener->bGlobalListener || Listener->GetMetasound() == &CastedAsset->GetConstDocument())
 			{
 				Listener->SetMetasoundAsset(&CastedAsset->GetConstDocument());
 				Listener->MetasoundDocumentUpdated();

@@ -223,6 +223,11 @@ struct FM2SoundGraphAddNodeAction_NewGraphInputNode : public FM2SoundGraphAddNod
 	UPROPERTY()
 	int MetadataIndex = INDEX_NONE;
 
+	//expose explicit constructor to refrain from calling the laggy 'update search text'
+
+	FM2SoundGraphAddNodeAction_NewGraphInputNode(FText InNodeCategory, FText InMenuDesc, FText InToolTip, const int32 InGrouping, const int32 InSectionID, const int32 InSortOrder) : FM2SoundGraphAddNodeAction(InNodeCategory, InMenuDesc, InToolTip, InGrouping, InSectionID, InSortOrder) {}
+
+
 	FM2SoundGraphAddNodeAction_NewGraphInputNode() : FM2SoundGraphAddNodeAction(INVTEXT("Inputs"), INVTEXT("Midi Track"), INVTEXT("Tooltip"), 0, 0, 0) {}
 	UEdGraphNode* MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin) override;
 };
