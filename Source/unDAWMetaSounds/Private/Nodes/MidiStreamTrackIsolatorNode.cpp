@@ -64,7 +64,7 @@ namespace unDAWMetasounds::TrackIsolatorNode
 					Info.MinorVersion = 0;
 					Info.DisplayName = INVTEXT("MIDI Stream Track Isolator");
 					Info.Description = INVTEXT("Filters out all but the specified MIDI tracks from the input MIDI stream and sets the output to Track 1");
-					Info.Author = PluginAuthor;
+					Info.Author = TEXT("Amir Ben-Kiki");
 					Info.PromptIfMissing = PluginNodeMissingPrompt;
 					Info.DefaultInterface = GetVertexInterface();
 					Info.CategoryHierarchy = { INVTEXT("unDAW"), NodeCategories::Music };
