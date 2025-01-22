@@ -43,9 +43,6 @@ public:
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
-	const float TickToPixel(const float Tick) const
-	{
-		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X;
-	}
+	const float TickToPixel(const float Tick) const;
 
 };

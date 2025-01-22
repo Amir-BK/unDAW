@@ -94,24 +94,26 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 
-	//auto TimelineCullingRect = MyCullingRect.IntersectionWith(FSlateRect::FromPointAndExtent(TimelineGeometry.LocalToAbsolute(FVector2D(0, 0)), TimelineGeometry.Size));
-
-
-	auto TrackAreaGeometry = AllottedGeometry.MakeChild(
+	// Calculate the geometry for the track area
+	FGeometry TrackAreaGeometry = AllottedGeometry.MakeChild(
 		FVector2f(0, TimelineHeight),
 		FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
 	);
 
-	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
+	// Calculate the offset geometry for scrolling
+	FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 
-	
+	// Paint the timeline
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 	LayerId++;
-	//PaintTimelineMarks(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+
+	// Paint the background grid
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
+
+	// Paint the scroll box
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 
-	//paint the major tab line on top of everything
+	// Paint the major tab line on top of everything
 	FSlateDrawElement::MakeLines(
 		OutDrawElements,
 		LayerId,
@@ -134,8 +136,8 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 		5.0f
 	);
 
-	
-	PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+	// Paint the play cursor
+	LayerId = PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	return LayerId;
 }
