@@ -84,6 +84,8 @@ public:
 	TAttribute<FVector2D> Position;
 	TAttribute<FVector2D> Zoom;
 
+	//float TotalTrackWidth = 0.0f;
+
 	float HorizontalOffset = 0.0f;
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId);
@@ -97,6 +99,8 @@ public:
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+
+	float TickToPixel(const float Tick) const;
 };
 
 

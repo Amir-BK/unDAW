@@ -11,12 +11,17 @@
 
 void SDawSequencerTrackMidiSection::Construct(const FArguments& InArgs, FLinkedNotesClip* InClip, FDawSequencerTrack* InParentTrack, UDAWSequencerData* InSequenceToEdit)
 {
-	Clip = InClip;
-	TrackColor = InArgs._TrackColor;
-	ParentTrack = InParentTrack;
-	Position = InArgs._Position;
-	Zoom = InArgs._Zoom;
-	SequenceData = InSequenceToEdit;
+    Clip = InClip;
+    TrackColor = InArgs._TrackColor;
+    ParentTrack = InParentTrack;
+    Position = InArgs._Position;
+    Zoom = InArgs._Zoom;
+    SequenceData = InSequenceToEdit;
+}
+
+float SDawSequencerTrackMidiSection::CalculateXPosition(float Tick) const
+{
+    return TickToPixel(Tick + Clip->OffsetTick) - Position.Get().X * Zoom.Get().X;
 }
 
 int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
@@ -25,8 +30,8 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
 
     // Calculate the geometry for the background box
-    const float BackgroundX = TickToPixel(Clip->StartTick);
-    const float BackgroundWidth = TickToPixel(Clip->EndTick) - BackgroundX;
+    const float BackgroundX = CalculateXPosition(Clip->StartTick);
+    const float BackgroundWidth = TickToPixel(Clip->EndTick + Clip->OffsetTick) - TickToPixel(Clip->StartTick + Clip->OffsetTick);
     FGeometry BackgroundGeometry = AllottedGeometry.MakeChild(
         FVector2f(BackgroundX, 0),
         FVector2f(BackgroundWidth, AllottedGeometry.Size.Y)
@@ -36,25 +41,32 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         LayerId++,
-        BackgroundGeometry.ToPaintGeometry(),
+        AllottedGeometry.ToPaintGeometry(),
         FAppStyle::GetBrush("Sequencer.Section.Background_Contents"),
         ESlateDrawEffect::None,
         ColorToUse
     );
 
     // Draw notes
+    LayerId++;
     const float Height = AllottedGeometry.Size.Y / 127;
     for (const auto& Note : Clip->LinkedNotes)
     {
-        const float X = TickToPixel(Note.StartTick + Clip->StartTick);
-        const float Width = (TickToPixel(Note.EndTick + Clip->StartTick) - X);
+        // Calculate relative to the clip's start position
+
+        const float X = TickToPixel(Note.StartTick + Clip->StartTick) - BackgroundX;
+        const float End = TickToPixel(Note.EndTick + Clip->StartTick) - BackgroundX;
+		const float Width = End - X;
         const float Y = (127 - Note.Pitch) * Height;
 
-        FSlateDrawElement::MakeLines(
+        FSlateDrawElement::MakeBox(
             OutDrawElements,
             LayerId,
-            AllottedGeometry.ToPaintGeometry(),
-            { FVector2D(X, Y), FVector2D(X + Width, Y) },
+            AllottedGeometry.ToPaintGeometry(
+                FVector2f(X, Y),
+                FVector2f(Width, Height)
+            ),
+            FAppStyle::GetBrush("WhiteBrush"),
             ESlateDrawEffect::None,
             FLinearColor::White
         );
@@ -76,6 +88,12 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 
 const float SDawSequencerTrackMidiSection::TickToPixel(const float Tick) const
 {
-    return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X;
-}
+    // Make sure SequenceData is valid
+    if (!SequenceData || !SequenceData->HarmonixMidiFile)
+    {
+        return 0.0f;
+    }
 
+    const float Milliseconds = SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick);
+    return Milliseconds * Zoom.Get().X;
+}

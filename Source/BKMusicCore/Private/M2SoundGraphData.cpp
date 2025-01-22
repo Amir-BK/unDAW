@@ -26,6 +26,15 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+const FSongMaps& UDAWSequencerData::GetSongMaps()
+{
+	// TODO: insert return statement here
+
+	//for now just get the songs map from the HarmonixMidi
+
+	return *HarmonixMidiFile->GetSongMaps();
+}
+
 void UDAWSequencerData::EnsureLevelSequence()
 {
 

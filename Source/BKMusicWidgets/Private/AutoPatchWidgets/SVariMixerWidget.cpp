@@ -54,8 +54,15 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 
 				[
 
-					SNew(STextBlock)
-						.Text(FText::FromString(LinkedToChannelName))
+					SNew(SBox)
+						.HeightOverride(30)
+						.WidthOverride(150)
+						[
+							SNew(STextBlock)
+								.Text(FText::FromString(LinkedToChannelName))
+								.AutoWrapText(true)
+						]
+
 				]
 
 				+ SVerticalBox::Slot()

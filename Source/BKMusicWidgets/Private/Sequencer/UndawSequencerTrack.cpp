@@ -1,4 +1,4 @@
-#include "Sequencer/UndawSequencerTrack.h"
+﻿#include "Sequencer/UndawSequencerTrack.h"
 #include "SlateFwd.h"
 #include "Components/Widget.h"
 #include "Widgets/SCompoundWidget.h"
@@ -115,6 +115,9 @@ FReply SDAwSequencerTrackControlsArea::OnMouseMove(const FGeometry& MyGeometry, 
 
 void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId)
 {
+	
+	
+	
 	ChildSlot
 		[
 			SNew(SHorizontalBox)
@@ -160,6 +163,7 @@ void SDawSequencerTrackLane::Construct(const FArguments& InArgs, UDAWSequencerDa
 	{
 		TSharedPtr<SDawSequencerTrackMidiSection> Section;
 
+		//TotalTrackWidth = FMath::Max(TotalTrackWidth, Clip.EndTick * Zoom.Get().X);
 
 		SAssignNew(Section, SDawSequencerTrackMidiSection, &Clip, &SequenceData->Tracks[TrackId], SequenceData)
 			.TrackColor(TAttribute<FLinearColor>::CreateLambda([this]() {return SequenceData->GetTrackMetadata(TrackId).TrackColor; }))
@@ -168,6 +172,8 @@ void SDawSequencerTrackLane::Construct(const FArguments& InArgs, UDAWSequencerDa
 
 		Section->AssignParentWidget(SharedThis(this));
 		Sections.Add(Section);
+
+		
 	}
 
 }
@@ -192,17 +198,24 @@ TOptional<EMouseCursor::Type> SDawSequencerTrackLane::GetCursor() const {
 
 int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	// Calculate total track width
 
-	// Calculate the offset geometry for scrolling
-	FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
-
-	// Paint the background grid
-	//LayerId = PaintBackgroundGrid(Args, OffsetGeometryChild, MyCullingRect, OutDrawElements, LayerId);
-
-	// Paint the sections
-	for (const TSharedPtr<SDawSequencerTrackMidiSection>& Section : Sections)
+	// Let Slate handle clipping via MyCullingRect
+	for (const auto& Section : Sections)
 	{
-		LayerId = Section->Paint(Args, OffsetGeometryChild, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+		float SectionStartPixel = TickToPixel(Section->Clip->StartTick);
+		float XOffset = SectionStartPixel + Position.Get().X; // Adjust for panning
+
+		// Create child geometry for each section with individual offset
+		FGeometry SectionGeometry = AllottedGeometry.MakeChild(
+			AllottedGeometry.GetLocalSize(), // Maintain track size; section clips internally if needed
+			FSlateLayoutTransform(
+				1.0f,
+				FVector2D(XOffset, 0.0f) // Position based on section start and pan
+			)
+		);
+
+		LayerId = Section->Paint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
 	}
 
 	return LayerId;
@@ -212,8 +225,11 @@ inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, c
 
 	//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
 	//check if hovering over section
-	const float MouseLocalX = MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X + Position.Get().X;
-	const float MouseToPixel = MouseLocalX; //* Zoom.Get().X;
+	const float MouseLocalX = (MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X);
+	const float MouseToPixel = (MouseLocalX + Position.Get().X * Zoom.Get().X) / Zoom.Get().X;
+
+
+
 	constexpr int32 SectionResizeAreaWidth = 5;
 
 	bool bAnySectionHovered = false;
@@ -269,4 +285,15 @@ inline FReply SDawSequencerTrackLane::OnMouseButtonDown(const FGeometry& MyGeome
 	};
 
 	return FReply::Unhandled();
+}
+
+float SDawSequencerTrackLane::TickToPixel(const float Tick) const
+{
+	const auto& SongsMap = SequenceData->GetSongMaps();
+
+	const float Milisecond = SongsMap.TickToMs(Tick);
+
+	return Milisecond  * Zoom.Get().X;
+
+
 }

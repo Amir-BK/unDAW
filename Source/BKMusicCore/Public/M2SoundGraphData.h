@@ -447,6 +447,8 @@ private:
 
 class UMappedVertexCache;
 
+
+
 //This is the main data object that holds all the data for the sequencer, the idea is for this class to hold non-transient data that can be used to recreate the sequencer OR just expose the outputs via the saved metasound
 //it's probably a bad idea to have the saved metasound option here... we can export to a new asset and then use that asset to recreate the sequencer without the realtime builder.
 
@@ -458,6 +460,8 @@ public:
 
 	//UPROPERTY()
 	//UMidiDrivenLevelSequence* MidiDrivenLevelSequence;
+
+	const FSongMaps& GetSongMaps(); 
 
 	void EnsureLevelSequence();
 

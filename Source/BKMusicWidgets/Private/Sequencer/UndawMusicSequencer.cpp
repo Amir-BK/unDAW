@@ -101,7 +101,7 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	);
 
 	// Calculate the offset geometry for scrolling
-	FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
+	//FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 
 	// Paint the timeline
 	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
@@ -205,6 +205,10 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 		//const float HorizontalOffset -= MouseEvent.GetCursorDelta().X;
 		ScrollBox->SetScrollOffset(ScrollBox->GetScrollOffset() - MouseEvent.GetCursorDelta().Y);
 		Position.Set(FVector2D{ FMath::Min(0.0f, Position.Get().X + MouseEvent.GetCursorDelta().X), 0.0f });
+
+		//invalidate children
+		for (auto& TrackRoot : TrackRoots) { TrackRoot->Invalidate(EInvalidateWidgetReason::Layout); };
+
 		//for (auto& TrackRoot : TrackRoots) { TrackRoot->Lane->HorizontalOffset = HorizontalOffset; }
 		//ScrollBox->ScrollTo(FVector2D(HorizontalScrollOffset, 0));
 	}
