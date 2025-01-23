@@ -61,6 +61,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 							SNew(STextBlock)
 								.Text(FText::FromString(LinkedToChannelName))
 								.AutoWrapText(true)
+								.Justification(ETextJustify::Center)
 						]
 
 				]
@@ -81,11 +82,13 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				+SVerticalBox::Slot()
 				.AutoHeight()
 				.Padding(5)
+				.HAlign(HAlign_Center)
 
 				[
 					SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot()
 						.HAlign(HAlign_Center)
+						.AutoWidth()
 						[
 							SNew(SBorder)
 								.BorderBackgroundColor(FLinearColor::Yellow)
@@ -104,6 +107,7 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 
 						+ SHorizontalBox::Slot()
 						.HAlign(HAlign_Center)
+						.AutoWidth()
 
 						[
 							SNew(SBorder)
