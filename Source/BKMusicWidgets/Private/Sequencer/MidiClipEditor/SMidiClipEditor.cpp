@@ -51,183 +51,189 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 }
 int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	auto ScreenCenterPaintGeometry = AllottedGeometry.ToOffsetPaintGeometry(FVector2D(AllottedGeometry.Size / 2.0f));
-	auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
+    static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
 
-	auto TrackAreaGeometry = AllottedGeometry.MakeChild(
-		FVector2f(0, TimelineHeight),
-		FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
-	);
+    // Draw piano grid
+    LayerId++;
+    for (int i = 0; i < 128; i++)
+    {
+        const float Y = (127 - i) * RowHeight;
 
-	static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
+        // Draw grid background
+        FSlateDrawElement::MakeBox(
+            OutDrawElements,
+            LayerId,
+            AllottedGeometry.ToPaintGeometry(
+                FVector2D(0, Y),
+                FVector2D(AllottedGeometry.Size.X, RowHeight)
+            ),
+            NoteBrush,
+            ESlateDrawEffect::None,
+            PianoGridColors[i]
+        );
 
+        // Draw note names for C notes
+        if (i % 12 == 0)
+        {
+            const auto NoteName = FText::FromString(FString::Printf(TEXT("C (%d)"), (i / 12) - 2));
+            FSlateDrawElement::MakeText(
+                OutDrawElements,
+                LayerId++,
+                AllottedGeometry.ToPaintGeometry(
+                    FVector2D(0, Y),
+                    FVector2D(50.0f, RowHeight)
+                ),
+                NoteName,
+                FAppStyle::GetFontStyle("NormalFont"),
+                ESlateDrawEffect::None,
+                FLinearColor::White
+            );
+        }
+    }
 
-	//draw the piano grid
-	LayerId++;
-	for (int i = 0; i < 128; i++)
-	{
-		const float Y = (127 - i) * RowHeight + Position.Get().Y;
-		FSlateDrawElement::MakeBox(
-			OutDrawElements,
-			LayerId,
-			AllottedGeometry.ToPaintGeometry(FVector2D((AllottedGeometry.Size.X), RowHeight), FSlateLayoutTransform(1.0f, FVector2D(0, Y))),
-			NoteBrush,
-			ESlateDrawEffect::None,
-			PianoGridColors[i]
-		);
+    // Draw MIDI notes
+    if (Clip != nullptr)
+    {
+        LayerId++;
+        for (const auto& Note : Clip->LinkedNotes)
+        {
+            const float Start = TickToPixel(Note.StartTick);
+            if (Start > AllottedGeometry.Size.X) continue;
 
-		//if note is C (i % 12 == 0) write the note name
-		if (i % 12 == 0)
-		{
-			const auto NoteName = FText::FromString(FString::Printf(TEXT("C (%d)"), (i / 12) - 2));
-			FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToOffsetPaintGeometry(FVector2D(0, Y)), NoteName, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-		}
-	}
+            const float End = TickToPixel(Note.EndTick);
+            if (End < 0) continue;
 
+            const float Width = End - Start;
+            if (Width < 0.1f) continue;
 
+            const float Y = (127 - Note.Pitch) * RowHeight;
 
+            FSlateDrawElement::MakeBox(
+                OutDrawElements,
+                LayerId,
+                AllottedGeometry.ToPaintGeometry(
+                    FVector2D(Start, Y),
+                    FVector2D(Width, RowHeight)
+                ),
+                NoteBrush,
+                ESlateDrawEffect::None,
+                TrackColor
+            );
+        }
 
-	if (Clip != nullptr)
-	{
-		LayerId++;
-		for (const auto& Note : Clip->LinkedNotes)
-		{
-			const float Start = TickToPixel(Note.StartTick);
-			if (Start > AllottedGeometry.Size.X - Position.Get().X) continue;
-			
+        // Paint timeline and play cursor
+        LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, ++LayerId);
+        LayerId = PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
+    }
 
-			const float End = TickToPixel(Note.EndTick);
-			if (End < 0 - Position.Get().X) continue;
-			const float Width = End - Start;
+    // Debug text
+    const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"),
+        TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y));
+    FSlateDrawElement::MakeText(
+        OutDrawElements,
+        LayerId++,
+        AllottedGeometry.ToPaintGeometry(),
+        ToPrint,
+        FAppStyle::GetFontStyle("NormalFont"),
+        ESlateDrawEffect::None,
+        FLinearColor::White
+    );
 
-			if (Width < 0.1) continue;
-
-			const float Y = (127 - Note.Pitch) * RowHeight;
-
-			FSlateDrawElement::MakeBox(
-				OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, RowHeight), FSlateLayoutTransform(1.0f, FVector2D(Start, Y))),
-				NoteBrush,
-				ESlateDrawEffect::None,
-				TrackColor
-			);
-
-			//FSlateDrawElement::MakeBox
-
-
-
-
-		}
-
-		PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, ++LayerId);
-
-	}
-
-	PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-
-	const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)"), TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y));
-	FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), ToPrint, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-
-	return LayerId;
+    return LayerId;
 }
-
-
 
 int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-	
-	if (Clip != nullptr)
-	{
-		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
-		LayerId++;
+    LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 
-		FMidiSustainPedalEvent CurrentSustainOnEvent;
+    if (Clip != nullptr)
+    {
+        // Draw sustain pedal events
+        LayerId++;
+        FMidiSustainPedalEvent CurrentSustainOnEvent;
 
-		for (const auto& SustainEvent : Clip->SustainPedalEvents)
-		{
-			//we draw a transparent box for the sustain pedal events from event to the next event
-			//if is pedal on, we store the event
+        for (const auto& SustainEvent : Clip->SustainPedalEvents)
+        {
+            if (SustainEvent.bIsSustainPedalDown)
+            {
+                CurrentSustainOnEvent = SustainEvent;
+            }
+            else
+            {
+                const float Start = TickToPixel(CurrentSustainOnEvent.StartTick);
+                const float End = TickToPixel(SustainEvent.StartTick);
+                const float Width = End - Start;
 
-			if (SustainEvent.bIsSustainPedalDown)
-			{
-				CurrentSustainOnEvent = SustainEvent;
-			}
-			else
-			{
-				const float Start = TickToPixel(CurrentSustainOnEvent.StartTick);
-				const float End = TickToPixel(SustainEvent.StartTick);
-				const float Width = End - Start;
-				const float Y = AllottedGeometry.GetLocalSize().Y;
-				FSlateDrawElement::MakeBox(
-					OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(Width, Y), FSlateLayoutTransform(1.0f, FVector2D(Start, 0))),
-					FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
-					ESlateDrawEffect::None,
-					FLinearColor(0.1f, 0.1f, 0.1f, 0.01f)
-				);
-			}	
+                FSlateDrawElement::MakeBox(
+                    OutDrawElements,
+                    LayerId,
+                    AllottedGeometry.ToPaintGeometry(
+                        FVector2D(Start, 0),
+                        FVector2D(Width, AllottedGeometry.GetLocalSize().Y)
+                    ),
+                    FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+                    ESlateDrawEffect::None,
+                    FLinearColor(0.1f, 0.1f, 0.1f, 0.01f)
+                );
+            }
+        }
 
-		}
-		
-		LayerId++;
-		
-		for (const auto& Note : Clip->LinkedNotes)
-		{
-			const float Start = TickToPixel(Note.StartTick);
-			
-			const float Y = ((127 - Note.NoteVelocity) / 127.0f) * AllottedGeometry.GetLocalSize().Y;
+        // Draw velocity lines and markers
+        LayerId++;
+        static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush.Selected");
+        const float Rotate = FMath::DegreesToRadians(45.f);
 
-			//paint a line extending from the bottom of the panel to the Y velocity value
+        for (const auto& Note : Clip->LinkedNotes)
+        {
+            const float Start = TickToPixel(Note.StartTick);
+            const float Y = ((127 - Note.NoteVelocity) / 127.0f) * AllottedGeometry.GetLocalSize().Y;
 
-			static const FSlateBrush* DottedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dotted");
-			static const FSlateBrush* DashedKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Dashed");
-			static const FSlateBrush* SolidKeyBarBrush = FAppStyle::GetBrush("Sequencer.KeyBar.Solid");
-			static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush.Selected");
-			const float Rotate = FMath::DegreesToRadians(45.f);
+            // Velocity line
+            FSlateDrawElement::MakeLines(
+                OutDrawElements,
+                LayerId,
+                AllottedGeometry.ToPaintGeometry(),
+                {
+                    FVector2D(Start, AllottedGeometry.GetLocalSize().Y),
+                    FVector2D(Start, Y)
+                },
+                ESlateDrawEffect::None,
+                TrackColor
+            );
 
+            // Velocity marker
+            FSlateDrawElement::MakeRotatedBox(
+                OutDrawElements,
+                LayerId,
+                AllottedGeometry.ToPaintGeometry(
+                    FVector2D(Start - 5, Y),
+                    FVector2D(10, 10)
+                ),
+                NoteBrush,
+                ESlateDrawEffect::None,
+                Rotate,
+                TOptional<FVector2D>(),
+                FSlateDrawElement::RelativeToElement,
+                TrackColor
+            );
+        }
 
-			FSlateDrawElement::MakeLines(
-				OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(1, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(Start, 0))),
-				{ FVector2D(0, AllottedGeometry.GetLocalSize().Y), FVector2D(0, Y) },
-				ESlateDrawEffect::None,
-				TrackColor
-			);
+        // Paint play cursor and debug info
+        LayerId = PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 
-			//draw a rotated box at the velocity value using the selected note brush
-			FSlateDrawElement::MakeRotatedBox(
-				OutDrawElements,
-				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(10, 10), FSlateLayoutTransform(1.0f, FVector2D(Start - 5, Y))),
-				NoteBrush,
-				ESlateDrawEffect::None,
-				Rotate,
-				TOptional<FVector2D>(),
-				FSlateDrawElement::RelativeToElement,
-				TrackColor
-			);
+        const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)\n Bar, Beat: %d, %f"),
+            TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y, PlayCursor.Get().Bar, PlayCursor.Get().Beat));
+        FSlateDrawElement::MakeText(
+            OutDrawElements,
+            LayerId++,
+            AllottedGeometry.ToPaintGeometry(),
+            ToPrint,
+            FAppStyle::GetFontStyle("NormalFont"),
+            ESlateDrawEffect::None,
+            FLinearColor::White
+        );
+    }
 
-
-			//paint the velcity value as text
-			//FSlateDrawElement::MakeText(OutDrawElements, LayerId++, OffsetGeometryChild.ToOffsetPaintGeometry(FVector2D(Start, Y - 10)), FText::FromString(FString::Printf(TEXT("%d"), Note.NoteVelocity)), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-
-		}
-
-	
-
-		PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-
-		const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)\n Bar, Beat: %d, %f"), 
-			TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y, PlayCursor.Get().Bar, PlayCursor.Get().Beat));
-		FSlateDrawElement::MakeText(OutDrawElements, LayerId++, AllottedGeometry.ToPaintGeometry(), ToPrint, FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-
-	}
-
-	
-	return LayerId;
+    return LayerId;
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

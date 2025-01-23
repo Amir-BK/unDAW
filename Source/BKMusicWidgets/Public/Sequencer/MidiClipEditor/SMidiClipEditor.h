@@ -38,12 +38,13 @@ DECLARE_DELEGATE_TwoParams(
 // this includes panning, zooming, providing methods to paint grid points and timeline
 // and receiving play cursor, to sync two panels together provide a shared position offset attribute
 // also drawing the resizable 'major tab' 
-class SMidiEditorPanelBase: public SCompoundWidget
+class SMidiEditorPanelBase : public SCompoundWidget
 {
 public:
 
 	SLATE_BEGIN_ARGS(SMidiEditorPanelBase)
-		{}
+		{
+		}
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 		SLATE_ATTRIBUTE(FVector2D, Position);
 		SLATE_ATTRIBUTE(FMusicTimestamp, PlayCursor);
@@ -72,7 +73,7 @@ public:
 		//ignore y component if bLockVerticalPan
 
 		if (bIgnoreVertical || bLockVerticalPan) InPosition.Y = Position.Get().Y;
-		
+
 		Position.Set(InPosition);
 	}
 
@@ -118,11 +119,21 @@ public:
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
 			auto& CurrentPos = Position.Get();
-			const auto NewPositionX = FMath::Min(0, CurrentPos.X + MouseEvent.GetCursorDelta().X);
-			const auto NewPositionY = FMath::Min(0, CurrentPos.Y + MouseEvent.GetCursorDelta().Y);
+			const float ContentWidth = TickToPixel(SequenceData->HarmonixMidiFile->GetLastEventTick());
+			const float ContentHeight = 127 * RowHeight;
+
+			const auto NewPositionX = FMath::Clamp(
+				CurrentPos.X + MouseEvent.GetCursorDelta().X,
+				-ContentWidth + MyGeometry.Size.X,
+				0.0f
+			);
+			const auto NewPositionY = FMath::Clamp(
+				CurrentPos.Y + MouseEvent.GetCursorDelta().Y,
+				-ContentHeight + MyGeometry.Size.Y,
+				0.0f
+			);
+
 			const FVector2D NewPosition = FVector2D(NewPositionX, NewPositionY);
-
-
 			if (OnPanelPositionChangedByUser.IsBound())
 			{
 				OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
@@ -130,7 +141,6 @@ public:
 			else {
 				SetPosition(NewPosition);
 			}
-
 
 			bIsPanActive = true;
 			return FReply::Handled();
@@ -145,20 +155,20 @@ public:
 
 	void SetZoom(const FVector2D NewZoom)
 	{
-		
-		
+
+
 		Zoom.Set(NewZoom);
 	}
 
 	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 	{
-		
+
 		bool bIsCtrlPressed = MouseEvent.IsControlDown();
 		bool bIsShiftPressed = MouseEvent.IsShiftDown();
 		FVector2D NewZoom;
 
 		if (MouseEvent.GetWheelDelta() > 0)
-		{			
+		{
 			if (bIsShiftPressed)
 			{
 				//VerticalZoom += 0.1f;
@@ -180,12 +190,12 @@ public:
 			if (bIsShiftPressed)
 			{
 				NewZoom = FVector2D(Zoom.Get().X, Zoom.Get().Y * 0.9f);
-		
+
 			}
 			else if (bIsCtrlPressed)
 			{
 				NewZoom = FVector2D(Zoom.Get().X * 0.9f, Zoom.Get().Y);
-			
+
 			}
 			else {
 				OnVerticalScroll(MouseEvent.GetWheelDelta());
@@ -205,10 +215,9 @@ public:
 		return FReply::Handled();
 	}
 
-
 	const float TickToPixel(const float Tick) const
 	{
-		return SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick - Position.Get().X) * Zoom.Get().X + MajorTabWidth;
+		return (SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick) * Zoom.Get().X) + Position.Get().X + MajorTabWidth;
 	}
 
 	virtual void OnVerticalScroll(float ScrollAmount) {};
@@ -227,57 +236,49 @@ public:
 	virtual void CacheDesiredSize(float InLayoutScaleMultiplier) override {
 		RecalculateGrid();
 	}
-	
+
 	void RecalculateGrid()
 	{
 		GridPoints.Empty();
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
-		const auto& BarMap = SongsMap->GetBarMap();
-		const auto& BeatMap = SongsMap->GetBeatMap();
-		//const auto& SubdivisionMap = SongsMap->GetSubdivisionMap();
 
-		const float FirstTickOfFirstBar = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(1, 1, 0);
-		const float LastTickOfLastBar = SequenceData->HarmonixMidiFile->GetLastEventTick();
+		// Calculate visible range based on current position and zoom
+		// Since we're now adding Position.X, we need to adjust the calculation
+		const float VisibleStartTick = SongsMap->MsToTick(-Position.Get().X / Zoom.Get().X);  // Start of visible area
+		const float VisibleEndTick = SongsMap->MsToTick((GetCachedGeometry().Size.X - Position.Get().X) / Zoom.Get().X);  // End of visible area
 
-		using namespace UnDAW;
+		// Find the first bar that starts before or at VisibleStartTick
+		const auto StartBarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(VisibleStartTick);
+		float BarTick = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(
+			StartBarInfo.Bar,
+			1,
+			0
+		);
 
-		RowHeight = 10.0f * Zoom.Get().Y;
-
-		int32 BarCount = 1;
-		float BarTick = 0;
-
-		while (BarTick <= LastTickOfLastBar)
+		// Add grid points for all bars in the visible range
+		while (BarTick <= VisibleEndTick)
 		{
-			//VisibleBars.Add(MidiSongMap->CalculateMidiTick(MidiSongMap->GetBarMap().TickToMusicTimestamp(BarTick), TimeSpanToSubDiv(EMusicTimeSpanOffsetUnits::Bars)));
-			GridPoints.Add(BarTick, { EGridPointType::Bar, BarCount++, 1, 1 });
+			const auto BarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(BarTick);
+			GridPoints.Add(BarTick, {
+				UnDAW::EGridPointType::Bar,
+				BarInfo.Bar,
+				1,
+				0
+				});
+
+			// Move to next bar
 			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
 		}
 
-		//for (const auto& Beat : BeatMap)
-		//{
-		//	FMusicalGridPoint Point;
-		//	Point.Type = EGridPointType::Beat;
-		//	Point.Bar = Beat.Value.Bar;
-		//	Point.Beat = Beat.Value.Beat;
-		//	GridPoints.Add(Beat.Key, Point);
-		//}
-
-		//for (const auto& Subdivision : SubdivisionMap)
-		//{
-		//	FMusicalGridPoint Point;
-		//	Point.Type = EGridPointType::Subdivision;
-		//	Point.Bar = Subdivision.Value.Bar;
-		//	Point.Beat = Subdivision.Value.Beat;
-		//	Point.Subdivision = Subdivision.Value.Subdivision;
-		//	GridPoints.Add(Subdivision.Key, Point);
-		//}
+		// Update row height for vertical scaling
+		RowHeight = 10.0f * Zoom.Get().Y;
 	}
 
 	int32 PaintTimelineMarks(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 	{
-		
+
 		return LayerId;
-	
+
 	}
 
 	virtual float GetStartOffset() const
@@ -288,225 +289,196 @@ public:
 	int32 PaintPlayCursor(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 	{
 		const auto& PlayCursorTick = SequenceData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None) - GetStartOffset();
-		
-	
+		const float CursorPixel = TickToPixel(PlayCursorTick);
 
-		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
-		
-
+		// Don't create offset geometry - use the base geometry
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
 			LayerId,
-			OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
-			{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
+			AllottedGeometry.ToPaintGeometry(),  // Use base geometry
+			{ FVector2D(CursorPixel, 0), FVector2D(CursorPixel, AllottedGeometry.GetLocalSize().Y) },
 			ESlateDrawEffect::None,
 			FLinearColor::Red
 		);
 
 		if (TimelineHeight > 0.0f)
 		{
-			//paint a red box at the top of the timeline
 			constexpr float PlayCursorWidth = 10.0f;
 			constexpr float PlayCursorHalfWidth = PlayCursorWidth / 2.0f;
-			//const FFixedSampleSequenceRulerStyle TimeRulerStyle = FAppStyle::GetWidgetStyle<FFixedSampleSequenceRulerStyle>();
-
-			//const FSlateBrush& PlayCursorBrush = TimeRulerStyle.HandleBrush;
-			
-
-			//use play cursor brush to paint box
 
 			FSlateDrawElement::MakeBox(
 				OutDrawElements,
 				LayerId,
-				OffsetGeometryChild.ToPaintGeometry(FVector2D(PlayCursorWidth, TimelineHeight), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick) - PlayCursorHalfWidth, -Position.Get().Y))),
+				AllottedGeometry.ToPaintGeometry(
+					FVector2D(CursorPixel - PlayCursorHalfWidth, 0),  // Position directly
+					FVector2D(PlayCursorWidth, TimelineHeight)
+				),
 				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 				ESlateDrawEffect::None,
 				FLinearColor(255.f, 0.1f, 0.2f, 1.f)
 			);
-
-
-
-			//FSlateDrawElement::MakeLines(
-			//	OutDrawElements,
-			//	LayerId,
-			//	OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(PlayCursorTick), -Position.Get().Y))),
-			//	{ FVector2D(0, 0), FVector2D(0, TimelineHeight) },
-			//	ESlateDrawEffect::None,
-			//	FLinearColor::Red,
-			//	false,
-			//	PlayCursorWidth * 2
-
-			//);
-			
 		}
 
 		return LayerId;
 	}
-	
+
 	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 	{
-		// first draw the timeline backgroumd a black box
-		//UE_LOG(LogTemp, Warning, TEXT("Painting timeline, timeline height: %f"), TimelineHeight);
-
+		// Draw timeline background
 		const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
 
-		const auto& TimeLinePaintGeometry = AllottedGeometry.ToPaintGeometry(
-			FVector2f(MajorTabWidth, 0),
-			FSlateLayoutTransform(1.0, FVector2D(AllottedGeometry.Size.X, TimelineHeight))
-		);
-
-		//static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
 		if (bShouldPaintTimelineBar)
 		{
 			FSlateDrawElement::MakeBox(
 				OutDrawElements,
 				LayerId,
-				TimeLinePaintGeometry,
-				FAppStyle::GetBrush("Graph.Panel.SolidBackground"), 
+				AllottedGeometry.ToPaintGeometry(
+					FVector2D(MajorTabWidth, 0),
+					FVector2D(AllottedGeometry.Size.X - MajorTabWidth, TimelineHeight)
+				),
+				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 				ESlateDrawEffect::None,
 				FLinearColor::Black
 			);
-
-
 		}
-		TRange<float> DrawRange(Position.Get().X, AllottedGeometry.Size.X + Position.Get().X);
 
-		auto OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));;
+		// Setup drawing parameters
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
-		using namespace UnDAW;
 		const float Height = (AllottedGeometry.Size.Y / 127) / Zoom.Get().Y;
 		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
 		const FLinearColor BarTextColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
+		const FSlateFontInfo LargeFont(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14);
+		const FSlateFontInfo SmallFont(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7);
 
+		// Draw grid points
 		for (const auto& [OriginTick, GridPoint] : GridPoints)
 		{
-			FLinearColor LineColor;
 			const float Tick = OriginTick - GetStartOffset();
+			const float PixelPosition = TickToPixel(Tick);
 
-			//ugly as heck but probably ok for now
 			switch (GridPoint.Type)
 			{
-			case EGridPointType::Bar:
-				//draw bar number
-			if(bShouldPaintTimelineBar)
-			{
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
-					FText::FromString(FString::FromInt(GridPoint.Bar)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14),
-					ESlateDrawEffect::None,
-					BarTextColor
-				);
+			case UnDAW::EGridPointType::Bar:
+				// Draw bar numbers and info in timeline
+				if (bShouldPaintTimelineBar)
+				{
+					// Bar number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId,
+						AllottedGeometry.ToPaintGeometry(
+							FVector2D(PixelPosition, 0),
+							FVector2D(50.0f, Height)
+						),
+						FText::FromString(FString::FromInt(GridPoint.Bar)),
+						LargeFont,
+						ESlateDrawEffect::None,
+						BarTextColor
+					);
 
-				//draw beat number
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 18))),
-					FText::FromString(FString::FromInt(GridPoint.Beat)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-					ESlateDrawEffect::None,
-					FLinearColor::White
-				);
+					// Beat number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId,
+						AllottedGeometry.ToPaintGeometry(
+							FVector2D(PixelPosition, 18),
+							FVector2D(50.0f, Height)
+						),
+						FText::FromString(FString::FromInt(GridPoint.Beat)),
+						SmallFont,
+						ESlateDrawEffect::None,
+						FLinearColor::White
+					);
 
-				//draw subdivision number
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
-					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-					ESlateDrawEffect::None,
-					FLinearColor::White
-				);
+					// Subdivision number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId,
+						AllottedGeometry.ToPaintGeometry(
+							FVector2D(PixelPosition, 30),
+							FVector2D(50.0f, Height)
+						),
+						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+						SmallFont,
+						ESlateDrawEffect::None,
+						FLinearColor::White
+					);
+				}
 
-			}
-				//bar is even, draw a faint gray box from origin tick of this bar until next bar tick
+				// Draw alternating bar backgrounds
 				if (GridPoint.Bar % 2 == 0)
 				{
-					//get bar duration in ticks
 					const float BarDuration = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, OriginTick);
-					const float BarStartPixel = TickToPixel(Tick);
 					const float BarEndPixel = TickToPixel(Tick + BarDuration);
-					const float BarWidth = BarEndPixel - BarStartPixel;
-					// draw a box from origin tick to next bar tick
+					const float BarWidth = BarEndPixel - PixelPosition;
+
 					FSlateDrawElement::MakeBox(
 						OutDrawElements,
 						LayerId - 2,
-						OffsetGeometryChild.ToPaintGeometry(FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
+						AllottedGeometry.ToPaintGeometry(
+							FVector2D(PixelPosition, 0),
+							FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y)
+						),
 						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 						ESlateDrawEffect::None,
 						FLinearColor::Gray.CopyWithNewOpacity(0.4f)
 					);
-
-					
 				}
 
-
-				LineColor = BarLineColor;
-				break;
-
-			case EGridPointType::Subdivision:
-				//draw subdivision number
-				//FSlateDrawElement::MakeText(OutDrawElements,
-				//	LayerId - 2,
-				//	OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
-				//	FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-				//	FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-				//	ESlateDrawEffect::None,
-				//	FLinearColor::White
-				//);
-
-				LineColor = FLinearColor::Black;
-				break;
-
-			case EGridPointType::Beat:
-				//draw beat number
-				/*
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 18))),
-					FText::FromString(FString::FromInt(GridPoint.Beat)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
+				// Draw bar line
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId - 2,
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
 					ESlateDrawEffect::None,
-					FLinearColor::White
+					BarLineColor,
+					false,
+					1.0f
 				);
-
-				//draw subdivision number
-				FSlateDrawElement::MakeText(OutDrawElements,
-					LayerId,
-					OffsetGeometryChild.ToPaintGeometry(FVector2D(50.0f, Height), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y + 30))),
-					FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-					FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7),
-					ESlateDrawEffect::None,
-					FLinearColor::White
-				);
-				*/
-
-				LineColor = FLinearColor::Blue;
 				break;
 
+			case UnDAW::EGridPointType::Beat:
+				// Draw beat line
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId - 2,
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
+					ESlateDrawEffect::None,
+					FLinearColor::Blue.CopyWithNewOpacity(0.1f),
+					false,
+					1.0f
+				);
+				break;
 
-
-
+			case UnDAW::EGridPointType::Subdivision:
+				// Draw subdivision line
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId - 2,
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
+					ESlateDrawEffect::None,
+					FLinearColor::Black.CopyWithNewOpacity(0.05f),
+					false,
+					1.0f
+				);
+				break;
 			}
-				
-			FSlateDrawElement::MakeLines(
-				OutDrawElements,
-				LayerId - 2,
-				OffsetGeometryChild.ToPaintGeometry(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, FVector2D(TickToPixel(Tick), -Position.Get().Y))),
-				{ FVector2D(0, 0), FVector2D(0, AllottedGeometry.GetLocalSize().Y) },
-				ESlateDrawEffect::None,
-				LineColor, false, 1.0f
-			);
-
-
-
 		}
 
-
 		return LayerId;
-	}
-
+	};
 };
 
 /**
@@ -562,29 +534,18 @@ public:
 		const auto& CachedGeometry = GetCachedGeometry();
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 
-		const float Width = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
+		// Calculate width before zoom
+		const float ClipDurationMs = SongsMap->TickToMs(Clip->EndTick - Clip->StartTick);
+		const float HorizontalZoom = CachedGeometry.Size.X / ClipDurationMs;
 
-		const auto& HorizontalZoom = CachedGeometry.Size.X / Width;
-
-
-		TRange<int8> ClipNoteRange { Clip->MinNote, Clip->MaxNote };
-
-		const auto& VerticalZoom = CachedGeometry.Size.Y / UnDAW::MidiNoteRange.Size<int8>();
+		const auto VerticalZoom = CachedGeometry.Size.Y / UnDAW::MidiNoteRange.Size<int8>();
 
 		SetZoom(FVector2D(HorizontalZoom, VerticalZoom));
 
-		//Position.Get().Y = -(127 - Clip->MaxNote) * RowHeight;
-		FVector2D NewPosition{ -TickToPixel(Clip->StartTick), -127  * RowHeight / 2 };
-
-		if (OnPanelPositionChangedByUser.IsBound())
-		{
-			OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
-		}
-		else {
-			SetPosition(NewPosition, true);
-		};
-		
-
+		// Calculate position after zoom is set
+		const float StartPixel = SongsMap->TickToMs(Clip->StartTick) * HorizontalZoom;
+		FVector2D NewPosition{ -StartPixel, -(127 - Clip->MaxNote) * RowHeight };
+		SetPosition(NewPosition, true);
 	}
 
 };

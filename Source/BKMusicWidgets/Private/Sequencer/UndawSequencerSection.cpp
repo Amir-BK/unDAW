@@ -21,7 +21,7 @@ void SDawSequencerTrackMidiSection::Construct(const FArguments& InArgs, FLinkedN
 
 float SDawSequencerTrackMidiSection::CalculateXPosition(float Tick) const
 {
-    return TickToPixel(Tick + Clip->OffsetTick);
+    return TickToPixel(Tick);
 }
 
 int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
@@ -30,12 +30,16 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
 
     // Calculate the geometry for the background box
+    // Calculate positions using consistent coordinate system
     const float BackgroundX = CalculateXPosition(Clip->StartTick);
-    const float BackgroundWidth = TickToPixel(Clip->EndTick + Clip->OffsetTick) - TickToPixel(Clip->StartTick + Clip->OffsetTick);
+    const float BackgroundWidth = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
+
     FGeometry BackgroundGeometry = AllottedGeometry.MakeChild(
         FVector2f(BackgroundX, 0),
         FVector2f(BackgroundWidth, AllottedGeometry.Size.Y)
     );
+        
+    BackgroundGeometry.AppendTransform(FSlateLayoutTransform(1.0f, Position.Get()));
 
     // Paint the background box
     FSlateDrawElement::MakeBox(
@@ -56,6 +60,7 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
 
         const float X = TickToPixel(Note.StartTick + Clip->StartTick) - BackgroundX;
         const float End = TickToPixel(Note.EndTick + Clip->StartTick) - BackgroundX;
+
 		const float Width = End - X;
         const float Y = (127 - Note.Pitch) * Height;
 
@@ -72,28 +77,28 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
         );
     }
 
-    // Draw start and end ticks for debugging
-    FSlateDrawElement::MakeText(
-        OutDrawElements,
-        LayerId++,
-        AllottedGeometry.ToPaintGeometry(),
-        FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d\n Position: %s, Zoom: %s"), Clip->StartTick, Clip->EndTick, *Position.Get().ToString(), *Zoom.Get().ToString())),
-        FAppStyle::GetFontStyle("NormalFont"),
-        ESlateDrawEffect::None,
-        FLinearColor::White
-    );
+    //// Draw start and end ticks for debugging
+    //FSlateDrawElement::MakeText(
+    //    OutDrawElements,
+    //    LayerId++,
+    //    AllottedGeometry.ToPaintGeometry(),
+    //    FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d\n Position: %s, Zoom: %s"), Clip->StartTick, Clip->EndTick, *Position.Get().ToString(), *Zoom.Get().ToString())),
+    //    FAppStyle::GetFontStyle("NormalFont"),
+    //    ESlateDrawEffect::None,
+    //    FLinearColor::White
+    //);
 
     return LayerId;
 }
 
 const float SDawSequencerTrackMidiSection::TickToPixel(const float Tick) const
 {
-    // Make sure SequenceData is valid
     if (!SequenceData || !SequenceData->HarmonixMidiFile)
     {
         return 0.0f;
     }
 
     const float Milliseconds = SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick);
-    return Milliseconds * Zoom.Get().X;
+    // Apply zoom and position offset consistently
+    return (Milliseconds * Zoom.Get().X) + Position.Get().X;
 }

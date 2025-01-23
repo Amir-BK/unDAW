@@ -198,21 +198,22 @@ TOptional<EMouseCursor::Type> SDawSequencerTrackLane::GetCursor() const {
 
 int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
+	FGeometry BaseGeometry = AllottedGeometry.MakeChild(
+		AllottedGeometry.GetLocalSize(),
+		FSlateLayoutTransform(1.0f, Position.Get())
+	);
+	
 	// Calculate total track width
 
 	// Let Slate handle clipping via MyCullingRect
 	for (const auto& Section : Sections)
 	{
-		float SectionStartPixel = TickToPixel(Section->Clip->StartTick);
-		float XOffset = SectionStartPixel + Position.Get().X; // Adjust for panning
+		const float SectionStartPixel = TickToPixel(Section->Clip->StartTick);
 
-		// Create child geometry for each section with individual offset
-		FGeometry SectionGeometry = AllottedGeometry.MakeChild(
-			AllottedGeometry.GetLocalSize(), // Maintain track size; section clips internally if needed
-			FSlateLayoutTransform(
-				1.0f,
-				FVector2D(SectionStartPixel, 0.0f) // Position based on section start and pan
-			)
+		// Create section geometry with proper offset
+		FGeometry SectionGeometry = BaseGeometry.MakeChild(
+			AllottedGeometry.GetLocalSize(),
+			FSlateLayoutTransform(1.0f, FVector2D(SectionStartPixel, 0.0f))
 		);
 
 		LayerId = Section->Paint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
@@ -293,7 +294,7 @@ float SDawSequencerTrackLane::TickToPixel(const float Tick) const
 
 	const float Milisecond = SongsMap.TickToMs(Tick);
 
-	return Milisecond  * Zoom.Get().X;
+	return Milisecond * Zoom.Get().X;
 
 
 }

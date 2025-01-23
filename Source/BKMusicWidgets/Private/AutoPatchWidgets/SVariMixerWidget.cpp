@@ -16,6 +16,7 @@ void SVariMixerWidget::Construct(const FArguments& InArgs, UM2VariMixerVertex* I
 	ChildSlot
 		[
 			SAssignNew(MainHorizontalBox, SHorizontalBox)
+				
 		];
 }
 
@@ -25,8 +26,10 @@ void SVariMixerWidget::AddChannelWidget(UM2AudioTrackPin* InPin)
 	TSharedPtr<SMixerChannelWidget> NewChannelWidget;
 
 	MainHorizontalBox->AddSlot()
+		.AutoWidth()
 		[
 			SAssignNew(NewChannelWidget, SMixerChannelWidget, InPin)
+	
 		];
 
 	ChannelWidgets.Add(NewChannelWidget);

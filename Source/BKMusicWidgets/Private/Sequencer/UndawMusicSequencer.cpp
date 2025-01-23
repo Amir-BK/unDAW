@@ -144,16 +144,21 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 
 int32 SUndawMusicSequencer::PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 {
-	//just fill the background with a gray box
+	// Create transformed geometry that matches the sections
+	FGeometry GridGeometry = AllottedGeometry.MakeChild(
+		AllottedGeometry.GetLocalSize(),
+		FSlateLayoutTransform(1.0f, Position.Get())
+	);
+
 	FSlateDrawElement::MakeBox(
 		OutDrawElements,
 		LayerId,
-		AllottedGeometry.ToPaintGeometry(),
+		GridGeometry.ToPaintGeometry(),
 		FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 		ESlateDrawEffect::None,
 		FLinearColor::Green.CopyWithNewOpacity(0.2f)
 	);
-	
+
 	return LayerId;
 }
 
