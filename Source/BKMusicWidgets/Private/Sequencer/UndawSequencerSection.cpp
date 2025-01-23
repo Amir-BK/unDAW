@@ -21,7 +21,7 @@ void SDawSequencerTrackMidiSection::Construct(const FArguments& InArgs, FLinkedN
 
 float SDawSequencerTrackMidiSection::CalculateXPosition(float Tick) const
 {
-    return TickToPixel(Tick + Clip->OffsetTick) - Position.Get().X * Zoom.Get().X;
+    return TickToPixel(Tick + Clip->OffsetTick);
 }
 
 int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
