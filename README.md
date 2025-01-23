@@ -1,4 +1,5 @@
-UPDATE: Now compiles and works on MacOS! 
+https://github.com/user-attachments/assets/646bd071-d9fa-4996-a7eb-a639990d8f38
+
 
 UnDAW uses the metasound builder subsystem, the harmonix plugin and a bunch of custom widgets to create dynamic metasounds that can play midi files in just a few clicks, it lets you assign different metasound patches to each midi track, edit the midi in real time, and few other conveniences. 
 
