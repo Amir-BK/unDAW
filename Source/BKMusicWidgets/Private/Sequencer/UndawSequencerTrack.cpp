@@ -211,7 +211,7 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 			AllottedGeometry.GetLocalSize(), // Maintain track size; section clips internally if needed
 			FSlateLayoutTransform(
 				1.0f,
-				FVector2D(XOffset, 0.0f) // Position based on section start and pan
+				FVector2D(SectionStartPixel, 0.0f) // Position based on section start and pan
 			)
 		);
 
