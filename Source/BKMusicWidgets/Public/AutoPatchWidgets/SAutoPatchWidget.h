@@ -252,21 +252,15 @@ public:
 	}
 
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		
+	{	
 		const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton;
 		//is left mouse button down?
 		if (bIsLeftMouseButtonEffecting)
 		{
-			//if so, drag
-			
 			OnInnerWidgetDragged.ExecuteIfBound(MouseEvent.GetScreenSpacePosition(), this);
-			//print drag delta
-			UE_LOG(LogTemp, Warning, TEXT("Drag Delta: %f"), MouseEvent.GetCursorDelta().X);
-			//return handled capture mouse
 			return FReply::Handled().CaptureMouse(SharedThis(this));
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Mouse Drag, Unhandled"));
+
 		return FReply::Unhandled();
 	}
 

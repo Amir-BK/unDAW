@@ -332,8 +332,8 @@ public:
 				OutDrawElements,
 				LayerId,
 				AllottedGeometry.ToPaintGeometry(
-					FVector2D(CursorPixel - PlayCursorHalfWidth, 0),  // Position directly
-					FVector2D(PlayCursorWidth, TimelineHeight)
+					FVector2f(CursorPixel - PlayCursorHalfWidth, 0),  // Position directly
+					FSlateLayoutTransform(1.0f, FVector2f(PlayCursorWidth, TimelineHeight))
 				),
 				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 				ESlateDrawEffect::None,
@@ -355,8 +355,8 @@ public:
 				OutDrawElements,
 				LayerId,
 				AllottedGeometry.ToPaintGeometry(
-					FVector2D(MajorTabWidth, 0),
-					FVector2D(AllottedGeometry.Size.X - MajorTabWidth, TimelineHeight)
+					FVector2f(MajorTabWidth, 0),
+					FSlateLayoutTransform(1.0f, FVector2D(AllottedGeometry.Size.X - MajorTabWidth, TimelineHeight))
 				),
 				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 				ESlateDrawEffect::None,
@@ -390,7 +390,7 @@ public:
 						LayerId,
 						AllottedGeometry.ToPaintGeometry(
 							FVector2D(PixelPosition, 0),
-							FVector2D(50.0f, Height)
+							FSlateLayoutTransform(1.0f, FVector2D(50.0f, Height))
 						),
 						FText::FromString(FString::FromInt(GridPoint.Bar)),
 						LargeFont,
@@ -404,7 +404,7 @@ public:
 						LayerId,
 						AllottedGeometry.ToPaintGeometry(
 							FVector2D(PixelPosition, 18),
-							FVector2D(50.0f, Height)
+							FSlateLayoutTransform(1.0f, FVector2D(50.0f, Height))
 						),
 						FText::FromString(FString::FromInt(GridPoint.Beat)),
 						SmallFont,
@@ -418,7 +418,7 @@ public:
 						LayerId,
 						AllottedGeometry.ToPaintGeometry(
 							FVector2D(PixelPosition, 30),
-							FVector2D(50.0f, Height)
+							FSlateLayoutTransform(1.0f, FVector2D(50.0f, Height))
 						),
 						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
 						SmallFont,
@@ -439,7 +439,7 @@ public:
 						LayerId - 2,
 						AllottedGeometry.ToPaintGeometry(
 							FVector2D(PixelPosition, 0),
-							FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y)
+							FSlateLayoutTransform(1.0f, FVector2D(BarWidth, AllottedGeometry.GetLocalSize().Y))
 						),
 						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
 						ESlateDrawEffect::None,
@@ -651,7 +651,7 @@ public:
 	void OnInternalPanelMovedByUser(FVector2D NewPosition, bool bIgnoreVerticalPan)
 	{
 		// Note editor: Update full position (X and Y)
-		MidiClipEditor->SetPosition(NewPosition, false);
+		MidiClipEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
 
 		// Velocity editor: Only update X, preserve its own Y (or ignore)
 		MidiClipVelocityEditor->SetPosition(FVector2D(NewPosition.X, MidiClipVelocityEditor->Position.Get().Y), true);
