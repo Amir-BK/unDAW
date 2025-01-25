@@ -14,6 +14,8 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 	MajorTabWidth = 0.0f;
 	TimelineHeight = InArgs._TimelineHeight;
 
+	bLockVerticalPan = false;
+
 	//FSoftClassPath NoteBrushPath = FSoftClassPath(TEXT("/unDAW/Brushes/MidiNoteBrush.MidiNoteBrush"));
 	//NoteBrush = NoteBrushPath.TryLoad();
 	
@@ -57,7 +59,7 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
     LayerId++;
     for (int i = 0; i < 128; i++)
     {
-        const float Y = (127 - i) * RowHeight;
+        const float Y = (127 - i) * RowHeight + Position.Get().Y; // Add vertical offset
 
         // Draw grid background
         FSlateDrawElement::MakeBox(
@@ -106,7 +108,8 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
             const float Width = End - Start;
             if (Width < 0.1f) continue;
 
-            const float Y = (127 - Note.Pitch) * RowHeight;
+            const float Y = (127 - Note.Pitch) * RowHeight + Position.Get().Y; // Add vertical offset
+
 
             FSlateDrawElement::MakeBox(
                 OutDrawElements,
@@ -236,4 +239,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 
     return LayerId;
 }
+
+
+
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

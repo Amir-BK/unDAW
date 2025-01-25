@@ -117,17 +117,6 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 				[
 					SNew(SVerticalBox)
 						+ SVerticalBox::Slot()
-						.AutoHeight()
-						[
-							SAssignNew(ClipEditorToolbar, SHorizontalBox)
-								+ SHorizontalBox::Slot()
-								[
-									SNew(SButton)
-										.Text(INVTEXT("Test"))
-										//.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); }
-								]
-						]
-						+ SVerticalBox::Slot()
 						.FillHeight(0.9f)
 						[
 								SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
@@ -156,17 +145,6 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 								[
 
 									SNew(SVerticalBox)
-										+ SVerticalBox::Slot()
-										.AutoHeight()
-										[
-											SNew(SHorizontalBox)
-												+ SHorizontalBox::Slot()
-												[
-													SNew(SButton)
-														.Text(INVTEXT("Add Track"))
-														.OnClicked_Lambda([this]() { SequenceData->AddTrack(); return FReply::Handled(); })
-												]
-										]
 										+ SVerticalBox::Slot()
 										.FillHeight(0.9f)
 										[

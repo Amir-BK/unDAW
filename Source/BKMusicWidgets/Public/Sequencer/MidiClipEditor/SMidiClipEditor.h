@@ -54,7 +54,6 @@ public:
 
 	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Constructing SMidiEditorPanelBase"));
 		SequenceData = InSequence;
 		TimelineHeight = InArgs._TimelineHeight;
 		Position = InArgs._Position;
@@ -70,9 +69,11 @@ public:
 	// called to set the position offset of the panel without firing the delegates, i.e when an external source changes the position
 	void SetPosition(FVector2D InPosition, bool bIgnoreVertical = false)
 	{
-		//ignore y component if bLockVerticalPan
-
-		if (bIgnoreVertical || bLockVerticalPan) InPosition.Y = Position.Get().Y;
+		// Ignore y component if bLockVerticalPan
+		if (bIgnoreVertical || bLockVerticalPan)
+		{
+			InPosition.Y = Position.Get().Y;
+		}
 
 		Position.Set(InPosition);
 	}
@@ -114,39 +115,60 @@ public:
 	}
 
 
-	FReply OnMousePan(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+
+	FReply OnMousePan(const FGeometry & MyGeometry, const FPointerEvent & MouseEvent)
 	{
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
 			auto& CurrentPos = Position.Get();
 			const float ContentWidth = TickToPixel(SequenceData->HarmonixMidiFile->GetLastEventTick());
-			const float ContentHeight = 127 * RowHeight;
+
+			// Only calculate Y delta if vertical pan is NOT locked
+			const float ContentHeight = bLockVerticalPan ? 0 : 127 * RowHeight;
+			const float DeltaY = bLockVerticalPan ? 0 : MouseEvent.GetCursorDelta().Y;
 
 			const auto NewPositionX = FMath::Clamp(
 				CurrentPos.X + MouseEvent.GetCursorDelta().X,
 				-ContentWidth + MyGeometry.Size.X,
 				0.0f
 			);
-			const auto NewPositionY = FMath::Clamp(
-				CurrentPos.Y + MouseEvent.GetCursorDelta().Y,
-				-ContentHeight + MyGeometry.Size.Y,
-				0.0f
-			);
+
+			const auto NewPositionY = bLockVerticalPan ?
+				CurrentPos.Y : // Preserve existing Y
+				FMath::Clamp(
+					CurrentPos.Y + DeltaY,
+					-ContentHeight + MyGeometry.Size.Y,
+					0.0f
+				);
 
 			const FVector2D NewPosition = FVector2D(NewPositionX, NewPositionY);
+
 			if (OnPanelPositionChangedByUser.IsBound())
 			{
+				// Pass bLockVerticalPan to enforce Y ignore in linked panels
 				OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
 			}
-			else {
+			else
+			{
 				SetPosition(NewPosition);
 			}
 
 			bIsPanActive = true;
-			return FReply::Handled();
+			return FReply::Handled().CaptureMouse(AsShared());
 		}
 		bIsPanActive = false;
 		return FReply::Unhandled();
+	}
+
+
+	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		 if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton && bIsPanActive)
+		{
+			bIsPanActive = false;
+			return FReply::Handled().ReleaseMouseCapture();
+		}
+		return SCompoundWidget::OnMouseButtonUp(MyGeometry, MouseEvent);
 	}
 
 	const FVector2D GetLocalMousePosition(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
@@ -595,6 +617,7 @@ public:
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
 
+
 };
 
 class BKMUSICWIDGETS_API SMidiClipLinkedPanelsContainer : public SCompoundWidget
@@ -615,6 +638,9 @@ public:
 	FVector2D Position = FVector2D(0, 0);
 	FVector2D Zoom = FVector2D(1, 1);
 
+	TAttribute<FVector2D> NoteEditorPosition; // Tracks (X, Y) for note editor
+	TAttribute<float> VelocityEditorPositionX; // Only track X for velocity editor
+
 	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) 
 	{
 		MidiClipEditor->OnClipsFocused(Clips);
@@ -624,8 +650,11 @@ public:
 
 	void OnInternalPanelMovedByUser(FVector2D NewPosition, bool bIgnoreVerticalPan)
 	{
-		MidiClipEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
-		MidiClipVelocityEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
+		// Note editor: Update full position (X and Y)
+		MidiClipEditor->SetPosition(NewPosition, false);
+
+		// Velocity editor: Only update X, preserve its own Y (or ignore)
+		MidiClipVelocityEditor->SetPosition(FVector2D(NewPosition.X, MidiClipVelocityEditor->Position.Get().Y), true);
 	}
 
 	void OnInternalPanelZoomByUser(FVector2D NewZoom)
