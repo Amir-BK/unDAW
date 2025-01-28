@@ -104,14 +104,15 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	//FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
 
 	// Paint the timeline
-	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-	LayerId++;
+	LayerId = PaintBackground(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	// Paint the background grid
 	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	// Paint the scroll box
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
+
+	LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId++);
 
 	// Paint the major tab line on top of everything
 	FSlateDrawElement::MakeLines(

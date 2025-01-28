@@ -256,7 +256,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 	DetailsViewArgs.bShowOptions = true;
 	DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs).ToSharedPtr();
 	//DetailsView->
-	//DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
+	DetailsView->SetObjects(TArray<UObject*>{ SequenceData });
 
 	// FDetailsViewArgs NodeDetailsViewArgs;
    //  NodeDetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
@@ -316,6 +316,13 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 void FUnDAWSequenceEditorToolkit::OnSelectionChanged(const TSet<UObject*>& SelectedNodes)
 {
 	UM2SoundGraph* Graph = Cast<UM2SoundGraph>(SequenceData->M2SoundGraph);
+
+	//if selected nodes is empty select the root sequencer data
+	if (SelectedNodes.Num() == 0)
+	{
+		DetailsView->SetObject(SequenceData);
+		return;
+	}
 
 	DetailsView->SetObjects(SelectedNodes.Array());
 
@@ -668,7 +675,12 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		.AddCustomRow(FText::FromString("Tracks"))
 		.WholeRowContent()
 		[
-			SAssignNew(MidiInputTracks, SVerticalBox)
+			SNew(SBox)
+				.MaxDesiredHeight(300)
+				[
+				SAssignNew(MidiInputTracks, SScrollBox)
+
+				]
 		];
 
 	UpdateMidiInputTracks();
@@ -677,20 +689,21 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			UpdateMidiInputTracks();
 		});
 
-	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	FDetailsViewArgs DetailsViewArgs;
-	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
-	DetailsViewArgs.bAllowSearch = false;
+	//FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	//FDetailsViewArgs DetailsViewArgs;
+	//DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+	//DetailsViewArgs.bAllowSearch = false;
 	// DetailsViewArgs.
-	NodeDetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
-	NodeDetailsView->SetObjects(TArray<UObject*>{ SequenceData->M2SoundGraph });
-	DetailBuilder.EditCategory("Selection")
-		.AddCustomRow(FText::FromString("Selection"))
-		.WholeRowContent()
-		[
-			NodeDetailsView.ToSharedRef()
-
-		];
+//	NodeDetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
+//	NodeDetailsView->SetObjects(TArray<UObject*>{ SequenceData->M2SoundGraph });
+//	DetailBuilder.EditCategory("Selection")
+//		.AddCustomRow(FText::FromString("Selection"))
+//		.WholeRowContent()
+//		[
+//			NodeDetailsView.ToSharedRef()
+//
+//		];
+//}
 }
 
 FSequenceAssetDetails::~FSequenceAssetDetails()
@@ -706,7 +719,7 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 	MidiInputTracks->ClearChildren();
 
 	MidiInputTracks->AddSlot()
-		.AutoHeight()
+
 		[
 			SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()
@@ -721,7 +734,6 @@ void FSequenceAssetDetails::UpdateMidiInputTracks()
 	for (SIZE_T i = 0; i < SequenceData->M2TrackMetadata.Num(); i++)
 	{
 		MidiInputTracks->AddSlot()
-			.AutoHeight()
 			[
 				SNew(SMIDITrackControls)
 					.TrackData(&SequenceData->M2TrackMetadata[i])

@@ -70,7 +70,7 @@ public:
 	//UPROPERTY(Transient, EditFixedSize, EditAnywhere, Instanced, meta = (TitleProperty = "{Name}") , Category = "Selection")
 	TArray<TObjectPtr<UM2SoundEdGraphNode>> SelectedNodes;
 
-	UPROPERTY(Transient, EditFixedSize, Instanced, EditAnywhere, Category = "Selection")
+	UPROPERTY(Transient)
 	TArray<TObjectPtr<UM2SoundVertex>> SelectedVertices;
 
 	UFUNCTION()

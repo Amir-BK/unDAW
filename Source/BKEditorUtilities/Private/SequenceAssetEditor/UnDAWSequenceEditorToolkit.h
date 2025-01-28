@@ -34,7 +34,7 @@ private:
 
 	void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
 
-	TSharedPtr<SVerticalBox> MidiInputTracks;
+	TSharedPtr<SScrollBox> MidiInputTracks;
 
 	void UpdateMidiInputTracks();
 
