@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+
 #include "DSP/Dsp.h"
 #include "DSP/BufferVectorOperations.h"
 #include "DSP/FloatArrayMath.h"
@@ -16,197 +17,176 @@
 
 #define LOCTEXT_NAMESPACE "unDAWMetasounds_ConsoleMixerNode"
 
-
 namespace Metasound
 {
+	// Template operator used for mixing audio with gain and pan controls.
+	// This version removes debug logging and uses updated panning logic.
 	template<uint32 NumInputs, uint32 NumChannels>
 	class TDAWConsoleMixerNodeOperator : public TExecutableOperator<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>
 	{
 	public:
-		// ctor
-		TDAWConsoleMixerNodeOperator(const FBuildOperatorParams& InParams, const TArray<FAudioBufferReadRef>&& InInputBuffers, const TArray<FFloatReadRef>&& InGainValues, const TArray<FFloatReadRef>&& InPanValues)
+		// Constructor: Set up input/output buffers.
+		TDAWConsoleMixerNodeOperator(const FBuildOperatorParams& InParams,
+			const TArray<FAudioBufferReadRef>&& InInputBuffers,
+			const TArray<FFloatReadRef>&& InGainValues,
+			const TArray<FFloatReadRef>&& InPanValues)
 			: Gains(InGainValues)
 			, Pans(InPanValues)
-			, Inputs (InInputBuffers)
+			, Inputs(InInputBuffers)
+			, bEqualPower(false)
 		{
-			// create write refs
+			// Create output write references.
 			for (uint32 i = 0; i < NumChannels; ++i)
 			{
 				Outputs.Add(FAudioBufferWriteRef::CreateNew(InParams.OperatorSettings));
 			}
 
-			// init previous gains to current values
-			PrevGains.Reset();
-			PrevGains.AddUninitialized(NumInputs);
-
-			PrevPan.Reset();
-			PrevPan.AddUninitialized(NumInputs);
-
-			PrevPanLeft.Reset();
-			PrevPanLeft.AddUninitialized(NumInputs);
-
-			PrevPanRight.Reset();
-			PrevPanRight.AddUninitialized(NumInputs);
-
 			Reset(InParams);
 		}
 
-		// dtor
 		virtual ~TDAWConsoleMixerNodeOperator() = default;
 
+		// Defines the default vertex interface for this node.
 		static const FVertexInterface& GetDefaultInterface()
 		{
-			auto CreateDefaultInterface = []()-> FVertexInterface
-			{
-				// inputs
-				FInputVertexInterface InputInterface;
-				for (uint32 InputIndex = 0; InputIndex < NumInputs; ++InputIndex)
+			auto CreateDefaultInterface = []() -> FVertexInterface
 				{
-					// audio channels
+					// Build the input interface: audio channels for each input,
+					// as well as gain and pan values.
+					FInputVertexInterface InputInterface;
+					for (uint32 InputIndex = 0; InputIndex < NumInputs; ++InputIndex)
+					{
+						// Audio channels.
+						for (uint32 ChanIndex = 0; ChanIndex < NumChannels; ++ChanIndex)
+						{
+#if WITH_EDITOR
+							const FDataVertexMetadata AudioInputMetadata{
+								GetAudioInputDescription(InputIndex, ChanIndex),
+								GetAudioInputDisplayName(InputIndex, ChanIndex)
+							};
+#else
+							const FDataVertexMetadata AudioInputMetadata;
+#endif // WITH_EDITOR
+							InputInterface.Add(TInputDataVertex<FAudioBuffer>(GetAudioInputName(InputIndex, ChanIndex), AudioInputMetadata));
+						}
+#if WITH_EDITOR
+						FDataVertexMetadata GainPinMetadata{
+							GetGainInputDescription(InputIndex),
+							GetGainInputDisplayName(InputIndex)
+						};
+#else
+						FDataVertexMetadata GainPinMetadata;
+#endif // WITH_EDITOR
+						InputInterface.Add(TInputDataVertex<float>(GainInputNames[InputIndex], GainPinMetadata, 1.0f));
+#if WITH_EDITOR
+						FDataVertexMetadata PanPinMetadata{
+							GetPanInputDescription(InputIndex),
+							GetPanInputDisplayName(InputIndex)
+						};
+#else
+						FDataVertexMetadata PanPinMetadata;
+#endif // WITH_EDITOR
+						InputInterface.Add(TInputDataVertex<float>(PanInputNames[InputIndex], PanPinMetadata, 0.0f));
+					}
+
+					// Build the output interface.
+					FOutputVertexInterface OutputInterface;
 					for (uint32 ChanIndex = 0; ChanIndex < NumChannels; ++ChanIndex)
 					{
 #if WITH_EDITOR
-						const FDataVertexMetadata AudioInputMetadata
-						{
-							GetAudioInputDescription(InputIndex, ChanIndex),
-							GetAudioInputDisplayName(InputIndex, ChanIndex)
+						const FDataVertexMetadata AudioOutputMetadata{
+							GetAudioOutputDescription(ChanIndex),
+							GetAudioOutputDisplayName(ChanIndex)
 						};
-#else 
-						const FDataVertexMetadata AudioInputMetadata;
+#else
+						const FDataVertexMetadata AudioOutputMetadata;
 #endif // WITH_EDITOR
-						InputInterface.Add(TInputDataVertex<FAudioBuffer>(GetAudioInputName(InputIndex, ChanIndex), AudioInputMetadata));
+						OutputInterface.Add(TOutputDataVertex<FAudioBuffer>(AudioOutputNames[ChanIndex], AudioOutputMetadata));
 					}
 
-					// gain scalar
-#if WITH_EDITOR
-					FDataVertexMetadata GainPinMetaData
-					{
-						GetGainInputDescription(InputIndex),
-						GetGainInputDisplayName(InputIndex)
-					};
-#else 
-					FDataVertexMetadata GainPinMetaData;
-#endif // WITH_EDITOR
-					TInputDataVertex<float>GainVertexModel(GainInputNames[InputIndex], GainPinMetaData, 1.0f);
-
-					InputInterface.Add(GainVertexModel);
-
-					// pan scalar
-					#if WITH_EDITOR
-					FDataVertexMetadata PanPinMetaData
-					{
-						GetPanInputDescription(InputIndex),
-						GetPanInputDisplayName(InputIndex)
-					};
-#else
-					FDataVertexMetadata PanPinMetaData;
-
-#endif // WITH_EDITOR
-					TInputDataVertex<float> PanVertexModel(PanInputNames[InputIndex], PanPinMetaData, 0.0f);
-					InputInterface.Add(PanVertexModel);
-				}
-
-				// outputs
-				FOutputVertexInterface OutputInterface;
-				for (uint32 i = 0; i < NumChannels; ++i)
-				{
-#if WITH_EDITOR
-					const FDataVertexMetadata AudioOutputMetadata
-					{
-						GetAudioOutputDescription(i),
-						GetAudioOutputDisplayName(i)
-					};
-#else 
-					const FDataVertexMetadata AudioOutputMetadata;
-#endif // WITH_EDITOR
-					OutputInterface.Add(TOutputDataVertex<FAudioBuffer>(AudioOutputNames[i], AudioOutputMetadata));
-				}
-
-				return FVertexInterface(InputInterface, OutputInterface);
-			}; // end lambda: CreateDefaultInterface()
+					return FVertexInterface(InputInterface, OutputInterface);
+				};
 
 			static const FVertexInterface DefaultInterface = CreateDefaultInterface();
 			return DefaultInterface;
 		}
 
+		// Returns node class metadata based on channel count.
 		static const FNodeClassMetadata& GetNodeInfo()
 		{
-			// used if NumChannels == 1
 			auto CreateNodeClassMetadataMono = []() -> FNodeClassMetadata
-			{
-				FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (Mono, %d)"), NumInputs);
-				FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("MonoMixer", "Console Mono Mixer ({0})", NumInputs);
-				const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription1", "Will scale input channels by their corresponding gain value and sum them together.");
-				FVertexInterface NodeInterface = GetDefaultInterface();
+				{
+					FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (Mono, %d)"), NumInputs);
+					FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("MonoMixer", "Console Mono Mixer ({0})", NumInputs);
+					const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription1", "Scales and sums inputs with corresponding gain values.");
+					FVertexInterface NodeInterface = GetDefaultInterface();
 
-				return CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
-			};
+					return CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
+				};
 
-			// used if NumChannels == 2
 			auto CreateNodeClassMetadataStereo = []() -> FNodeClassMetadata
-			{
-				FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (Stereo, %d)"), NumInputs);
-				FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("StereoMixer", "Console Stereo Mixer ({0})", NumInputs);
-				const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription2", "Will scale input channels by their corresponding gain value and sum them together.");
-				FVertexInterface NodeInterface = GetDefaultInterface();
+				{
+					FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (Stereo, %d)"), NumInputs);
+					FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("StereoMixer", "Console Stereo Mixer ({0})", NumInputs);
+					const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription2", "Scales and sums inputs with corresponding gain values.");
+					FVertexInterface NodeInterface = GetDefaultInterface();
 
-				return  CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
-			};
+					return CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
+				};
 
-			// used if NumChannels > 2
 			auto CreateNodeClassMetadataMultiChan = []() -> FNodeClassMetadata
-			{
-				FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (%d-Channel, %d)"), NumChannels, NumInputs);
-				FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("NChannelMixer", "Console {0}-channel Mixer ({1})", NumChannels, NumInputs);
-				const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription3", "Will scale input audio by their corresponding gain value and sum them together.");
-				FVertexInterface NodeInterface = GetDefaultInterface();
+				{
+					FName OperatorName = *FString::Printf(TEXT("Console Audio Mixer (%d-Channel, %d)"), NumChannels, NumInputs);
+					FText NodeDisplayName = METASOUND_LOCTEXT_FORMAT("NChannelMixer", "Console {0}-Channel Mixer ({1})", NumChannels, NumInputs);
+					const FText NodeDescription = METASOUND_LOCTEXT("MixerDescription3", "Scales and sums input audio by their corresponding gain values.");
+					FVertexInterface NodeInterface = GetDefaultInterface();
 
-				return  CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
-			};
+					return CreateNodeClassMetadata(OperatorName, NodeDisplayName, NodeDescription, NodeInterface);
+				};
 
-			static const FNodeClassMetadata Metadata = (NumChannels == 1)? CreateNodeClassMetadataMono()
-														: (NumChannels == 2)? CreateNodeClassMetadataStereo() : CreateNodeClassMetadataMultiChan();
+			static const FNodeClassMetadata Metadata = (NumChannels == 1) ? CreateNodeClassMetadataMono() :
+				(NumChannels == 2) ? CreateNodeClassMetadataStereo() : CreateNodeClassMetadataMultiChan();
 			return Metadata;
 		}
 
+		// Creates an operator instance from input data.
 		static TUniquePtr<IOperator> CreateOperator(const FBuildOperatorParams& InParams, FBuildResults& OutResults)
 		{
 			const FInputVertexInterfaceData& InputData = InParams.InputData;
-			
+
 			TArray<FAudioBufferReadRef> InputBuffers;
 			TArray<FFloatReadRef> InputGains;
 			TArray<FFloatReadRef> InputPans;
 
 			for (uint32 i = 0; i < NumInputs; ++i)
 			{
-				for (uint32 Chan = 0; Chan < NumChannels; ++Chan)
+				for (uint32 chan = 0; chan < NumChannels; ++chan)
 				{
-					InputBuffers.Add(InputData.GetOrConstructDataReadReference<FAudioBuffer>(GetAudioInputName(i, Chan), InParams.OperatorSettings));
+					InputBuffers.Add(InputData.GetOrConstructDataReadReference<FAudioBuffer>(GetAudioInputName(i, chan), InParams.OperatorSettings));
 				}
 
 				InputGains.Add(InputData.GetOrCreateDefaultDataReadReference<float>(GainInputNames[i], InParams.OperatorSettings));
-
-				// pan values
 				InputPans.Add(InputData.GetOrCreateDefaultDataReadReference<float>(PanInputNames[i], InParams.OperatorSettings));
 			}
 
 			return MakeUnique<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>(InParams, MoveTemp(InputBuffers), MoveTemp(InputGains), MoveTemp(InputPans));
 		}
 
+		// Bind input references to the vertex data.
 		virtual void BindInputs(FInputVertexInterfaceData& InOutVertexData) override
 		{
 			for (uint32 i = 0; i < NumInputs; ++i)
 			{
-				for (uint32 Chan = 0; Chan < NumChannels; ++Chan)
+				for (uint32 chan = 0; chan < NumChannels; ++chan)
 				{
-					InOutVertexData.BindReadVertex(GetAudioInputName(i, Chan), Inputs[i * NumChannels + Chan]);
+					InOutVertexData.BindReadVertex(GetAudioInputName(i, chan), Inputs[i * NumChannels + chan]);
 				}
-
 				InOutVertexData.BindReadVertex(GainInputNames[i], Gains[i]);
 				InOutVertexData.BindReadVertex(PanInputNames[i], Pans[i]);
 			}
 		}
 
+		// Bind output references to the vertex data.
 		virtual void BindOutputs(FOutputVertexInterfaceData& InOutVertexData) override
 		{
 			for (uint32 i = 0; i < NumChannels; ++i)
@@ -215,252 +195,161 @@ namespace Metasound
 			}
 		}
 
-
+		// Resets operator state.
 		void Reset(const IOperator::FResetParams& InParams)
 		{
-			for (uint32 i = 0; i < NumInputs; ++i)
-			{
-				PrevGains[i] = *Gains[i];
-			}
-
 			Execute();
 		}
 
+		// Execute mixing.
 		void Execute()
 		{
-			// initialize the output using the first set of input channels
-			float NextGain = *Gains[0];
-			float PrevGain = PrevGains[0];
-			float PrevPanningAmount = FMath::Clamp(*Pans[0], -1.0f, 1.0f);
-			float NextPanningAmount = FMath::Clamp(PrevPan[0], -1.0f, 1.0f);
-
-			ComputePanGains(*Pans[0], PrevPanLeft[0], PrevPanRight[0]);
-
-			// initialize the output buffers w/ the first set of input buffers 
-			for (uint32 i = 0; i < NumChannels; ++i)
+			// Clear output buffers.
+			for (uint32 chan = 0; chan < NumChannels; ++chan)
 			{
-				TArrayView<const float> InputView = *Inputs[i];
-				TArrayView<float> OutputView = *Outputs[i];
-	
-				check(InputView.Num() == OutputView.Num());
-				if (i == 0)
-				{
-					NextGain *= PrevPanLeft[0];
-				//	UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
-					UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), i, 0, PrevPanLeft[0], PrevPanRight[0], *Pans[0], NextGain);
-
-				}
-
-				if (i == 1)
-				{
-					NextGain *= PrevPanRight[0];
-					UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), i, 0, PrevPanLeft[0], PrevPanRight[0], *Pans[0], NextGain);
-				//	UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
-
-				}
-
-
-				Audio::ArrayFade(InputView, PrevGain, NextGain, OutputView);
-
+				TArrayView<float> OutputView = *Outputs[chan];
+				FMemory::Memzero(OutputView.GetData(), OutputView.Num() * sizeof(float));
 			}
 
-			PrevGains[0] = NextGain;
-
-			// mix in each following input //start from 1 cause 0 was already mixed in?
-			for (uint32 InputIndex = 1; InputIndex < NumInputs; ++InputIndex)
+			// Process each input.
+			for (uint32 inputIndex = 0; inputIndex < NumInputs; ++inputIndex)
 			{
-				NextGain = *Gains[InputIndex];
-				PrevGain = PrevGains[InputIndex];
+				const float currentGain = *Gains[inputIndex];
+				float leftPan = 0.f, rightPan = 0.f;
+				ComputePanGains(*Pans[inputIndex], leftPan, rightPan);
 
-				ComputePanGains(*Pans[InputIndex], PrevPanLeft[InputIndex], PrevPanRight[InputIndex]);
-				//bool bPanHasChanged = !FMath::IsNearlyEqual(*Pans[InputIndex],PrevPan[InputIndex]);
-
-				//if (!bPanHasChanged)
-				//{
-				//	ComputePanGains(*Pans[InputIndex], PrevPanLeft[InputIndex], PrevPanRight[InputIndex]);
-				//}
-
-				// for each channel of audio
-				for (uint32 ChanIndex = 0; ChanIndex < NumChannels; ++ChanIndex)
+				// Mix each channel.
+				for (uint32 chanIndex = 0; chanIndex < NumChannels; ++chanIndex)
 				{
-					
-					if (ChanIndex == 0)
+					float channelGain = currentGain;
+					if (NumChannels > 1)
 					{
-						NextGain *= PrevPanLeft[InputIndex];
-						//UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
-
+						// Use updated pan logic.
+						channelGain *= (chanIndex == 0) ? leftPan : rightPan;
 					}
 
-					if (ChanIndex == 1)
+					TArrayView<const float> InputView = *Inputs[inputIndex * NumChannels + chanIndex];
+					TArrayView<float> OutputView = *Outputs[chanIndex];
+
+					// Simple loop to mix input into output.
+					for (int32 sample = 0; sample < OutputView.Num(); ++sample)
 					{
-						NextGain *= PrevPanRight[InputIndex];
-						//UE_LOG(LogTemp, Warning, TEXT("ChanIndex: %d, Input Index %d, PanL %f PanR %f, Pan Amount %f, NEXT gAIN %f"), ChanIndex, InputIndex, PrevPanLeft[InputIndex], PrevPanRight[InputIndex], *Pans[InputIndex], NextGain);
-
+						OutputView[sample] += InputView[sample] * channelGain;
 					}
-					
-					// Outputs[Chan] += Gains[i] * Inputs[i][Chan]
-					Audio::ArrayMixIn(*Inputs[InputIndex * NumChannels + ChanIndex], *Outputs[ChanIndex], PrevGain, NextGain);
-
-
 				}
-
-
-				PrevGains[InputIndex] = NextGain;
 			}
 		}
 
-
 	private:
-		
-#pragma region ParamNames
+		// Helper functions to initialize vertex names.
 		static TArray<FVertexName> InitializeAudioInputNames()
 		{
-			TStringBuilder<32> InputNameStr;
 			TArray<FVertexName> Names;
-			Names.AddUninitialized(NumInputs * NumChannels);
-
-			for (int InputIndex = 0; InputIndex < NumInputs; ++InputIndex)
+			Names.Reserve(NumInputs * NumChannels);
+			for (uint32 inputIndex = 0; inputIndex < NumInputs; ++inputIndex)
 			{
-				for (int ChannelIndex = 0; ChannelIndex < NumChannels; ++ChannelIndex)
+				for (uint32 channelIndex = 0; channelIndex < NumChannels; ++channelIndex)
 				{
-					InputNameStr << "In " << InputIndex;
-
-					if (NumChannels == 1)
+					FString Name = FString::Printf(TEXT("In %d"), inputIndex);
+					if (NumChannels == 2)
 					{
+						Name += (channelIndex == 0) ? TEXT(" L") : TEXT(" R");
 					}
-					else if (NumChannels == 2)
+					else if (NumChannels > 2)
 					{
-						InputNameStr << ' ' << ((!ChannelIndex)? 'L' : 'R');
+						Name += FString::Printf(TEXT(", %d"), channelIndex);
 					}
-					else
-					{
-						InputNameStr << ", " << ChannelIndex;
-					}
-
-					Names[InputIndex * NumChannels + ChannelIndex] = *InputNameStr;
-					InputNameStr.Reset();
+					Names.Add(*Name);
 				}
 			}
-
 			return Names;
 		}
 
 		static TArray<FVertexName> InitializeAudioOutputNames()
 		{
-			TStringBuilder<32> AudioOutNameStr;
 			TArray<FVertexName> Names;
-			Names.AddUninitialized(NumChannels);
-
-			for (int ChanIndex = 0; ChanIndex < NumChannels; ++ChanIndex)
+			Names.Reserve(NumChannels);
+			for (uint32 chanIndex = 0; chanIndex < NumChannels; ++chanIndex)
 			{
-				AudioOutNameStr << "Out";
-
-				if (NumChannels == 1)
+				FString Name = TEXT("Out");
+				if (NumChannels == 2)
 				{
+					Name += (chanIndex == 0) ? TEXT(" L") : TEXT(" R");
 				}
-				else if (NumChannels == 2)
+				else if (NumChannels > 2)
 				{
-					AudioOutNameStr << ' ' << ((!ChanIndex)? 'L' : 'R');
+					Name += FString::Printf(TEXT(" %d"), chanIndex);
 				}
-				else
-				{
-					AudioOutNameStr << ' ' << ChanIndex;
-				}
-			
-				Names[ChanIndex] = *AudioOutNameStr;
-				AudioOutNameStr.Reset();
+				Names.Add(*Name);
 			}
-
 			return Names;
 		}
 
 		static TArray<FVertexName> InitializeGainInputNames()
 		{
-			TStringBuilder<32> GainNameStr;
-		
 			TArray<FVertexName> Names;
-			Names.AddUninitialized(NumInputs);
-
-			for (int GainIndex = 0; GainIndex < NumInputs; ++GainIndex)
+			Names.Reserve(NumInputs);
+			for (uint32 i = 0; i < NumInputs; ++i)
 			{
-				GainNameStr << "Gain " << GainIndex;
-				Names[GainIndex] = * GainNameStr;
-
-				GainNameStr.Reset();
+				Names.Add(*FString::Printf(TEXT("Gain %d"), i));
 			}
-
 			return Names;
 		}
 
 		static TArray<FVertexName> InitializePanInputNames()
 		{
-			TStringBuilder<32> PanNameStr;
-		
 			TArray<FVertexName> Names;
-			Names.AddUninitialized(NumInputs);
-
-			for (int GainIndex = 0; GainIndex < NumInputs; ++GainIndex)
+			Names.Reserve(NumInputs);
+			for (uint32 i = 0; i < NumInputs; ++i)
 			{
-				PanNameStr << "Pan Amount " << GainIndex;
-				Names[GainIndex] = *PanNameStr;
-
-				PanNameStr.Reset();
+				Names.Add(*FString::Printf(TEXT("Pan Amount %d"), i));
 			}
-
 			return Names;
 		}
 
-		static const FVertexName& GetAudioInputName(uint32 InputIndex, uint32 ChannelIndex)
+		static const FVertexName& GetAudioInputName(uint32 inputIndex, uint32 channelIndex)
 		{
-			return AudioInputNames[InputIndex * NumChannels + ChannelIndex];
+			return AudioInputNames[inputIndex * NumChannels + channelIndex];
 		}
-#pragma endregion ParamNames
 
-
+		// Static arrays to hold vertex names.
 		static inline const TArray<FVertexName> AudioInputNames = InitializeAudioInputNames();
 		static inline const TArray<FVertexName> AudioOutputNames = InitializeAudioOutputNames();
 		static inline const TArray<FVertexName> GainInputNames = InitializeGainInputNames();
 		static inline const TArray<FVertexName> PanInputNames = InitializePanInputNames();
 
+		// Instance variables.
 		TArray<FFloatReadRef> Gains;
 		TArray<FFloatReadRef> Pans;
 		TArray<FAudioBufferReadRef> Inputs;
 		TArray<FAudioBufferWriteRef> Outputs;
 
-		TArray<float> PrevGains;
-		TArray<float> PrevPan;
-		TArray<float> PrevPanLeft;
-		TArray<float> PrevPanRight;
+		bool bEqualPower;
 
-		bool bEqualPower = false;
-
-
-#pragma region PannerMethods
-
-		void ComputePanGains(float InPanningAmmount, float& OutLeftGain, float& OutRightGain) const
+		// Updated ComputePanGains: For InPanAmount -1, fraction = 0 gives left gain = 1 and right gain = 0.
+		void ComputePanGains(float InPanAmount, float& OutLeftGain, float& OutRightGain) const
 		{
-			// Convert [-1.0, 1.0] to [0.0, 1.0]
-			float Fraction = 0.5f * (InPanningAmmount + 1.0f);
-
+			float Fraction = 0.5f * (InPanAmount + 1.0f);
 			if (bEqualPower)
 			{
-				// Compute the left and right amount with one math call
-				FMath::SinCos(&OutRightGain, &OutLeftGain, 0.5f * PI * Fraction);
+				// Equal-power panning: left = cos(angle), right = sin(angle) with angle = 0.5 * PI * Fraction.
+				OutLeftGain = FMath::Cos(0.5f * PI * Fraction);
+				OutRightGain = FMath::Sin(0.5f * PI * Fraction);
 			}
 			else
 			{
-				OutLeftGain = Fraction;
-				OutRightGain = 1.0f - Fraction;
+				OutLeftGain = 1.0f - Fraction;
+				OutRightGain = Fraction;
 			}
 		}
 
-#pragma endregion PannerMethods
-
-		static FNodeClassMetadata CreateNodeClassMetadata(const FName& InOperatorName, const FText& InDisplayName, const FText& InDescription, const FVertexInterface& InDefaultInterface)
+		static FNodeClassMetadata CreateNodeClassMetadata(const FName& InOperatorName,
+			const FText& InDisplayName,
+			const FText& InDescription,
+			const FVertexInterface& InDefaultInterface)
 		{
-			FNodeClassMetadata Metadata
-			{
-				FNodeClassName { "ConsoleAudioMixer", InOperatorName, FName() },
+			FNodeClassMetadata Metadata{
+				FNodeClassName{ "ConsoleAudioMixer", InOperatorName, FName() },
 				1, // Major Version
 				0, // Minor Version
 				InDisplayName,
@@ -469,13 +358,12 @@ namespace Metasound
 				PluginNodeMissingPrompt,
 				InDefaultInterface,
 				{ NodeCategories::Mix },
-				{ INVTEXT("unDAW"), METASOUND_LOCTEXT("Metasound_AudioMixerKeyword", "Mixer")},
+				{ INVTEXT("unDAW"), METASOUND_LOCTEXT("Metasound_AudioMixerKeyword", "Mixer") },
 				FNodeDisplayStyle{}
 			};
 
 			return Metadata;
 		}
-
 
 #if WITH_EDITOR
 		static const FText GetAudioInputDescription(uint32 InputIndex, uint32 ChannelIndex)
@@ -491,14 +379,9 @@ namespace Metasound
 			}
 			else if (NumChannels == 2)
 			{
-				if (ChannelIndex == 0)
-				{
-					return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InL", "In {0} L", InputIndex);
-				}
-				else
-				{
-					return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InR", "In {0} R", InputIndex);
-				}
+				return (ChannelIndex == 0)
+					? METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InL", "In {0} L", InputIndex)
+					: METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InR", "In {0} R", InputIndex);
 			}
 			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInputIn", "In {0}, {1}", InputIndex, ChannelIndex);
 		}
@@ -515,7 +398,7 @@ namespace Metasound
 
 		static const FText GetPanInputDisplayName(uint32 InputIndex)
 		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDisplayName", "Pan Amount {0}", InputIndex);
+			return METASOUND_LOCTEXT_FORMAT("AudioMixerPanInputDisplayName", "Pan Amount {0}", InputIndex);
 		}
 
 		static const FText GetPanInputDescription(uint32 InputIndex)
@@ -531,14 +414,9 @@ namespace Metasound
 			}
 			else if (NumChannels == 2)
 			{
-				if (ChannelIndex == 0)
-				{
-					return METASOUND_LOCTEXT("AudioMixerAudioOutput2OutL", "Out L");
-				}
-				else
-				{
-					return METASOUND_LOCTEXT("AudioMixerAudioOutput2OutR", "Out R");
-				}
+				return (ChannelIndex == 0)
+					? METASOUND_LOCTEXT("AudioMixerAudioOutput2OutL", "Out L")
+					: METASOUND_LOCTEXT("AudioMixerAudioOutput2OutR", "Out R");
 			}
 			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioOutputOut", "Out {0}", ChannelIndex);
 		}
@@ -550,48 +428,38 @@ namespace Metasound
 #endif // WITH_EDITOR
 	}; // class TDAWConsoleMixerNodeOperator
 
-
+	// Facade class used by the Metasound Frontend.
 	template<uint32 NumInputs, uint32 NumChannels>
 	class TDAWConsoleMixerNode : public FNodeFacade
 	{
 	public:
-		/**
-		 * Constructor used by the Metasound Frontend.
-		 */
 		TDAWConsoleMixerNode(const FNodeInitData& InInitData)
-			: FNodeFacade(InInitData.InstanceName, InInitData.InstanceID, TFacadeOperatorClass<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>())
-		{}
+			: FNodeFacade(InInitData.InstanceName,
+				InInitData.InstanceID,
+				TFacadeOperatorClass<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>())
+		{
+		}
 
 		virtual ~TDAWConsoleMixerNode() = default;
 	};
 
+	// Macro to register the node for different input/channel configurations.
+#define REGISTER_AUDIOMIXER_NODE(A, B) \
+		using FAudioMixerNode_##A##_##B = TDAWConsoleMixerNode<A, B>; \
+		METASOUND_REGISTER_NODE(FAudioMixerNode_##A##_##B)
 
-	#define REGISTER_AUDIOMIXER_NODE(A, B) \
-		using FAudioMixerNode_##A ## _ ##B = TDAWConsoleMixerNode<A, B>; \
-		METASOUND_REGISTER_NODE(FAudioMixerNode_##A ## _ ##B) \
+	// Register some common variants.
+	// Stereo variants:
+	REGISTER_AUDIOMIXER_NODE(2, 2)
+		//REGISTER_AUDIOMIXER_NODE(3, 2)
+		REGISTER_AUDIOMIXER_NODE(4, 2)
+		//REGISTER_AUDIOMIXER_NODE(5, 2)
+		//REGISTER_AUDIOMIXER_NODE(6, 2)
+		//REGISTER_AUDIOMIXER_NODE(8, 2)
+		REGISTER_AUDIOMIXER_NODE(8, 2)
+		REGISTER_AUDIOMIXER_NODE(16, 2)
 
-
-	// mono
-	//REGISTER_AUDIOMIXER_NODE(2, 1)
-	//REGISTER_AUDIOMIXER_NODE(3, 1)
-	//REGISTER_AUDIOMIXER_NODE(4, 1)
-	//REGISTER_AUDIOMIXER_NODE(5, 1)
-	//REGISTER_AUDIOMIXER_NODE(6, 1)
-	//REGISTER_AUDIOMIXER_NODE(7, 1)
-	//REGISTER_AUDIOMIXER_NODE(8, 1)
-
-	// stereo
- 	REGISTER_AUDIOMIXER_NODE(2, 2)
-	//REGISTER_AUDIOMIXER_NODE(3, 2)
-	//REGISTER_AUDIOMIXER_NODE(4, 2)
-	//REGISTER_AUDIOMIXER_NODE(5, 2)
-	//REGISTER_AUDIOMIXER_NODE(6, 2)
-	//REGISTER_AUDIOMIXER_NODE(7, 2)
-	//REGISTER_AUDIOMIXER_NODE(8, 2)
-
-	// test
-	//REGISTER_AUDIOMIXER_NODE(8, 6)
-
+		// You can add similar registrations for mono or multichannel variants as needed.
 } // namespace Metasound
 
-#undef LOCTEXT_NAMESPACE // "MetasoundStandardNodes_MixerNode"
+#undef LOCTEXT_NAMESPACE
