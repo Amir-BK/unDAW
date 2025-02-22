@@ -459,10 +459,6 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 	GENERATED_BODY()
 public:
 
-
-	//UPROPERTY()
-	//UMidiDrivenLevelSequence* MidiDrivenLevelSequence;
-
 	const FSongMaps& GetSongMaps(); 
 
 	void EnsureLevelSequence();
@@ -715,7 +711,7 @@ public:
 	UPROPERTY()
 	TMap<TObjectPtr <UM2SoundVertex>, FAssignableAudioOutput> AudioOutsMap;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TArray<FTrackDisplayOptions> M2TrackMetadata;
 
 	void InitMetadataFromFoundMidiTracks(TArray<TTuple<int, int>> InTracks);

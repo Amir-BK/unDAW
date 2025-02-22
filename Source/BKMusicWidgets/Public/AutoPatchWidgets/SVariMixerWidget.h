@@ -47,23 +47,7 @@ public:
 		MixerVertex->UpdateMuteAndSoloStates();
 	};
 
-	void UpdatePanKnobValue(float NewValue)
-	{
-		Pin->PanValue = NewValue;
-
-		FName FloatName;
-		EMetaSoundBuilderResult BuildResult;
-
-
-		auto NewFloatLiteral = MixerVertex->BuilderSubsystem->CreateFloatMetaSoundLiteral(NewValue, FloatName);
-		MixerVertex->BuilderContext->SetNodeInputDefault(Pin->PanParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
-
-
-		//print handle and result
-		FString ResultToString = BuildResult == EMetaSoundBuilderResult::Succeeded ? "Succeeded" : "Failed";
-		
-		UE_LOG(LogTemp, Warning, TEXT("Result: %s"), *ResultToString);
-	};
+	void UpdatePanKnobValue(float NewValue);;
 
 	void UpdateMuteCheckBoxState(ECheckBoxState NewState)
 	{

@@ -9,14 +9,12 @@
 #include "Sequencer/UndawMusicSequencer.h"
 #include "HarmonixMetasound/DataTypes/MusicTimestamp.h"
 
-#include "GlyphButton.h"
 #include "Toolkits/BaseToolkit.h"
 
 #include "IDetailCustomization.h"
 #include "DetailLayoutBuilder.h"
 //#include "MidiDeviceManager.h"
-#include "ISequencer.h"
-#include "ISequencerModule.h"
+
 #include "GraphEditor.h"
 #include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 

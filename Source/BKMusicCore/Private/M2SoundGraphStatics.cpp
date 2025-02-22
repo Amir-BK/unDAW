@@ -155,7 +155,7 @@ void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudi
 {
 	// Check if we are in the new (4 inputs per channel) or legacy (3 inputs per channel) scenario.
 	const int32 NumInputs = InMixerNodeInputs.Num();
-	bool bIsNewMixer = false;
+	bool bIsNewMixer = true;
 
 	if (NumInputs % 4 == 0)
 	{

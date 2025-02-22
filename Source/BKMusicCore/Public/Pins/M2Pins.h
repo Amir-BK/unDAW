@@ -234,6 +234,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr < UM2MetasoundLiteralPin> PanParameter = nullptr;
 
+
 };
 
 UCLASS()

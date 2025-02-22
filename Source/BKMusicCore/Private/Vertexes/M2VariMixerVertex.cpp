@@ -149,6 +149,7 @@ UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
 	}
 
 	auto AvailableOutput = MixerChannels.Pop();
+	
 
 	auto TrackName = FName(FString::Printf(TEXT("Channel %d"), NumConnectedChannels++));
 	if (InputM2SoundPins.Contains(TrackName) == false)
@@ -267,6 +268,7 @@ void UM2VariMixerVertex::BuildVertex()
 		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
 		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
 		AutoNewInput->GainParameter = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.GainParameterInputHandle);
+		AutoNewInput->PanParameter = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.PanInputHandle);
 		AvailableOutput.AssignedPin = AutoNewInput;
 	}
 
