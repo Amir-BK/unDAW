@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Vertexes/M2VariMixerVertex.h"
+#include "M2SoundGraphStatics.h"
+//#include "Metasounds/unDAW_ConsoleMixer.h" // Include the header for the new console mixer node.
 
 int UM2VariMixerVertex::AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, float InVolume)
 {
@@ -155,6 +157,7 @@ UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
 		AutoNewInput->ChannelIndex = NumConnectedChannels;
 		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
 		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
+		AutoNewInput->PanParameter = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.PanInputHandle);
 		InputM2SoundPins.Add(TrackName, AutoNewInput);
 		AvailableOutput.AssignedPin = AutoNewInput;
 
@@ -208,7 +211,12 @@ void UM2VariMixerVertex::BuildVertex()
 	BuilderSubsystem = SequencerData->MSBuilderSystem;
 	BuilderContext = SequencerData->BuilderContext;
 
-	const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
+	FMetasoundFrontendClassName ConsoleMixerClass(
+		FName(TEXT("ConsoleAudioMixer")),
+		FName(TEXT("Console Audio Mixer (Stereo, 8)"))
+	);
+
+	const auto NewMixerNode = BuilderContext->AddNodeByClassName(ConsoleMixerClass
 		, BuildResult);
 
 	BuilderResults.Add("MixerNode", BuildResult);
@@ -230,12 +238,9 @@ void UM2VariMixerVertex::BuildVertex()
 		AudioTrackPin->AudioStreamR = CreateOutputPin<UM2MetasoundLiteralPin>(MixerOutPins[1]);
 	}
 
-	//PopulatePinsFromMetasoundData(InPins, OutPins);
 
 	UM2SoundGraphStatics::PopulateAssignableOutputsArray(MixerChannels, BuilderContext->FindNodeInputs(NewMixerNode, BuildResult));
 
-	//create one input channel
-	//CreateChannel();
 
 	// if input pins are empty this means this is a new vertex, create initial pin,
 	// otherwise we are updating an existing vertex, so we need to update the pins
@@ -265,33 +270,6 @@ void UM2VariMixerVertex::BuildVertex()
 		AvailableOutput.AssignedPin = AutoNewInput;
 	}
 
-
-
-	/*
-	int i = 0;
-	for (auto& Channel : MixerChannels)
-	{
-		auto TrackName = FName(FString::Printf(TEXT("Channel %d"), i));
-		if (InputM2SoundPins.Contains(TrackName) == false)
-		{
-			auto* AutoNewInput = CreateAudioTrackInputPin(TrackName);
-			AutoNewInput->ChannelIndex = i;
-			AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
-			InputM2SoundPins.Add(TrackName, AutoNewInput);
-			Channel.AssignedPin = AutoNewInput;
-		}
-		else {
-			auto AutoNewInput = Cast<UM2AudioTrackPin>(InputM2SoundPins[TrackName]);
-			AutoNewInput->ChannelIndex = i; // I guess this can help avoid mixups? I don't know
-			AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioLeftOutputInputHandle);
-			AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(Channel.AudioRightOutputInputHandle);
-			MixerChannels[i].AssignedPin = AutoNewInput;
-		}
-
-		i++;
-	}
-	*/
 	UpdateMuteAndSoloStates();
 }
 

@@ -10,6 +10,9 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
+#include "AudioMaterialSlate/SAudioMaterialLabeledKnob.h"
+#include "AudioMaterialSlate/SAudioMaterialKnob.h"
+#include "SAudioRadialSlider.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/Input/SCheckBox.h"
 
@@ -30,6 +33,7 @@ public:
 	TSharedPtr<SAudioRadialSlider> RadialSlider;
 	TSharedPtr<SAudioSlider> VolumeSlider;
 	TSharedPtr<SAudioMaterialLabeledSlider> VolumeLabeledSlider;
+	TSharedPtr<SAudioRadialSlider> PanKnob;
 
 	float GetVolumeSliderValue() const
 	{
@@ -41,6 +45,24 @@ public:
 		Pin->GainValue = NewValue;
 
 		MixerVertex->UpdateMuteAndSoloStates();
+	};
+
+	void UpdatePanKnobValue(float NewValue)
+	{
+		Pin->PanValue = NewValue;
+
+		FName FloatName;
+		EMetaSoundBuilderResult BuildResult;
+
+
+		auto NewFloatLiteral = MixerVertex->BuilderSubsystem->CreateFloatMetaSoundLiteral(NewValue, FloatName);
+		MixerVertex->BuilderContext->SetNodeInputDefault(Pin->PanParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
+
+
+		//print handle and result
+		FString ResultToString = BuildResult == EMetaSoundBuilderResult::Succeeded ? "Succeeded" : "Failed";
+		
+		UE_LOG(LogTemp, Warning, TEXT("Result: %s"), *ResultToString);
 	};
 
 	void UpdateMuteCheckBoxState(ECheckBoxState NewState)

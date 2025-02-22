@@ -4,6 +4,8 @@
 #include "M2SoundGraphData.h"
 #include "Vertexes/M2SoundVertex.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Logging/LogMacros.h"
+#include "Misc/Guid.h"
 #include "Interfaces/unDAWMetasoundInterfaces.h"
 
 
@@ -149,19 +151,68 @@ UMetaSoundPatch* UM2SoundGraphStatics::GetPatchByName(FString Name)
 	return nullptr;
 }
 
-void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs)
+void UM2SoundGraphStatics::PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle>& InMixerNodeInputs)
 {
-	for (SIZE_T i = 0; i < InMixerNodeInputs.Num(); i += 3)
+	// Check if we are in the new (4 inputs per channel) or legacy (3 inputs per channel) scenario.
+	const int32 NumInputs = InMixerNodeInputs.Num();
+	bool bIsNewMixer = false;
+
+	if (NumInputs % 4 == 0)
 	{
-		//the outputs are always sorted "In 0 L", "In 0 R", "Gain 0"
-		FAssignableAudioOutput AssignableOutput;
-		AssignableOutput.AudioLeftOutputInputHandle = InMixerNodeInputs[i];
-		AssignableOutput.AudioRightOutputInputHandle = InMixerNodeInputs[i + 1];
-		AssignableOutput.GainParameterInputHandle = InMixerNodeInputs[i + 2];
+		bIsNewMixer = true;
+	}
+	else if (NumInputs % 3 != 0)
+	{
+		// Neither scenario matches; log a warning and return.
+		UE_LOG(LogTemp, Warning, TEXT("PopulateAssignableOutputsArray: Expected InMixerNodeInputs count to be a multiple of 3 (legacy) or 4 (new), but got %d."), NumInputs);
+		return;
+	}
 
-		AssignableOutput.OutputName = FName(FGuid::NewGuid().ToString());
+	if (bIsNewMixer)
+	{
+		// For the new console mixer node, each channel is represented by 4 inputs:
+		// "In X L", "In X R", "Gain X" and "Pan X".
+		for (int32 i = 0; i < NumInputs; i += 4)
+		{
+			if (i + 3 < NumInputs)
+			{
+				FAssignableAudioOutput AssignableOutput;
+				AssignableOutput.AudioLeftOutputInputHandle = InMixerNodeInputs[i];
+				AssignableOutput.AudioRightOutputInputHandle = InMixerNodeInputs[i + 1];
+				AssignableOutput.GainParameterInputHandle = InMixerNodeInputs[i + 2];
+				// The new pan input handle is stored, for example, into the pan control of the assignable output.
+				AssignableOutput.PanInputHandle = InMixerNodeInputs[i + 3];
 
-		OutAssignableOutputs.Add(AssignableOutput);
+				// Generate a unique name for this output.
+				AssignableOutput.OutputName = FName(*FGuid::NewGuid().ToString());
+				OutAssignableOutputs.Add(AssignableOutput);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("PopulateAssignableOutputsArray (new mixer): Not enough inputs to form a complete channel group at index %d."), i);
+			}
+		}
+	}
+	else
+	{
+		// Legacy behavior: each channel is represented by 3 inputs ("In X L", "In X R", "Gain X").
+		for (int32 i = 0; i < NumInputs; i += 3)
+		{
+			if (i + 2 < NumInputs)
+			{
+				FAssignableAudioOutput AssignableOutput;
+				AssignableOutput.AudioLeftOutputInputHandle = InMixerNodeInputs[i];
+				AssignableOutput.AudioRightOutputInputHandle = InMixerNodeInputs[i + 1];
+				AssignableOutput.GainParameterInputHandle = InMixerNodeInputs[i + 2];
+				// No pan input in the legacy case.
+				AssignableOutput.OutputName = FName(*FGuid::NewGuid().ToString());
+				OutAssignableOutputs.Add(AssignableOutput);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("PopulateAssignableOutputsArray (legacy): Not enough inputs to form a complete channel group at index %d."), i);
+			}
+		}
 	}
 }
 

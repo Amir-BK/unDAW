@@ -210,6 +210,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float GainValue = 1.0f;
 
+	//pan value
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float PanValue = 0.0f;
+
 	UPROPERTY()
 	bool bMute = false;
 
@@ -225,6 +229,10 @@ public:
 	//this is a convenience for the vari mixer, it's a way to keep track of the audio stream that is connected to this pin
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr < UM2MetasoundLiteralPin> GainParameter = nullptr;
+
+	//pan value
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr < UM2MetasoundLiteralPin> PanParameter = nullptr;
 
 };
 
@@ -260,18 +268,3 @@ public:
 
 };
 
-template <typename T>
-class TNumericPinController
-{
-public:
-	TNumericPinController(T InMin, T InMax) : Min(InMin), Max(InMax) {};
-
-	T Min;
-	T Max;
-	TRange<T> Range;
-
-	TOptional<int> MidiControlNumber;
-
-	TOptional<TRange<float>> MappingRange; // this is the transformation value for the cc input into the relevant param range
-
-};

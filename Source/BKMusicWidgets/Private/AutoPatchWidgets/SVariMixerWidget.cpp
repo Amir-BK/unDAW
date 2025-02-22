@@ -4,6 +4,7 @@
 #include "SlateOptMacros.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "AudioMaterialSlate/SAudioMaterialLabeledSlider.h"
 #include "UndawWidgetsSettings.h"
 #include "Widgets/SBoxPanel.h"
@@ -66,6 +67,25 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 								.AutoWrapText(true)
 								.Justification(ETextJustify::Center)
 						]
+
+				]
+
+				//panning knob
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					
+
+									SAssignNew(PanKnob, SAudioRadialSlider)
+										.DesiredSizeOverride(FVector2D(100, 100))
+										// Set the initial normalized value to 0.5, which will map to 0 pan.
+										.SliderValue(0.5f)
+										.OnValueChanged(this, &SMixerChannelWidget::UpdatePanKnobValue)
+										// You can leave the default HandStartEndRatio or adjust if needed.
+										.HandStartEndRatio(FVector2D(0.0f, 1.0f))
+										
+
+										//.OnValueChanged(this, &SMixerChannelWidget::UpdatePanKnobValue)
 
 				]
 
@@ -132,6 +152,9 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				]
 
 		];
+
+		PanKnob->SetOutputRange(FVector2D(-1.0f, 1.0f));
+
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

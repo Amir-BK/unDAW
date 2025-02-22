@@ -26,6 +26,7 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+
 const FSongMaps& UDAWSequencerData::GetSongMaps()
 {
 	// TODO: insert return statement here

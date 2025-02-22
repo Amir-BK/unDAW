@@ -16,11 +16,11 @@ class BKMUSICCORE_API UM2VariMixerVertex : public UM2SoundVertex
 {
 	GENERATED_BODY()
 
-	UMetaSoundBuilderSubsystem* BuilderSubsystem;
-	UMetaSoundSourceBuilder* BuilderContext;
 
 public:
 
+	UMetaSoundBuilderSubsystem* BuilderSubsystem;
+	UMetaSoundSourceBuilder* BuilderContext;
 	//Mixer aliases are the connection point for anything we add to the graph in runtime, the vari mixer will create and remove input channels per request
 	UPROPERTY(EditAnywhere, Category = "M2Sound | Mixer")
 	FName MixerAlias = NAME_None;
@@ -60,6 +60,8 @@ private:
 	//TArray<TObjectPtr<UM2
 
 public:
+
+
 	UM2AudioTrackPin* CreateMixerInputPin();
 
 	UFUNCTION()

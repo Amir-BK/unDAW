@@ -16,7 +16,7 @@
 #include "Widgets/Input/SEditableTextBox.h"
 #include "M2SoundGraphData.h"
 #include "M2SoundEdGraphSchema.h"
-#include "SFZ/UnDAWSFZAsset.h"
+
 
 // this are global settings affecting the entire editor
 class SMidiEditorBaseSettingsWidget : public SCompoundWidget
@@ -132,38 +132,6 @@ public:
 		return SNew(STextBlock).Text(FText::FromString(*InOption));
 	}
 
-	void OnSelectionChanged(TSharedPtr<FString> NewValue, ESelectInfo::Type)
-	{
-		if (CurrentItem == NewValue) return;
-
-		CurrentItem = NewValue;
-
-		if (CurrentItem.IsValid())
-		{
-			for (auto& patch : UFKSFZAsset::GetAllFusionPatchAssets())
-			{
-				if (patch->GetName().Equals(*CurrentItem, ESearchCase::IgnoreCase))
-				{
-					//TrackData->fusionPatch = TObjectPtr<UFusionPatch>(patch);
-					//OnFusionPatchChanged.ExecuteIfBound(slotInParentID, patch);
-					//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Empty();
-					for (int i = 0; i < 127; i++)
-					{
-						for (auto& keyzone : patch->GetKeyzones())
-						{
-							if (i >= keyzone.MinNote && i <= keyzone.MaxNote)
-							{
-								//parentMidiEditor->GetTracksDisplayOptions(slotInParentID).SampleAvailabilityMap.Add(TTuple<int, bool>(i, true));
-								break;
-							}
-						}
-					}
-					//parentMidiEditor->currentTimelineCursorPosition
-					break;
-				}
-			}
-		}
-	}
 
 	FText GetCurrentItemLabel() const
 	{

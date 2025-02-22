@@ -18,8 +18,7 @@
 #include "MetasoundBuilderSubsystem.h"
 
 #include "TrackPlaybackAndDisplayOptions.h"
-//#include "MidiDeviceManager.h"
-#include "MidiDrivenSequence/MidiDrivenLevelSequence.h"
+
 
 #include <Pins/M2Pins.h>
 #include "Evaluation/IMovieSceneCustomClockSource.h"
@@ -61,21 +60,23 @@ struct FAssignableAudioOutput
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
 	FName OutputName;
 
 	//this is the name of the parameter in the metasound patch that will be used to control the gain of this output
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
 	FMetaSoundBuilderNodeInputHandle AudioLeftOutputInputHandle;
-
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
 	FMetaSoundBuilderNodeInputHandle AudioRightOutputInputHandle;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
 	FMetaSoundBuilderNodeInputHandle GainParameterInputHandle;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
+	FMetaSoundBuilderNodeInputHandle PanInputHandle;
+
+	UPROPERTY(VisibleAnywhere, Category = "unDAW Mixer")
 	TObjectPtr<UM2AudioTrackPin> AssignedPin;
 };
 
@@ -457,6 +458,7 @@ class BKMUSICCORE_API UDAWSequencerData : public UObject, public FTickableGameOb
 {
 	GENERATED_BODY()
 public:
+
 
 	//UPROPERTY()
 	//UMidiDrivenLevelSequence* MidiDrivenLevelSequence;

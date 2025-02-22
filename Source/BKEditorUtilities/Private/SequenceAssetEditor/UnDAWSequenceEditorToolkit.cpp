@@ -26,6 +26,7 @@
 
 #include "Widgets/Layout/SScaleBox.h"
 #include "Sequencer/UndawMusicSequencer.h"
+#include "MetasoundEditorSubsystem.h"
 #include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 //#include "MusicDeviceControllerSubsystem.h"
 #include "Framework/Docking/TabManager.h"
@@ -670,6 +671,30 @@ void FSequenceAssetDetails::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 	DetailBuilder.GetObjectsBeingCustomized(Outers);
 	if (Outers.Num() == 0) return;
 	SequenceData = Cast<UDAWSequencerData>(Outers[0].Get());
+
+	DetailBuilder.EditCategory("MetasoundAsset")
+		.AddCustomRow(FText::FromString("MetasoundAsset"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+				.Text(INVTEXT("Build Asset"))
+				.OnClicked_Lambda([this]() { 
+				UMetaSoundEditorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UMetaSoundEditorSubsystem>();
+				EMetaSoundBuilderResult Result;
+				FString AuthorName = FString("UnDAW");
+				FString AssetName;
+				SequenceData->GetName(AssetName);
+				//append 'Metasound' to the asset name
+				AssetName.Append(FString(TEXT("Metasound")));
+				FString PackageName = FString(TEXT("/Game/"));
+				Subsystem->BuildToAsset(SequenceData->BuilderContext, Subsystem->GetDefaultAuthor(), AssetName, PackageName, Result);
+				//print result
+				UE_LOG(LogTemp, Warning, TEXT("Build Result: %s"), Result == EMetaSoundBuilderResult::Succeeded ? TEXT("Succeeded") : TEXT("Failed"));
+
+
+				return FReply::Handled();
+					})
+		];
 
 	DetailBuilder.EditCategory("Tracks")
 		.AddCustomRow(FText::FromString("Tracks"))

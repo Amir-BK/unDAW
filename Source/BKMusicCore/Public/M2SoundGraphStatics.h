@@ -110,7 +110,7 @@ public:
 
 	//Populates an array of assignable outputs from the inputs of a mixer node,
 
-	static void PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle> InMixerNodeInputs);
+	static void PopulateAssignableOutputsArray(TArray<FAssignableAudioOutput>& OutAssignableOutputs, const TArray<FMetaSoundBuilderNodeInputHandle>& InMixerNodeInputs);
 
 	/**
 	* Get All Metasound Patches that implement the unDAW instrument parameter interface
