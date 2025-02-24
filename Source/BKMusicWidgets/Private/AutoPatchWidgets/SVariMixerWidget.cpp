@@ -90,14 +90,16 @@ void SMixerChannelWidget::Construct(const FArguments& InArgs, UM2AudioTrackPin* 
 				]
 
 				+ SVerticalBox::Slot()
+				.AutoHeight()
 				//.MaxHeight(175)
 				//.Padding(5)
 				[
 					SAssignNew(VolumeLabeledSlider, SAudioMaterialLabeledSlider)
 					//	.LabelText(FText::FromString("Volume"))
 						.SliderValue(this, &SMixerChannelWidget::GetVolumeSliderValue)
+						//.SliderValue(1.0f)
 						.OnValueChanged(this, &SMixerChannelWidget::UpdateVolumeSliderValue)
-						.Style(Settings->GetSliderStyle())
+					//	.Style(Settings->GetSliderStyle())
 						.Orientation(EOrientation::Orient_Vertical)	
 						.AudioUnitsValueType(EAudioUnitsValueType::Volume)
 				]
@@ -164,24 +166,8 @@ void SMixerChannelWidget::UpdatePanKnobValue(float NewValue)
 	FName FloatName;
 	EMetaSoundBuilderResult BuildResult;
 
-
 	auto NewFloatLiteral = MixerVertex->BuilderSubsystem->CreateFloatMetaSoundLiteral(NewValue, FloatName);
 	MixerVertex->BuilderContext->SetNodeInputDefault(Pin->PanParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
-
-	{
-		//for debugging purposes let's print all the details of the handle
-		FName NodeName, NodeData;
-		MixerVertex->BuilderContext->GetNodeInputData(Pin->PanParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NodeName, NodeData, BuildResult);
-
-		UE_LOG(LogTemp, Warning, TEXT("NodeName: %s, NodeData: %s"), *NodeName.ToString(), *NodeData.ToString());
-
-	}
-
-
-	//print handle and result
-	FString ResultToString = BuildResult == EMetaSoundBuilderResult::Succeeded ? "Succeeded" : "Failed";
-
-	UE_LOG(LogTemp, Warning, TEXT("Result: %s"), *ResultToString);
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

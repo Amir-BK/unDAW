@@ -29,40 +29,10 @@ struct FEventsWithIndex
 
 const FSongMaps& UDAWSequencerData::GetSongMaps()
 {
-	// TODO: insert return statement here
-
 	//for now just get the songs map from the HarmonixMidi
 
 	return *HarmonixMidiFile->GetSongMaps();
 }
-
-void UDAWSequencerData::EnsureLevelSequence()
-{
-
-}
-
-//void UDAWSequencerData::OnMidiNoteOn(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
-//{
-//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note On %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
-//		//if we have a track for this channel, add the note to the track
-//		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
-//		bJustReceivedMessage = true;
-//	//FWorldContext* WorldContext = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
-//	//WorldContext->World
-//
-//}
-//
-//void UDAWSequencerData::OnMidiNoteOff(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Note, int32 Velocity)
-//{
-//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Note Off %d, %d, %d, %d"), Timestamp, Channel, Note, Velocity)
-//		//if we have a track for this channel, remove the note from the track
-//		//auto TrackIndex = M2TrackMetadata.IndexOfByPredicate([Channel](const FTrackDisplayOptions& Track) { return Track.ChannelIndexRaw == Channel; });
-//}
-//
-//void UDAWSequencerData::OnMidiControlChange(UMIDIDeviceInputController* MIDIDeviceController, int32 Timestamp, int32 Channel, int32 Type, int32 Value)
-//{
-//	UE_LOG(unDAWDataLogs, Verbose, TEXT("Received Control Change %d, %d, %d, %d"), Timestamp, Channel, Type, Value)
-//}
 
 bool UDAWSequencerData::AttachActionPatchToMixer(FName InMixerAlias, UMetaSoundPatch* Patch, float InVolume, const FOnTriggerExecuted& InDelegate)
 {

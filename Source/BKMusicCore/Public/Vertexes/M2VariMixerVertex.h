@@ -56,9 +56,6 @@ private:
 
 	void UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin, float newGain);
 
-	//UPROPERTY()
-	//TArray<TObjectPtr<UM2
-
 public:
 
 

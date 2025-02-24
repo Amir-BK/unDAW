@@ -39,10 +39,11 @@ TSharedRef<SButton> UTransportGlyphButton::CreateTransportButton(EBKTransportCom
 	return SNew(SButton)
 		.VAlign(EVerticalAlignment::VAlign_Center)
 		.HAlign(EHorizontalAlignment::HAlign_Center)
+		.ContentPadding(FMargin(5))
 		[
 			SNew(STextBlock)
 				.Text(FText::FromString(outString))
-				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
+				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 12))
 				.Justification(ETextJustify::Center)
 
 		];
@@ -89,6 +90,7 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 		//return IsActive ? FLinearColor::Blue : FLinearColor::Gray; }))
 
 		.ButtonColorAndOpacity(IconColor)
+		//.ContentPadding(FMargin(5))
 		.OnClicked(FOnClicked::CreateLambda([&, data = TransportCommand.GetValue()]() {
 		TransportButtonClicked.Broadcast(TransportCommand.GetValue());
 		//UE_LOG(LogTemp, Log, TEXT("Do we get in here sir?"))
@@ -98,9 +100,9 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 		[
 			SNew(STextBlock)
 				.Text(FText::FromString(outString))
-				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
+				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 12))
 				.Justification(ETextJustify::Center)
-				.MinDesiredWidth(40)
+				//.MinDesiredWidth(40)
 
 		];
 }

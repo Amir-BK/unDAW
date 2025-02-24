@@ -187,7 +187,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                     ),
                     FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
                     ESlateDrawEffect::None,
-                    FLinearColor(0.1f, 0.1f, 0.1f, 0.01f)
+                    FLinearColor(0.5f, 0.1f, 0.1f, 0.5f)
                 );
             }
         }

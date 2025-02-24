@@ -494,33 +494,36 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 								StopButton
 							]
 							+ SHorizontalBox::Slot()
-
+								.AutoWidth()
 							// loop control check box, monitors the value of CoreNodes.bIsLooping and calls 'SetLoopSettings' on assign value
 							[
-								SNew(SCheckBox)
-									.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (SequenceData) SequenceData->SetLoopSettings(NewState == ECheckBoxState::Checked, SequenceData->CoreNodes.BarLoopDuration); })
-									.IsChecked_Lambda([this]() -> ECheckBoxState { return SequenceData && SequenceData->CoreNodes.bIsLooping ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-									.ToolTipText(INVTEXT("Set simple loop, right now will loop the first 4 bars of the MIDI, more nuance to come\nUnfortunatley the harmonix node jump to 0 when loop is toggled"))
-									.Content()
-									[
-										SNew(STextBlock).Text(INVTEXT("Loop"))
-									]
+								//SNew(SCheckBox)
+								//	.CheckBoxContentUsesAutoWidth(true)
+								//	.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (SequenceData) SequenceData->SetLoopSettings(NewState == ECheckBoxState::Checked, SequenceData->CoreNodes.BarLoopDuration); })
+								//	.IsChecked_Lambda([this]() -> ECheckBoxState { return SequenceData && SequenceData->CoreNodes.bIsLooping ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+								//	.ToolTipText(INVTEXT("Set simple loop, right now will loop the first 4 bars of the MIDI, more nuance to come\nUnfortunatley the harmonix node jump to 0 when loop is toggled"))
+								//	.Content()
+								//	[
+								//		SNew(STextBlock).Text(INVTEXT("Loop"))
+								//	]
+								SNew(SSpacer)
+									.Size(FVector2D(20, 1))
 							]
 							// loop duration int numberic entry box
 
-							+ SHorizontalBox::Slot()
-							[
-								SNew(SNumericEntryBox<int32>)
-									.AllowSpin(true)
-									.MinValue(1)
-									.MaxValue(100)
-									.MaxSliderValue(100)
-									.MaxFractionalDigits(0)
-									.MinFractionalDigits(0)
-									.Value_Lambda([this]() -> int32 { return SequenceData ? SequenceData->CoreNodes.BarLoopDuration : 4; })
-									.OnValueChanged_Lambda([this](int32 NewValue) { if (SequenceData) SequenceData->SetLoopSettings(true, NewValue); })
+							//+ SHorizontalBox::Slot()
+							//[
+							//	SNew(SNumericEntryBox<int32>)
+							//		.AllowSpin(true)
+							//		.MinValue(1)
+							//		.MaxValue(100)
+							//		.MaxSliderValue(100)
+							//		.MaxFractionalDigits(0)
+							//		.MinFractionalDigits(0)
+							//		.Value_Lambda([this]() -> int32 { return SequenceData ? SequenceData->CoreNodes.BarLoopDuration : 4; })
+							//		.OnValueChanged_Lambda([this](int32 NewValue) { if (SequenceData) SequenceData->SetLoopSettings(true, NewValue); })
 
-							]
+							//]
 					]);
 
 				ToolbarBuilder.EndSection();

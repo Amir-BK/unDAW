@@ -4,6 +4,11 @@
 #include "M2SoundGraphStatics.h"
 //#include "Metasounds/unDAW_ConsoleMixer.h" // Include the header for the new console mixer node.
 
+static const FMetasoundFrontendClassName ConsoleMixerClass(
+	FName(TEXT("ConsoleAudioMixer")),
+	FName(TEXT("Console Audio Mixer (Stereo, 8)"))
+);
+
 int UM2VariMixerVertex::AttachM2VertexToMixerInput(UM2SoundVertex* InVertex, float InVolume)
 {
 
@@ -89,6 +94,8 @@ void UM2VariMixerVertex::UpdateMuteAndSoloStates()
 			continue;
 		}
 
+		UE_CLOG(AudioTrackPin->GainValue == 0.0f, LogTemp, Error, TEXT("Gain value is 0.0f, when did this happen?"));
+
 		UpdateGainParamForPin_Internal(AudioTrackPin, AudioTrackPin->GainValue);
 
 	}
@@ -172,6 +179,7 @@ UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
 		AutoNewInput->AudioStreamL = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioLeftOutputInputHandle);
 		AutoNewInput->AudioStreamR = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.AudioRightOutputInputHandle);
 		AutoNewInput->PanParameter = CreateInputPin<UM2MetasoundLiteralPin>(AvailableOutput.PanInputHandle);
+		AutoNewInput->GainValue = 1.0f;
 		InputM2SoundPins.Add(TrackName, AutoNewInput);
 		AvailableOutput.AssignedPin = AutoNewInput;
 
@@ -226,10 +234,6 @@ void UM2VariMixerVertex::BuildVertex()
 	BuilderSubsystem = SequencerData->MSBuilderSystem;
 	BuilderContext = SequencerData->BuilderContext;
 
-	FMetasoundFrontendClassName ConsoleMixerClass(
-		FName(TEXT("ConsoleAudioMixer")),
-		FName(TEXT("Console Audio Mixer (Stereo, 8)"))
-	);
 
 	const auto NewMixerNode = BuilderContext->AddNodeByClassName(ConsoleMixerClass
 		, BuildResult);
@@ -321,10 +325,7 @@ FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
 {
 	EMetaSoundBuilderResult BuildResult;
 
-	FMetasoundFrontendClassName ConsoleMixerClass(
-		FName(TEXT("ConsoleAudioMixer")),
-		FName(TEXT("Console Audio Mixer (Stereo, 8)"))
-	);
+
 
 
 	const auto NewMixerNode = BuilderContext->AddNodeByClassName(ConsoleMixerClass, BuildResult);
