@@ -21,9 +21,6 @@ class BKMUSICWIDGETS_API UTransportGlyphButton : public UWidget
 {
 	GENERATED_BODY()
 
-	UFUNCTION(BlueprintCallable, Category = "BK Music|Transport")
-	bool SetParentEditor(UObject* MidiEditor);
-
 	UFUNCTION(BlueprintCallable, Category = "BK Music|Grid|Transport")
 	void SetActiveState(bool isActive);
 

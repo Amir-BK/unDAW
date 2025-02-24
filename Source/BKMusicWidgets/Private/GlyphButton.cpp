@@ -3,7 +3,7 @@
 #include "GlyphButton.h"
 #include "Widgets/Input/SButton.h"
 #include <BKMusicWidgets.h>
-#include <TimeSyncedPanel.h>
+
 
 TSharedRef<SButton> UTransportGlyphButton::CreateTransportButton(EBKTransportCommands Command)
 {
@@ -48,19 +48,6 @@ TSharedRef<SButton> UTransportGlyphButton::CreateTransportButton(EBKTransportCom
 		];
 }
 
-bool UTransportGlyphButton::SetParentEditor(UObject* MidiEditor)
-{
-	ITimeSyncedPanel* interfaceCast = (ITimeSyncedPanel*)(MidiEditor);
-	if (interfaceCast)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Yay?"))
-			//ParentEditorWidgetPointer = interfaceCast;
-			return true;
-	}
-
-	return false;
-}
-
 void UTransportGlyphButton::SetActiveState(bool isActive)
 {
 	IsActive = isActive;
@@ -100,6 +87,7 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 	return SNew(SButton)
 		//.ButtonColorAndOpacity_Lambda(([&]() {
 		//return IsActive ? FLinearColor::Blue : FLinearColor::Gray; }))
+
 		.ButtonColorAndOpacity(IconColor)
 		.OnClicked(FOnClicked::CreateLambda([&, data = TransportCommand.GetValue()]() {
 		TransportButtonClicked.Broadcast(TransportCommand.GetValue());
@@ -112,6 +100,7 @@ TSharedRef<SWidget> UTransportGlyphButton::RebuildWidget()
 				.Text(FText::FromString(outString))
 				.Font(FSlateFontInfo(PluginDir / TEXT("Resources/UtilityIconsFonts/icons.ttf"), 24))
 				.Justification(ETextJustify::Center)
+				.MinDesiredWidth(40)
 
 		];
 }

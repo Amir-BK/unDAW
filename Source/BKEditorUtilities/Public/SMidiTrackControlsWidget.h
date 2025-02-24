@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EngineGlobals.h"
-#include "TimeSyncedPanel.h"
+
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "TrackPlaybackAndDisplayOptions.h"
@@ -18,33 +18,6 @@
 #include "M2SoundEdGraphSchema.h"
 
 
-// this are global settings affecting the entire editor
-class SMidiEditorBaseSettingsWidget : public SCompoundWidget
-{
-public:
-	SLATE_BEGIN_ARGS(SMidiEditorBaseSettingsWidget)
-		{}
-		SLATE_ARGUMENT(TSharedPtr<ITimeSyncedPanel>, parentMidiEditor)
-
-	SLATE_END_ARGS()
-
-	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
-
-	void Construct(const FArguments& InArgs)
-	{
-		parentMidiEditor = InArgs._parentMidiEditor;
-
-		ChildSlot[
-			SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.VAlign(EVerticalAlignment::VAlign_Center)
-
-				[
-					SNew(STextBlock).Text(FText::FromString(TEXT("Snapping Step Size")))
-				]
-		];
-	}
-};
 
 /**
  * slate widget that allows controlling tracks on a pianoroll, individual track controls (such as visibility, color, Z-order, selection)

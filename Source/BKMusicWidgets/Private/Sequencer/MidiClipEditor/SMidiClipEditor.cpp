@@ -60,7 +60,6 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
     const auto& PlayCursorTick = SequenceData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None) - GetStartOffset();
     const float CursorPixel = TickToPixel(PlayCursorTick);
-	UE_LOG(LogTemp, Warning, TEXT("bFollowCusrsor %d"), bFollowCursor.Get());
 
     // Draw piano grid
     LayerId++;

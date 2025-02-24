@@ -309,9 +309,13 @@ void UM2SoundVertex::CollectParamsForAutoConnect()
 
 void UM2SoundVertex::UpdateConnections()
 {
-	UE_LOG(unDAWVertexLogs, Verbose, TEXT("Updating Connections"))
+	UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Updating Connections, Vertex Name %s, Class Name %s"), *GetVertexDisplayName(), *GetClass()->GetName())
+
 		for (const auto& [Name, Pin] : InputM2SoundPins)
 		{
+			
+			UE_LOG(unDAWVertexLogs, VeryVerbose, TEXT("Updating Pin %s"), *Name.ToString())
+
 			if (Pin->bIsMetadataSource)
 			{
 				//we need to update this vertex's display name and color from the pin
@@ -326,6 +330,7 @@ void UM2SoundVertex::UpdateConnections()
 
 			if (AsLiteral)
 			{
+			
 				EMetaSoundBuilderResult BuildResult;
 				GetSequencerData()->BuilderContext->SetNodeInputDefault(AsLiteral->GetHandle<FMetaSoundBuilderNodeInputHandle>(), AsLiteral->LiteralValue, BuildResult);
 			}
@@ -558,7 +563,7 @@ void UM2SoundPatch::BuildVertex()
 	if (BuilderContext && NodeHandle.IsSet())
 	{
 		BuilderContext->RemoveNode(NodeHandle, BuildResult);
-		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Removing Existing Node, Result %s"), *UEnum::GetValueAsString(BuildResult))
+		UE_LOG(unDAWVertexLogs, Verbose, TEXT("Removing Existing Node, Result %s, Node Name %s"), *UEnum::GetValueAsString(BuildResult), *GetName())
 
 		//BuilderResults.Add(FName(TEXT("Remove Existing Node")), BuildResult);
 		bIsRebuildingExistingNode = true;

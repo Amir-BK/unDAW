@@ -134,6 +134,17 @@ void UM2VariMixerVertex::UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin,
 	if (InPin->GainParameter)
 	{
 		auto NewFloatLiteral = BuilderSubsystem->CreateFloatMetaSoundLiteral(newGain, FloatName);
+		{
+			FName PinName;
+			FName PinDataType;
+			EMetaSoundBuilderResult PinDataBuildResult;
+
+			BuilderContext->GetNodeInputData(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), PinName, PinDataType, PinDataBuildResult);
+			//print the input data for debugging
+			UE_LOG(LogTemp, Warning, TEXT("Pin Name: %s, Pin Data Type: %s"), *PinName.ToString(), *PinDataType.ToString());
+		}
+
+
 		BuilderContext->SetNodeInputDefault(InPin->GainParameter->GetHandle<FMetaSoundBuilderNodeInputHandle>(), NewFloatLiteral, BuildResult);
 	}
 
@@ -141,6 +152,8 @@ void UM2VariMixerVertex::UpdateGainParamForPin_Internal(UM2AudioTrackPin* InPin,
 
 UM2AudioTrackPin* UM2VariMixerVertex::CreateMixerInputPin()
 {
+	//return nullptr;
+	
 	if(MixerChannels.Num() == 1)
 	{
 		//FAssignableAudioOutput NewChannel;
@@ -204,6 +217,7 @@ void UM2VariMixerVertex::SetChannelSoloState(int ChannelIndex, ECheckBoxState In
 void UM2VariMixerVertex::BuildVertex()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Building Mixer Vertex"));
+
 
 	BuilderResults.Empty();
 	//VertexToChannelMap.Empty();
@@ -306,8 +320,14 @@ FLinearColor UM2VariMixerVertex::GetChannelColor(uint8 ChannelIndex)
  void UM2VariMixerVertex::ResizeOutputMixer()
 {
 	EMetaSoundBuilderResult BuildResult;
-	const auto NewMixerNode = BuilderContext->AddNodeByClassName(FMetasoundFrontendClassName(FName(TEXT("AudioMixer")), FName(TEXT("Audio Mixer (Stereo, 8)")))
-		, BuildResult);
+
+	FMetasoundFrontendClassName ConsoleMixerClass(
+		FName(TEXT("ConsoleAudioMixer")),
+		FName(TEXT("Console Audio Mixer (Stereo, 8)"))
+	);
+
+
+	const auto NewMixerNode = BuilderContext->AddNodeByClassName(ConsoleMixerClass, BuildResult);
 
 	//add the new mixer to the array so that we can remove it when destroying the node
 	MixerNodes.Add(NewMixerNode);

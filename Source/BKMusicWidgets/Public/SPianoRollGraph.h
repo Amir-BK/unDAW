@@ -14,7 +14,7 @@
 #include "Widgets/Layout/SWrapBox.h"
 
 #include "Widgets/Colors/SColorBlock.h"
-#include <TimeSyncedPanel.h>
+
 #include <Widgets/SCanvas.h>
 #include "Widgets/Colors/SColorPicker.h"
 #include <Runtime/AppFramework/Public/Widgets/Colors/SColorPicker.h>
@@ -30,6 +30,21 @@
 #include "Types/SlateAttribute.h"
 #include "UndawMusicDrawingStatics.h"
 #include <Pianoroll/MarqueeOperation.h>
+#include "BK_MusicSceneManagerInterface.h"
+
+
+
+//TODO: needs major refactoring
+UENUM(BlueprintType)
+enum class EPianoRollEditorMouseMode : uint8
+{
+	drawNotes,
+	Panning,
+	//pan,
+	//zoom,
+	seek,
+	empty
+};
 
 //#include "SMidiNoteContainer.h"
 
@@ -51,18 +66,16 @@ class BKMUSICWIDGETS_API STrackResizeArea : public SCompoundWidget
 public:
 	SLATE_BEGIN_ARGS(STrackResizeArea)
 		{}
-		SLATE_ARGUMENT(TSharedPtr<ITimeSyncedPanel>, parentMidiEditor)
+
 		SLATE_ARGUMENT(int, slotInParentID)
 
 	SLATE_END_ARGS()
 
-	TSharedPtr<ITimeSyncedPanel> parentMidiEditor;
 	int slotInParentID;
 	bool lmbDown = false;
 
 	void Construct(const FArguments& InArgs)
 	{
-		parentMidiEditor = InArgs._parentMidiEditor;
 		slotInParentID = InArgs._slotInParentID;
 	};
 
@@ -91,7 +104,6 @@ public:
 	};
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
-		if (lmbDown) parentMidiEditor->ResizePanel(slotInParentID, MouseEvent.GetCursorDelta().Y);
 
 		return FReply::Handled();
 	};
@@ -163,8 +175,6 @@ public:
 
 	FOnTransportSeekCommand OnSeekEvent;
 
-	UBKEditorUtilsKeyboardMappings* KeyMappings;
-
 	TScriptInterface<IBK_MusicSceneManagerInterface> MonitoredSceneManager;
 
 	FLinearColor GridColor = FLinearColor::White;
@@ -231,7 +241,6 @@ public:
 	EMusicTimeSpanOffsetUnits QuantizationGridUnit = EMusicTimeSpanOffsetUnits::Beats;
 	EBKPlayState TransportPlaystate;
 
-	FNeedReinit NeedsRinitDelegate;
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Appearance")
 	FSlateFontInfo GridFont;

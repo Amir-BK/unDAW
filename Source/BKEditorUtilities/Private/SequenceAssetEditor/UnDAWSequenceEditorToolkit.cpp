@@ -293,6 +293,12 @@ TSharedRef<SButton> FUnDAWSequenceEditorToolkit::GetConfiguredTransportButton(EB
 
 	switch (InCommand)
 	{
+	case Init:
+
+
+
+		break;
+
 	case Play:
 		NewButton->SetEnabled(TAttribute<bool>::Create([this]() { return SequenceData != nullptr && (SequenceData->PlayState == ReadyToPlay || SequenceData->PlayState == TransportPaused); }));
 		NewButton->SetVisibility(TAttribute<EVisibility>::Create([this]() { return SequenceData != nullptr && ((SequenceData->PlayState == ReadyToPlay)
@@ -446,6 +452,11 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 		GetToolkitCommands(),
 		FToolBarExtensionDelegate::CreateLambda([this, Commands](FToolBarBuilder& ToolbarBuilder)
 			{
+				auto ReinitButton = GetConfiguredTransportButton(Init);
+
+				ReinitButton->SetOnClicked(FOnClicked::CreateLambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); }));
+				ReinitButton->SetToolTipText(FText::FromString("Stop the current audition component and rebuild from the Metasound Builder Context"));
+
 				auto StopButton = GetConfiguredTransportButton(Stop);
 				auto PlayButton = GetConfiguredTransportButton(Play);
 				auto PauseButton = GetConfiguredTransportButton(Pause);
@@ -457,22 +468,28 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 						SNew(SHorizontalBox)
 
 							+ SHorizontalBox::Slot()
+							.AutoWidth()
 							[
-								SNew(SButton)
+
+								ReinitButton
+							/*	SNew(SButton)
 									.Text(INVTEXT("ReInit"))
-									.OnClicked_Lambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); })
+									.OnClicked_Lambda([this]() { SetupPreviewPerformer(); return FReply::Handled(); })*/
 									// .IsEnabled_Lambda([this]() { return Performer == nullptr; })
 							]
 
 							+ SHorizontalBox::Slot()
+							.AutoWidth()
 							[
 								PlayButton
 							]
 							+ SHorizontalBox::Slot()
+								.AutoWidth()
 							[
 								PauseButton
 							]
 							+ SHorizontalBox::Slot()
+								.AutoWidth()
 							[
 								StopButton
 							]
