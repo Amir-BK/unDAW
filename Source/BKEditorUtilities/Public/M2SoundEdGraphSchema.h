@@ -20,9 +20,10 @@ class UM2SoundEdGraphNode;
 
 struct FPlacementDefaults
 {
-	static constexpr int OffsetBetweenNodes = 200;
-	static constexpr int OutputsColumnPosition = 1400;
-	static constexpr int InputsColumnPosition = 300;
+	static constexpr int OffsetBetweenNodes = 500;
+	static constexpr int OutputsColumnPosition = 1800;
+	static constexpr int MixerColumnPosition = 1200;
+	static constexpr int InputsColumnPosition = 0;
 	static constexpr int InstrumentColumns = 950;
 };
 

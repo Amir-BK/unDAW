@@ -422,7 +422,7 @@ void UM2SoundGraph::InitializeGraph()
 
 		if (Vertex->IsA<UM2VariMixerVertex>())
 		{
-			Node = CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
+			Node = CreateDefaultNodeForVertex<UM2SoundVariMixerNode>(Vertex, FPlacementDefaults::MixerColumnPosition);
 		}
 
 		Node->Vertex->OnVertexUpdated.AddUniqueDynamic(Node, &UM2SoundEdGraphNode::VertexUpdated);

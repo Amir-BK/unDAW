@@ -18,28 +18,28 @@
 #include "GraphEditor.h"
 #include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 
-class FSequenceAssetDetails : public IDetailCustomization
-{
-public:
-	// This function will be called when the properties are being customized
-	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
-
-	~FSequenceAssetDetails();
-
-	static TSharedRef<IDetailCustomization> MakeInstance() { return MakeShareable(new FSequenceAssetDetails()); }
-private:
-	UDAWSequencerData* SequenceData = nullptr;
-
-	void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
-
-	TSharedPtr<SScrollBox> MidiInputTracks;
-
-	void UpdateMidiInputTracks();
-
-	// This function will create a new instance of this class as a shared pointer
-
-	TSharedPtr<IDetailsView> NodeDetailsView;
-};
+//class FSequenceAssetDetails : public IDetailCustomization
+//{
+//public:
+//	// This function will be called when the properties are being customized
+//	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
+//
+//	~FSequenceAssetDetails();
+//
+//	static TSharedRef<IDetailCustomization> MakeInstance() { return MakeShareable(new FSequenceAssetDetails()); }
+//private:
+//	UDAWSequencerData* SequenceData = nullptr;
+//
+//	void OnFusionPatchChangedInTrack(int TrackID, UFusionPatch* NewPatch);
+//
+//	TSharedPtr<SScrollBox> MidiInputTracks;
+//
+//	void UpdateMidiInputTracks();
+//
+//	// This function will create a new instance of this class as a shared pointer
+//
+//	TSharedPtr<IDetailsView> NodeDetailsView;
+//};
 
 class FUnDAWSequenceEditorToolkit : public FAssetEditorToolkit, public IBK_MusicSceneManagerInterface, public FEditorUndoClient
 {

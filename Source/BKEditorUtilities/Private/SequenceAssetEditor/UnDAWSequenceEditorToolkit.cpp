@@ -507,7 +507,7 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 								//		SNew(STextBlock).Text(INVTEXT("Loop"))
 								//	]
 								SNew(SSpacer)
-									.Size(FVector2D(20, 1))
+									.Size(FVector2D(10, 1))
 							]
 							// loop duration int numberic entry box
 

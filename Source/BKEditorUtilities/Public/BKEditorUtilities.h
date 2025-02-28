@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 
 #include "Modules/ModuleManager.h"
-#include "FFKSFZASampleBankAssetActions.h"
 #include "M2SoundEdGraphSchema.h"
+#include "SequenceassetEditor/UnDAWSequenceDetailCustomizations.h"
 #include "SequenceDataFactory/BKMusicSequenceDataFactory.h"
 
 class BKEditorUtilitiesModule final : public IModuleInterface

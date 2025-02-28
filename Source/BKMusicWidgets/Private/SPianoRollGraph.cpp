@@ -735,24 +735,25 @@ FReply SPianoRollGraph::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, 
 }
 FReply SPianoRollGraph::OnMouseWheel(const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (isCtrlPressed) {
+	const FModifierKeysState ModifierKeys = FSlateApplication::Get().GetModifierKeys();
+	const bool bCtrlDown = ModifierKeys.IsControlDown();
+	const bool bShiftDown = ModifierKeys.IsShiftDown();
+
+	if (bCtrlDown) {
 		if (InMouseEvent.GetWheelDelta() >= 0.1)
 		{
 			hZoomTarget *= 1.1f;
-			//hZoomTarget = FMath::Lerp<float>(hZoomTarget, 2.0f, 0.05f);
 		}
 		else {
 			hZoomTarget *= 0.9f;
-			//hZoomTarget = FMath::Lerp<float>(hZoomTarget, 0.02f, 0.05f);
 		}
 
 		const FVector2D WidgetSpaceCursorPos = InMyGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-
-
 		absMousePosition = InMouseEvent.GetScreenSpacePosition();
+		localMousePosition = WidgetSpaceCursorPos;
 		return FReply::Handled();
 	}
-	else if (isShiftPressed)
+	else if (bShiftDown)
 	{
 		if (InMouseEvent.GetWheelDelta() >= 0.1)
 		{
