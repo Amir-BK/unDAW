@@ -60,7 +60,7 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-                , "LevelSequence", "MovieScene", "MovieSceneTracks", "AudioWidgets", "AssetRegistry"
+                , "LevelSequence", "MovieScene", "MovieSceneTracks", "AudioWidgets", "AssetRegistry", "WindowsTargetPlatformSettings"
 			}
 
             );

@@ -43,24 +43,24 @@ TSharedRef<SWidget> SM2MidiTrackGraphNode::CreateNodeContentArea()
 				[
 					// Center
 					SAssignNew(MainVerticalBox, SVerticalBox)
-						+ SVerticalBox::Slot()
+						//+ SVerticalBox::Slot()
 
-						//patch select
+						////patch select
 
-						.AutoHeight()
-						[
-							//make FAudioRadialSliderStyle
+						//.AutoHeight()
+						//[
+						//	//make FAudioRadialSliderStyle
 
-							SNew(SCheckBox)
-								.IsChecked_Lambda([AsInputVertex] {return AsInputVertex->bOutputToBlueprints ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-								.OnCheckStateChanged_Lambda([AsInputVertex](ECheckBoxState NewState) {AsInputVertex->bOutputToBlueprints = NewState == ECheckBoxState::Checked; })
-								[
-									SNew(STextBlock)
-										.Text(FText::FromString("Graph Output"))
-										.ToolTipText(FText::FromString("When checked the MIDI output, after having been filtered by track/ch\nwill be assigned to a metasound graph output\nwhere it can be used to be connected to metasound watch outputs"))
-								]
+						//	SNew(SCheckBox)
+						//		.IsChecked_Lambda([AsInputVertex] {return AsInputVertex->bOutputToBlueprints ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+						//		.OnCheckStateChanged_Lambda([AsInputVertex](ECheckBoxState NewState) {AsInputVertex->bOutputToBlueprints = NewState == ECheckBoxState::Checked; })
+						//		[
+						//			SNew(STextBlock)
+						//				.Text(FText::FromString("Graph Output"))
+						//				.ToolTipText(FText::FromString("When checked the MIDI output, after having been filtered by track/ch\nwill be assigned to a metasound graph output\nwhere it can be used to be connected to metasound watch outputs"))
+						//		]
 
-						]
+						//]
 				]
 
 				+ SHorizontalBox::Slot()

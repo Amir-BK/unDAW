@@ -2,6 +2,7 @@
 
 #include "EditorSlateWidgets/SM2SoundGraphPin.h"
 #include "SlateOptMacros.h"
+#include "SPinTypeSelector.h"
 #include "AutoPatchWidgets/SAutoPatchWidget.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
@@ -15,6 +16,14 @@ void SM2SoundGraphPin::Construct(const FArguments& InArgs, UEdGraphPin* InGraphP
 
 	SGraphPin::Construct(SGraphPin::FArguments(), InGraphPinObj);
 	//bUsePinColorForText = true; 
+
+	// Create the pin icon widget
+	TSharedRef<SWidget> PinWidgetRef = SPinTypeSelector::ConstructPinTypeImage(
+		MakeAttributeSP(this, &SM2SoundGraphPin::GetPinIcon),
+		MakeAttributeSP(this, &SM2SoundGraphPin::GetPinColor),
+		MakeAttributeSP(this, &SM2SoundGraphPin::GetSecondaryPinIcon),
+		MakeAttributeSP(this, &SM2SoundGraphPin::GetSecondaryPinColor));
+	PinImage = PinWidgetRef;
 	
 }
 TSharedRef<SWidget> SM2SoundGraphPin::GetDefaultValueWidget()

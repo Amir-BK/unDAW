@@ -234,7 +234,7 @@ public:
 	};
 
 	void OnValueChanged(float NewValue) {
-		UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f, Pin Name: %s"), InputWidget->GetOutputValue(NewValue), *LiteralPin->Name.ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("Value Changed: %f, Pin Name: %s"), InputWidget->GetOutputValue(NewValue), *LiteralPin->Name.ToString());
 
 		if (!bIsInit) return;
 

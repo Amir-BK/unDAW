@@ -16,6 +16,7 @@
 #include "ScopedTransaction.h"
 #include "M2SoundEdGraphSchema.h"
 #include "SM2SoundGraphPin.h"
+#include "MetasoundEditorModule.h"
 
 /**
  * I'm lazy so this slate widget is going to only be used for patches/inserts
@@ -295,6 +296,24 @@ protected:
 template<typename T>
 inline TSharedPtr<SGraphPin> SM2SoundPatchContainerGraphNode<T>::CreatePinWidget(UEdGraphPin* InPin) const
 {
+	auto PinWidget = SNew(SM2SoundGraphPin, InPin);
 
-	return SNew(SM2SoundGraphPin, InPin);
+	using namespace Metasound::Editor;
+
+	IMetasoundEditorModule& EditorModule = FModuleManager::GetModuleChecked<IMetasoundEditorModule>("MetaSoundEditor");
+	const FSlateBrush* PinConnectedIcon = nullptr;
+	const FSlateBrush* PinDisconnectedIcon = nullptr;
+
+	FName PinDataTypeName = InPin->PinType.PinSubCategory;
+	
+	//print pin name, pin category and pin subcategory
+	//UE_LOG(LogTemp, Warning, TEXT("Pin Name: %s, Pin Category: %s, Pin SubCategory: %s"), *InPin->PinName.ToString(), *InPin->PinType.PinCategory.ToString(), *InPin->PinType.PinSubCategory.ToString());
+
+	if (EditorModule.GetCustomPinIcons(PinDataTypeName, PinConnectedIcon, PinDisconnectedIcon))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Custom Pin Icons Found"));
+		PinWidget->SetCustomPinIcon(PinConnectedIcon, PinDisconnectedIcon);
+	}
+
+	return PinWidget;
 }

@@ -92,21 +92,7 @@ public:
 
 	void UpdateDownstreamTrackAssignment(int NewTrackId) {
 		AssignedTrackId = NewTrackId;
-		//for (UEdGraphPin* Pin : Pins)
-		//{
-		//	if (Pin->Direction == EGPD_Output && (Pin->PinType.PinCategory == "Track-Midi" || Pin->PinType.PinCategory == "Track-Audio"))
-		//	{
-		//		for (UEdGraphPin* LinkedPin : Pin->LinkedTo)
-		//		{
-		//			if (UM2SoundEdGraphNode* LinkedNode = Cast<UM2SoundEdGraphNode>(LinkedPin->GetOwningNode()))
-		//			{
-		//				LinkedNode->UpdateDownstreamTrackAssignment(NewTrackId);
-		//			}
-		//		}
-		//	}
-		//}
-
-		//NodeConnectionListChanged();
+	
 	}
 
 	void DestroyNode() override {
