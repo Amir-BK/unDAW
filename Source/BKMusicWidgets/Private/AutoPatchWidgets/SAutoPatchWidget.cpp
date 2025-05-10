@@ -450,9 +450,6 @@ void SM2LiteralControllerWidget::OnSelectEnum(TSharedPtr<FString> NewSelection, 
 	else {
 		NonConstLiteralPin->LiteralValue.Set(EnumInterface->GetDefaultValue());
 	}
-	//auto Value = NewValue.GetValue().Value;
-	//NonConstLiteralPin->LiteralValue.Set(Value);
-	
 
 	UpdateValueForLiteralPin();
 }

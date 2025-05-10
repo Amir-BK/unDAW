@@ -569,6 +569,17 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 					]
 				);
 
+				//show hide piano tab toggle
+				ToolbarBuilder.AddWidget(SNew(SCheckBox)
+					.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { if (PianoRollGraph) PianoRollGraph->PianoTabWidth.Set(*PianoRollGraph, NewState == ECheckBoxState::Checked ? 50.0f : 0.0f); })
+					.IsChecked_Lambda([this]() -> ECheckBoxState { return PianoRollGraph && PianoRollGraph->PianoTabWidth.Get() > 0.0f ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					.Content()
+					[
+						SNew(STextBlock).Text(INVTEXT("Show Piano Tab"))
+							.ToolTipText(INVTEXT("Show or hide the piano tab, Hotkey 'P'"))
+					]
+				);
+
 				ToolbarBuilder.AddWidget(SNew(SNumericEntryBox<float>)
 					.AllowSpin(true)
 					.MinValue(0.0f)
