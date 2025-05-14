@@ -1,3 +1,8 @@
+# New classes require unreal engine 5.6 
+If you'd like to compile on 5.5 you can for now delete the ConfigurableMixer class as it will only work in 5.6 and unreal doesn't have a convenient way to conditionally include classes by engine version. 
+
+
+
 https://github.com/user-attachments/assets/646bd071-d9fa-4996-a7eb-a639990d8f38
 
 
