@@ -13,7 +13,10 @@
 #include "MetasoundStandardNodesNames.h"
 #include "MetasoundTrigger.h"
 #include "MetasoundVertex.h"
+#include "MetasoundFrontendDocument.h"
+#include "MetasoundOperatorData.h"
 #include "MetasoundStandardNodesCategories.h"
+
 
 #define LOCTEXT_NAMESPACE "unDAWMetasounds_ConsoleMixerNode"
 
@@ -463,3 +466,4 @@ namespace Metasound
 } // namespace Metasound
 
 #undef LOCTEXT_NAMESPACE
+

@@ -790,6 +790,9 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 	//hoveredNotePitch = -1;
 
 	SelectedNote = nullptr;
+
+	/*
+
 	CulledNotesArray.FindByPredicate([&](FLinkedMidiEvents* note) {
 		if (tickAtMouse >= note->StartTick && tickAtMouse <= note->EndTick)
 		{
@@ -818,6 +821,7 @@ FReply SPianoRollGraph::OnMouseMove(const FGeometry& MyGeometry, const FPointerE
 		;
 		return false;
 		});
+	 */
 
 	if (bIsRightMouseButtonDown)
 	{

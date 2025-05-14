@@ -450,7 +450,7 @@ void SPinConfigWidget::UpdateMinMax(float InMin, float InMax)
 
 	FName SearchName = FName(Pin->ParentVertex->GetName());
 	const auto& Settings = UUNDAWSettings::Get();
-	Settings->Cache.Contains(SearchName);
+	bool bContains = Settings->Cache.Contains(SearchName);
 }
 
 inline TSharedRef<SWidget> SPinConfigWidget::OnGenerateValueTypeEnumWidget(TSharedPtr<FString> InItem)
