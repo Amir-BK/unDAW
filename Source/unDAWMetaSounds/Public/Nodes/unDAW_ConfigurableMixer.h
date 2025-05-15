@@ -2,6 +2,11 @@
 
 #pragma once
 
+
+//#include "Runtime/Launch/Resources/Version.h"
+//
+//#if (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 6)
+
 #include "MetasoundOperatorData.h"
 #include "MetasoundFrontendDocument.h"
 
@@ -18,9 +23,15 @@ struct FConfigurableMixerConfiguration : public FMetaSoundFrontendNodeConfigurat
 	UPROPERTY(EditAnywhere, Category = General, meta = (ClampMin = "2", ClampMax = "1000"))
 	uint32 NumInputs;
 
+	UPROPERTY(EditAnywhere, Category = General, meta = (DisplayName = "Equal Power Panning Law"))
+	bool bEqualPower;
+
 	/* Get the current interface for the class based upon the node extension */
 	virtual TInstancedStruct<FMetasoundFrontendClassInterface> OverrideDefaultInterface(const FMetasoundFrontendClass& InNodeClass) const;
 
 	///* Pass data down to the operator. */
 	virtual TSharedPtr<const Metasound::IOperatorData> GetOperatorData() const override;
 };
+
+
+//#endif

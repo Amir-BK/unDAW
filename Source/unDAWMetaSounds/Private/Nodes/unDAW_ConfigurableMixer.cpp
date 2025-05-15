@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+
 #include "DSP/Dsp.h"
 #include "DSP/BufferVectorOperations.h"
 #include "DSP/FloatArrayMath.h"
@@ -116,8 +117,9 @@ namespace Metasound::ConfigurableMixerPrivate
 	public:
 		static const FLazyName OperatorDataTypeName;
 
-		FConfigurableMixerOperatorData(const int& InNumInputs)
-			: NumInputs(InNumInputs)
+		FConfigurableMixerOperatorData(const int& InNumInputs, const bool& bInEqualPower)
+			: NumInputs(InNumInputs),
+			bEqualPower(bInEqualPower)
 		{
 		}
 
@@ -127,8 +129,14 @@ namespace Metasound::ConfigurableMixerPrivate
 			return NumInputs;
 		}
 
+		const bool& GetEqualPower() const
+		{
+			return bEqualPower;
+		}
+
 	private:
 		int32 NumInputs;
+		bool bEqualPower = false;
 
 	};
 
@@ -138,14 +146,14 @@ namespace Metasound::ConfigurableMixerPrivate
 	{
 	public:
 		// Constructor: Set up input/output buffers.
-		FDAWConfigurableMixerNodeOperator(const int& InNumInputs, const FBuildOperatorParams& InParams,
+		FDAWConfigurableMixerNodeOperator(const int& InNumInputs, const bool& bInEqualPower, const FBuildOperatorParams& InParams,
 			const TArray<FAudioBufferReadRef>&& InInputBuffers,
 			const TArray<FFloatReadRef>&& InGainValues,
 			const TArray<FFloatReadRef>&& InPanValues)
 			: Gains(InGainValues)
 			, Pans(InPanValues)
 			, Inputs(InInputBuffers)
-			, bEqualPower(false)
+			, bEqualPower(bInEqualPower)
 		{
 			// Create output write references.
 			for (int32 i = 0; i < 2; ++i)
@@ -165,10 +173,10 @@ namespace Metasound::ConfigurableMixerPrivate
 			return FNodeClassMetadata
 			{
 
-				FNodeClassName{ "unDAW", "ConfigurableMixer", "" },
+				FNodeClassName{ "unDAW", "ConfigurableStereoMixer", "" },
 				0, // Major version
 				1, // Minor version
-				LOCTEXT("ConfigurableMixerNodeName", "Configurable Mixer"),
+				LOCTEXT("ConfigurableMixerNodeName", "Configurable Stereo Mixer"),
 				LOCTEXT("ConfigurableMixerNodeDescription", "A node that mixes audio with configurable gain and pan controls."),
 				TEXT("Amir Ben-Kiki"), // Author
 				LOCTEXT("ConfigurableMixerPromptIfMissing", "Enable the unDAW Plugin"), // Prompt if missing
@@ -189,7 +197,11 @@ namespace Metasound::ConfigurableMixerPrivate
 				ConfiguredNumInputs = ConfigData->GetNumInputs();
 			}
 
-			UE_LOG(LogTemp, Log, TEXT("ConfiguredNumInputs, if this worked this should read the number of inputs we configured: %d"), ConfiguredNumInputs);
+			bool bConfiguredEqualPower = false;
+			if (const FConfigurableMixerOperatorData* ConfigData = CastOperatorData<const FConfigurableMixerOperatorData>(InParams.Node.GetOperatorData().Get()))
+			{
+				bConfiguredEqualPower = ConfigData->GetEqualPower();
+			}
 
 
 			TArray<FAudioBufferReadRef> InputBuffers;
@@ -220,7 +232,7 @@ namespace Metasound::ConfigurableMixerPrivate
 				InputPans.Add(InputData.GetOrCreateDefaultDataReadReference<float>(PanInputName, InParams.OperatorSettings));
 			}
 
-			return MakeUnique<FDAWConfigurableMixerNodeOperator>(ConfiguredNumInputs, InParams, MoveTemp(InputBuffers), MoveTemp(InputGains), MoveTemp(InputPans));
+			return MakeUnique<FDAWConfigurableMixerNodeOperator>(ConfiguredNumInputs, bConfiguredEqualPower, InParams, MoveTemp(InputBuffers), MoveTemp(InputGains), MoveTemp(InputPans));
 		}
 
 		// Bind input references to the vertex data.
@@ -414,7 +426,6 @@ METASOUND_REGISTER_NODE_AND_CONFIGURATION(FConfigurableMixerNode, FConfigurableM
 
 } // namespace Metasound
 
-#undef LOCTEXT_NAMESPACE
 
 FConfigurableMixerConfiguration::FConfigurableMixerConfiguration()
 	:NumInputs(4)
@@ -430,10 +441,7 @@ TInstancedStruct<FMetasoundFrontendClassInterface> FConfigurableMixerConfigurati
 
 TSharedPtr<const Metasound::IOperatorData> FConfigurableMixerConfiguration::GetOperatorData() const
 {
-	return MakeShared<Metasound::ConfigurableMixerPrivate::FConfigurableMixerOperatorData>(NumInputs);
+	return MakeShared<Metasound::ConfigurableMixerPrivate::FConfigurableMixerOperatorData>(NumInputs, bEqualPower);
 }
 
-//TSharedPtr<const Metasound::IOperatorData> FConfigurableMixerConfiguration::GetOperatorData() const
-//{
-//	return TSharedPtr<Metasound::FConfigur
-//}
+#undef LOCTEXT_NAMESPACE
