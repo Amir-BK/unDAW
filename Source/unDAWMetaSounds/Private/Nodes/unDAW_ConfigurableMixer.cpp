@@ -366,57 +366,6 @@ namespace Metasound::ConfigurableMixerPrivate
 			return Metadata;
 		}
 
-#if WITH_EDITOR
-		static const FText GetAudioInputDescription(uint32 InputIndex, uint32 ChannelIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInputDescription", "Audio Input #: {0}, Channel: {1}", InputIndex, ChannelIndex);
-		}
-
-		static const FText GetAudioInputDisplayName(uint32 InputIndex, uint32 ChannelIndex)
-		{
-
-				return (ChannelIndex == 0)
-					? METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InL", "In {0} L", InputIndex)
-					: METASOUND_LOCTEXT_FORMAT("AudioMixerAudioInput2InR", "In {0} R", InputIndex);
-
-		}
-
-		static const FText GetGainInputDisplayName(uint32 InputIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDisplayName", "Gain {0} (Lin)", InputIndex);
-		}
-
-		static const FText GetGainInputDescription(uint32 InputIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerGainInputDescription", "Gain Input #: {0}", InputIndex);
-		}
-
-		static const FText GetPanInputDisplayName(uint32 InputIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerPanInputDisplayName", "Pan Amount {0}", InputIndex);
-		}
-
-		static const FText GetPanInputDescription(uint32 InputIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerPanInputDescription", "Pan Amount Input #: {0}", InputIndex);
-		}
-
-		static const FText GetAudioOutputDisplayName(uint32 ChannelIndex)
-		{
-
-				return (ChannelIndex == 0)
-					? METASOUND_LOCTEXT("AudioMixerAudioOutput2OutL", "Out L")
-					: METASOUND_LOCTEXT("AudioMixerAudioOutput2OutR", "Out R");
-
-		}
-
-		static const FText GetAudioOutputDescription(uint32 ChannelIndex)
-		{
-			return METASOUND_LOCTEXT_FORMAT("AudioMixerAudioOutputDescription", "Summed output for channel: {0}", ChannelIndex);
-		}
-#endif // WITH_EDITOR
-	
-
 
 }; // class TDAWConfigurableMixerNodeOperator
 
