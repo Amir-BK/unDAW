@@ -14,7 +14,6 @@
 #include "MetasoundTrigger.h"
 #include "MetasoundVertex.h"
 #include "MetasoundFrontendDocument.h"
-#include "MetasoundOperatorData.h"
 #include "MetasoundStandardNodesCategories.h"
 
 

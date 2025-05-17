@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
+#include "Runtime/Launch/Resources/Version.h"
+#if (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 6)	//this entire class is only available in 5.6 and up
 #include "DSP/Dsp.h"
 #include "DSP/BufferVectorOperations.h"
 #include "DSP/FloatArrayMath.h"
@@ -394,3 +396,5 @@ TSharedPtr<const Metasound::IOperatorData> FConfigurableMixerConfiguration::GetO
 }
 
 #undef LOCTEXT_NAMESPACE
+
+#endif // (ENGINE_MAJOR_VERSION >= 5) && (ENGINE_MINOR_VERSION >= 6)
