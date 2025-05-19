@@ -54,7 +54,7 @@ public class unDAWMetaSounds : ModuleRules
                 "HarmonixMetasound",
                 "AudioExtensions",
                 "MetasoundEngine",
-               "MetasoundGraphCore",
+                "MetasoundGraphCore",
                 "MetasoundFrontend",
                 "MetasoundGenerator",
                 "AudioMixer"
