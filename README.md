@@ -1,3 +1,5 @@
+Configurable Mixer Node has been moved to a different plugin https://github.com/Amir-BK/ConfigurableMetasoundMixer
+
 https://github.com/user-attachments/assets/646bd071-d9fa-4996-a7eb-a639990d8f38
 
 
