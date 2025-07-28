@@ -1,35 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Sequencer/MidiClipEditor/SMidiClipEditor.h"
 #include "SlateOptMacros.h"
 #include "UnDAWStyle.h"
 
-
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
 void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 {
 	SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequence);
 	SequenceData = InSequence;
 	MajorTabWidth = 0.0f;
 	TimelineHeight = InArgs._TimelineHeight;
-
 	bLockVerticalPan = false;
-
-	//FSoftClassPath NoteBrushPath = FSoftClassPath(TEXT("/unDAW/Brushes/MidiNoteBrush.MidiNoteBrush"));
-	//NoteBrush = NoteBrushPath.TryLoad();
-	
-
-	/*
-	ChildSlot
-	[
-		// Populate the widget
-	];
-	*/
 
 	//populate piano grid colors 
 	auto GridColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.1f);
-		
 	auto AccidentalColor = FLinearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	auto CNoteGridColor = FLinearColor(0.3f, 0.3f, 0.3f, 0.1f);
 
@@ -48,15 +34,13 @@ void SMidiClipEditor::Construct(const FArguments& InArgs, UDAWSequencerData* InS
 			PianoGridColors.Add(GridColor);
 		}
 	}
-
-
 }
+
 int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
     static const FSlateBrush* NoteBrush = FUndawStyle::Get().GetBrush("MidiNoteBrush");
 
     const FLinearColor& TrackColorRef = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
-    LayerId = PaintBackground(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 
     const auto& PlayCursorTick = SequenceData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None) - GetStartOffset();
     const float CursorPixel = TickToPixel(PlayCursorTick);
@@ -67,15 +51,13 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
     {
         const float Y = (127 - i) * RowHeight + Position.Get().Y; // Add vertical offset
 
-
-
-        // Draw grid background
+        // Draw grid background - Fix deprecated API
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             LayerId,
             AllottedGeometry.ToPaintGeometry(
-                FVector2D(0, Y),
-                FVector2D(AllottedGeometry.Size.X, RowHeight)
+                FVector2f(AllottedGeometry.Size.X, RowHeight),
+                FSlateLayoutTransform(FVector2f(0, Y))
             ),
             NoteBrush,
             ESlateDrawEffect::None,
@@ -90,8 +72,8 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
                 OutDrawElements,
                 LayerId++,
                 AllottedGeometry.ToPaintGeometry(
-                    FVector2D(0, Y),
-                    FVector2D(50.0f, RowHeight)
+                    FVector2f(50.0f, RowHeight),
+                    FSlateLayoutTransform(FVector2f(0, Y))
                 ),
                 NoteName,
                 FAppStyle::GetFontStyle("NormalFont"),
@@ -118,13 +100,13 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
             const float Y = (127 - Note.Pitch) * RowHeight + Position.Get().Y; // Add vertical offset
 
-
+            // Fix deprecated API
             FSlateDrawElement::MakeBox(
                 OutDrawElements,
                 LayerId,
                 AllottedGeometry.ToPaintGeometry(
-                    FVector2D(Start, Y),
-                    FVector2D(Width, RowHeight)
+                    FVector2f(Width, RowHeight),
+                    FSlateLayoutTransform(FVector2f(Start, Y))
                 ),
                 NoteBrush,
                 ESlateDrawEffect::None,
@@ -156,7 +138,6 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
 
 int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-    LayerId = PaintBackground(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
     LayerId = PaintTimeline(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
 	const FLinearColor& TrackColorRef = SequenceData->GetTrackMetadata(TrackIndex).TrackColor;
 
@@ -178,12 +159,13 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                 const float End = TickToPixel(SustainEvent.StartTick);
                 const float Width = End - Start;
 
+                // Fix deprecated API
                 FSlateDrawElement::MakeBox(
                     OutDrawElements,
                     LayerId,
                     AllottedGeometry.ToPaintGeometry(
-                        FVector2D(Start, 0),
-                        FVector2D(Width, AllottedGeometry.GetLocalSize().Y)
+                        FVector2f(Width, AllottedGeometry.GetLocalSize().Y),
+                        FSlateLayoutTransform(FVector2f(Start, 0))
                     ),
                     FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
                     ESlateDrawEffect::None,
@@ -220,8 +202,8 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                 OutDrawElements,
                 LayerId,
                 AllottedGeometry.ToPaintGeometry(
-                    FVector2D(Start - 5, Y),
-                    FVector2D(10, 10)
+                    FVector2f(10, 10),
+                    FSlateLayoutTransform(FVector2f(Start - 5, Y))
                 ),
                 NoteBrush,
                 ESlateDrawEffect::None,
@@ -234,23 +216,9 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
 
         // Paint play cursor and debug info
         LayerId = PaintPlayCursor(Args, AllottedGeometry, MyCullingRect, OutDrawElements, LayerId);
-
-        //const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f)\n Bar, Beat: %d, %f"),
-        //    TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y, PlayCursor.Get().Bar, PlayCursor.Get().Beat));
-        //FSlateDrawElement::MakeText(
-        //    OutDrawElements,
-        //    LayerId++,
-        //    AllottedGeometry.ToPaintGeometry(),
-        //    ToPrint,
-        //    FAppStyle::GetFontStyle("NormalFont"),
-        //    ESlateDrawEffect::None,
-        //    FLinearColor::White
-        //);
     }
 
     return LayerId;
 }
-
-
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

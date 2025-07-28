@@ -37,6 +37,69 @@ namespace UnDAW
 	};
 
 	typedef TMap<int32, FMusicalGridPoint> FGridPointMap;
+
+	// Constants for timeline marking density
+	namespace TimelineConstants
+	{
+		/** The minimum amount of pixels between each major ticks on the widget */
+		constexpr int32 MinPixelsPerMajorTick = 50;
+
+		/** The minimum amount of pixels between each minor ticks on the widget */
+		constexpr int32 MinPixelsPerMinorTick = 20;
+
+		/** The minimum amount of pixels between bar numbers/text */
+		constexpr int32 MinPixelsPerBarText = 80;
+
+		/** Grid density levels from most dense to least dense */
+		enum class EGridDensity : uint8
+		{
+			Subdivisions,	// Show bars, beats, and subdivisions
+			Beats,			// Show bars and beats
+			Bars,			// Show only bars
+			SparseBar,		// Show every other bar
+			VerySparseBars	// Show every 4th bar
+		};
+	}
+
+	/**
+	 * Determines optimal grid density based on zoom level and available space
+	 */
+	struct BKMUSICWIDGETS_API FTimelineGridDensityCalculator
+	{
+		static TimelineConstants::EGridDensity CalculateOptimalDensity(
+			float PixelsPerTick, 
+			float GeometryWidth,
+			int32 TicksPerBar,
+			int32 TicksPerBeat
+		);
+
+		/**
+		 * Gets the minimum interval (in ticks) that should be shown at the given density level
+		 */
+		static int32 GetMinimumInterval(
+			TimelineConstants::EGridDensity Density,
+			int32 TicksPerBar,
+			int32 TicksPerBeat
+		);
+
+		/**
+		 * Determines if a grid point should be shown based on the current density level
+		 */
+		static bool ShouldShowGridPoint(
+			const FMusicalGridPoint& GridPoint,
+			TimelineConstants::EGridDensity Density,
+			int32 BarNumber
+		);
+
+		/**
+		 * Determines if bar text should be shown for this bar based on density
+		 */
+		static bool ShouldShowBarText(
+			int32 BarNumber,
+			TimelineConstants::EGridDensity Density,
+			float PixelsPerBar
+		);
+	};
 }
 
 class SMidiEditorPanelBase;

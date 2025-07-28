@@ -56,13 +56,11 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 
 		TrackRoot->ControlsArea->ControlsBox->SetContent(
 			SNew(SBorder)
-			// Remove BorderBackgroundColor to prevent ghostly background in controls area
-			// .BorderBackgroundColor(ColorLambda)  
 			.Content()
 			[
 				SNew(STextBlock)
 					.Text(FText::FromString(Track.TrackName))
-					.ColorAndOpacity(ColorLambda) // Apply color to text instead of background
+					.ColorAndOpacity(ColorLambda)
 			]
 		);
 
@@ -101,12 +99,6 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 		FVector2f(0, TimelineHeight),
 		FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
 	);
-
-	// Calculate the offset geometry for scrolling
-	//FGeometry OffsetGeometryChild = AllottedGeometry.MakeChild(AllottedGeometry.GetLocalSize(), FSlateLayoutTransform(1.0f, Position.Get()));
-
-	// Paint the timeline
-	LayerId = PaintBackground(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	// Paint the background grid
 	LayerId = PaintBackgroundFill(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
@@ -162,7 +154,7 @@ int32 SUndawMusicSequencer::PaintBackgroundFill(const FPaintArgs& Args, const FG
 		FLinearColor::Green.CopyWithNewOpacity(0.2f)
 	);
 
-	return LayerId;
+	return LayerId + 1;
 }
 
 FReply SUndawMusicSequencer::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
