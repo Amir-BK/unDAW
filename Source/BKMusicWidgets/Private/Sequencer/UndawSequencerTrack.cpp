@@ -203,9 +203,6 @@ TOptional<EMouseCursor::Type> SDawSequencerTrackLane::GetCursor() const {
 
 int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnPaint - TrackId: %d, AllottedSize: %s, Position: %s"), 
-		TrackId, *AllottedGeometry.GetLocalSize().ToString(), *Position.Get().ToString());
-
 	// Let Slate handle clipping via MyCullingRect
 	for (int32 i = 0; i < Sections.Num(); i++)
 	{
@@ -215,9 +212,6 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 		const float SectionStartPixel = TickToPixel(SectionStartTick);
 		const float SectionEndPixel = TickToPixel(SectionEndTick);
 		const float SectionWidth = SectionEndPixel - SectionStartPixel;
-
-		UE_LOG(LogTemp, Warning, TEXT("  Section %d: StartTick=%d, EndTick=%d, StartPixel=%f, Width=%f"), 
-			i, Section->Clip->StartTick, Section->Clip->EndTick, SectionStartPixel, SectionWidth);
 
 		// Create section geometry with proper size and offset
 		FGeometry SectionGeometry = AllottedGeometry.MakeChild(
@@ -233,17 +227,12 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 
 inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 
-	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnMouseMove - TrackId: %d"), TrackId);
-	
 	// Get mouse position relative to the actual track area (accounting for position offset)
 	const FVector2D LocalMousePosition = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
 	
 	// Convert to tick space using the sequence data directly
 	const float MouseMs = (LocalMousePosition.X - Position.Get().X) / Zoom.Get().X;
 	const float MouseTick = SequenceData->HarmonixMidiFile->GetSongMaps()->MsToTick(MouseMs);
-
-	UE_LOG(LogTemp, Warning, TEXT("  LocalMouse: %s, MouseMs: %f, MouseTick: %f"), 
-		*LocalMousePosition.ToString(), MouseMs, MouseTick);
 
 	constexpr int32 SectionResizeAreaWidth = 5;
 
@@ -254,9 +243,6 @@ inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, c
 		const int32 SectionStartTick = Section->Clip->StartTick;
 		const int32 SectionEndTick = Section->Clip->EndTick;
 		
-		UE_LOG(LogTemp, Warning, TEXT("    Section %d: StartTick=%d, EndTick=%d"), 
-			i, SectionStartTick, SectionEndTick);
-
 		// Check if mouse is within this section's tick range
 		if (MouseTick >= SectionStartTick && MouseTick <= SectionEndTick)
 		{
@@ -280,9 +266,6 @@ inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, c
 				bIsHoveringOverSectionDragArea = true;
 				bIsHoveringOverSectionResizeArea = false;
 			}
-
-			UE_LOG(LogTemp, Warning, TEXT("    Section %d hovered - StartPixel: %f, EndPixel: %f, bNearStart: %d, bNearEnd: %d"), 
-				i, SectionStartPixel, SectionEndPixel, bNearStart ? 1 : 0, bNearEnd ? 1 : 0);
 		}
 		else {
 			Section->bIsHovered = false;
@@ -302,9 +285,6 @@ inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, c
 inline FReply SDawSequencerTrackLane::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 
 	const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
-
-	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnMouseButtonDown - TrackId: %d, HoveringIndex: %d, bDragArea: %d"), 
-		TrackId, HoveringOverSectionIndex, bIsHoveringOverSectionDragArea ? 1 : 0);
 
 	if (bIsLeftMouseButtonEffecting && HoveringOverSectionIndex != INDEX_NONE && bIsHoveringOverSectionDragArea)
 	{

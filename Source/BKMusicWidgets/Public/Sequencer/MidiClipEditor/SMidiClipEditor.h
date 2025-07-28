@@ -282,36 +282,34 @@ public:
 		const float VisibleStartTick = SongsMap->MsToTick((-Position.Get().X - MajorTabWidth) / Zoom.Get().X);
 		const float VisibleEndTick = SongsMap->MsToTick((GetCachedGeometry().Size.X - Position.Get().X - MajorTabWidth) / Zoom.Get().X);
 
-		// Find the first bar that starts before or at VisibleStartTick
-		// Make sure we include bar 1 by starting from 0 if we're close to the beginning
-		const auto StartBarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(FMath::Max(0.0f, VisibleStartTick));
+		// For display purposes, we want "Bar 1" to always appear at the beginning of our timeline
+		// regardless of the MIDI file's internal StartBar value
+		int32 DisplayBarNumber = 1;
 		
-		// Always include bar 1 if we're viewing near the start
-		int32 StartBar = (VisibleStartTick <= 0) ? 1 : StartBarInfo.Bar;
-		
-		float BarTick = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(
-			StartBar,
-			1,
-			0
-		);
+		// Start from tick 0 (beginning of timeline) and increment by bar durations
+		float BarTick = 0.0f;
 
-		UE_LOG(LogTemp, Warning, TEXT("RecalculateGrid: VisibleStart=%f, VisibleEnd=%f, StartBar=%d, BarTick=%f"), 
-			VisibleStartTick, VisibleEndTick, StartBar, BarTick);
-
-		// Add grid points for all bars in the visible range
-		while (BarTick <= VisibleEndTick && StartBar <= 200) // Safety limit
+		// If we're viewing later in the timeline, skip forward to the first visible bar
+		while (BarTick < VisibleStartTick && DisplayBarNumber <= 200)
 		{
-			const auto BarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(BarTick);
+			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+			DisplayBarNumber++;
+		}
+
+		// Add grid points for all bars in the visible range  
+		while (BarTick <= VisibleEndTick && DisplayBarNumber <= 200) // Safety limit
+		{
+			// Add the current bar to grid points
 			GridPoints.Add(BarTick, {
 				UnDAW::EGridPointType::Bar,
-				BarInfo.Bar,
+				DisplayBarNumber,  // Use display bar number starting from 1
 				1,
 				0
 				});
 
 			// Move to next bar
 			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
-			StartBar++;
+			DisplayBarNumber++;
 		}
 
 		// Update row height for vertical scaling
@@ -380,8 +378,8 @@ public:
 				const float Tick = OriginTick - GetStartOffset();
 				const float PixelPosition = TickToPixel(Tick);
 
-				// Only draw background elements if they're to the right of the controls area
-				const bool bShouldDrawBackgroundElements = PixelPosition > MajorTabWidth;
+				// Only draw background elements if they're at or to the right of the controls area
+				const bool bShouldDrawBackgroundElements = PixelPosition >= MajorTabWidth;
 
 				// Draw alternating bar backgrounds
 				if (GridPoint.Bar % 2 == 0 && bShouldDrawBackgroundElements)
@@ -467,17 +465,14 @@ public:
 			const float Tick = OriginTick - GetStartOffset();
 			const float PixelPosition = TickToPixel(Tick);
 
-			// Only draw timeline elements if they're to the right of the controls area
-			const bool bShouldDrawTimelineElements = PixelPosition > MajorTabWidth;
+			// Only draw timeline elements if they're at or to the right of the controls area
+			const bool bShouldDrawTimelineElements = PixelPosition >= MajorTabWidth;
 
 			switch (GridPoint.Type)
 			{
 			case UnDAW::EGridPointType::Bar:
 				if (bShouldPaintTimelineBar && bShouldDrawTimelineElements)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Drawing timeline text at PixelPosition=%f, MajorTabWidth=%f, Bar=%d"), 
-						PixelPosition, MajorTabWidth, GridPoint.Bar);
-
 					// Bar number
 					FSlateDrawElement::MakeText(
 						OutDrawElements,
@@ -521,7 +516,7 @@ public:
 					);
 				}
 
-				// Only draw bar lines if they're to the right of the controls area
+				// Only draw bar lines if they're at or to the right of the controls area
 				if (bShouldDrawTimelineElements)
 				{
 					FSlateDrawElement::MakeLines(
@@ -541,7 +536,7 @@ public:
 				break;
 
 			case UnDAW::EGridPointType::Beat:
-				// Only draw beat lines if they're to the right of the controls area
+				// Only draw beat lines if they're at or to the right of the controls area
 				if (bShouldDrawTimelineElements)
 				{
 					FSlateDrawElement::MakeLines(
@@ -561,7 +556,7 @@ public:
 				break;
 
 			case UnDAW::EGridPointType::Subdivision:
-				// Only draw subdivision lines if they're to the right of the controls area
+				// Only draw subdivision lines if they're at or to the right of the controls area
 				if (bShouldDrawTimelineElements)
 				{
 					FSlateDrawElement::MakeLines(

@@ -29,9 +29,6 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
     const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
 
-    UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackMidiSection::OnPaint - Clip: %d-%d, GeometrySize: %s, Position: %s"), 
-        Clip->StartTick, Clip->EndTick, *AllottedGeometry.GetLocalSize().ToString(), *Position.Get().ToString());
-
     // Paint the background box using the full allocated geometry (which should already be sized correctly by the parent)
     FSlateDrawElement::MakeBox(
         OutDrawElements,
@@ -54,13 +51,6 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
         const float X = StartMs * Zoom.Get().X;
         const float Width = (EndMs - StartMs) * Zoom.Get().X;
         const float Y = (127 - Note.Pitch) * Height;
-
-        // Only log first few notes to avoid spam
-        if (Clip->LinkedNotes.Num() < 5 || &Note == &Clip->LinkedNotes[0])
-        {
-            UE_LOG(LogTemp, Warning, TEXT("    Note: Tick=%d-%d, Ms=%f-%f, X=%f, Width=%f"), 
-                Note.StartTick, Note.EndTick, StartMs, EndMs, X, Width);
-        }
 
         FSlateDrawElement::MakeBox(
             OutDrawElements,

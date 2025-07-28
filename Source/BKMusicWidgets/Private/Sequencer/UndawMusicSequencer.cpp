@@ -109,7 +109,7 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	LayerId = PaintBackground(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	// Paint the background grid
-	LayerId = PaintBackgroundGrid(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
+	LayerId = PaintBackgroundFill(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId);
 
 	// Paint the scroll box
 	LayerId = ScrollBox->Paint(Args, TrackAreaGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
@@ -145,7 +145,7 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 	return LayerId;
 }
 
-int32 SUndawMusicSequencer::PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
+int32 SUndawMusicSequencer::PaintBackgroundFill(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 {
 	// Create geometry that excludes the controls area (starts at MajorTabWidth)
 	FGeometry GridGeometry = AllottedGeometry.MakeChild(
@@ -252,7 +252,6 @@ TTuple<int, ETrackType> SUndawMusicSequencer::GetHoveredTrackAndType(const FVect
 			return MakeTuple(TrackRoot->Lane->TrackId, TrackRoot->Lane->TrackType);
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("No track found at position: %s"), *MousePosition.ToString());
 	return MakeTuple(INDEX_NONE, ETrackType::None);
 
 }
@@ -270,8 +269,6 @@ int32 SUndawMusicSequencer::PaintPlayCursor(const FPaintArgs& Args, const FGeome
 			FVector2f(0, TimelineHeight),
 			FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
 		);
-
-		UE_LOG(LogTemp, Warning, TEXT("PaintPlayCursor: CursorPixel=%f, MajorTabWidth=%f"), CursorPixel, MajorTabWidth);
 
 		FSlateDrawElement::MakeLines(
 			OutDrawElements,
