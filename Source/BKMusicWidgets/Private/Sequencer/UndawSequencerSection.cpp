@@ -29,19 +29,10 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     const bool bIsHoveredStrong = bIsHovered && GetParentWidget()->IsHovered();
     const FLinearColor ColorToUse = bIsSelected ? TrackColor.Get().CopyWithNewOpacity(0.5f) : bIsHoveredStrong ? TrackColor.Get().CopyWithNewOpacity(0.2f) : TrackColor.Get().CopyWithNewOpacity(0.1f);
 
-    // Calculate the geometry for the background box
-    // Calculate positions using consistent coordinate system
-    const float BackgroundX = CalculateXPosition(Clip->StartTick);
-    const float BackgroundWidth = TickToPixel(Clip->EndTick) - TickToPixel(Clip->StartTick);
+    UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackMidiSection::OnPaint - Clip: %d-%d, GeometrySize: %s, Position: %s"), 
+        Clip->StartTick, Clip->EndTick, *AllottedGeometry.GetLocalSize().ToString(), *Position.Get().ToString());
 
-    FGeometry BackgroundGeometry = AllottedGeometry.MakeChild(
-        FVector2f(BackgroundX, 0),
-        FVector2f(BackgroundWidth, AllottedGeometry.Size.Y)
-    );
-        
-    BackgroundGeometry.AppendTransform(FSlateLayoutTransform(1.0f, Position.Get()));
-
-    // Paint the background box
+    // Paint the background box using the full allocated geometry (which should already be sized correctly by the parent)
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         LayerId++,
@@ -56,13 +47,20 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
     const float Height = AllottedGeometry.Size.Y / 127;
     for (const auto& Note : Clip->LinkedNotes)
     {
-        // Calculate relative to the clip's start position
-
-        const float X = TickToPixel(Note.StartTick + Clip->StartTick) - BackgroundX;
-        const float End = TickToPixel(Note.EndTick + Clip->StartTick) - BackgroundX;
-
-		const float Width = End - X;
+        // Calculate note positions relative to the clip's start
+        const float StartMs = SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Note.StartTick);
+        const float EndMs = SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Note.EndTick);
+        
+        const float X = StartMs * Zoom.Get().X;
+        const float Width = (EndMs - StartMs) * Zoom.Get().X;
         const float Y = (127 - Note.Pitch) * Height;
+
+        // Only log first few notes to avoid spam
+        if (Clip->LinkedNotes.Num() < 5 || &Note == &Clip->LinkedNotes[0])
+        {
+            UE_LOG(LogTemp, Warning, TEXT("    Note: Tick=%d-%d, Ms=%f-%f, X=%f, Width=%f"), 
+                Note.StartTick, Note.EndTick, StartMs, EndMs, X, Width);
+        }
 
         FSlateDrawElement::MakeBox(
             OutDrawElements,
@@ -76,17 +74,6 @@ int32 SDawSequencerTrackMidiSection::OnPaint(const FPaintArgs& Args, const FGeom
             FLinearColor::White
         );
     }
-
-    //// Draw start and end ticks for debugging
-    //FSlateDrawElement::MakeText(
-    //    OutDrawElements,
-    //    LayerId++,
-    //    AllottedGeometry.ToPaintGeometry(),
-    //    FText::FromString(FString::Printf(TEXT("Start: %d, Stop: %d\n Position: %s, Zoom: %s"), Clip->StartTick, Clip->EndTick, *Position.Get().ToString(), *Zoom.Get().ToString())),
-    //    FAppStyle::GetFontStyle("NormalFont"),
-    //    ESlateDrawEffect::None,
-    //    FLinearColor::White
-    //);
 
     return LayerId;
 }

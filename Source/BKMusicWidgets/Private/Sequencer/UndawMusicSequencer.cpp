@@ -56,11 +56,13 @@ void SUndawMusicSequencer::PopulateSequencerFromDawData()
 
 		TrackRoot->ControlsArea->ControlsBox->SetContent(
 			SNew(SBorder)
-			.BorderBackgroundColor(ColorLambda)
+			// Remove BorderBackgroundColor to prevent ghostly background in controls area
+			// .BorderBackgroundColor(ColorLambda)  
 			.Content()
 			[
 				SNew(STextBlock)
 					.Text(FText::FromString(Track.TrackName))
+					.ColorAndOpacity(ColorLambda) // Apply color to text instead of background
 			]
 		);
 
@@ -145,10 +147,10 @@ int32 SUndawMusicSequencer::OnPaint(const FPaintArgs& Args, const FGeometry& All
 
 int32 SUndawMusicSequencer::PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 {
-	// Create transformed geometry that matches the sections
+	// Create geometry that excludes the controls area (starts at MajorTabWidth)
 	FGeometry GridGeometry = AllottedGeometry.MakeChild(
-		AllottedGeometry.GetLocalSize(),
-		FSlateLayoutTransform(1.0f, Position.Get())
+		FVector2f(AllottedGeometry.GetLocalSize().X - MajorTabWidth, AllottedGeometry.GetLocalSize().Y),
+		FSlateLayoutTransform(1.0f, FVector2f(MajorTabWidth, Position.Get().Y))
 	);
 
 	FSlateDrawElement::MakeBox(
@@ -220,5 +222,87 @@ FReply SUndawMusicSequencer::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 	}
 	
 	return FReply::Unhandled();
+}
+
+void SUndawMusicSequencer::AbsoluteCursorPositionToTime(const FVector2D& MousePosition, float& OutTick, FMusicTimestamp& OutTimestamp)
+{
+	
+	const auto LocalPositionAtGeometry = GetCachedGeometry().AbsoluteToLocal(MousePosition);
+
+	
+
+	OutTick = PixelToTick(LocalPositionAtGeometry.X - PositionOffset.X);
+
+	OutTimestamp = SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMusicTimestamp(OutTick);
+
+
+
+
+}
+
+TTuple<int, ETrackType> SUndawMusicSequencer::GetHoveredTrackAndType(const FVector2D& MousePosition) const
+{
+	const auto LocalPositionAtGeometry = GetCachedGeometry().AbsoluteToLocal(MousePosition);
+
+	for (int32 i = 0; i < TrackRoots.Num(); ++i)
+	{
+		const auto& TrackRoot = TrackRoots[i];
+		if (TrackRoot->GetCachedGeometry().IsUnderLocation(MousePosition))
+		{
+			return MakeTuple(TrackRoot->Lane->TrackId, TrackRoot->Lane->TrackType);
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("No track found at position: %s"), *MousePosition.ToString());
+	return MakeTuple(INDEX_NONE, ETrackType::None);
+
+}
+
+int32 SUndawMusicSequencer::PaintPlayCursor(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
+{
+	const auto& PlayCursorTick = SequenceData->HarmonixMidiFile->GetSongMaps()->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None);
+	const float CursorPixel = TickToPixel(PlayCursorTick);
+
+	// Only draw cursor if it's to the right of the controls area
+	if (CursorPixel > MajorTabWidth)
+	{
+		// Create geometry that excludes the controls area
+		FGeometry TrackAreaGeometry = AllottedGeometry.MakeChild(
+			FVector2f(0, TimelineHeight),
+			FVector2f(AllottedGeometry.Size.X, AllottedGeometry.Size.Y - TimelineHeight)
+		);
+
+		UE_LOG(LogTemp, Warning, TEXT("PaintPlayCursor: CursorPixel=%f, MajorTabWidth=%f"), CursorPixel, MajorTabWidth);
+
+		FSlateDrawElement::MakeLines(
+			OutDrawElements,
+			LayerId,
+			TrackAreaGeometry.ToPaintGeometry(),
+			{ FVector2D(CursorPixel, 0), FVector2D(CursorPixel, TrackAreaGeometry.GetLocalSize().Y) },
+			ESlateDrawEffect::None,
+			FLinearColor::Red,
+			false,
+			2.0f
+		);
+
+		if (TimelineHeight > 0.0f)
+		{
+			constexpr float PlayCursorWidth = 10.0f;
+			constexpr float PlayCursorHalfWidth = PlayCursorWidth / 2.0f;
+
+			FSlateDrawElement::MakeBox(
+				OutDrawElements,
+				LayerId,
+				AllottedGeometry.ToPaintGeometry(
+					FVector2f(PlayCursorWidth, TimelineHeight),
+					FSlateLayoutTransform(1.0f, FVector2f(CursorPixel - PlayCursorHalfWidth, 0))
+				),
+				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+				ESlateDrawEffect::None,
+				FLinearColor(255.f, 0.1f, 0.2f, 1.f)
+			);
+		}
+	}
+
+	return LayerId;
 }
 

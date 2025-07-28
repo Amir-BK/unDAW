@@ -115,7 +115,8 @@ FReply SDAwSequencerTrackControlsArea::OnMouseMove(const FGeometry& MyGeometry, 
 
 void SDawSequencerTrackRoot::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 TrackId)
 {
-	
+	//print constructing "SequencerTrackRoot with track ID"
+	UE_LOG(LogTemp, Log, TEXT("Coinstructing Sequencer Track root with ID %d"), TrackId)
 	
 	
 	ChildSlot
@@ -152,10 +153,14 @@ void SDawSequencerTrackRoot::ResizeSplitter(float InNewSize) {
 
 void SDawSequencerTrackLane::Construct(const FArguments& InArgs, UDAWSequencerData* InSequenceToEdit, int32 InTrackId)
 {
+	
+	UE_LOG(LogTemp, Log, TEXT("Constructing track lane with Id %d"), InTrackId)
+
 	SequenceData = InSequenceToEdit;
 	TrackId = InTrackId;
 	Position = InArgs._Position;
 	Zoom = InArgs._Zoom;
+	TrackType = InArgs._LaneTrackType;
 
 	//PopulateSections();
 
@@ -198,22 +203,26 @@ TOptional<EMouseCursor::Type> SDawSequencerTrackLane::GetCursor() const {
 
 int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
-	FGeometry BaseGeometry = AllottedGeometry.MakeChild(
-		AllottedGeometry.GetLocalSize(),
-		FSlateLayoutTransform(1.0f, Position.Get())
-	);
-	
-	// Calculate total track width
+	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnPaint - TrackId: %d, AllottedSize: %s, Position: %s"), 
+		TrackId, *AllottedGeometry.GetLocalSize().ToString(), *Position.Get().ToString());
 
 	// Let Slate handle clipping via MyCullingRect
-	for (const auto& Section : Sections)
+	for (int32 i = 0; i < Sections.Num(); i++)
 	{
-		const float SectionStartPixel = TickToPixel(Section->Clip->StartTick);
+		const auto& Section = Sections[i];
+		const float SectionStartTick = Section->Clip->StartTick;
+		const float SectionEndTick = Section->Clip->EndTick;
+		const float SectionStartPixel = TickToPixel(SectionStartTick);
+		const float SectionEndPixel = TickToPixel(SectionEndTick);
+		const float SectionWidth = SectionEndPixel - SectionStartPixel;
 
-		// Create section geometry with proper offset
-		FGeometry SectionGeometry = BaseGeometry.MakeChild(
-			AllottedGeometry.GetLocalSize(),
-			FSlateLayoutTransform(1.0f, FVector2D(SectionStartPixel, 0.0f))
+		UE_LOG(LogTemp, Warning, TEXT("  Section %d: StartTick=%d, EndTick=%d, StartPixel=%f, Width=%f"), 
+			i, Section->Clip->StartTick, Section->Clip->EndTick, SectionStartPixel, SectionWidth);
+
+		// Create section geometry with proper size and offset
+		FGeometry SectionGeometry = AllottedGeometry.MakeChild(
+			FVector2D(SectionWidth, AllottedGeometry.GetLocalSize().Y),
+			FSlateLayoutTransform(1.0f, FVector2D(SectionStartPixel + Position.Get().X, Position.Get().Y))
 		);
 
 		LayerId = Section->Paint(Args, SectionGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
@@ -224,38 +233,59 @@ int32 SDawSequencerTrackLane::OnPaint(const FPaintArgs& Args, const FGeometry& A
 
 inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 
-	//UE_LOG(LogTemp, Warning, TEXT("Mouse moved over lane"));
-	//check if hovering over section
-	const float MouseLocalX = (MouseEvent.GetScreenSpacePosition().X - MyGeometry.GetAbsolutePosition().X);
-	const float MouseToPixel = (MouseLocalX + Position.Get().X * Zoom.Get().X) / Zoom.Get().X;
+	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnMouseMove - TrackId: %d"), TrackId);
+	
+	// Get mouse position relative to the actual track area (accounting for position offset)
+	const FVector2D LocalMousePosition = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+	
+	// Convert to tick space using the sequence data directly
+	const float MouseMs = (LocalMousePosition.X - Position.Get().X) / Zoom.Get().X;
+	const float MouseTick = SequenceData->HarmonixMidiFile->GetSongMaps()->MsToTick(MouseMs);
 
-
+	UE_LOG(LogTemp, Warning, TEXT("  LocalMouse: %s, MouseMs: %f, MouseTick: %f"), 
+		*LocalMousePosition.ToString(), MouseMs, MouseTick);
 
 	constexpr int32 SectionResizeAreaWidth = 5;
 
 	bool bAnySectionHovered = false;
 	for (int32 i = 0; i < Sections.Num(); i++)
 	{
-		TRange<double> SectionRange{ Sections[i]->Clip->StartTick * Zoom.Get().X, Sections[i]->Clip->EndTick * Zoom.Get().X };
-		if (SectionRange.Contains(MouseToPixel))
+		const auto& Section = Sections[i];
+		const int32 SectionStartTick = Section->Clip->StartTick;
+		const int32 SectionEndTick = Section->Clip->EndTick;
+		
+		UE_LOG(LogTemp, Warning, TEXT("    Section %d: StartTick=%d, EndTick=%d"), 
+			i, SectionStartTick, SectionEndTick);
+
+		// Check if mouse is within this section's tick range
+		if (MouseTick >= SectionStartTick && MouseTick <= SectionEndTick)
 		{
 			HoveringOverSectionIndex = i;
-			Sections[i]->bIsHovered = true;
+			Section->bIsHovered = true;
 			bAnySectionHovered = true;
-			TRange<double> NonResizeRange{ Sections[i]->Clip->StartTick + SectionResizeAreaWidth * Zoom.Get().X, Sections[i]->Clip->EndTick - SectionResizeAreaWidth * Zoom.Get().X };
-			if (NonResizeRange.Contains(MouseToPixel))
+			
+			// Check if we're in the resize area (5 pixels from edges)
+			const float SectionStartPixel = TickToPixel(SectionStartTick);
+			const float SectionEndPixel = TickToPixel(SectionEndTick);
+			const bool bNearStart = FMath::Abs(LocalMousePosition.X - SectionStartPixel) < SectionResizeAreaWidth;
+			const bool bNearEnd = FMath::Abs(LocalMousePosition.X - SectionEndPixel) < SectionResizeAreaWidth;
+			
+			if (bNearStart || bNearEnd)
+			{
+				bIsHoveringOverSectionResizeArea = true;
+				bIsHoveringOverSectionDragArea = false;
+			}
+			else
 			{
 				bIsHoveringOverSectionDragArea = true;
 				bIsHoveringOverSectionResizeArea = false;
 			}
-			else {
-				bIsHoveringOverSectionDragArea = false;
-				bIsHoveringOverSectionResizeArea = true;
-			}
 
+			UE_LOG(LogTemp, Warning, TEXT("    Section %d hovered - StartPixel: %f, EndPixel: %f, bNearStart: %d, bNearEnd: %d"), 
+				i, SectionStartPixel, SectionEndPixel, bNearStart ? 1 : 0, bNearEnd ? 1 : 0);
 		}
 		else {
-			Sections[i]->bIsHovered = false;
+			Section->bIsHovered = false;
 		}
 	}
 
@@ -265,25 +295,23 @@ inline FReply SDawSequencerTrackLane::OnMouseMove(const FGeometry& MyGeometry, c
 		bIsHoveringOverSectionDragArea = false;
 		bIsHoveringOverSectionResizeArea = false;
 	}
-	else {
-		bIsHoveringOverSectionDragArea = true;
-	}
-
 
 	return FReply::Unhandled();
-
 }
 
 inline FReply SDawSequencerTrackLane::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 
-	const bool bIsLeftMoustButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
+	const bool bIsLeftMouseButtonEffecting = MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton;
 
-	if (bIsLeftMoustButtonEffecting && bIsHoveringOverSectionDragArea)
+	UE_LOG(LogTemp, Warning, TEXT("SDawSequencerTrackLane::OnMouseButtonDown - TrackId: %d, HoveringIndex: %d, bDragArea: %d"), 
+		TrackId, HoveringOverSectionIndex, bIsHoveringOverSectionDragArea ? 1 : 0);
+
+	if (bIsLeftMouseButtonEffecting && HoveringOverSectionIndex != INDEX_NONE && bIsHoveringOverSectionDragArea)
 	{
 		OnSectionSelected.ExecuteIfBound(Sections[HoveringOverSectionIndex]);
 		SelectedSectionIndex = HoveringOverSectionIndex;
 		return FReply::Handled();
-	};
+	}
 
 	return FReply::Unhandled();
 }

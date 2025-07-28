@@ -15,6 +15,8 @@
 
 BKMUSICCORE_API DECLARE_LOG_CATEGORY_EXTERN(unDAWVertexLogs, Verbose, All);
 
+
+
 //class UM2SoundGraphData;
 
 struct FBuilderVertexCompositeData;

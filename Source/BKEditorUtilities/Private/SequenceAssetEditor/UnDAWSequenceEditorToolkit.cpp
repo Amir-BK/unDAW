@@ -142,7 +142,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 							SNew(SAssetDropTarget)
 								.OnAssetsDropped(this, &FUnDAWSequenceEditorToolkit::OnAssetsDropped)
 								.OnAreAssetsAcceptableForDrop(this, &FUnDAWSequenceEditorToolkit::OnAssetDraggedOver)
-								[
+									[
 
 									SNew(SVerticalBox)
 										+ SVerticalBox::Slot()
@@ -646,6 +646,7 @@ void FUnDAWSequenceEditorToolkit::SetupPreviewPerformer()
 
 
 
+
 void FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Midi Input Device Changed"));
@@ -683,6 +684,28 @@ bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAs
 		if (Asset.GetClass()->IsChildOf(UMidiFile::StaticClass()) || Asset.GetClass()->IsChildOf(USoundWave::StaticClass()) ||
 			Asset.GetClass()->IsChildOf(UDAWSequencerData::StaticClass()))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Asset Dragged Over: %s"), *Asset.AssetName.ToString());
+			//asset duration
+			//if soundwave, get duration and print it
+			if (Asset.GetClass()->IsChildOf(USoundWave::StaticClass()))
+			{
+				USoundWave* SoundWave = Cast<USoundWave>(Asset.GetAsset());
+				if (SoundWave)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Sound Wave Duration: %f"), SoundWave->GetDuration());
+				}
+			}
+
+			//can we get the mouse position here?
+			FVector2D MousePosition = FSlateApplication::Get().GetCursorPos();
+			// can we get the coordinates of the relevant window or drop target?
+	
+			UE_LOG(LogTemp, Warning, TEXT("Mouse Position: %s"), *MousePosition.ToString());
+			float MusicSequencerTick;
+			FMusicTimestamp MusicSequencerPosition;
+			MusicSequencer->AbsoluteCursorPositionToTime(MousePosition, MusicSequencerTick, MusicSequencerPosition);
+			const auto& TrackInfo = MusicSequencer->GetHoveredTrackAndType(MousePosition);
+			UE_LOG(LogTemp, Warning, TEXT("Track Info, ID: %d, Type: %s"), TrackInfo.Key, *UEnum::GetValueAsString(TrackInfo.Value));
 			return true;
 		}
 	}
@@ -690,7 +713,33 @@ bool FUnDAWSequenceEditorToolkit::OnAssetDraggedOver(TArrayView<FAssetData> InAs
 	return false;
 }
 
-void FUnDAWSequenceEditorToolkit::OnAssetsDropped(const FDragDropEvent&, TArrayView<FAssetData> InAssets)
+void FUnDAWSequenceEditorToolkit::OnAssetsDropped(const FDragDropEvent& Event, TArrayView<FAssetData> InAssets)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Asset Dropped"));
+
+	//print asset name and the pixel location of the drop
+	for (const auto& Asset : InAssets)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Asset Name: %s"), *Asset.AssetName.ToString());
+		float MusicSequencerTick;
+		FMusicTimestamp MusicSequencerPosition;
+		MusicSequencer->AbsoluteCursorPositionToTime(Event.GetScreenSpacePosition(), MusicSequencerTick, MusicSequencerPosition);
+
+
+		if (Asset.GetClass()->IsChildOf(USoundWave::StaticClass()))
+		{
+			USoundWave* SoundWave = Cast<USoundWave>(Asset.GetAsset());
+			if (SoundWave)
+			{
+				//SequenceData->AddWavContainer(SoundWave, MusicSequencerPosition);
+				UE_LOG(LogTemp, Warning, TEXT("Sound Wave Duration: %f"), SoundWave->GetDuration());
+				//print track info
+		
+			}
+		}
+		
+	}
+
+
+
 }

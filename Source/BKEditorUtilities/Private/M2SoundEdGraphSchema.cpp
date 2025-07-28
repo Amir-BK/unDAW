@@ -458,6 +458,33 @@ void UM2SoundGraph::PerformVertexToNodeBinding()
 	}
 }
 
+void UM2SoundGraph::OnVertexAdded(UM2SoundVertex* Vertex)
+{
+	//so this is definitely not good enough and indicates some issues
+		// we need to think about the node creation process and how to handle the vertex to node mapping
+
+	UE_LOG(LogTemp, Warning, TEXT("Vertex added received in M2 EdGraph"));
+	//is vertex already in the map?
+	if (VertexToNodeMap.Contains(Vertex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Vertex already in the map"));
+		return;
+	}
+
+	//create node in accordance to the vertex class, a little ugly but we have only three cases
+	//for now check for the node class, we're looking for Patch Vertex, Audio Output Vertex and 'Input Handle Node' vertex
+	UM2SoundEdGraphNode* Node = nullptr;
+	if (Vertex->IsA<UM2SoundLiteralNodeVertex>())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Vertex is a literal node"));
+		Node = CreateDefaultNodeForVertex<UM2SoundPatchContainerNode>(Vertex, FPlacementDefaults::InstrumentColumns);
+
+	}
+
+	// 
+	//NotifyGraphChanged();
+}
+
 
 
 UEdGraphNode* FM2SoundGraphAddNodeAction_NewInstrument::MakeNode(UEdGraph* ParentGraph, UEdGraphPin* FromPin)

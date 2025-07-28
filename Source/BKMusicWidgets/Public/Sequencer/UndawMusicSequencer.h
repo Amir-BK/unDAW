@@ -88,7 +88,7 @@ protected:
 
 	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	int32 PaintBackgroundGrid(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
-	
+	int32 PaintPlayCursor(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 
 	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
@@ -115,6 +115,14 @@ public:
 
 		return false;
 	}
+
+
+
+	void AbsoluteCursorPositionToTime(const FVector2D& MousePosition, float& OutTick, FMusicTimestamp& OutTimestamp);
+
+	//returns the track we're hovering on and its type 
+	TTuple<int, ETrackType> GetHoveredTrackAndType(const FVector2D& MousePosition) const;
+
 protected:
 
 	TSharedPtr<SScrollBox> ScrollBox;

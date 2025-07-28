@@ -41,6 +41,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTimeStampUpdated, FMusicTimestamp
 
 class UDAWSequencerData;
 
+UENUM(BlueprintType, Category = "unDAW Sequence")
+enum class ETrackType : uint8
+{
+	AudioTrack,
+	MidiTrack,
+	VariMixerTrack,
+	MetaSoundTrack, //this is a track that contains a metasound patch, it can be used to play audio or midi data
+	Unknown,
+	None
+};
+
 USTRUCT(BlueprintType, Category = "unDAW Sequence")
 struct FMidiExplicitMidiInstrumentTrack
 {

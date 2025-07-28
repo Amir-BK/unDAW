@@ -248,6 +248,14 @@ public:
 		return (SequenceData->HarmonixMidiFile->GetSongMaps()->TickToMs(Tick) * Zoom.Get().X) + Position.Get().X + MajorTabWidth;
 	}
 
+	const float PixelToTick(const float Pixel) const
+	{
+		// Step 1: Remove position and tab offset
+		float Ms = (Pixel - Position.Get().X - MajorTabWidth) / Zoom.Get().X;
+		// Step 2: Convert ms to tick
+		return SequenceData->HarmonixMidiFile->GetSongMaps()->MsToTick(Ms);
+	}
+ 
 	virtual void OnVerticalScroll(float ScrollAmount) {};
 
 	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
@@ -271,19 +279,27 @@ public:
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 
 		// Calculate visible range based on current position and zoom
-		const float VisibleStartTick = SongsMap->MsToTick(-Position.Get().X / Zoom.Get().X);
-		const float VisibleEndTick = SongsMap->MsToTick((GetCachedGeometry().Size.X - Position.Get().X) / Zoom.Get().X);
+		const float VisibleStartTick = SongsMap->MsToTick((-Position.Get().X - MajorTabWidth) / Zoom.Get().X);
+		const float VisibleEndTick = SongsMap->MsToTick((GetCachedGeometry().Size.X - Position.Get().X - MajorTabWidth) / Zoom.Get().X);
 
 		// Find the first bar that starts before or at VisibleStartTick
-		const auto StartBarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(VisibleStartTick);
+		// Make sure we include bar 1 by starting from 0 if we're close to the beginning
+		const auto StartBarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(FMath::Max(0.0f, VisibleStartTick));
+		
+		// Always include bar 1 if we're viewing near the start
+		int32 StartBar = (VisibleStartTick <= 0) ? 1 : StartBarInfo.Bar;
+		
 		float BarTick = SongsMap->GetBarMap().BarBeatTickIncludingCountInToTick(
-			StartBarInfo.Bar,
+			StartBar,
 			1,
 			0
 		);
 
+		UE_LOG(LogTemp, Warning, TEXT("RecalculateGrid: VisibleStart=%f, VisibleEnd=%f, StartBar=%d, BarTick=%f"), 
+			VisibleStartTick, VisibleEndTick, StartBar, BarTick);
+
 		// Add grid points for all bars in the visible range
-		while (BarTick <= VisibleEndTick)
+		while (BarTick <= VisibleEndTick && StartBar <= 200) // Safety limit
 		{
 			const auto BarInfo = SongsMap->GetBarMap().TickToMusicTimestamp(BarTick);
 			GridPoints.Add(BarTick, {
@@ -295,6 +311,7 @@ public:
 
 			// Move to next bar
 			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+			StartBar++;
 		}
 
 		// Update row height for vertical scaling
@@ -363,40 +380,53 @@ public:
 				const float Tick = OriginTick - GetStartOffset();
 				const float PixelPosition = TickToPixel(Tick);
 
+				// Only draw background elements if they're to the right of the controls area
+				const bool bShouldDrawBackgroundElements = PixelPosition > MajorTabWidth;
+
 				// Draw alternating bar backgrounds
-				if (GridPoint.Bar % 2 == 0)
+				if (GridPoint.Bar % 2 == 0 && bShouldDrawBackgroundElements)
 				{
 					const float BarDuration = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, OriginTick);
 					const float BarEndPixel = TickToPixel(Tick + BarDuration);
 					const float BarWidth = BarEndPixel - PixelPosition;
 
-					FSlateDrawElement::MakeBox(
-						OutDrawElements,
-						LayerId, // Background below lines and text
-						AllottedGeometry.ToPaintGeometry(
-							FVector2f(BarWidth, AllottedGeometry.GetLocalSize().Y),
-							FSlateLayoutTransform(FVector2f(PixelPosition, 0))
-						),
-						FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
-						ESlateDrawEffect::None,
-						FLinearColor::Gray.CopyWithNewOpacity(0.4f)
-					);
+					// Clamp the bar start position to not draw over the controls area
+					const float ClampedStartPosition = FMath::Max(PixelPosition, MajorTabWidth);
+					const float ClampedBarWidth = FMath::Max(0.0f, BarWidth - (ClampedStartPosition - PixelPosition));
+
+					if (ClampedBarWidth > 0.0f)
+					{
+						FSlateDrawElement::MakeBox(
+							OutDrawElements,
+							LayerId, // Background below lines and text
+							AllottedGeometry.ToPaintGeometry(
+								FVector2f(ClampedBarWidth, AllottedGeometry.GetLocalSize().Y),
+								FSlateLayoutTransform(FVector2f(ClampedStartPosition, 0))
+							),
+							FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+							ESlateDrawEffect::None,
+							FLinearColor::Gray.CopyWithNewOpacity(0.4f)
+						);
+					}
 				}
 
-				// Draw bar line
-				FSlateDrawElement::MakeLines(
-					OutDrawElements,
-					LayerId + 2, // Lines above background and text
-					AllottedGeometry.ToPaintGeometry(),
-					{
-						FVector2D(PixelPosition, 0),
-						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-					},
-					ESlateDrawEffect::None,
-					BarLineColor,
-					false,
-					1.0f
-				);
+				// Draw bar line - also respect the controls area boundary
+				if (bShouldDrawBackgroundElements)
+				{
+					FSlateDrawElement::MakeLines(
+						OutDrawElements,
+						LayerId + 2, // Lines above background and text
+						AllottedGeometry.ToPaintGeometry(),
+						{
+							FVector2D(PixelPosition, 0),
+							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+						},
+						ESlateDrawEffect::None,
+						BarLineColor,
+						false,
+						1.0f
+					);
+				}
 			}
 		}
 		return LayerId;
@@ -427,7 +457,9 @@ public:
 		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
 		const FLinearColor BarTextColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
 		const FSlateFontInfo LargeFont(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 14);
+		const FCompositeFont* LargeFontComposite = LargeFont.GetCompositeFont();
 		const FSlateFontInfo SmallFont(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 7);
+		const FCompositeFont* SmallFontComposite = SmallFont.GetCompositeFont();
 
 		// Draw grid points
 		for (const auto& [OriginTick, GridPoint] : GridPoints)
@@ -435,11 +467,17 @@ public:
 			const float Tick = OriginTick - GetStartOffset();
 			const float PixelPosition = TickToPixel(Tick);
 
+			// Only draw timeline elements if they're to the right of the controls area
+			const bool bShouldDrawTimelineElements = PixelPosition > MajorTabWidth;
+
 			switch (GridPoint.Type)
 			{
 			case UnDAW::EGridPointType::Bar:
-				if (bShouldPaintTimelineBar)
+				if (bShouldPaintTimelineBar && bShouldDrawTimelineElements)
 				{
+					UE_LOG(LogTemp, Warning, TEXT("Drawing timeline text at PixelPosition=%f, MajorTabWidth=%f, Bar=%d"), 
+						PixelPosition, MajorTabWidth, GridPoint.Bar);
+
 					// Bar number
 					FSlateDrawElement::MakeText(
 						OutDrawElements,
@@ -459,8 +497,8 @@ public:
 						OutDrawElements,
 						LayerId + 1,
 						AllottedGeometry.ToPaintGeometry(
-							FVector2D(PixelPosition, 18),
-							FVector2D(50.0f, Height)
+							FVector2D(50.0f, Height),
+							FSlateLayoutTransform(FVector2f(PixelPosition, 18))
 						),
 						FText::FromString(FString::FromInt(GridPoint.Beat)),
 						SmallFont,
@@ -483,41 +521,63 @@ public:
 					);
 				}
 
-				
+				// Only draw bar lines if they're to the right of the controls area
+				if (bShouldDrawTimelineElements)
+				{
+					FSlateDrawElement::MakeLines(
+						OutDrawElements,
+						LayerId + 2, // Lines above background and text
+						AllottedGeometry.ToPaintGeometry(),
+						{
+							FVector2D(PixelPosition, 0),
+							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+						},
+						ESlateDrawEffect::None,
+						BarLineColor,
+						false,
+						1.0f
+					);
+				}
 				break;
 
 			case UnDAW::EGridPointType::Beat:
-				// Draw beat line
-				FSlateDrawElement::MakeLines(
-					OutDrawElements,
-					LayerId + 2,
-					AllottedGeometry.ToPaintGeometry(),
-					{
-						FVector2D(PixelPosition, 0),
-						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-					},
-					ESlateDrawEffect::None,
-					FLinearColor::Blue.CopyWithNewOpacity(0.1f),
-					false,
-					1.0f
-				);
+				// Only draw beat lines if they're to the right of the controls area
+				if (bShouldDrawTimelineElements)
+				{
+					FSlateDrawElement::MakeLines(
+						OutDrawElements,
+						LayerId + 2,
+						AllottedGeometry.ToPaintGeometry(),
+						{
+							FVector2D(PixelPosition, 0),
+							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+						},
+						ESlateDrawEffect::None,
+						FLinearColor::Blue.CopyWithNewOpacity(0.1f),
+						false,
+						1.0f
+					);
+				}
 				break;
 
 			case UnDAW::EGridPointType::Subdivision:
-				// Draw subdivision line
-				FSlateDrawElement::MakeLines(
-					OutDrawElements,
-					LayerId + 2,
-					AllottedGeometry.ToPaintGeometry(),
-					{
-						FVector2D(PixelPosition, 0),
-						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-					},
-					ESlateDrawEffect::None,
-					FLinearColor::Black.CopyWithNewOpacity(0.05f),
-					false,
-					1.0f
-				);
+				// Only draw subdivision lines if they're to the right of the controls area
+				if (bShouldDrawTimelineElements)
+				{
+					FSlateDrawElement::MakeLines(
+						OutDrawElements,
+						LayerId + 2,
+						AllottedGeometry.ToPaintGeometry(),
+						{
+							FVector2D(PixelPosition, 0),
+							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+						},
+						ESlateDrawEffect::None,
+						FLinearColor::Black.CopyWithNewOpacity(0.05f),
+						false,
+						1.0f
+					);
+				}
 				break;
 			}
 		}

@@ -7,26 +7,8 @@
 #include "MetasoundDocumentInterface.h"
 #include "WindowsTargetSettings.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "BKMusicCore.generated.h"
+//#include "BKMusicCore.generated.h"
 
-
-
-UCLASS()
-class USomeClass : public UObject
-{
-	GENERATED_BODY()
-public:
-
-	UFUNCTION(BlueprintCallable, Category = "Audio Settings Or Whatever")
-	static void SetApplicationSampleRateAndBufferSize(int32 SampleRate, int32 BufferSize)
-	{
-		UWindowsTargetSettings* WindowsSettings = GetMutableDefault<UWindowsTargetSettings>();
-		WindowsSettings->AudioSampleRate = SampleRate;
-		WindowsSettings->AudioCallbackBufferFrameSize = BufferSize;
-
-		WindowsSettings->SaveConfig();
-	}
-};
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogBKMusicCore, Log, All);

@@ -20,6 +20,8 @@
 //#include "UndawMusicSequencer.h"
 
 
+
+
 DECLARE_DELEGATE_OneParam(
 	FOnSectionSelected,
 	/** called when the spacer is hovered so we can change its color */
@@ -72,6 +74,8 @@ public:
 	SLATE_BEGIN_ARGS(SDawSequencerTrackLane) {}
 		SLATE_ATTRIBUTE(FVector2D, Position)
 		SLATE_ATTRIBUTE(FVector2D, Zoom)
+		SLATE_ARGUMENT(ETrackType, LaneTrackType)
+
 	SLATE_END_ARGS()
 
 	UDAWSequencerData* SequenceData = nullptr;
@@ -83,6 +87,8 @@ public:
 	int32 SelectedSectionIndex = INDEX_NONE;
 	TAttribute<FVector2D> Position;
 	TAttribute<FVector2D> Zoom;
+	
+	ETrackType TrackType = ETrackType::Unknown;
 
 	//float TotalTrackWidth = 0.0f;
 
