@@ -226,7 +226,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                 NoteBrush,
                 ESlateDrawEffect::None,
                 Rotate,
-                TOptional<FVector2D>(),
+                FVector2D::ZeroVector,
                 FSlateDrawElement::RelativeToElement,
                 TrackColorRef
             );

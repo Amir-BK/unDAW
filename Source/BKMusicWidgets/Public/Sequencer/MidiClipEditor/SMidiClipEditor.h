@@ -273,14 +273,32 @@ public:
 		RecalculateGrid();
 	}
 
-	void RecalculateGrid()
+	void RecalculateGrid(const FGeometry* OptionalGeometry = nullptr)
 	{
 		GridPoints.Empty();
 		const auto& SongsMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 
+		// Use provided geometry or try to get cached geometry, with fallback
+		FVector2D GeometrySize;
+		if (OptionalGeometry)
+		{
+			GeometrySize = OptionalGeometry->GetLocalSize();
+		}
+		else
+		{
+			const FGeometry& CachedGeom = GetCachedGeometry();
+			GeometrySize = CachedGeom.GetLocalSize();
+			
+			// If cached geometry is invalid, use a reasonable default to ensure timeline draws
+			if (GeometrySize.X <= 0.0f || GeometrySize.Y <= 0.0f)
+			{
+				GeometrySize = FVector2D(1920.0f, 1080.0f); // Fallback size
+			}
+		}
+
 		// Calculate visible range based on current position and zoom
 		const float VisibleStartTick = SongsMap->MsToTick((-Position.Get().X - MajorTabWidth) / Zoom.Get().X);
-		const float VisibleEndTick = SongsMap->MsToTick((GetCachedGeometry().Size.X - Position.Get().X - MajorTabWidth) / Zoom.Get().X);
+		const float VisibleEndTick = SongsMap->MsToTick((GeometrySize.X - Position.Get().X - MajorTabWidth) / Zoom.Get().X);
 
 		// For display purposes, we want "Bar 1" to always appear at the beginning of our timeline
 		// regardless of the MIDI file's internal StartBar value
@@ -368,6 +386,9 @@ public:
 
 	int32 PaintBackground(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 	{
+		// Recalculate grid with current geometry to ensure we have up-to-date grid points
+		const_cast<SMidiEditorPanelBase*>(this)->RecalculateGrid(&AllottedGeometry);
+
 		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
 		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
 
@@ -432,6 +453,9 @@ public:
 
 	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
 	{
+		// Recalculate grid with current geometry to ensure we have up-to-date grid points
+		const_cast<SMidiEditorPanelBase*>(this)->RecalculateGrid(&AllottedGeometry);
+
 		const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
 
 		if (bShouldPaintTimelineBar)
