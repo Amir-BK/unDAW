@@ -76,7 +76,12 @@ public:
 		}
 
 		Position.Set(InPosition);
-		RecalculateGrid();
+		// Only recalculate grid if position change is significant or we're not actively panning
+		// This prevents flickering during continuous pan operations
+		if (!bIsPanActive)
+		{
+			RecalculateGrid();
+		}
 	}
 
 	FVector2D PositionOffset = FVector2D(0, 0);
@@ -116,23 +121,61 @@ public:
 		return TOptional<EMouseCursor::Type>();
 	}
 
-
-
 	FReply OnMousePan(const FGeometry & MyGeometry, const FPointerEvent & MouseEvent)
 	{
+		// Debug: Log mouse pan details when zoomed out to identify erratic behavior
+		const bool bIsZoomedOut = Zoom.Get().X < 0.5f;
+		if (bIsZoomedOut)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("OnMousePan Debug: RMB=%s, CursorDelta=%s, Position=%s, bIsPanActive=%s"),
+				MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton) ? TEXT("Down") : TEXT("Up"),
+				*MouseEvent.GetCursorDelta().ToString(),
+				*Position.Get().ToString(),
+				bIsPanActive ? TEXT("true") : TEXT("false"));
+		}
+
 		if (MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
 		{
-			auto& CurrentPos = Position.Get();
-			const float ContentWidth = TickToPixel(SequenceData->HarmonixMidiFile->GetLastEventTick());
+			const auto& CurrentPos = Position.Get();
+			
+			// Cache ContentWidth to prevent fluctuation between frames during panning
+			static float CachedContentWidth = 0.0f;
+			static float LastZoomX = 0.0f;
+			
+			// Only recalculate ContentWidth if zoom has changed significantly
+			const float CurrentZoomX = Zoom.Get().X;
+			if (FMath::Abs(CurrentZoomX - LastZoomX) > 0.001f || CachedContentWidth == 0.0f)
+			{
+				CachedContentWidth = TickToPixel(SequenceData->HarmonixMidiFile->GetLastEventTick());
+				LastZoomX = CurrentZoomX;
+			}
+			
+			const float ContentWidth = CachedContentWidth;
 
 			// Only calculate Y delta if vertical pan is NOT locked
 			const float ContentHeight = bLockVerticalPan ? 0 : 127 * RowHeight;
 			const float DeltaY = bLockVerticalPan ? 0 : MouseEvent.GetCursorDelta().Y;
 
+			// Fix the broken clamping logic - when viewport is larger than content, don't create impossible constraints
+			float MinPositionX, MaxPositionX;
+			if (MyGeometry.Size.X >= ContentWidth)
+			{
+				// When viewport is larger than content, allow full range positioning
+				// to center content or position it anywhere within the viewport
+				MinPositionX = -(ContentWidth);
+				MaxPositionX = MyGeometry.Size.X;
+			}
+			else
+			{
+				// When content is larger than viewport, use normal clamping
+				MinPositionX = -ContentWidth + MyGeometry.Size.X;
+				MaxPositionX = 0.0f;
+			}
+
 			const auto NewPositionX = FMath::Clamp(
 				CurrentPos.X + MouseEvent.GetCursorDelta().X,
-				-ContentWidth + MyGeometry.Size.X,
-				0.0f
+				MinPositionX,
+				MaxPositionX
 			);
 
 			const auto NewPositionY = bLockVerticalPan ?
@@ -145,6 +188,15 @@ public:
 
 			const FVector2D NewPosition = FVector2D(NewPositionX, NewPositionY);
 
+			// Debug: Log the position change calculation when zoomed out
+			if (bIsZoomedOut)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("  Position Change: Current=%s -> New=%s (Delta=%s)"),
+					*CurrentPos.ToString(), *NewPosition.ToString(), *MouseEvent.GetCursorDelta().ToString());
+				UE_LOG(LogTemp, Warning, TEXT("  Geometry Size=%s, ContentWidth=%.1f, MinX=%.1f, MaxX=%.1f"),
+					*MyGeometry.Size.ToString(), ContentWidth, MinPositionX, MaxPositionX);
+			}
+
 			if (OnPanelPositionChangedByUser.IsBound())
 			{
 				// Pass bLockVerticalPan to enforce Y ignore in linked panels
@@ -155,10 +207,16 @@ public:
 				SetPosition(NewPosition);
 			}
 
-			bIsPanActive = true;
+			// Only set pan active if we actually have a valid delta to avoid false positives
+			if (!MouseEvent.GetCursorDelta().IsNearlyZero(0.1f))
+			{
+				bIsPanActive = true;
+			}
 			return FReply::Handled().CaptureMouse(AsShared());
 		}
-		bIsPanActive = false;
+		
+		// Don't immediately set bIsPanActive to false - let mouse button up handle it
+		// This prevents erratic state changes during mouse move events
 		return FReply::Unhandled();
 	}
 
@@ -168,6 +226,8 @@ public:
 		 if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton && bIsPanActive)
 		{
 			bIsPanActive = false;
+			// Recalculate grid after panning is complete to ensure correct state
+			RecalculateGrid();
 			return FReply::Handled().ReleaseMouseCapture();
 		}
 		return SCompoundWidget::OnMouseButtonUp(MyGeometry, MouseEvent);
@@ -179,9 +239,17 @@ public:
 
 	void SetZoom(const FVector2D NewZoom)
 	{
-
-
+		const FVector2D OldZoom = Zoom.Get();
 		Zoom.Set(NewZoom);
+		
+		// Debug: Log zoom changes to track potential issues
+		if (!OldZoom.Equals(NewZoom, 0.01f))
+		{
+			UE_LOG(LogTemp, VeryVerbose, TEXT("SetZoom: %s -> %s"), *OldZoom.ToString(), *NewZoom.ToString());
+			
+			// Recalculate grid after zoom change
+			RecalculateGrid();
+		}
 	}
 
 	FReply OnZoom(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -299,9 +367,9 @@ public:
 		const float SmartBuffer = FMath::Min(200.0f, FMath::Max(50.0f, (GeometrySize.X - MajorTabWidth) * 0.1f));
 		const float VisibleEndTick = SongsMap->MsToTick((GeometrySize.X - Position.Get().X - MajorTabWidth + SmartBuffer) / Zoom.Get().X);
 
-		// DEBUG: Log visible range calculation
-		UE_LOG(LogTemp, Log, TEXT("RecalculateGrid: GeometrySize=%s, Zoom=%s, GridPoints=%d"), 
-			*GeometrySize.ToString(), *Zoom.Get().ToString(), GridPoints.Num());
+		// Log essential grid calculation info only in verbose mode
+		UE_LOG(LogTemp, VeryVerbose, TEXT("RecalculateGrid: GeometrySize=%s, Zoom=%s, GridPoints=%d, SmartBuffer=%.1f"), 
+			*GeometrySize.ToString(), *Zoom.Get().ToString(), GridPoints.Num(), SmartBuffer);
 
 		// Calculate density parameters for optimal spacing
 		const float TicksPerMs = 1.0f / SongsMap->TickToMs(1.0f);
@@ -319,25 +387,14 @@ public:
 			TicksPerBeat
 		);
 
-		// DEBUG: Log density information to track when it changes
-		UE_LOG(LogTemp, Warning, TEXT("  Density Calculation:"));
-		UE_LOG(LogTemp, Warning, TEXT("    PixelsPerTick: %f"), (double)PixelsPerTick);
-		UE_LOG(LogTemp, Warning, TEXT("    PixelsPerBar: %f"), (double)(PixelsPerTick * TicksPerBar));
-		UE_LOG(LogTemp, Warning, TEXT("    OptimalDensity: %d (%s)"), (int32)OptimalDensity, 
-			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Subdivisions ? TEXT("Subdivisions") :
-			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Beats ? TEXT("Beats") :
-			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Bars ? TEXT("Bars") :
-			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::SparseBar ? TEXT("SparseBar") :
-			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::VerySparseBars ? TEXT("VerySparseBars") : TEXT("Unknown"));
-
-		// Store previous density to detect changes
-		static UnDAW::TimelineConstants::EGridDensity PreviousDensity = UnDAW::TimelineConstants::EGridDensity::Bars;
+		// Log density changes only when they occur
 		if (PreviousDensity != OptimalDensity)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("  >>> DENSITY CHANGED: %d -> %d <<<"), (int32)PreviousDensity, (int32)OptimalDensity);
+			UE_LOG(LogTemp, Log, TEXT("Grid density changed: %d -> %d (PixelsPerBar=%.1f)"), 
+				(int32)PreviousDensity, (int32)OptimalDensity, (double)(PixelsPerTick * TicksPerBar));
 			PreviousDensity = OptimalDensity;
 		}
-
+		
 		// For display purposes, we want "Bar 1" to always appear at the beginning of our timeline
 		// regardless of the MIDI file's internal StartBar value
 		int32 DisplayBarNumber = 1;
@@ -371,8 +428,6 @@ public:
 
 			// Only add the grid point if it should be shown at current density
 			const bool bShouldShow = UnDAW::FTimelineGridDensityCalculator::ShouldShowGridPoint(BarGridPoint, OptimalDensity, DisplayBarNumber);
-			UE_LOG(LogTemp, Warning, TEXT("    ShouldShowGridPoint for Bar %d: %s (Density=%d, BarNumber=%d)"), 
-				DisplayBarNumber, bShouldShow ? TEXT("true") : TEXT("false"), (int32)OptimalDensity, DisplayBarNumber);
 
 			if (bShouldShow)
 			{
@@ -382,25 +437,15 @@ public:
 			else
 			{
 				BarsSkipped++;
-				UE_LOG(LogTemp, Warning, TEXT("    >>> BAR %d FILTERED OUT BY DENSITY CALCULATOR <<<"), DisplayBarNumber);
 			}
 
 			// Calculate next bar tick
 			const float NextBarTickIncrement = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
 			const float NextBarTick = BarTick + NextBarTickIncrement;
 			
-			// DEBUG: More detailed logging for the loop exit condition
-			const float NextBarPixel = TickToPixel(NextBarTick - GetStartOffset());
-			UE_LOG(LogTemp, Warning, TEXT("  Bar %d: BarTick=%f, BarPixel=%f"), DisplayBarNumber, BarTick, BarPixel);
-			UE_LOG(LogTemp, Warning, TEXT("  Next: NextBarTick=%f, NextBarPixel=%f"), NextBarTick, NextBarPixel);
-			UE_LOG(LogTemp, Warning, TEXT("  Condition: NextBarTick(%f) <= VisibleEndTick(%f) = %s"), 
-				NextBarTick, VisibleEndTick, (NextBarTick <= VisibleEndTick) ? TEXT("true") : TEXT("false"));
-			
 			// Check if we're about to exit the loop
 			if (NextBarTick > VisibleEndTick || DisplayBarNumber >= 200)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("  Loop will exit: NextBarTick=%f > VisibleEndTick=%f (NextBarPixel=%f, DisplayBarNumber=%d)"), 
-					NextBarTick, VisibleEndTick, NextBarPixel, DisplayBarNumber + 1);
 				break;
 			}
 
@@ -409,11 +454,8 @@ public:
 			DisplayBarNumber++;
 		}
 
-		// DEBUG: Log final summary
-		UE_LOG(LogTemp, Warning, TEXT("  Grid calculation completed:"));
-		UE_LOG(LogTemp, Warning, TEXT("    Total bars added: %d"), BarsAdded);
-		UE_LOG(LogTemp, Warning, TEXT("    Total bars skipped: %d"), BarsSkipped);
-		UE_LOG(LogTemp, Warning, TEXT("    GridPoints count: %d"), GridPoints.Num());
+		// Log final summary only in verbose mode
+		UE_LOG(LogTemp, VeryVerbose, TEXT("Grid calculation completed: %d bars added, %d skipped"), BarsAdded, BarsSkipped);
 
 		// Store current density for use in painting
 		CurrentGridDensity = OptimalDensity;
@@ -469,6 +511,9 @@ public:
 private:
 	// Store current grid density for painting decisions
 	UnDAW::TimelineConstants::EGridDensity CurrentGridDensity = UnDAW::TimelineConstants::EGridDensity::Bars;
+	
+	// Store previous density per-instance to detect changes (not static to avoid cross-panel interference)
+	UnDAW::TimelineConstants::EGridDensity PreviousDensity = UnDAW::TimelineConstants::EGridDensity::Bars;
 
 	// Helper method to add beats and subdivisions for a bar
 	void AddBeatsAndSubdivisions(float BarStartTick, int32 BarNumber, UnDAW::TimelineConstants::EGridDensity Density, const FSongMaps* SongsMap, float VisibleEndTick);
@@ -647,24 +692,23 @@ public:
 		
 		ChildSlot
 			[
-				SNew(SSplitter)
-					.ResizeMode(ESplitterResizeMode::Fill)
-					.Orientation(Orient_Vertical)
-					+ SSplitter::Slot()
-					.Value(0.75f)
-					[
-						SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
-							.Clipping(EWidgetClipping::ClipToBounds)  // Use proper clipping but with our improved buffer calculations
+			 SNew(SSplitter)
+				.ResizeMode(ESplitterResizeMode::Fill)
+				.Orientation(Orient_Vertical)
+				+ SSplitter::Slot()
+				.Value(0.75f)
+				[
+					SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
+							.Clipping(EWidgetClipping::ClipToBounds)
 							.ParentArgs(BaseArgs)
 
-					]
-					+ SSplitter::Slot()
-					.Value(0.25f)
-					[
-						SAssignNew(MidiClipVelocityEditor, SMidiClipVelocityEditor, InSequence)
-							.Clipping(EWidgetClipping::ClipToBounds)  // Use proper clipping but with our improved buffer calculations
+				]
+				+ SSplitter::Slot()
+				.Value(0.25f)
+				[
+					SAssignNew(MidiClipVelocityEditor, SMidiClipVelocityEditor, InSequence)
 							.ParentArgs(BaseArgs)
-					]
+				]
 			];
 
 	}

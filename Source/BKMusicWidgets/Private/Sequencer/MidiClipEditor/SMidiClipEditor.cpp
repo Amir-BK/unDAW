@@ -228,14 +228,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 
 	const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
 
-	// DEBUG: Log clipping information to understand if bars are being clipped
-	UE_LOG(LogTemp, Warning, TEXT("PaintTimeline Debug:"));
-	UE_LOG(LogTemp, Warning, TEXT("  AllottedGeometry.Size: %s"), *AllottedGeometry.Size.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("  MyCullingRect: Left=%f, Top=%f, Right=%f, Bottom=%f"), 
-		(double)MyCullingRect.Left, (double)MyCullingRect.Top, (double)MyCullingRect.Right, (double)MyCullingRect.Bottom);
-	UE_LOG(LogTemp, Warning, TEXT("  MajorTabWidth: %f"), MajorTabWidth);
-	UE_LOG(LogTemp, Warning, TEXT("  GridPoints to draw: %d"), GridPoints.Num());
-
 	if (bShouldPaintTimelineBar)
 	{
 		FSlateDrawElement::MakeBox(
@@ -269,10 +261,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 	const float PixelsPerTick = Zoom.Get().X / TicksPerMs;
 	const float PixelsPerBar = PixelsPerTick * TicksPerBar;
 
-	int32 BarsDrawn = 0;
-	int32 BarsSkippedOutsideControls = 0;
-	int32 BarsSkippedClippedAway = 0;
-
 	// Draw grid points
 	for (const auto& [OriginTick, GridPoint] : GridPoints)
 	{
@@ -281,17 +269,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 
 		// Only draw timeline elements if they're at or to the right of the controls area
 		const bool bShouldDrawTimelineElements = PixelPosition >= MajorTabWidth;
-		
-		// Check if the bar line would be clipped by the culling rectangle
-		const bool bIsWithinCullingRect = PixelPosition >= MyCullingRect.Left && PixelPosition <= MyCullingRect.Right;
-
-		// DEBUG: Log detailed information for each grid point
-		UE_LOG(LogTemp, Warning, TEXT("  Processing GridPoint: Bar %d, Tick=%f, PixelPosition=%f"), 
-			GridPoint.Bar, (double)OriginTick, (double)PixelPosition);
-		UE_LOG(LogTemp, Warning, TEXT("    bShouldDrawTimelineElements: %s (PixelPosition >= MajorTabWidth: %f >= %f)"), 
-			bShouldDrawTimelineElements ? TEXT("true") : TEXT("false"), (double)PixelPosition, (double)MajorTabWidth);
-		UE_LOG(LogTemp, Warning, TEXT("    bIsWithinCullingRect: %s (Left=%f <= PixelPos=%f <= Right=%f)"), 
-			bIsWithinCullingRect ? TEXT("true") : TEXT("false"), (double)MyCullingRect.Left, (double)PixelPosition, (double)MyCullingRect.Right);
 
 		switch (GridPoint.Type)
 		{
@@ -300,8 +277,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 			{
 				// Check if density calculator allows this bar
 				const bool bShouldShowBarText = UnDAW::FTimelineGridDensityCalculator::ShouldShowBarText(GridPoint.Bar, CurrentGridDensity, PixelsPerBar);
-				UE_LOG(LogTemp, Warning, TEXT("    ShouldShowBarText: %s (Bar %d, Density=%d, PixelsPerBar=%f)"), 
-					bShouldShowBarText ? TEXT("true") : TEXT("false"), GridPoint.Bar, (int32)CurrentGridDensity, (double)PixelsPerBar);
 
 				// Only show bar text if density calculator says we should
 				if (bShouldShowBarText)
@@ -353,7 +328,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 			// Only draw bar lines if they're at or to the right of the controls area
 			if (bShouldDrawTimelineElements)
 			{
-				// Always draw the bar line, but log if it might be clipped
 				FSlateDrawElement::MakeLines(
 					OutDrawElements,
 					LayerId + 2, // Lines above background and text
@@ -367,23 +341,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 					false,
 					1.0f
 				);
-				
-				BarsDrawn++;
-				if (bIsWithinCullingRect)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("    Drew bar line for Bar %d at pixel %f (WITHIN culling rect)"), GridPoint.Bar, (double)PixelPosition);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("    Drew bar line for Bar %d at pixel %f (OUTSIDE culling rect - MAY BE CLIPPED)"), GridPoint.Bar, (double)PixelPosition);
-					BarsSkippedClippedAway++;
-				}
-			}
-			else
-			{
-				BarsSkippedOutsideControls++;
-				UE_LOG(LogTemp, Warning, TEXT("    Skipped bar line for Bar %d - outside controls area (pixel %f < MajorTabWidth %f)"), 
-					GridPoint.Bar, (double)PixelPosition, (double)MajorTabWidth);
 			}
 			break;
 
@@ -428,12 +385,6 @@ int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometr
 			break;
 		}
 	}
-
-	// DEBUG: Log final drawing summary with clipping information
-	UE_LOG(LogTemp, Warning, TEXT("  Drawing completed:"));
-	UE_LOG(LogTemp, Warning, TEXT("    Bars drawn: %d"), BarsDrawn);
-	UE_LOG(LogTemp, Warning, TEXT("    Bars skipped (outside controls): %d"), BarsSkippedOutsideControls);
-	UE_LOG(LogTemp, Warning, TEXT("    Bars possibly clipped: %d"), BarsSkippedClippedAway);
 
 	return LayerId + 3; // Incremented LayerId based on drawn elements
 }
