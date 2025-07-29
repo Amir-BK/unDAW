@@ -89,10 +89,10 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
         LayerId++;
         for (const auto& Note : Clip->LinkedNotes)
         {
-            const float Start = bFollowCursor.Get() ? TickToPixel(Note.StartTick) + CursorPixel : TickToPixel(Note.StartTick);
+            const float Start = TickToPixel(Note.StartTick);
             if (Start > AllottedGeometry.Size.X) continue;
 
-			const float End = bFollowCursor.Get() ? TickToPixel(Note.EndTick) + CursorPixel : TickToPixel(Note.EndTick);
+			const float End = TickToPixel(Note.EndTick);
             if (End < 0) continue;
 
             const float Width = End - Start;
@@ -120,8 +120,9 @@ int32 SMidiClipEditor::OnPaint(const FPaintArgs& Args, const FGeometry& Allotted
     }
 
     // Debug text
-    const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f) \n TimeLineHeight %f"),
-        TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y, TimelineHeight));
+    const auto ToPrint = FText::FromString(FString::Printf(TEXT("Track %d\nVZoom: %f\n HZoom: %f\n Offset (%f, %f) \n TimeLineHeight %f\nFollow Cursor: %s"),
+        TrackIndex, Zoom.Get().X, Zoom.Get().Y, Position.Get().X, Position.Get().Y, TimelineHeight,
+        bFollowCursor.Get() ? TEXT("ON") : TEXT("OFF")));
 
     FSlateDrawElement::MakeText(
         OutDrawElements,

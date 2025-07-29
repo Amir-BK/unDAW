@@ -111,6 +111,9 @@ protected:
 	TSharedPtr<FString> SelectedInputDeviceName;
 	//UMIDIDeviceInputController* MidiDeviceController = nullptr;
 
+	// Follow cursor state for MIDI clip editor
+	bool bMidiClipFollowCursor = true;
+
 	void SetupPreviewPerformer();
 	//void PlayAudioComponent();
 	//void StopAudioComponent();

@@ -121,6 +121,7 @@ void FUnDAWSequenceEditorToolkit::RegisterTabSpawners(const TSharedRef<class FTa
 						[
 								SAssignNew(MidiClipLinkedWidgetContainer, SMidiClipLinkedPanelsContainer, SequenceData)
 									.PlayCursor(CurrentTimestamp)
+									.bFollowCursor_Lambda([this]() { return bMidiClipFollowCursor; })
 						]
 				];
 		}))
@@ -565,7 +566,31 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 					.IsChecked_Lambda([this]() -> ECheckBoxState { return PianoRollGraph && PianoRollGraph->bFollowCursor ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
 					.Content()
 					[
-						SNew(STextBlock).Text(INVTEXT("Follow Cursor"))
+						SNew(STextBlock).Text(INVTEXT("Follow Cursor (Piano)"))
+					]
+				);
+
+				//add follow cursor checkbox for MIDI clip editor
+				ToolbarBuilder.AddWidget(SNew(SCheckBox)
+					.OnCheckStateChanged_Lambda([this](ECheckBoxState NewState) { 
+						if (MidiClipLinkedWidgetContainer) 
+						{
+							bMidiClipFollowCursor = NewState == ECheckBoxState::Checked;
+							// Update the follow cursor state if the widget exists
+							if (MidiClipLinkedWidgetContainer->MidiClipEditor)
+							{
+								MidiClipLinkedWidgetContainer->MidiClipEditor->bFollowCursor.Set(bMidiClipFollowCursor);
+							}
+							if (MidiClipLinkedWidgetContainer->MidiClipVelocityEditor)
+							{
+								MidiClipLinkedWidgetContainer->MidiClipVelocityEditor->bFollowCursor.Set(bMidiClipFollowCursor);
+							}
+						}
+					})
+					.IsChecked_Lambda([this]() -> ECheckBoxState { return bMidiClipFollowCursor ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+					.Content()
+					[
+						SNew(STextBlock).Text(INVTEXT("Follow Cursor (Clip)"))
 					]
 				);
 
@@ -593,33 +618,34 @@ void FUnDAWSequenceEditorToolkit::ExtendToolbar()
 				ToolbarBuilder.EndSection();
 				//now a new section, combobox for midi input 
 
-				//ToolbarBuilder.BeginSection("MIDI Input");
-				//TArray<FMIDIDeviceInfo> InputDevices;
-				//TArray<FMIDIDeviceInfo> OutputDevices;
+				// Commented out MIDI input section
+				/*
+				ToolbarBuilder.BeginSection("MIDI Input");
+				TArray<FMIDIDeviceInfo> InputDevices;
+				TArray<FMIDIDeviceInfo> OutputDevices;
 
-				//UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
+				UMIDIDeviceManager::FindAllMIDIDeviceInfo(InputDevices, OutputDevices);
 
-				//InputDeviceNames.Empty();
-				//
-				//for (auto& Device : InputDevices)
-				//{
-				//	InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
-				//}
+				InputDeviceNames.Empty();
+				
+				for (auto& Device : InputDevices)
+				{
+					InputDeviceNames.Add(MakeShared<FString>(Device.DeviceName));
+				}
 
-//				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
-//					.OptionsSource(&InputDeviceNames)
-//					.OnSelectionChanged(this, &FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged)
-//					.InitiallySelectedItem(InputDeviceNames[0])
-//					.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
-//						{
-//							return SNew(STextBlock).Text(FText::FromString(*InItem));
-//						})
-//					.Content()
-//					[
-//						SNew(STextBlock).Text(INVTEXT("MIDI Input Device"))
-//					]);
-//
-
+				ToolbarBuilder.AddWidget(SNew(SComboBox<TSharedPtr<FString>>)
+					.OptionsSource(&InputDeviceNames)
+					.OnSelectionChanged(this, &FUnDAWSequenceEditorToolkit::OnMidiInputDeviceChanged)
+					.InitiallySelectedItem(InputDeviceNames[0])
+					.OnGenerateWidget_Lambda([](TSharedPtr<FString> InItem)
+						{
+							return SNew(STextBlock).Text(FText::FromString(*InItem));
+						})
+					.Content()
+					[
+						SNew(STextBlock).Text(INVTEXT("MIDI Input Device"))
+					]);
+				*/
 
 			}));
 
@@ -739,7 +765,4 @@ void FUnDAWSequenceEditorToolkit::OnAssetsDropped(const FDragDropEvent& Event, T
 		}
 		
 	}
-
-
-
 }

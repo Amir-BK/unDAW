@@ -14,6 +14,9 @@
 #include "Widgets/Layout/SSplitter.h"
 #include "Styling/AppStyle.h"
 #include <AudioWidgetsSlateTypes.h>
+#include "Framework/Application/SlateApplication.h"
+#include "Input/CursorReply.h"
+#include "GenericPlatform/ICursor.h"
 
 
 /**
@@ -49,6 +52,7 @@ public:
 		SLATE_ATTRIBUTE(FVector2D, Position);
 		SLATE_ATTRIBUTE(FMusicTimestamp, PlayCursor);
 		SLATE_ATTRIBUTE(bool, bFollowCursor)
+		SLATE_ARGUMENT_DEFAULT(float, CursorFollowAnchorPosition) = 0.5f;
 		SLATE_EVENT(FOnPanelPositionChangedByUser, OnPanelPositionChangedByUser);
 		SLATE_EVENT(FOnPanelZoomChangedByUser, OnPanelZoomByUser);
 	SLATE_END_ARGS()
@@ -62,6 +66,13 @@ public:
 		OnPanelZoomByUser = InArgs._OnPanelZoomByUser;
 		PlayCursor = InArgs._PlayCursor;
 		bFollowCursor = InArgs._bFollowCursor;
+		CursorFollowAnchorPosition = InArgs._CursorFollowAnchorPosition;
+
+		// Enable ticking if we have valid sequence data for follow cursor functionality
+		if (SequenceData)
+		{
+			SetCanTick(true);
+		}
 
 		RecalculateGrid();
 	};
@@ -84,11 +95,67 @@ public:
 		}
 	}
 
+	// Override Tick to implement follow cursor functionality
+	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override
+	{
+		SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+
+		// Only perform follow cursor logic if we have sequence data and follow cursor is enabled
+		if (!SequenceData || !bFollowCursor.Get())
+		{
+			return;
+		}
+
+		// Check if transport is playing
+		if (SequenceData->PlayState != EBKPlayState::TransportPlaying)
+		{
+			return;
+		}
+
+		auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
+		if (!MidiSongMap)
+		{
+			return;
+		}
+
+		// Calculate current play position in ticks relative to clip start
+		const auto PlayCursorTick = MidiSongMap->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None);
+		const auto RelativePlayCursorTick = PlayCursorTick - GetStartOffset();
+		
+		// Convert to milliseconds for position calculation  
+		const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(RelativePlayCursorTick);
+		
+		// Calculate desired cursor position on screen (as a fraction of viewport width)
+		const float ViewportWidth = AllottedGeometry.GetLocalSize().X - MajorTabWidth;
+		const float DesiredCursorScreenX = ViewportWidth * CursorFollowAnchorPosition;
+		
+		// Calculate where the cursor would be with current position
+		const float CurrentCursorScreenX = TickToPixel(RelativePlayCursorTick) - MajorTabWidth;
+		
+		// Calculate how much we need to adjust position to center cursor at desired location
+		const float PositionAdjustment = DesiredCursorScreenX - CurrentCursorScreenX;
+		
+		// Apply the adjustment to the current position
+		FVector2D NewPosition = Position.Get();
+		NewPosition.X += PositionAdjustment;
+		
+		// Update position (this will notify linked panels if delegates are bound)
+		if (OnPanelPositionChangedByUser.IsBound())
+		{
+			OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
+		}
+		else
+		{
+			SetPosition(NewPosition, bLockVerticalPan);
+		}
+	}
+
 	FVector2D PositionOffset = FVector2D(0, 0);
 	TAttribute<FVector2D> Position = FVector2D(0, 0);
 	TAttribute<FMusicTimestamp> PlayCursor = FMusicTimestamp();
 	TAttribute<FVector2D> Zoom = FVector2D(1, 1);
 	TAttribute<bool> bFollowCursor = true;
+	float CursorFollowAnchorPosition = 0.5f;
 	FOnPanelPositionChangedByUser OnPanelPositionChangedByUser;
 	FOnPanelZoomChangedByUser OnPanelZoomByUser;
 	FSlateBrush* PlayCursorHandleBrush = nullptr;
@@ -110,15 +177,14 @@ public:
 
 	TRange<int> ContentRange;
 
-	TOptional<EMouseCursor::Type> GetCursor() const override
+	virtual TOptional<EMouseCursor::Type> GetCursor() const override
 	{
-
 		if (bIsPanActive)
 		{
 			return EMouseCursor::GrabHand;
 		}
 
-		return TOptional<EMouseCursor::Type>();
+		return SCompoundWidget::GetCursor();
 	}
 
 	FReply OnMousePan(const FGeometry & MyGeometry, const FPointerEvent & MouseEvent)
@@ -221,7 +287,7 @@ public:
 	}
 
 
-	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
 		 if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton && bIsPanActive)
 		{
@@ -322,12 +388,12 @@ public:
  
 	virtual void OnVerticalScroll(float ScrollAmount) {};
 
-	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	virtual FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
 		return OnMousePan(MyGeometry, MouseEvent);
 	}
 
-	FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
 
 		return OnZoom(MyGeometry, MouseEvent);
@@ -562,9 +628,9 @@ public:
 		}
 	}
 
-	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 
-	float GetStartOffset() const override
+	virtual float GetStartOffset() const override
 	{
 		return ClipStartOffset;
 	}
@@ -620,7 +686,7 @@ public:
 		}
 	};
 
-	float GetStartOffset() const override
+	virtual float GetStartOffset() const override
 	{
 		return ClipStartOffset;
 	}
@@ -632,7 +698,7 @@ public:
 		bLockVerticalPan = true;
 	};
 
-	int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 };
 
 class BKMUSICWIDGETS_API SMidiClipLinkedPanelsContainer : public SCompoundWidget
@@ -643,12 +709,16 @@ public:
 		SLATE_ARGUMENT_DEFAULT(float, TimelineHeight) = 25.0f;
 		SLATE_ARGUMENT_DEFAULT(FVector2D, Position) = FVector2D(0, 0);
 		SLATE_ATTRIBUTE(FMusicTimestamp, PlayCursor);
+		SLATE_ATTRIBUTE(bool, bFollowCursor);
+		SLATE_ARGUMENT_DEFAULT(float, CursorFollowAnchorPosition) = 0.5f;
 		SLATE_ARGUMENT_DEFAULT(FVector2D, Zoom) = FVector2D(1, 1);
 	SLATE_END_ARGS()
 
 	TSharedPtr<SMidiClipEditor> MidiClipEditor;
 	TSharedPtr<SMidiClipVelocityEditor> MidiClipVelocityEditor;
 	TAttribute<FMusicTimestamp> PlayCursor = FMusicTimestamp();
+	TAttribute<bool> bFollowCursor = true;
+	float CursorFollowAnchorPosition = 0.5f;
 
 	FVector2D Position = FVector2D(0, 0);
 	FVector2D Zoom = FVector2D(1, 1);
@@ -683,12 +753,16 @@ public:
 
 		Position = InArgs._Position;
 		PlayCursor = InArgs._PlayCursor;
+		bFollowCursor = InArgs._bFollowCursor;
+		CursorFollowAnchorPosition = InArgs._CursorFollowAnchorPosition;
 
 		SMidiEditorPanelBase::FArguments BaseArgs;
 		//BaseArgs.Position(TAttribute<FVector2D>::Create(TAttribute<FVector2D>::FGetter::CreateLambda([this]() { return Position; })));
 		BaseArgs.OnPanelPositionChangedByUser(FOnPanelPositionChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelMovedByUser));
 		BaseArgs.OnPanelZoomByUser(FOnPanelZoomChangedByUser::CreateSP(this, &SMidiClipLinkedPanelsContainer::OnInternalPanelZoomByUser));
 		BaseArgs.PlayCursor(PlayCursor);
+		BaseArgs.bFollowCursor(bFollowCursor);
+		BaseArgs.CursorFollowAnchorPosition(CursorFollowAnchorPosition);
 		
 		ChildSlot
 			[
