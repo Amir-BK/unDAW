@@ -20,25 +20,29 @@ namespace UnDAW
 		const int32 TicksPerSubdivision = TicksPerBeat / 4; // 16th notes
 		const float PixelsPerSubdivision = PixelsPerTick * TicksPerSubdivision;
 		
-		if (PixelsPerSubdivision >= TimelineConstants::MinPixelsPerMinorTick)
+		// Add hysteresis to prevent flickering by using larger thresholds
+		// This makes the density changes less sensitive to small zoom adjustments
+		const float HysteresisMultiplier = 1.5f;
+		
+		if (PixelsPerSubdivision >= TimelineConstants::MinPixelsPerMinorTick * HysteresisMultiplier)
 		{
 			return TimelineConstants::EGridDensity::Subdivisions;
 		}
 		
 		// Check if we can show beats
-		if (PixelsPerBeat >= TimelineConstants::MinPixelsPerMinorTick)
+		if (PixelsPerBeat >= TimelineConstants::MinPixelsPerMinorTick * HysteresisMultiplier)
 		{
 			return TimelineConstants::EGridDensity::Beats;
 		}
 		
-		// Check if we can show all bars
-		if (PixelsPerBar >= TimelineConstants::MinPixelsPerMajorTick)
+		// Check if we can show all bars - use larger threshold to prevent bar 3 from disappearing
+		if (PixelsPerBar >= TimelineConstants::MinPixelsPerMajorTick * HysteresisMultiplier)
 		{
 			return TimelineConstants::EGridDensity::Bars;
 		}
 		
-		// Check if we can show every other bar
-		if (PixelsPerBar * 2 >= TimelineConstants::MinPixelsPerMajorTick)
+		// Check if we can show every other bar - use even larger threshold
+		if (PixelsPerBar * 2 >= TimelineConstants::MinPixelsPerMajorTick * HysteresisMultiplier)
 		{
 			return TimelineConstants::EGridDensity::SparseBar;
 		}

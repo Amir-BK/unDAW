@@ -221,4 +221,284 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
     return LayerId;
 }
 
+int32 SMidiEditorPanelBase::PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
+{
+	// Recalculate grid with current geometry to ensure we have up-to-date grid points
+	const_cast<SMidiEditorPanelBase*>(this)->RecalculateGrid(&AllottedGeometry);
+
+	const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
+
+	// DEBUG: Log clipping information to understand if bars are being clipped
+	UE_LOG(LogTemp, Warning, TEXT("PaintTimeline Debug:"));
+	UE_LOG(LogTemp, Warning, TEXT("  AllottedGeometry.Size: %s"), *AllottedGeometry.Size.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("  MyCullingRect: Left=%f, Top=%f, Right=%f, Bottom=%f"), 
+		(double)MyCullingRect.Left, (double)MyCullingRect.Top, (double)MyCullingRect.Right, (double)MyCullingRect.Bottom);
+	UE_LOG(LogTemp, Warning, TEXT("  MajorTabWidth: %f"), MajorTabWidth);
+	UE_LOG(LogTemp, Warning, TEXT("  GridPoints to draw: %d"), GridPoints.Num());
+
+	if (bShouldPaintTimelineBar)
+	{
+		FSlateDrawElement::MakeBox(
+			OutDrawElements,
+			LayerId,
+			AllottedGeometry.ToPaintGeometry(
+				FVector2f(AllottedGeometry.Size.X - MajorTabWidth, TimelineHeight),
+				FSlateLayoutTransform(FVector2f(MajorTabWidth, 0))
+			),
+			FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
+			ESlateDrawEffect::None,
+			FLinearColor::Black
+		);
+	}
+
+	// Setup drawing parameters
+	const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
+	const float Height = (AllottedGeometry.Size.Y / 127.0f) / Zoom.Get().Y;
+	const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
+	const FLinearColor BeatLineColor = FLinearColor::Blue.CopyWithNewOpacity(0.1f);
+	const FLinearColor SubdivisionLineColor = FLinearColor::Black.CopyWithNewOpacity(0.05f);
+	const FLinearColor BarTextColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
+	
+	// Use the proper font constructor
+	const FSlateFontInfo LargeFont = FCoreStyle::GetDefaultFontStyle("Regular", 14);
+	const FSlateFontInfo SmallFont = FCoreStyle::GetDefaultFontStyle("Regular", 7);
+
+	// Calculate pixels per bar for text density decisions
+	const float TicksPerBar = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, 0);
+	const float TicksPerMs = 1.0f / MidiSongMap->TickToMs(1.0f);
+	const float PixelsPerTick = Zoom.Get().X / TicksPerMs;
+	const float PixelsPerBar = PixelsPerTick * TicksPerBar;
+
+	int32 BarsDrawn = 0;
+	int32 BarsSkippedOutsideControls = 0;
+	int32 BarsSkippedClippedAway = 0;
+
+	// Draw grid points
+	for (const auto& [OriginTick, GridPoint] : GridPoints)
+	{
+		const float Tick = OriginTick - GetStartOffset();
+		const float PixelPosition = TickToPixel(Tick);
+
+		// Only draw timeline elements if they're at or to the right of the controls area
+		const bool bShouldDrawTimelineElements = PixelPosition >= MajorTabWidth;
+		
+		// Check if the bar line would be clipped by the culling rectangle
+		const bool bIsWithinCullingRect = PixelPosition >= MyCullingRect.Left && PixelPosition <= MyCullingRect.Right;
+
+		// DEBUG: Log detailed information for each grid point
+		UE_LOG(LogTemp, Warning, TEXT("  Processing GridPoint: Bar %d, Tick=%f, PixelPosition=%f"), 
+			GridPoint.Bar, (double)OriginTick, (double)PixelPosition);
+		UE_LOG(LogTemp, Warning, TEXT("    bShouldDrawTimelineElements: %s (PixelPosition >= MajorTabWidth: %f >= %f)"), 
+			bShouldDrawTimelineElements ? TEXT("true") : TEXT("false"), (double)PixelPosition, (double)MajorTabWidth);
+		UE_LOG(LogTemp, Warning, TEXT("    bIsWithinCullingRect: %s (Left=%f <= PixelPos=%f <= Right=%f)"), 
+			bIsWithinCullingRect ? TEXT("true") : TEXT("false"), (double)MyCullingRect.Left, (double)PixelPosition, (double)MyCullingRect.Right);
+
+		switch (GridPoint.Type)
+		{
+		case UnDAW::EGridPointType::Bar:
+			if (bShouldPaintTimelineBar && bShouldDrawTimelineElements)
+			{
+				// Check if density calculator allows this bar
+				const bool bShouldShowBarText = UnDAW::FTimelineGridDensityCalculator::ShouldShowBarText(GridPoint.Bar, CurrentGridDensity, PixelsPerBar);
+				UE_LOG(LogTemp, Warning, TEXT("    ShouldShowBarText: %s (Bar %d, Density=%d, PixelsPerBar=%f)"), 
+					bShouldShowBarText ? TEXT("true") : TEXT("false"), GridPoint.Bar, (int32)CurrentGridDensity, (double)PixelsPerBar);
+
+				// Only show bar text if density calculator says we should
+				if (bShouldShowBarText)
+				{
+					// Bar number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId + 1, // Ensure text is above background
+						AllottedGeometry.ToPaintGeometry(
+							FVector2f(50.0f, Height),
+							FSlateLayoutTransform(FVector2f(PixelPosition, 0))
+						),
+						FText::FromString(FString::FromInt(GridPoint.Bar)),
+						LargeFont,
+						ESlateDrawEffect::None,
+						BarTextColor
+					);
+
+					// Beat number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId + 1,
+						AllottedGeometry.ToPaintGeometry(
+							FVector2f(50.0f, Height),
+							FSlateLayoutTransform(FVector2f(PixelPosition, 18))
+						),
+						FText::FromString(FString::FromInt(GridPoint.Beat)),
+						SmallFont,
+						ESlateDrawEffect::None,
+						FLinearColor::White
+					);
+
+					// Subdivision number
+					FSlateDrawElement::MakeText(
+						OutDrawElements,
+						LayerId + 1,
+						AllottedGeometry.ToPaintGeometry(
+							FVector2f(50.0f, Height),
+							FSlateLayoutTransform(FVector2f(PixelPosition, 30))
+						),
+						FText::FromString(FString::FromInt(GridPoint.Subdivision)),
+						SmallFont,
+						ESlateDrawEffect::None,
+						FLinearColor::White
+					);
+				}
+			}
+
+			// Only draw bar lines if they're at or to the right of the controls area
+			if (bShouldDrawTimelineElements)
+			{
+				// Always draw the bar line, but log if it might be clipped
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId + 2, // Lines above background and text
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
+					ESlateDrawEffect::None,
+					BarLineColor,
+					false,
+					1.0f
+				);
+				
+				BarsDrawn++;
+				if (bIsWithinCullingRect)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("    Drew bar line for Bar %d at pixel %f (WITHIN culling rect)"), GridPoint.Bar, (double)PixelPosition);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("    Drew bar line for Bar %d at pixel %f (OUTSIDE culling rect - MAY BE CLIPPED)"), GridPoint.Bar, (double)PixelPosition);
+					BarsSkippedClippedAway++;
+				}
+			}
+			else
+			{
+				BarsSkippedOutsideControls++;
+				UE_LOG(LogTemp, Warning, TEXT("    Skipped bar line for Bar %d - outside controls area (pixel %f < MajorTabWidth %f)"), 
+					GridPoint.Bar, (double)PixelPosition, (double)MajorTabWidth);
+			}
+			break;
+
+		case UnDAW::EGridPointType::Beat:
+			// Only draw beat lines if they're at or to the right of the controls area
+			if (bShouldDrawTimelineElements)
+			{
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId + 2,
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
+					ESlateDrawEffect::None,
+					BeatLineColor,
+					false,
+					1.0f
+				);
+			}
+			break;
+
+		case UnDAW::EGridPointType::Subdivision:
+			// Only draw subdivision lines if they're at or to the right of the controls area
+			if (bShouldDrawTimelineElements)
+			{
+				FSlateDrawElement::MakeLines(
+					OutDrawElements,
+					LayerId + 2,
+					AllottedGeometry.ToPaintGeometry(),
+					{
+						FVector2D(PixelPosition, 0),
+						FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
+					},
+					ESlateDrawEffect::None,
+					SubdivisionLineColor,
+					false,
+					1.0f
+				);
+			}
+			break;
+		}
+	}
+
+	// DEBUG: Log final drawing summary with clipping information
+	UE_LOG(LogTemp, Warning, TEXT("  Drawing completed:"));
+	UE_LOG(LogTemp, Warning, TEXT("    Bars drawn: %d"), BarsDrawn);
+	UE_LOG(LogTemp, Warning, TEXT("    Bars skipped (outside controls): %d"), BarsSkippedOutsideControls);
+	UE_LOG(LogTemp, Warning, TEXT("    Bars possibly clipped: %d"), BarsSkippedClippedAway);
+
+	return LayerId + 3; // Incremented LayerId based on drawn elements
+}
+
+// Helper method to add beats and subdivisions for a bar
+void SMidiEditorPanelBase::AddBeatsAndSubdivisions(float BarStartTick, int32 BarNumber, UnDAW::TimelineConstants::EGridDensity Density, const FSongMaps* SongsMap, float VisibleEndTick)
+{
+	const int32 TicksPerBeat = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Beat, BarStartTick);
+	const int32 TicksPerBar = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarStartTick);
+	
+	// Assuming 4/4 time signature for now - could be made dynamic later
+	const int32 BeatsPerBar = 4;
+	
+	for (int32 Beat = 1; Beat <= BeatsPerBar; Beat++)
+	{
+		const float BeatTick = BarStartTick + (Beat - 1) * TicksPerBeat;
+		
+		if (BeatTick > VisibleEndTick) break;
+		if (BeatTick == BarStartTick) continue; // Skip beat 1 as it's the same as the bar
+		
+		const UnDAW::FMusicalGridPoint BeatGridPoint = {
+			UnDAW::EGridPointType::Beat,
+			BarNumber,
+			static_cast<int8>(Beat),
+			1
+		};
+		
+		if (UnDAW::FTimelineGridDensityCalculator::ShouldShowGridPoint(BeatGridPoint, Density, BarNumber))
+		{
+			GridPoints.Add(BeatTick, BeatGridPoint);
+			
+			// Add subdivisions if density allows
+			if (Density == UnDAW::TimelineConstants::EGridDensity::Subdivisions)
+			{
+				AddSubdivisions(BeatTick, BarNumber, Beat, SongsMap, VisibleEndTick);
+			}
+		}
+	}
+}
+
+// Helper method to add subdivisions for a beat
+void SMidiEditorPanelBase::AddSubdivisions(float BeatStartTick, int32 BarNumber, int32 BeatNumber, const FSongMaps* SongsMap, float VisibleEndTick)
+{
+	const int32 TicksPerBeat = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Beat, BeatStartTick);
+	
+	// Assuming 16th note subdivisions (4 per beat)
+	const int32 SubdivisionsPerBeat = 4;
+	const int32 TicksPerSubdivision = TicksPerBeat / SubdivisionsPerBeat;
+	
+	for (int32 Subdivision = 1; Subdivision <= SubdivisionsPerBeat; Subdivision++)
+	{
+		const float SubdivisionTick = BeatStartTick + (Subdivision - 1) * TicksPerSubdivision;
+		
+		if (SubdivisionTick > VisibleEndTick) break;
+		if (SubdivisionTick == BeatStartTick) continue; // Skip subdivision 1 as it's the same as the beat
+		
+		const UnDAW::FMusicalGridPoint SubdivisionGridPoint = {
+			UnDAW::EGridPointType::Subdivision,
+			BarNumber,
+			static_cast<int8>(BeatNumber),
+			static_cast<int8>(Subdivision)
+		};
+		
+		GridPoints.Add(SubdivisionTick, SubdivisionGridPoint);
+	}
+}
+
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

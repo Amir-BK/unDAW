@@ -294,7 +294,14 @@ public:
 
 		// Calculate visible range based on current position and zoom
 		const float VisibleStartTick = SongsMap->MsToTick((-Position.Get().X - MajorTabWidth) / Zoom.Get().X);
-		const float VisibleEndTick = SongsMap->MsToTick((GeometrySize.X - Position.Get().X - MajorTabWidth) / Zoom.Get().X);
+		// Use smart buffer calculation - larger buffer when far from edge, smaller when near edge
+		// This prevents bars from being truncated while not being overly generous near boundaries
+		const float SmartBuffer = FMath::Min(200.0f, FMath::Max(50.0f, (GeometrySize.X - MajorTabWidth) * 0.1f));
+		const float VisibleEndTick = SongsMap->MsToTick((GeometrySize.X - Position.Get().X - MajorTabWidth + SmartBuffer) / Zoom.Get().X);
+
+		// DEBUG: Log visible range calculation
+		UE_LOG(LogTemp, Log, TEXT("RecalculateGrid: GeometrySize=%s, Zoom=%s, GridPoints=%d"), 
+			*GeometrySize.ToString(), *Zoom.Get().ToString(), GridPoints.Num());
 
 		// Calculate density parameters for optimal spacing
 		const float TicksPerMs = 1.0f / SongsMap->TickToMs(1.0f);
@@ -312,6 +319,25 @@ public:
 			TicksPerBeat
 		);
 
+		// DEBUG: Log density information to track when it changes
+		UE_LOG(LogTemp, Warning, TEXT("  Density Calculation:"));
+		UE_LOG(LogTemp, Warning, TEXT("    PixelsPerTick: %f"), (double)PixelsPerTick);
+		UE_LOG(LogTemp, Warning, TEXT("    PixelsPerBar: %f"), (double)(PixelsPerTick * TicksPerBar));
+		UE_LOG(LogTemp, Warning, TEXT("    OptimalDensity: %d (%s)"), (int32)OptimalDensity, 
+			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Subdivisions ? TEXT("Subdivisions") :
+			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Beats ? TEXT("Beats") :
+			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Bars ? TEXT("Bars") :
+			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::SparseBar ? TEXT("SparseBar") :
+			OptimalDensity == UnDAW::TimelineConstants::EGridDensity::VerySparseBars ? TEXT("VerySparseBars") : TEXT("Unknown"));
+
+		// Store previous density to detect changes
+		static UnDAW::TimelineConstants::EGridDensity PreviousDensity = UnDAW::TimelineConstants::EGridDensity::Bars;
+		if (PreviousDensity != OptimalDensity)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("  >>> DENSITY CHANGED: %d -> %d <<<"), (int32)PreviousDensity, (int32)OptimalDensity);
+			PreviousDensity = OptimalDensity;
+		}
+
 		// For display purposes, we want "Bar 1" to always appear at the beginning of our timeline
 		// regardless of the MIDI file's internal StartBar value
 		int32 DisplayBarNumber = 1;
@@ -326,6 +352,9 @@ public:
 			DisplayBarNumber++;
 		}
 
+		int32 BarsAdded = 0;
+		int32 BarsSkipped = 0;
+
 		// Add grid points for all bars in the visible range based on density
 		while (BarTick <= VisibleEndTick && DisplayBarNumber <= 200) // Safety limit
 		{
@@ -337,23 +366,54 @@ public:
 				0
 			};
 
+			// Calculate pixel position for this bar for debugging
+			const float BarPixel = TickToPixel(BarTick - GetStartOffset());
+
 			// Only add the grid point if it should be shown at current density
-			if (UnDAW::FTimelineGridDensityCalculator::ShouldShowGridPoint(BarGridPoint, OptimalDensity, DisplayBarNumber))
+			const bool bShouldShow = UnDAW::FTimelineGridDensityCalculator::ShouldShowGridPoint(BarGridPoint, OptimalDensity, DisplayBarNumber);
+			UE_LOG(LogTemp, Warning, TEXT("    ShouldShowGridPoint for Bar %d: %s (Density=%d, BarNumber=%d)"), 
+				DisplayBarNumber, bShouldShow ? TEXT("true") : TEXT("false"), (int32)OptimalDensity, DisplayBarNumber);
+
+			if (bShouldShow)
 			{
 				GridPoints.Add(BarTick, BarGridPoint);
-				
-				// Add beats and subdivisions if density allows
-				if (OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Subdivisions || 
-					OptimalDensity == UnDAW::TimelineConstants::EGridDensity::Beats)
-				{
-					AddBeatsAndSubdivisions(BarTick, DisplayBarNumber, OptimalDensity, SongsMap, VisibleEndTick);
-				}
+				BarsAdded++;
+			}
+			else
+			{
+				BarsSkipped++;
+				UE_LOG(LogTemp, Warning, TEXT("    >>> BAR %d FILTERED OUT BY DENSITY CALCULATOR <<<"), DisplayBarNumber);
+			}
+
+			// Calculate next bar tick
+			const float NextBarTickIncrement = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+			const float NextBarTick = BarTick + NextBarTickIncrement;
+			
+			// DEBUG: More detailed logging for the loop exit condition
+			const float NextBarPixel = TickToPixel(NextBarTick - GetStartOffset());
+			UE_LOG(LogTemp, Warning, TEXT("  Bar %d: BarTick=%f, BarPixel=%f"), DisplayBarNumber, BarTick, BarPixel);
+			UE_LOG(LogTemp, Warning, TEXT("  Next: NextBarTick=%f, NextBarPixel=%f"), NextBarTick, NextBarPixel);
+			UE_LOG(LogTemp, Warning, TEXT("  Condition: NextBarTick(%f) <= VisibleEndTick(%f) = %s"), 
+				NextBarTick, VisibleEndTick, (NextBarTick <= VisibleEndTick) ? TEXT("true") : TEXT("false"));
+			
+			// Check if we're about to exit the loop
+			if (NextBarTick > VisibleEndTick || DisplayBarNumber >= 200)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("  Loop will exit: NextBarTick=%f > VisibleEndTick=%f (NextBarPixel=%f, DisplayBarNumber=%d)"), 
+					NextBarTick, VisibleEndTick, NextBarPixel, DisplayBarNumber + 1);
+				break;
 			}
 
 			// Move to next bar
-			BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
+			BarTick = NextBarTick;
 			DisplayBarNumber++;
 		}
+
+		// DEBUG: Log final summary
+		UE_LOG(LogTemp, Warning, TEXT("  Grid calculation completed:"));
+		UE_LOG(LogTemp, Warning, TEXT("    Total bars added: %d"), BarsAdded);
+		UE_LOG(LogTemp, Warning, TEXT("    Total bars skipped: %d"), BarsSkipped);
+		UE_LOG(LogTemp, Warning, TEXT("    GridPoints count: %d"), GridPoints.Num());
 
 		// Store current density for use in painting
 		CurrentGridDensity = OptimalDensity;
@@ -363,170 +423,7 @@ public:
 		RowHeight = 10.0f * Zoom.Get().Y;
 	}
 
-	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const
-	{
-		// Recalculate grid with current geometry to ensure we have up-to-date grid points
-		const_cast<SMidiEditorPanelBase*>(this)->RecalculateGrid(&AllottedGeometry);
-
-		const bool bShouldPaintTimelineBar = TimelineHeight > 0.0f;
-
-		if (bShouldPaintTimelineBar)
-		{
-			FSlateDrawElement::MakeBox(
-				OutDrawElements,
-				LayerId,
-				AllottedGeometry.ToPaintGeometry(
-					FVector2f(AllottedGeometry.Size.X - MajorTabWidth, TimelineHeight),
-					FSlateLayoutTransform(FVector2f(MajorTabWidth, 0))
-				),
-				FAppStyle::GetBrush("Graph.Panel.SolidBackground"),
-				ESlateDrawEffect::None,
-				FLinearColor::Black
-			);
-		}
-
-		// Setup drawing parameters
-		const auto* MidiSongMap = SequenceData->HarmonixMidiFile->GetSongMaps();
-		const float Height = (AllottedGeometry.Size.Y / 127.0f) / Zoom.Get().Y;
-		const FLinearColor BarLineColor = FLinearColor::Gray.CopyWithNewOpacity(0.1f);
-		const FLinearColor BeatLineColor = FLinearColor::Blue.CopyWithNewOpacity(0.1f);
-		const FLinearColor SubdivisionLineColor = FLinearColor::Black.CopyWithNewOpacity(0.05f);
-		const FLinearColor BarTextColor = FLinearColor::Gray.CopyWithNewOpacity(0.5f);
-		
-		// Use the proper font constructor
-		const FSlateFontInfo LargeFont = FCoreStyle::GetDefaultFontStyle("Regular", 14);
-		const FSlateFontInfo SmallFont = FCoreStyle::GetDefaultFontStyle("Regular", 7);
-
-		// Calculate pixels per bar for text density decisions
-		const float TicksPerBar = MidiSongMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, 0);
-		const float TicksPerMs = 1.0f / MidiSongMap->TickToMs(1.0f);
-		const float PixelsPerTick = Zoom.Get().X / TicksPerMs;
-		const float PixelsPerBar = PixelsPerTick * TicksPerBar;
-
-		// Draw grid points
-		for (const auto& [OriginTick, GridPoint] : GridPoints)
-		{
-			const float Tick = OriginTick - GetStartOffset();
-			const float PixelPosition = TickToPixel(Tick);
-
-			// Only draw timeline elements if they're at or to the right of the controls area
-			const bool bShouldDrawTimelineElements = PixelPosition >= MajorTabWidth;
-
-			switch (GridPoint.Type)
-			{
-			case UnDAW::EGridPointType::Bar:
-				if (bShouldPaintTimelineBar && bShouldDrawTimelineElements)
-				{
-					// Only show bar text if density calculator says we should
-					if (UnDAW::FTimelineGridDensityCalculator::ShouldShowBarText(GridPoint.Bar, CurrentGridDensity, PixelsPerBar))
-					{
-						// Bar number
-						FSlateDrawElement::MakeText(
-							OutDrawElements,
-							LayerId + 1, // Ensure text is above background
-							AllottedGeometry.ToPaintGeometry(
-								FVector2f(50.0f, Height),
-								FSlateLayoutTransform(FVector2f(PixelPosition, 0))
-							),
-							FText::FromString(FString::FromInt(GridPoint.Bar)),
-							LargeFont,
-							ESlateDrawEffect::None,
-							BarTextColor
-						);
-
-						// Beat number
-						FSlateDrawElement::MakeText(
-							OutDrawElements,
-							LayerId + 1,
-							AllottedGeometry.ToPaintGeometry(
-								FVector2f(50.0f, Height),
-								FSlateLayoutTransform(FVector2f(PixelPosition, 18))
-							),
-							FText::FromString(FString::FromInt(GridPoint.Beat)),
-							SmallFont,
-							ESlateDrawEffect::None,
-							FLinearColor::White
-						);
-
-						// Subdivision number
-						FSlateDrawElement::MakeText(
-							OutDrawElements,
-							LayerId + 1,
-							AllottedGeometry.ToPaintGeometry(
-								FVector2f(50.0f, Height),
-								FSlateLayoutTransform(FVector2f(PixelPosition, 30))
-							),
-							FText::FromString(FString::FromInt(GridPoint.Subdivision)),
-							SmallFont,
-							ESlateDrawEffect::None,
-							FLinearColor::White
-						);
-					}
-				}
-
-				// Only draw bar lines if they're at or to the right of the controls area
-				if (bShouldDrawTimelineElements)
-				{
-					FSlateDrawElement::MakeLines(
-						OutDrawElements,
-						LayerId + 2, // Lines above background and text
-						AllottedGeometry.ToPaintGeometry(),
-						{
-							FVector2D(PixelPosition, 0),
-							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-						},
-						ESlateDrawEffect::None,
-						BarLineColor,
-						false,
-						1.0f
-					);
-				}
-				break;
-
-			case UnDAW::EGridPointType::Beat:
-				// Only draw beat lines if they're at or to the right of the controls area
-				if (bShouldDrawTimelineElements)
-				{
-					FSlateDrawElement::MakeLines(
-						OutDrawElements,
-						LayerId + 2,
-						AllottedGeometry.ToPaintGeometry(),
-						{
-							FVector2D(PixelPosition, 0),
-							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-						},
-						ESlateDrawEffect::None,
-						BeatLineColor,
-						false,
-						1.0f
-					);
-				}
-				break;
-
-			case UnDAW::EGridPointType::Subdivision:
-				// Only draw subdivision lines if they're at or to the right of the controls area
-				if (bShouldDrawTimelineElements)
-				{
-					FSlateDrawElement::MakeLines(
-						OutDrawElements,
-						LayerId + 2,
-						AllottedGeometry.ToPaintGeometry(),
-						{
-							FVector2D(PixelPosition, 0),
-							FVector2D(PixelPosition, AllottedGeometry.GetLocalSize().Y)
-						},
-						ESlateDrawEffect::None,
-						SubdivisionLineColor,
-						false,
-						1.0f
-					);
-				}
-				break;
-			}
-		}
-
-		return LayerId + 3; // Incremented LayerId based on drawn elements
-	}
+	int32 PaintTimeline(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 
 	virtual float GetStartOffset() const
 	{
@@ -574,67 +471,10 @@ private:
 	UnDAW::TimelineConstants::EGridDensity CurrentGridDensity = UnDAW::TimelineConstants::EGridDensity::Bars;
 
 	// Helper method to add beats and subdivisions for a bar
-	void AddBeatsAndSubdivisions(float BarStartTick, int32 BarNumber, UnDAW::TimelineConstants::EGridDensity Density, const FSongMaps* SongsMap, float VisibleEndTick)
-	{
-		const int32 TicksPerBeat = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Beat, BarStartTick);
-		const int32 TicksPerBar = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarStartTick);
-		
-		// Assuming 4/4 time signature for now - could be made dynamic later
-		const int32 BeatsPerBar = 4;
-		
-		for (int32 Beat = 1; Beat <= BeatsPerBar; Beat++)
-		{
-			const float BeatTick = BarStartTick + (Beat - 1) * TicksPerBeat;
-			
-			if (BeatTick > VisibleEndTick) break;
-			if (BeatTick == BarStartTick) continue; // Skip beat 1 as it's the same as the bar
-			
-			const UnDAW::FMusicalGridPoint BeatGridPoint = {
-				UnDAW::EGridPointType::Beat,
-				BarNumber,
-				static_cast<int8>(Beat),
-				1
-			};
-			
-			if (UnDAW::FTimelineGridDensityCalculator::ShouldShowGridPoint(BeatGridPoint, Density, BarNumber))
-			{
-				GridPoints.Add(BeatTick, BeatGridPoint);
-				
-				// Add subdivisions if density allows
-				if (Density == UnDAW::TimelineConstants::EGridDensity::Subdivisions)
-				{
-					AddSubdivisions(BeatTick, BarNumber, Beat, SongsMap, VisibleEndTick);
-				}
-			}
-		}
-	}
+	void AddBeatsAndSubdivisions(float BarStartTick, int32 BarNumber, UnDAW::TimelineConstants::EGridDensity Density, const FSongMaps* SongsMap, float VisibleEndTick);
 
 	// Helper method to add subdivisions for a beat
-	void AddSubdivisions(float BeatStartTick, int32 BarNumber, int32 BeatNumber, const FSongMaps* SongsMap, float VisibleEndTick)
-	{
-		const int32 TicksPerBeat = SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Beat, BeatStartTick);
-		
-		// Assuming 16th note subdivisions (4 per beat)
-		const int32 SubdivisionsPerBeat = 4;
-		const int32 TicksPerSubdivision = TicksPerBeat / SubdivisionsPerBeat;
-		
-		for (int32 Subdivision = 1; Subdivision <= SubdivisionsPerBeat; Subdivision++)
-		{
-			const float SubdivisionTick = BeatStartTick + (Subdivision - 1) * TicksPerSubdivision;
-			
-			if (SubdivisionTick > VisibleEndTick) break;
-			if (SubdivisionTick == BeatStartTick) continue; // Skip subdivision 1 as it's the same as the beat
-			
-			const UnDAW::FMusicalGridPoint SubdivisionGridPoint = {
-				UnDAW::EGridPointType::Subdivision,
-				BarNumber,
-				static_cast<int8>(BeatNumber),
-				static_cast<int8>(Subdivision)
-			};
-			
-			GridPoints.Add(SubdivisionTick, SubdivisionGridPoint);
-		}
-	}
+	void AddSubdivisions(float BeatStartTick, int32 BarNumber, int32 BeatNumber, const FSongMaps* SongsMap, float VisibleEndTick);
 };
 
 /**
@@ -660,9 +500,9 @@ public:
 	float ClipStartOffset = 0.0f;
 
 	/** Constructs this widget with InArgs */
-	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence);
+	 void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence);
 
-	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips)
+	 void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips)
 	{
 		if (!Clips.IsEmpty())
 		{
@@ -721,7 +561,7 @@ public:
 	FLinkedNotesClip* Clip = nullptr;
 	float ClipStartOffset = 0.0f;
 
-	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) {
+	 void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) {
 		if (!Clips.IsEmpty())
 		{
 			TrackIndex = Clips[0].Key->MetadataIndex;
@@ -740,7 +580,7 @@ public:
 		return ClipStartOffset;
 	}
 
-	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence) {
+	 void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence) {
 		SMidiEditorPanelBase::Construct(InArgs._ParentArgs, InSequence);
 		SequenceData = InSequence;
 		TimelineHeight = InArgs._TimelineHeight;
@@ -771,14 +611,14 @@ public:
 	TAttribute<FVector2D> NoteEditorPosition; // Tracks (X, Y) for note editor
 	TAttribute<float> VelocityEditorPositionX; // Only track X for velocity editor
 
-	void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) 
+	 void OnClipsFocused(TArray< TTuple<FDawSequencerTrack*, FLinkedNotesClip*> > Clips) 
 	{
 		MidiClipEditor->OnClipsFocused(Clips);
 		MidiClipVelocityEditor->OnClipsFocused(Clips);
 
 	}
 
-	void OnInternalPanelMovedByUser(FVector2D NewPosition, bool bIgnoreVerticalPan)
+	 void OnInternalPanelMovedByUser(FVector2D NewPosition, bool bIgnoreVerticalPan)
 	{
 		// Note editor: Update full position (X and Y)
 		MidiClipEditor->SetPosition(NewPosition, bIgnoreVerticalPan);
@@ -787,13 +627,13 @@ public:
 		MidiClipVelocityEditor->SetPosition(FVector2D(NewPosition.X, MidiClipVelocityEditor->Position.Get().Y), true);
 	}
 
-	void OnInternalPanelZoomByUser(FVector2D NewZoom)
+	 void OnInternalPanelZoomByUser(FVector2D NewZoom)
 	{
 		MidiClipEditor->SetZoom(NewZoom);
 		MidiClipVelocityEditor->SetZoom(NewZoom);
 	}
 
-	void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
+	 void Construct(const FArguments& InArgs, UDAWSequencerData* InSequence)
 	{
 
 		Position = InArgs._Position;
@@ -814,7 +654,7 @@ public:
 					.Value(0.75f)
 					[
 						SAssignNew(MidiClipEditor, SMidiClipEditor, InSequence)
-							.Clipping(EWidgetClipping::ClipToBounds)
+							.Clipping(EWidgetClipping::ClipToBounds)  // Use proper clipping but with our improved buffer calculations
 							.ParentArgs(BaseArgs)
 
 					]
@@ -822,7 +662,7 @@ public:
 					.Value(0.25f)
 					[
 						SAssignNew(MidiClipVelocityEditor, SMidiClipVelocityEditor, InSequence)
-							.Clipping(EWidgetClipping::ClipToBounds)
+							.Clipping(EWidgetClipping::ClipToBounds)  // Use proper clipping but with our improved buffer calculations
 							.ParentArgs(BaseArgs)
 					]
 			];
