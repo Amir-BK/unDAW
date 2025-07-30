@@ -122,20 +122,21 @@ public:
 		const auto PlayCursorTick = MidiSongMap->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None);
 		const auto RelativePlayCursorTick = PlayCursorTick - GetStartOffset();
 		
-		// Don't follow cursor if we're at or before time 0
-		if (RelativePlayCursorTick <= 0.0f)
-		{
-			return;
-		}
+		// Calculate viewport boundaries
+		const float ViewportWidth = AllottedGeometry.GetLocalSize().X - MajorTabWidth;
+		const float ViewportLeftEdge = MajorTabWidth;
+		const float ViewportRightEdge = AllottedGeometry.GetLocalSize().X;
+		
+		// Calculate where the cursor currently appears on screen
+		const float CurrentCursorScreenX = TickToPixel(RelativePlayCursorTick);
+		
+		// Check if cursor is outside the viewport
+		const bool bCursorOutsideViewport = (CurrentCursorScreenX < ViewportLeftEdge) || (CurrentCursorScreenX > ViewportRightEdge);
 		
 		// Calculate desired cursor position on screen (as a fraction of viewport width)
-		const float ViewportWidth = AllottedGeometry.GetLocalSize().X - MajorTabWidth;
-		const float DesiredCursorScreenX = ViewportWidth * CursorFollowAnchorPosition;
+		const float DesiredCursorScreenX = ViewportLeftEdge + (ViewportWidth * CursorFollowAnchorPosition);
 		
-		// Calculate where the cursor would be with current position
-		const float CurrentCursorScreenX = TickToPixel(RelativePlayCursorTick) - MajorTabWidth;
-		
-		// Calculate how much we need to adjust position to center cursor at desired location
+		// Calculate how much we need to adjust position
 		const float PositionAdjustment = DesiredCursorScreenX - CurrentCursorScreenX;
 		
 		// Calculate what the new position would be
@@ -147,8 +148,26 @@ public:
 		const float LeftEdgeMs = (-NewPosition.X - MajorTabWidth) / Zoom.Get().X;
 		const float LeftEdgeTick = MidiSongMap->MsToTick(LeftEdgeMs) + GetStartOffset();
 		
-		// Only apply follow cursor if the left edge would still be at or after the start offset (time 0)
-		if (LeftEdgeTick >= GetStartOffset())
+		// Determine if we should follow the cursor
+		bool bShouldFollowCursor = false;
+		
+		if (RelativePlayCursorTick <= 0.0f)
+		{
+			// At or before time 0 - don't follow cursor
+			bShouldFollowCursor = false;
+		}
+		else if (bCursorOutsideViewport)
+		{
+			// Cursor is outside viewport - always jump to bring it into view (respecting negative time constraint)
+			bShouldFollowCursor = (LeftEdgeTick >= GetStartOffset());
+		}
+		else
+		{
+			// Cursor is inside viewport - follow normally if it won't cause negative time
+			bShouldFollowCursor = (LeftEdgeTick >= GetStartOffset());
+		}
+		
+		if (bShouldFollowCursor)
 		{
 			// Update position (this will notify linked panels if delegates are bound)
 			if (OnPanelPositionChangedByUser.IsBound())
@@ -160,7 +179,7 @@ public:
 				SetPosition(NewPosition, bLockVerticalPan);
 			}
 		}
-		// If we would show negative time, don't follow the cursor - just let it move freely
+		// If we can't follow without showing negative time, let the cursor move off-screen
 	}
 
 	FVector2D PositionOffset = FVector2D(0, 0);
