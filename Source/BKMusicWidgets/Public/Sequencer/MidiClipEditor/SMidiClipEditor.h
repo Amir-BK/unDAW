@@ -122,8 +122,11 @@ public:
 		const auto PlayCursorTick = MidiSongMap->CalculateMidiTick(PlayCursor.Get(), EMidiClockSubdivisionQuantization::None);
 		const auto RelativePlayCursorTick = PlayCursorTick - GetStartOffset();
 		
-		// Convert to milliseconds for position calculation  
-		const auto CurrentTimeMiliSeconds = MidiSongMap->TickToMs(RelativePlayCursorTick);
+		// Don't follow cursor if we're at or before time 0
+		if (RelativePlayCursorTick <= 0.0f)
+		{
+			return;
+		}
 		
 		// Calculate desired cursor position on screen (as a fraction of viewport width)
 		const float ViewportWidth = AllottedGeometry.GetLocalSize().X - MajorTabWidth;
@@ -135,19 +138,29 @@ public:
 		// Calculate how much we need to adjust position to center cursor at desired location
 		const float PositionAdjustment = DesiredCursorScreenX - CurrentCursorScreenX;
 		
-		// Apply the adjustment to the current position
+		// Calculate what the new position would be
 		FVector2D NewPosition = Position.Get();
 		NewPosition.X += PositionAdjustment;
 		
-		// Update position (this will notify linked panels if delegates are bound)
-		if (OnPanelPositionChangedByUser.IsBound())
+		// Check if this new position would cause negative time to be displayed
+		// Calculate what tick would be at the left edge with the new position
+		const float LeftEdgeMs = (-NewPosition.X - MajorTabWidth) / Zoom.Get().X;
+		const float LeftEdgeTick = MidiSongMap->MsToTick(LeftEdgeMs) + GetStartOffset();
+		
+		// Only apply follow cursor if the left edge would still be at or after the start offset (time 0)
+		if (LeftEdgeTick >= GetStartOffset())
 		{
-			OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
+			// Update position (this will notify linked panels if delegates are bound)
+			if (OnPanelPositionChangedByUser.IsBound())
+			{
+				OnPanelPositionChangedByUser.Execute(NewPosition, bLockVerticalPan);
+			}
+			else
+			{
+				SetPosition(NewPosition, bLockVerticalPan);
+			}
 		}
-		else
-		{
-			SetPosition(NewPosition, bLockVerticalPan);
-		}
+		// If we would show negative time, don't follow the cursor - just let it move freely
 	}
 
 	FVector2D PositionOffset = FVector2D(0, 0);
