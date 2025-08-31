@@ -147,7 +147,9 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
         // Draw sustain pedal events
         LayerId++;
         FMidiSustainPedalEvent CurrentSustainOnEvent;
+#define DEBUG_SUSTAIN_PEDAL 0
 
+#if DEBUG_SUSTAIN_PEDAL == 1
         for (const auto& SustainEvent : Clip->SustainPedalEvents)
         {
             if (SustainEvent.bIsSustainPedalDown)
@@ -174,6 +176,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                 );
             }
         }
+#endif
 
         // Draw velocity lines and markers
         LayerId++;
@@ -204,7 +207,7 @@ int32 SMidiClipVelocityEditor::OnPaint(const FPaintArgs& Args, const FGeometry& 
                 LayerId,
                 AllottedGeometry.ToPaintGeometry(
                     FVector2f(10, 10),
-                    FSlateLayoutTransform(FVector2f(Start - 5, Y))
+                    FSlateLayoutTransform(FVector2f(Start, Y))
                 ),
                 NoteBrush,
                 ESlateDrawEffect::None,
