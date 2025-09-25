@@ -14,6 +14,7 @@
 #include "MetasoundTrigger.h"
 #include "MetasoundVertex.h"
 #include "MetasoundFrontendDocument.h"
+#include "MetasoundFacade.h"
 #include "MetasoundStandardNodesCategories.h"
 
 
@@ -164,7 +165,7 @@ namespace Metasound
 			{
 				for (uint32 chan = 0; chan < NumChannels; ++chan)
 				{
-					InputBuffers.Add(InputData.GetOrConstructDataReadReference<FAudioBuffer>(GetAudioInputName(i, chan), InParams.OperatorSettings));
+					InputBuffers.Add(InputData.GetOrCreateDefaultDataReadReference<FAudioBuffer>(GetAudioInputName(i, chan), InParams.OperatorSettings));
 				}
 
 				InputGains.Add(InputData.GetOrCreateDefaultDataReadReference<float>(GainInputNames[i], InParams.OperatorSettings));
@@ -431,35 +432,35 @@ namespace Metasound
 	}; // class TDAWConsoleMixerNodeOperator
 
 	// Facade class used by the Metasound Frontend.
-	template<uint32 NumInputs, uint32 NumChannels>
-	class TDAWConsoleMixerNode : public FNodeFacade
-	{
-	public:
-		TDAWConsoleMixerNode(const FNodeInitData& InInitData)
-			: FNodeFacade(InInitData.InstanceName,
-				InInitData.InstanceID,
-				TFacadeOperatorClass<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>())
-		{
-		}
+	//template<uint32 NumInputs, uint32 NumChannels>
+	//class TDAWConsoleMixerNode : public FNodeFacade
+	//{
+	//public:
+	//	TDAWConsoleMixerNode(const FNodeInitData& InInitData)
+	//		: FNodeFacade(InInitData.InstanceName,
+	//			InInitData.InstanceID,
+	//			TFacadeOperatorClass<TDAWConsoleMixerNodeOperator<NumInputs, NumChannels>>())
+	//	{
+	//	}
 
-		virtual ~TDAWConsoleMixerNode() = default;
-	};
+	//	virtual ~TDAWConsoleMixerNode() = default;
+	//};
 
 	// Macro to register the node for different input/channel configurations.
-#define REGISTER_AUDIOMIXER_NODE(A, B) \
-		using FAudioMixerNode_##A##_##B = TDAWConsoleMixerNode<A, B>; \
+#define REGISTER_CONSOLEAUDIOMIXER_NODE(A, B) \
+		using FAudioMixerNode_##A##_##B = Metasound::TNodeFacade<TDAWConsoleMixerNodeOperator<A, B>>; \
 		METASOUND_REGISTER_NODE(FAudioMixerNode_##A##_##B)
 
 	// Register some common variants.
 	// Stereo variants:
-	REGISTER_AUDIOMIXER_NODE(2, 2)
+	REGISTER_CONSOLEAUDIOMIXER_NODE(2, 2)
 		//REGISTER_AUDIOMIXER_NODE(3, 2)
-		REGISTER_AUDIOMIXER_NODE(4, 2)
+		REGISTER_CONSOLEAUDIOMIXER_NODE(4, 2)
 		//REGISTER_AUDIOMIXER_NODE(5, 2)
 		//REGISTER_AUDIOMIXER_NODE(6, 2)
 		//REGISTER_AUDIOMIXER_NODE(8, 2)
-		REGISTER_AUDIOMIXER_NODE(8, 2)
-		REGISTER_AUDIOMIXER_NODE(16, 2)
+		REGISTER_CONSOLEAUDIOMIXER_NODE(8, 2)
+		REGISTER_CONSOLEAUDIOMIXER_NODE(16, 2)
 
 		// You can add similar registrations for mono or multichannel variants as needed.
 } // namespace Metasound

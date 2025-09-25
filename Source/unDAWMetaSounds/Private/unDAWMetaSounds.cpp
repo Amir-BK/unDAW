@@ -7,19 +7,23 @@
 #include "Misc/AssetRegistryInterface.h"
 #include "MetasoundSource.h"
 #include "MetasoundNodeRegistrationMacro.h"
+#include "Misc/EngineVersionComparison.h"
 #include "MetasoundDataTypeRegistrationMacro.h"
 
 #define LOCTEXT_NAMESPACE "unDAWMetaSoundsModule"
 
 void unDAWMetaSoundsModule::StartupModule()
 {
-
+#if !(UE_VERSION_OLDER_THAN(5, 7, 0))	
+	METASOUND_REGISTER_ITEMS_IN_MODULE
+#endif
 }
 
 void unDAWMetaSoundsModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+#if !(UE_VERSION_OLDER_THAN(5, 7, 0))	
+	METASOUND_UNREGISTER_ITEMS_IN_MODULE
+#endif
 }
 
 #undef LOCTEXT_NAMESPACE
