@@ -26,6 +26,24 @@ struct FEventsWithIndex
 	int32 EventIndex;
 };
 
+// Key for tracking unlinked notes: combines note number and channel to handle 
+// multiple channels on the same track correctly
+struct FNoteChannelKey
+{
+	int32 NoteNumber;
+	int32 Channel;
+	
+	bool operator==(const FNoteChannelKey& Other) const
+	{
+		return NoteNumber == Other.NoteNumber && Channel == Other.Channel;
+	}
+	
+	friend uint32 GetTypeHash(const FNoteChannelKey& Key)
+	{
+		return HashCombine(GetTypeHash(Key.NoteNumber), GetTypeHash(Key.Channel));
+	}
+};
+
 
 const FSongMaps& UDAWSequencerData::GetSongMaps()
 {
