@@ -31,17 +31,17 @@ public:
 		, _ComboBoxStyle(&FCoreStyle::Get().GetWidgetStyle<FComboBoxStyle>("ComboBox"))
 		, _ButtonStyle(nullptr)
 		, _ItemStyle(&FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row"))
-		, _ContentPadding(FMargin(0.0f))
-		, _MenuRowPadding(FMargin(0.0f))
-		, _ForegroundColor(FCoreStyle::Get().GetSlateColor("InvertedForeground"))
+		, _ContentPadding(_ComboBoxStyle->ContentPadding)
+		, _ForegroundColor(FSlateColor::UseStyle())
 		, _OptionsSource()
 		, _OnSelectionChanged()
+		, _bAlwaysSelectItem(false)
 		, _OnGenerateWidget()
 		, _InitiallySelectedItem(nullptr)
 		, _Method()
 		, _MaxListHeight(450.0f)
 		, _HasDownArrow(true)
-		, _SearchVisibility(EVisibility::Visible)
+		, _SearchVisibility()
 	{}
 
 	/** Slot for this button's content (optional) */
@@ -54,14 +54,12 @@ public:
 
 	SLATE_STYLE_ARGUMENT(FTableRowStyle, ItemStyle)
 
-		SLATE_ARGUMENT(FMargin, ContentPadding)
-
-		SLATE_ARGUMENT(FMargin, MenuRowPadding)
-
-		SLATE_ARGUMENT(FSlateColor, ForegroundColor)
+		SLATE_ATTRIBUTE(FMargin, ContentPadding)
+		SLATE_ATTRIBUTE(FSlateColor, ForegroundColor)
 
 		SLATE_ARGUMENT(const TArray< TSharedPtr<FString> >*, OptionsSource)
 		SLATE_EVENT(FOnSelectionChanged, OnSelectionChanged)
+		SLATE_ARGUMENT(bool, bAlwaysSelectItem)
 		SLATE_EVENT(FOnGenerateWidget, OnGenerateWidget)
 
 		/** Called when combo box is opened, before list is actually created */

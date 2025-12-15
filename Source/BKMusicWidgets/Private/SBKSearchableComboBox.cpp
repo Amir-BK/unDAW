@@ -4,26 +4,32 @@
 #include "SBKSearchableComboBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Input/SEditableTextBox.h"
-#include "Widgets/Input/SSearchBox.h"
 
 #define LOCTEXT_NAMESPACE "SBKSearchableComboBox"
 
 void SBKSearchableComboBox::Construct(const FArguments& InArgs)
 {
-	ItemStyle = InArgs._ItemStyle;
+	check(InArgs._ComboBoxStyle);
 
-	MenuRowPadding = InArgs._MenuRowPadding;
+	ItemStyle = InArgs._ItemStyle;
+	MenuRowPadding = InArgs._ComboBoxStyle->MenuRowPadding;
 
 	// Work out which values we should use based on whether we were given an override, or should use the style's version
 	const FComboButtonStyle& OurComboButtonStyle = InArgs._ComboBoxStyle->ComboButtonStyle;
-	const FButtonStyle* const OurButtonStyle = InArgs._ButtonStyle != nullptr ? InArgs._ButtonStyle : &OurComboButtonStyle.ButtonStyle;
+	const FButtonStyle* const OurButtonStyle = InArgs._ButtonStyle ? InArgs._ButtonStyle : &OurComboButtonStyle.ButtonStyle;
 
 	this->OnComboBoxOpening = InArgs._OnComboBoxOpening;
 	this->OnSelectionChanged = InArgs._OnSelectionChanged;
+	this->bAlwaysSelectItem = InArgs._bAlwaysSelectItem;
 	this->OnGenerateWidget = InArgs._OnGenerateWidget;
 
 	OptionsSource = InArgs._OptionsSource;
 	CustomScrollbar = InArgs._CustomScrollbar;
+
+	FilteredOptionsSource.Append(*OptionsSource);
+
+	TAttribute<EVisibility> SearchVisibility = InArgs._SearchVisibility;
+	const EVisibility CurrentSearchVisibility = SearchVisibility.Get();
 
 	TSharedRef<SWidget> ComboBoxMenuContent =
 		SNew(SBox)
@@ -34,10 +40,11 @@ void SBKSearchableComboBox::Construct(const FArguments& InArgs)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				SAssignNew(this->SearchField, SSearchBox)
+				SAssignNew(this->SearchField, SEditableTextBox)
+				.HintText(LOCTEXT("Search", "Search"))
 				.OnTextChanged(this, &SBKSearchableComboBox::OnSearchTextChanged)
 				.OnTextCommitted(this, &SBKSearchableComboBox::OnSearchTextCommitted)
-				.Visibility(InArgs._SearchVisibility)
+				.Visibility(SearchVisibility)
 			]
 
 			+ SVerticalBox::Slot()
@@ -56,8 +63,7 @@ void SBKSearchableComboBox::Construct(const FArguments& InArgs)
 	TSharedPtr<SWidget> ButtonContent = InArgs._Content.Widget;
 	if (InArgs._Content.Widget == SNullWidget::NullWidget)
 	{
-		ButtonContent =
-			SNew(STextBlock)
+		SAssignNew(ButtonContent, STextBlock)
 			.Text(NSLOCTEXT("SBKSearchableComboBox", "ContentWarning", "No Content Provided"))
 			.ColorAndOpacity(FLinearColor::Red);
 	}
@@ -80,8 +86,16 @@ void SBKSearchableComboBox::Construct(const FArguments& InArgs)
 		.ForegroundColor(InArgs._ForegroundColor)
 		.OnMenuOpenChanged(this, &SBKSearchableComboBox::OnMenuOpenChanged)
 		.IsFocusable(true)
-	);
-	SetMenuContentWidgetToFocus(SearchField);
+		);
+
+	if (CurrentSearchVisibility == EVisibility::Visible)
+	{
+		SetMenuContentWidgetToFocus(SearchField);
+	}
+	else
+	{
+		SetMenuContentWidgetToFocus(ComboListView);
+	}
 
 	// Need to establish the selected item at point of construction so its available for querying
 	// NB: If you need a selection to fire use SetItemSelection rather than setting an IntiallySelectedItem
@@ -91,12 +105,12 @@ void SBKSearchableComboBox::Construct(const FArguments& InArgs)
 		ComboListView->Private_SetItemSelection(SelectedItem, true);
 	}
 
-	SetOptionsSource(OptionsSource);
 }
 
 void SBKSearchableComboBox::ClearSelection()
 {
 	ComboListView->ClearSelection();
+	SelectedItem = nullptr;
 }
 
 void SBKSearchableComboBox::SetSelectedItem(TSharedPtr<FString> InSelectedItem, ESelectInfo::Type InSelectInfo)
@@ -107,7 +121,7 @@ void SBKSearchableComboBox::SetSelectedItem(TSharedPtr<FString> InSelectedItem, 
 	}
 	else
 	{
-		ComboListView->ClearSelection();
+		ComboListView->SetSelection(SelectedItem, InSelectInfo);
 	}
 }
 
@@ -118,35 +132,24 @@ TSharedPtr<FString> SBKSearchableComboBox::GetSelectedItem()
 
 void SBKSearchableComboBox::RefreshOptions()
 {
-	if (!OptionsSource)
-	{
-		return;
-	}
+	// Need to refresh filtered list whenever options change
+	FilteredOptionsSource.Reset();
 
-	FilteredOptionsSource.Empty();
-
-	FString SearchToken = SearchText.ToString();
-
-	// Trim and sanitized the filter text (so that it more likely matches the ui item text)
-	SearchToken.TrimStartAndEndInline();
-
-	// Tokenize the search box text into a string array
-	TArray<FString> SearchTokens;
-	SearchToken.ParseIntoArray(SearchTokens, TEXT(" "), true);
-
-	const bool bIsFilterEmpty = SearchToken.IsEmpty();
-	if (bIsFilterEmpty)
+	if (SearchText.IsEmpty())
 	{
 		FilteredOptionsSource.Append(*OptionsSource);
 	}
 	else
 	{
+		TArray<FString> SearchTokens;
+		SearchText.ToString().ParseIntoArrayWS(SearchTokens);
+
 		for (const TSharedPtr<FString>& Option : *OptionsSource)
 		{
 			bool bAllTokensMatch = true;
-			for (const FString& Token : SearchTokens)
+			for (const FString& SearchToken : SearchTokens)
 			{
-				if (Option->Find(Token, ESearchCase::Type::IgnoreCase) == INDEX_NONE)
+				if (Option->Find(SearchToken, ESearchCase::Type::IgnoreCase) == INDEX_NONE)
 				{
 					bAllTokensMatch = false;
 					break;
