@@ -31,8 +31,9 @@ void BKMusicCoreModule::StartupModule()
 
 	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	//AssetRegistryModule.Get().OnAssetUpdated().AddRaw(this, &BKMusicCoreModule::OnAssetChanged);
+#if WITH_EDITOR
 	AssetRegistryModule.Get().OnAssetsUpdatedOnDisk().AddRaw(this, &BKMusicCoreModule::OnAssetsChanged);
-
+#endif // WITH_EDITOR
 
 
 
@@ -45,6 +46,8 @@ void BKMusicCoreModule::ShutdownModule()
 	//FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	//AssetRegistryModule.Get().OnAssetsUpdatedOnDisk().RemoveAll(this);
 }
+
+#if WITH_EDITOR
 
 void BKMusicCoreModule::RegisterMetasoundAssetListener(UnDAW::IMetasoundAssetListener* Listener)
 {
@@ -109,6 +112,8 @@ inline void BKMusicCoreModule::OnMetasoundAssetUpdated(UObject* AssetObject)
 
 	}
 }
+
+#endif // WITH_EDITOR
 
 #undef LOCTEXT_NAMESPACE
 

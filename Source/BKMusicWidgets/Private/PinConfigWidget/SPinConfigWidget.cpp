@@ -9,7 +9,7 @@
 #include "Widgets/Input/SNumericEntryBox.h"
 #include "Widgets/Input/SComboButton.h"
 #include "Widgets/Input/SComboBox.h"
-#include "SSearchableComboBox.h"
+#include "SBKSearchableComboBox.h"
 #include "unDAWSettings.h"
 #include "UndawWidgetsSettings.h"
 #include "AudioMaterialSlate/SAudioMaterialLabeledKnob.h"
@@ -195,7 +195,7 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNew(SSearchableComboBox)
+							SNew(SBKSearchableComboBox)
 								.OptionsSource(&StylesStrings)
 								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateUnitTypeEnumWidget)
 								//.InitiallySelectedItem(GetCurrentStyle())
@@ -237,7 +237,7 @@ void SPinConfigWidget::Construct(const FArguments& InArgs, const UM2Pins* InPin)
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						[
-							SNew(SSearchableComboBox)
+							SNew(SBKSearchableComboBox)
 								.OptionsSource(&StylesStrings)
 								.OnGenerateWidget(this, &SPinConfigWidget::OnGenerateUnitTypeEnumWidget)
 								//.InitiallySelectedItem(GetCurrentStyle())

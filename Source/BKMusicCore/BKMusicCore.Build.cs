@@ -60,7 +60,8 @@ public class BKMusicCore : ModuleRules
                 "MetasoundFrontend",
                 "AudioExtensions", "HarmonixDsp", "HarmonixMetasound", "Harmonix", "HarmonixMidi", 
                 "MetasoundGenerator", "MetasoundGraphCore", "MetasoundFrontend", "MetasoundEngine", "WaveTable"
-                , "LevelSequence", "MovieScene", "MovieSceneTracks", "AudioWidgets", "AssetRegistry", "WindowsTargetPlatformSettings"
+                , "LevelSequence", "MovieScene", "MovieSceneTracks", "AudioWidgets", "AssetRegistry"
+                // Removed "WindowsTargetPlatformSettings" - this is an editor-only module that cannot be packaged
 			}
 
             );

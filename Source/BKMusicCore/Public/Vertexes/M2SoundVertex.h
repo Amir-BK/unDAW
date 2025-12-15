@@ -441,15 +441,17 @@ public:
 
 	void BuildVertex() override;
 
+	void TryFindVertexDefaultRangesInCache() override;
+
 	//void UpdateConnections() override;
 
-	void TryFindVertexDefaultRangesInCache() override;
 
 	~UM2SoundPatch();
 
+#if WITH_EDITOR
 	// Inherited via IMetasoundAssetListener
 	virtual void MetasoundDocumentUpdated() override;
-
+#endif
 
 
 };

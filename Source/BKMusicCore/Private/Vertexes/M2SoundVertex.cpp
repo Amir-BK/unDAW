@@ -578,11 +578,11 @@ void UM2SoundPatch::BuildVertex()
 	}
 
 	// get patch document and bind to asset updates
-
+#if WITH_EDITOR
 		const auto& PatchDocument = Patch->GetConstDocument();
 		SetMetasoundAsset(&PatchDocument);
 		BKMusicCoreModule::RegisterMetasoundAssetListener(this);
-
+#endif
 
 
 
@@ -609,11 +609,14 @@ void UM2SoundPatch::TryFindVertexDefaultRangesInCache()
 	}
 }
 
-inline UM2SoundPatch::~UM2SoundPatch()
+UM2SoundPatch::~UM2SoundPatch()
 {
+#if WITH_EDITOR
 	BKMusicCoreModule::UnregisterMetasoundAssetListener(this);
+#endif
 }
 
+#if WITH_EDITOR
 void UM2SoundPatch::MetasoundDocumentUpdated()
 {
 
@@ -633,6 +636,7 @@ void UM2SoundPatch::MetasoundDocumentUpdated()
 
 
 }
+#endif
 
 
 void UM2SoundLiteralNodeVertex::DestroyVertex()

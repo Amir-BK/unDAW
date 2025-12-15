@@ -11,7 +11,7 @@
 #include "Widgets/Input/SButton.h"
 #include "SlateOptMacros.h"
 #include "MetasoundBuilderSubsystem.h"
-#include "SSearchableComboBox.h"
+#include "SBKSearchableComboBox.h"
 
 
 #include "M2SoundGraphStatics.h"
@@ -255,7 +255,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 			MainHorizontalBox->AddSlot()
 				.MaxWidth(200)
 				[
-					SNew(SSearchableComboBox)
+					SNew(SBKSearchableComboBox)
 					.OptionsSource(&EnumOptions)
 					.InitiallySelectedItem(MakeShared<FString>(GetEnumValue().ToString()))
 					//.ComboBoxStyle(FAppStyle::Get(), TEXT("Graph.Node.PinName"))
@@ -326,7 +326,7 @@ void SM2LiteralControllerWidget::Construct(const FArguments& InArgs, const UM2Me
 		MainHorizontalBox->AddSlot()
 			.MaxWidth(200)
 			[
-				SNew(SSearchableComboBox)
+				SNew(SBKSearchableComboBox)
 				.OptionsSource(&UObjectOptions)
 				.InitiallySelectedItem(CurrentSelection)
 
